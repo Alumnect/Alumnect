@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ExternalLink, FileText, Tag, Lock, Users, AlertCircle } from 'lucide-react'
 import { Avatar } from '@/components/ui'
@@ -15,6 +16,7 @@ interface SharedGroupPostBubbleCardProps {
 const groupPostCache = new Map<string, GroupPost>()
 
 export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroupPostBubbleCardProps) {
+  const { t } = useTranslation()
   const cacheKey = `${groupId}_${postId}`
   const [post, setPost] = useState<GroupPost | null>(() => groupPostCache.get(cacheKey) || null)
   const [loading, setLoading] = useState(!groupPostCache.has(cacheKey))
@@ -90,10 +92,10 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
           </div>
           <div className="min-w-0 flex-1">
             <h5 className="text-xs font-bold text-text">
-              Bài viết trong nhóm riêng tư
+              {t('messages.privateGroupPost', 'Bài viết trong nhóm riêng tư')}
             </h5>
             <p className="mt-1 text-xs leading-relaxed text-text-subtle">
-              Nội dung này thuộc nhóm riêng tư. Chỉ thành viên được duyệt mới có quyền xem bài viết.
+              {t('messages.privateGroupPostDesc', 'Nội dung này thuộc nhóm riêng tư. Chỉ thành viên được duyệt mới có quyền xem bài viết.')}
             </p>
           </div>
         </div>
@@ -104,7 +106,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
             className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary-soft py-1.5 text-xs font-semibold text-primary-solid transition-colors hover:bg-primary-soft"
           >
             <Users size={13} />
-            <span>Đi tới hội nhóm</span>
+            <span>{t('messages.goToGroup', 'Đi tới hội nhóm')}</span>
             <ExternalLink size={12} />
           </Link>
         </div>
@@ -128,10 +130,10 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
           </div>
           <div className="min-w-0 flex-1">
             <h5 className="text-xs font-bold text-text">
-              Nội dung không khả dụng
+              {t('messages.contentUnavailable', 'Nội dung không khả dụng')}
             </h5>
             <p className="mt-1 text-xs leading-relaxed text-text-subtle">
-              Bài viết này có thể đã bị xóa hoặc không còn khả dụng trên hệ thống.
+              {t('messages.contentUnavailableDesc', 'Bài viết này có thể đã bị xóa hoặc không còn khả dụng trên hệ thống.')}
             </p>
           </div>
         </div>
@@ -142,7 +144,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
             className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-1.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface-3"
           >
             <Users size={13} />
-            <span>Xem hội nhóm</span>
+            <span>{t('messages.viewGroup', 'Xem hội nhóm')}</span>
             <ExternalLink size={12} />
           </Link>
         </div>
@@ -157,7 +159,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
           to={`/app/groups/${groupId}/posts/${postId}`}
           className="inline-flex items-center gap-1.5 text-xs underline font-medium text-primary-solid hover:text-primary-solid"
         >
-          <span>Xem bài viết nhóm #{postId}</span>
+          <span>{t('messages.viewGroupPostWithId', { id: postId, defaultValue: `Xem bài viết nhóm #${postId}` })}</span>
           <ExternalLink size={12} />
         </Link>
       </div>
@@ -205,7 +207,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
                 {post.author.fullName}
               </p>
               <p className="truncate text-xs text-text-subtle">
-                {post.author.headline || 'Bài viết hội nhóm'}
+                {post.author.headline || t('messages.groupPostFallback', 'Bài viết hội nhóm')}
               </p>
             </div>
           </div>
@@ -227,7 +229,7 @@ export function SharedGroupPostBubbleCard({ groupId, postId, isMe }: SharedGroup
         <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2 text-xs font-medium text-primary-solid">
           <span className="inline-flex items-center gap-1">
             <FileText size={12} />
-            Xem bài viết nhóm
+            {t('messages.viewGroupPost', 'Xem bài viết nhóm')}
           </span>
           <ExternalLink size={12} className="transition-transform group-hover:translate-x-0.5" />
         </div>

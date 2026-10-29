@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm, useWatch, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -161,7 +162,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       return {
         value: group.id,
         label: group.name,
-        sublabel: `${memberCount} thành viên đã tham gia`,
+        sublabel: t('mentoring.memberJoinedCountSublabel', { count: memberCount }),
         icon: <Users className="h-4 w-4 text-text-subtle" />,
       }
     })
@@ -224,7 +225,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     if (!files || files.length === 0) return
 
     if (attachedFiles.length + files.length > 5) {
-      const msg = 'Chỉ được đính kèm tối đa 5 tệp tin'
+      const msg = t('mentoring.max5FilesLimit')
       setServerError(msg)
       toast.warning(msg)
       return
@@ -238,7 +239,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
 
       // Kiểm tra dung lượng nhỏ hơn 10 MB (BR-07)
       if (file.size >= MAX_FILE_SIZE) {
-        const msg = `Tệp tin "${file.name}" vượt quá giới hạn 10 MB (${(file.size / (1024 * 1024)).toFixed(2)} MB)`
+        const msg = t('mentoring.fileExceeds10MB', { name: file.name, size: (file.size / (1024 * 1024)).toFixed(2) })
         setServerError(msg)
         toast.warning(msg)
         continue
@@ -279,8 +280,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
         ])
       } catch (err: unknown) {
         console.error('Lỗi tải tệp lên R2:', err)
-        const errMsg = err instanceof Error ? err.message : 'Tải tệp thất bại'
-        toast.error(`Không thể tải tệp "${item.file.name}": ${errMsg}`)
+        const errMsg = err instanceof Error ? err.message : t('mentoring.fileUploadFailed')
+        toast.error(t('mentoring.cannotUploadFile', { name: item.file.name, error: errMsg }))
         setAttachedFiles((prev) =>
           prev.map((f) => (f.id === item.id ? { ...f, uploading: false, error: errMsg } : f))
         )
@@ -309,7 +310,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     if (errorFields.length > 0) {
       const firstError = Object.values(fieldErrors)[0]
       const message = typeof firstError?.message === 'string'
-        ? firstError.message : 'Vui lòng kiểm tra lại thông tin yêu cầu còn thiếu hoặc chưa hợp lệ'
+        ? firstError.message : t('mentoring.formValidationError')
       setServerError(message)
       toast.error(message)
       const el = document.querySelector(`[name="${errorFields[0]}"]`) || document.getElementById(errorFields[0])
@@ -321,14 +322,14 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
   const onSubmit = (formData: CreateMentoringRequestFormInput) => {
     // 1. Kiểm tra tự gửi yêu cầu cho chính mình
     if (isSelfMentor) {
-      const msg = 'Bạn không thể tự gửi yêu cầu cố vấn cho chính tài khoản Mentor của mình'
+      const msg = t('mentoring.cannotRequestSelfMentor')
       setServerError(msg)
       toast.error(msg)
       return
     }
 
     if (formData.participationType === 'GROUP' && (!formData.groupId || Number(formData.groupId) <= 0)) {
-      const msg = 'Vui lòng chọn một nhóm đã tạo trước khi gửi yêu cầu'
+      const msg = t('mentoring.selectGroupBeforeSending')
       setServerError(msg)
       toast.error(msg)
       return
@@ -337,7 +338,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     // 2. Kiểm tra lĩnh vực hợp lệ đối với Mentor được chọn (UC101)
     if (isDirectRequest && targetMentor) {
       if (!targetMentor.supportedFields || targetMentor.supportedFields.length === 0) {
-        const msg = `Mentor ${targetMentor.fullName} chưa thiết lập lĩnh vực hỗ trợ. Vui lòng chọn Mentor khác.`
+        const msg = t('mentoring.mentorNoFieldsConfigured', { name: targetMentor.fullName })
         setServerError(msg)
         toast.error(msg)
         return
@@ -346,7 +347,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       const selectedId = Number(formData.industryId)
       const isSupported = targetMentor.supportedFields.some((sf) => sf.id === selectedId)
       if (!isSupported) {
-        const msg = `Lĩnh vực chuyên môn được chọn không nằm trong danh mục hỗ trợ của Mentor ${targetMentor.fullName}.`
+        const msg = t('mentoring.industryNotInMentorSupport', { name: targetMentor.fullName })
         setServerError(msg)
         toast.error(msg)
         return
@@ -356,7 +357,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
     // 3. Kiểm tra nếu còn file đang uploading
     const stillUploading = attachedFiles.some((f) => f.uploading)
     if (stillUploading) {
-      const msg = 'Vui lòng đợi các tệp tin đính kèm hoàn tất tải lên trước khi gửi yêu cầu'
+      const msg = t('mentoring.waitForAttachmentsUpload')
       setServerError(msg)
       toast.warning(msg)
       return
@@ -395,11 +396,11 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
       {
         onSuccess: (data) => {
           setClientRequestKey(crypto.randomUUID())
-          toast.success(isDirectRequest ? 'Gửi yêu cầu cố vấn trực tiếp thành công!' : 'Tạo yêu cầu mentoring thành công!')
+          toast.success(isDirectRequest ? t('mentoring.directRequestSuccess') : t('mentoring.matchingRequestSuccess'))
           onSuccess(data)
         },
         onError: (err: Error & { data?: { data?: Record<string, string> } }) => {
-          let errorMsg = err.message || 'Đã có lỗi xảy ra khi tạo yêu cầu. Vui lòng thử lại.'
+          let errorMsg = err.message || t('mentoring.createRequestError')
           if (err.data?.data) {
             const fieldErrors = Object.values(err.data.data)
             if (fieldErrors.length > 0) {
@@ -422,10 +423,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           <div className="rounded-2xl border border-danger-border bg-danger-soft p-4 flex items-start gap-3 text-danger text-sm animate-fade-in">
             <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
             <div className="flex-1">
-              <span className="font-bold">Không thể tạo yêu cầu: </span>
+              <span className="font-bold">{t('mentoring.cannotCreateRequestTitle')}</span>
               <span>{serverError}</span>
             </div>
-            <button aria-label="Đóng"
+            <button aria-label={t('common.close')}
               type="button"
               onClick={() => setServerError(null)}
               className="text-danger hover:text-danger"
@@ -443,12 +444,12 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             </div>
             <div>
               <h3 className="font-display text-base font-bold text-text">
-                1. Thông tin yêu cầu hỗ trợ
+                {t('mentoring.section1RequestInfo')}
               </h3>
               <p className="text-xs text-text-subtle">
                 {isDirectRequest && targetMentor
-                  ? `Mô tả rõ ràng vấn đề và kỳ vọng để gửi trực tiếp tới Mentor ${targetMentor.fullName}`
-                  : 'Mô tả rõ ràng vấn đề và kỳ vọng để hệ thống matching Mentor chuẩn xác nhất'}
+                  ? t('mentoring.directRequestDescMentor', { name: targetMentor.fullName })
+                  : t('mentoring.directRequestDescMatching')}
               </p>
             </div>
           </div>
@@ -456,12 +457,12 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           {/* Tiêu đề (Title) */}
           <div className="space-y-1.5">
             <label htmlFor="title" className="block text-xs font-bold text-text">
-              Tiêu đề yêu cầu <span className="text-danger">*</span>
+              {t('mentoring.requestTitleRequired')} <span className="text-danger">*</span>
             </label>
             <input
               id="title"
               type="text"
-              placeholder="Ví dụ: Cần cố vấn định hướng đề tài Capstone Project Spring Boot & Microservices"
+              placeholder={t('mentoring.requestTitlePlaceholder')}
               {...register('title')}
               className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:placeholder:text-text-subtle"
             />
@@ -475,17 +476,17 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           {/* Nội dung chi tiết (Description) */}
           <div className="space-y-1.5">
             <label htmlFor="description" className="block text-xs font-bold text-text">
-              Mô tả chi tiết nhu cầu <span className="text-danger">*</span>
+              {t('mentoring.requestDescRequired')} <span className="text-danger">*</span>
             </label>
             <textarea
               id="description"
               rows={5}
-              placeholder="Mô tả bối cảnh hiện tại, mục tiêu bạn muốn đạt được, những khó khăn bạn đang gặp phải và mong đợi cụ thể từ Mentor..."
+              placeholder={t('mentoring.requestDescPlaceholder')}
               {...register('description')}
               className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15 dark:placeholder:text-text-subtle"
             />
             <div className="flex justify-between items-center text-xs text-text-subtle">
-              <span>Tối thiểu 20 ký tự, tối đa 3000 ký tự</span>
+              <span>{t('mentoring.requestDescLengthHint')}</span>
               <span>{descriptionValue?.length || 0}/3000</span>
             </div>
             {errors.description && (
@@ -504,26 +505,26 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             </div>
             <div>
               <h3 className="font-display text-base font-bold text-text">
-                2. Lĩnh vực / Chuyên môn hỗ trợ
+                {t('mentoring.section2Industry')}
               </h3>
               <p className="text-xs text-text-subtle">
                 {isDirectRequest && targetMentor
-                  ? `Chỉ hiển thị các lĩnh vực chuyên môn mà Mentor ${targetMentor.fullName} hỗ trợ tiếp nhận`
-                  : 'Hệ thống sẽ matching và phân phối tới các Mentor có chuyên môn trong lĩnh vực này'}
+                  ? t('mentoring.directIndustryHintMentor', { name: targetMentor.fullName })
+                  : t('mentoring.directIndustryHintMatching')}
               </p>
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label htmlFor="industryId" className="block text-xs font-bold text-text">
-              Lĩnh vực ngành nghề <span className="text-danger">*</span>
+              {t('mentoring.industryFieldRequired')} <span className="text-danger">*</span>
             </label>
             <SelectDropdown
               value={Number(selectedIndustryId) || ''}
               onChange={(val) => setValue('industryId', Number(val), { shouldValidate: true })}
               options={industryOptions}
-              placeholder={loadingIndustries ? 'Đang tải danh mục lĩnh vực...' : 'Chọn lĩnh vực cần hỗ trợ'}
-              searchPlaceholder="Tìm kiếm lĩnh vực..."
+              placeholder={loadingIndustries ? t('mentoring.loadingIndustries') : t('mentoring.selectIndustry')}
+              searchPlaceholder={t('mentoring.searchIndustryPlaceholder')}
               disabled={loadingIndustries}
               buttonClassName="h-11 rounded-2xl text-sm"
               panelClassName="w-full sm:max-w-none"
@@ -545,17 +546,17 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             </div>
             <div>
               <h3 className="font-display text-base font-bold text-text">
-                3. Ngân sách dự kiến (VNĐ)
+                {t('mentoring.section3Budget')}
               </h3>
               <p className="text-xs text-text-subtle">
-                Không bắt buộc — để trống nếu bạn muốn trao đổi mức phí linh hoạt cùng Mentor
+                {t('mentoring.budgetOptionalHint')}
               </p>
             </div>
           </div>
 
           <div className="max-w-xl space-y-1.5">
             <label htmlFor="budgetMin" className="block text-xs font-bold text-text">
-              Mức ngân sách (VNĐ)
+              {t('mentoring.budgetLevelVnd')}
             </label>
             <div className="relative">
               <input
@@ -563,12 +564,12 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                 type="number"
                 min="0"
                 step="any"
-                placeholder="Ví dụ: 300000 (nhập 0 nếu mong muốn miễn phí)"
+                placeholder={t('mentoring.budgetPlaceholder')}
                 {...register('budgetMin')}
                 className="w-full rounded-2xl border border-border bg-surface px-4 py-3 pr-12 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
               />
               <span className="absolute right-4 top-3.5 text-xs font-bold text-text-subtle">
-                VNĐ
+                VND
               </span>
             </div>
             {errors.budgetMin && (
@@ -588,10 +589,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             </div>
             <div>
               <h3 className="font-display text-base font-bold text-text">
-                4. Phương thức làm việc & Nhiệm vụ
+                {t('mentoring.section4WorkingMode')}
               </h3>
               <p className="text-xs text-text-subtle">
-                Chọn cách thức kết nối và loại hình hỗ trợ bạn mong đợi
+                {t('mentoring.section4WorkingModeDesc')}
               </p>
             </div>
           </div>
@@ -599,7 +600,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           {/* 4.1 Phương thức làm việc (Working Mode) */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-text">
-              Phương thức làm việc <span className="text-danger">*</span>
+              {t('mentoring.workingModeRequired')} <span className="text-danger">*</span>
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {(['ONLINE', 'OFFLINE', 'BOTH'] as MentoringWorkingMode[]).map((mode) => (
@@ -621,7 +622,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           {/* 4.2 Hình thức tham gia (Participation Type) */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-text">
-              Hình thức tham gia <span className="text-danger">*</span>
+              {t('mentoring.participationRequired')} <span className="text-danger">*</span>
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {(['INDIVIDUAL', 'GROUP'] as const).map((type) => (
@@ -630,7 +631,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   type="button"
                   disabled={type === 'GROUP' && groupUnsupportedByTargetMentor}
                   onClick={() => setValue('participationType', type)}
-                  title={type === 'GROUP' && groupUnsupportedByTargetMentor ? 'Mentor này hiện chỉ nhận mentoring cá nhân' : undefined}
+                  title={type === 'GROUP' && groupUnsupportedByTargetMentor ? t('mentoring.mentorOnlyIndividualTitle') : undefined}
                   className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${selectedParticipationType === type
                       ? 'border-primary bg-primary-soft text-primary-solid shadow-xs'
                       : 'border-border bg-surface text-text-muted hover:border-border-strong'
@@ -641,7 +642,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               ))}
             </div>
             {groupUnsupportedByTargetMentor && (
-              <p className="text-xs text-text-subtle">Mentor này hiện chỉ nhận mentoring cá nhân.</p>
+              <p className="text-xs text-text-subtle">{t('mentoring.mentorOnlyIndividualNotice')}</p>
             )}
           </div>
 
@@ -655,10 +656,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   </div>
                   <div>
                     <p className="text-sm font-bold text-text">
-                      Chọn nhóm cố vấn tham gia (Group-First)
+                      {t('mentoring.chooseGroupParticipate')}
                     </p>
                     <p className="text-xs text-text-subtle">
-                      Yêu cầu phải được liên kết với một nhóm bạn làm Trưởng nhóm. Thành viên đã JOINED sẽ được chốt tham gia.
+                      {t('mentoring.chooseGroupParticipateDesc')}
                     </p>
                   </div>
                 </div>
@@ -670,23 +671,23 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                   className="self-start sm:self-auto gap-1.5 rounded-xl border-primary-soft-border text-primary-solid hover:bg-brand-100/60 text-xs"
                 >
                   <Plus className="h-4 w-4" />
-                  Tạo nhóm mới
+                  {t('mentoring.createNewGroup')}
                 </Button>
               </div>
 
               {loadingManagedGroups ? (
                 <div className="flex items-center justify-center gap-2 py-6 text-xs text-text-subtle">
                   <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
-                  Đang tải danh sách nhóm của bạn...
+                  {t('mentoring.loadingYourGroups')}
                 </div>
               ) : managedGroups.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-primary-soft-border bg-surface/70 p-6 text-center">
                   <Users className="mx-auto h-8 w-8 text-brand-400 mb-2 opacity-70" />
                   <p className="text-sm font-bold text-text">
-                    Bạn chưa có nhóm cố vấn nào đang hoạt động
+                    {t('mentoring.noActiveMentoringGroup')}
                   </p>
                   <p className="text-xs text-text-subtle max-w-md mx-auto mt-1 mb-4">
-                    Quy trình mới yêu cầu tạo nhóm và mời thành viên trước khi gửi Mentoring Request dạng nhóm.
+                    {t('mentoring.newGroupWorkflowDesc')}
                   </p>
                   <Button
                     type="button"
@@ -696,13 +697,13 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                     className="rounded-xl gap-1.5"
                   >
                     <Plus className="h-4 w-4" />
-                    Tạo nhóm đầu tiên ngay
+                    {t('mentoring.createFirstGroupNow')}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <label htmlFor="group-select" className="block text-xs font-bold text-text">
-                    Nhóm đại diện <span className="text-danger">*</span>
+                    {t('mentoring.representativeGroupRequired')} <span className="text-danger">*</span>
                   </label>
                   <SelectDropdown
                     value={Number(selectedGroupId) || ''}
@@ -711,8 +712,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                       setValue('groupId', numVal, { shouldValidate: true })
                     }}
                     options={groupOptions}
-                    placeholder="Chọn nhóm cố vấn của bạn"
-                    searchPlaceholder="Tìm kiếm nhóm..."
+                    placeholder={t('mentoring.chooseYourMentoringGroup')}
+                    searchPlaceholder={t('mentoring.searchGroupPlaceholder')}
                     buttonClassName="h-11 rounded-xl text-sm"
                     panelClassName="w-full sm:max-w-none"
                     icon={<Users className="h-4 w-4" />}
@@ -733,10 +734,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                     <div className="flex items-center justify-between border-b border-border pb-2.5 mb-3">
                       <span className="text-xs font-bold text-text flex items-center gap-1.5">
                         <CheckCircle2 className="h-4 w-4 text-success" />
-                        Danh sách thành viên chính thức tham gia Request (Snapshot)
+                        {t('mentoring.officialMembersSnapshotHeading')}
                       </span>
                       <span className="text-xs font-bold text-primary-solid">
-                        {(currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length} thành viên
+                        {t('mentoring.membersJoinedCount', { count: (currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length })}
                       </span>
                     </div>
 
@@ -760,7 +761,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                                 </span>
                                 {member.leader && (
                                   <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-bold text-warning">
-                                    Trưởng nhóm
+                                    {t('mentoring.groupLeader')}
                                   </span>
                                 )}
                               </div>
@@ -792,10 +793,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                           <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
                           <div className="space-y-1.5 flex-1">
                             <p className="font-bold text-warning">
-                              Một số thành viên được mời chưa phản hồi ({pendingMembers.length} lời mời đang chờ)
+                              {t('mentoring.pendingMembersWarning', { count: pendingMembers.length })}
                             </p>
                             <p className="text-xs text-warning leading-relaxed">
-                              Chỉ những thành viên đã chấp nhận (JOINED) mới chính thức tham gia vào Mentoring Request này. Các thành viên đang ở trạng thái PENDING sẽ bị loại khỏi snapshot.
+                              {t('mentoring.pendingMembersWarningDesc')}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 pt-2">
                               <button
@@ -804,10 +805,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-warning-border bg-surface px-3 py-1.5 text-xs font-bold text-warning shadow-2xs hover:bg-warning-soft transition-colors"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />
-                                Quay lại nhóm để quản lý lời mời
+                                {t('mentoring.backToGroupToManageInvitations')}
                               </button>
                               <span className="text-xs text-warning italic">
-                                (Nhấn &quot;Gửi yêu cầu&quot; phía dưới để tiếp tục với thành viên đã xác nhận)
+                                {t('mentoring.continueWithConfirmedMembersHint')}
                               </span>
                             </div>
                           </div>
@@ -823,7 +824,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           {/* 4.3 Loại nhiệm vụ (Task Type) */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-text">
-              Loại nhiệm vụ cố vấn <span className="text-danger">*</span>
+              {t('mentoring.taskTypeRequired')} <span className="text-danger">*</span>
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {TASK_TYPE_OPTIONS.map((opt) => (
@@ -857,17 +858,17 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             </div>
             <div>
               <h3 className="font-display text-base font-bold text-text">
-                5. Thời hạn mong muốn hoàn thành
+                {t('mentoring.section5Deadline')}
               </h3>
               <p className="text-xs text-text-subtle">
-                Đặt mốc thời gian bạn mong muốn nhận hỗ trợ xong để Mentor sắp xếp lịch trình
+                {t('mentoring.section5DeadlineDesc')}
               </p>
             </div>
           </div>
 
           <div className="space-y-1.5 max-w-sm">
             <label htmlFor="expectedDeadline" className="block text-xs font-bold text-text">
-              Hạn chót hoàn thành (Expected Deadline)
+              {t('mentoring.expectedDeadline')}
             </label>
             <DateTimePicker
               id="expectedDeadline"
@@ -893,10 +894,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
             </div>
             <div>
               <h3 className="font-display text-base font-bold text-text">
-                6. Tài liệu / Tệp tin đính kèm
+                {t('mentoring.section6Attachments')}
               </h3>
               <p className="text-xs text-text-subtle">
-                Tải lên đề cương đồ án, slide tóm tắt, mô tả bài toán... (Tối đa 5 file, mỗi file &lt; 10 MB)
+                {t('mentoring.section6AttachmentsDesc')}
               </p>
             </div>
           </div>
@@ -905,10 +906,10 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           <div className="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border-strong bg-cream-50/50 p-6 text-center transition-colors hover:border-primary dark:bg-white/[0.02]">
             <UploadCloud className="h-8 w-8 text-primary-solid mb-2" />
             <p className="text-xs font-bold text-text">
-              Kéo thả hoặc nhấp để chọn tệp tin
+              {t('mentoring.dragDropFilesPrompt')}
             </p>
             <p className="text-xs text-text-subtle mt-1">
-              Hỗ trợ PDF, DOCX, PNG, JPG, ZIP (mỗi file nhỏ hơn 10 MB)
+              {t('mentoring.supportedFileFormatsDesc')}
             </p>
             <input
               type="file"
@@ -934,8 +935,8 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                       <p className="font-bold text-text truncate">{item.file.name}</p>
                       <p className="text-xs text-text-subtle">
                         {(item.file.size / 1024).toFixed(1)} KB
-                        {item.uploading && ' • Đang tải lên...'}
-                        {item.error && ` • Lỗi: ${item.error}`}
+                        {item.uploading && t('mentoring.uploadingProgress')}
+                        {item.error && t('mentoring.uploadErrorPrefix', { error: item.error })}
                       </p>
                     </div>
                   </div>
@@ -944,7 +945,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                     {item.uploading ? (
                       <Loader2 className="h-4 w-4 animate-spin text-primary-solid" />
                     ) : (
-                      <button aria-label="Đóng"
+                      <button aria-label={t('common.close')}
                         type="button"
                         onClick={() => handleRemoveFile(idx)}
                         className="p-1 rounded-lg text-text-subtle hover:text-danger hover:bg-danger-soft transition-colors"
@@ -970,7 +971,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               disabled={createMutation.isPending}
               className="w-full sm:w-auto rounded-2xl font-bold text-text-muted hover:text-text"
             >
-              Hủy bỏ
+              {t('common.cancel')}
             </Button>
           )}
 
@@ -992,14 +993,14 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
           >
             <span>
               {isSelfMentor
-                ? 'Không thể gửi cho chính mình'
+                ? t('mentoring.cannotSendToSelf')
                 : createMutation.isPending
                   ? isDirectRequest
-                    ? 'Đang gửi yêu cầu trực tiếp...'
-                    : 'Đang tạo & Matching...'
+                    ? t('mentoring.sendingDirectRequest')
+                    : t('mentoring.creatingAndMatching')
                   : isDirectRequest
-                    ? 'Gửi yêu cầu tới Mentor'
-                    : 'Đăng yêu cầu Mentoring'}
+                    ? t('mentoring.sendRequestToMentor')
+                    : t('mentoring.postMentoringRequest')}
             </span>
           </Button>
         </div>

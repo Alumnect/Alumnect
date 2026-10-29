@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   Users,
   Calendar,
@@ -34,6 +35,7 @@ import type {
 } from '@/features/mentorship/model/mentoringRequestTypes'
 
 export function MentoringGroupDetailPage() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const groupId = Number(id)
   const navigate = useNavigate()
@@ -70,63 +72,63 @@ export function MentoringGroupDetailPage() {
   const cancelInvitationMutation = useMutation({
     mutationFn: (memberId: number) => mentoringGroupApi.cancelInvitation(groupId, memberId),
     onSuccess: () => {
-      toast.success('Đã thu hồi lời mời tham gia nhóm')
+      toast.success(t('mentoring.invitationRevokedSuccess'))
       setInvitationToCancel(null)
       queryClient.invalidateQueries({ queryKey: ['mentoring-group', groupId] })
       queryClient.invalidateQueries({ queryKey: ['mentoring-groups'] })
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'Không thể thu hồi lời mời')
+      toast.error(err.message || t('mentoring.revokeInvitationError'))
     },
   })
 
   const removeMemberMutation = useMutation({
     mutationFn: (userId: number) => mentoringGroupApi.remove(groupId, userId),
     onSuccess: () => {
-      toast.success('Đã xóa thành viên khỏi nhóm')
+      toast.success(t('mentoring.memberRemovedSuccess'))
       setMemberToRemove(null)
       queryClient.invalidateQueries({ queryKey: ['mentoring-group', groupId] })
       queryClient.invalidateQueries({ queryKey: ['mentoring-groups'] })
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'Không thể xóa thành viên')
+      toast.error(err.message || t('mentoring.removeMemberError'))
     },
   })
 
   const leaveGroupMutation = useMutation({
     mutationFn: () => mentoringGroupApi.leaveGroup(groupId),
     onSuccess: () => {
-      toast.success('Bạn đã rời khỏi nhóm mentoring')
+      toast.success(t('mentoring.leaveGroupSuccess'))
       setIsLeaveConfirmOpen(false)
       queryClient.invalidateQueries({ queryKey: ['mentoring-groups'] })
       navigate('/app/mentoring/groups')
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'Không thể rời khỏi nhóm')
+      toast.error(err.message || t('mentoring.leaveGroupError'))
     },
   })
 
   const deleteGroupMutation = useMutation({
     mutationFn: () => mentoringGroupApi.deleteGroup(groupId),
     onSuccess: () => {
-      toast.success('Đã giải tán nhóm mentoring')
+      toast.success(t('mentoring.disbandGroupSuccess'))
       setIsDeleteConfirmOpen(false)
       queryClient.invalidateQueries({ queryKey: ['mentoring-groups'] })
       navigate('/app/mentoring/groups')
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'Không thể giải tán nhóm')
+      toast.error(err.message || t('mentoring.disbandGroupError'))
     },
   })
 
   const reinviteMutation = useMutation({
     mutationFn: (userId: number) => mentoringGroupApi.invite(groupId, [userId]),
     onSuccess: () => {
-      toast.success('Đã gửi lại lời mời thành công')
+      toast.success(t('mentoring.reinviteSuccess'))
       queryClient.invalidateQueries({ queryKey: ['mentoring-group', groupId] })
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'Không thể gửi lại lời mời')
+      toast.error(err.message || t('mentoring.reinviteError'))
     },
   })
 
@@ -149,12 +151,12 @@ export function MentoringGroupDetailPage() {
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-soft text-danger">
           <AlertTriangle className="h-7 w-7" />
         </div>
-        <h2 className="text-xl font-bold text-text">Không tìm thấy nhóm</h2>
+        <h2 className="text-xl font-bold text-text">{t('mentoring.groupNotFoundTitle')}</h2>
         <p className="text-sm text-text-subtle max-w-md mx-auto">
-          {(error as Error)?.message || 'Nhóm này không tồn tại hoặc bạn không có quyền truy cập.'}
+          {(error as Error)?.message || t('mentoring.groupNotFoundDesc')}
         </p>
         <Button variant="primary" onClick={() => navigate('/app/mentoring/groups')}>
-          Quay lại danh sách nhóm
+          {t('mentoring.backToGroupsList')}
         </Button>
       </Container>
     )
@@ -186,32 +188,32 @@ export function MentoringGroupDetailPage() {
       case 'ACTIVE':
         return (
           <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-bold text-success">
-            <CheckCircle2 className="h-3 w-3" /> Đã tham gia
+            <CheckCircle2 className="h-3 w-3" /> {t('mentoring.memberStatusJoined')}
           </span>
         )
       case 'PENDING':
       case 'INVITED':
         return (
           <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning">
-            <Clock className="h-3 w-3" /> Đang chờ phản hồi
+            <Clock className="h-3 w-3" /> {t('mentoring.memberStatusPending')}
           </span>
         )
       case 'DECLINED':
         return (
           <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-bold text-danger">
-            <XCircle className="h-3 w-3" /> Đã từ chối
+            <XCircle className="h-3 w-3" /> {t('mentoring.memberStatusDeclined')}
           </span>
         )
       case 'CANCELLED':
         return (
           <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-bold text-text-muted dark:bg-surface-2">
-            <Ban className="h-3 w-3" /> Đã thu hồi
+            <Ban className="h-3 w-3" /> {t('mentoring.memberStatusCancelled')}
           </span>
         )
       case 'REMOVED':
         return (
           <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-bold text-danger">
-            <Trash2 className="h-3 w-3" /> Đã rời / bị xóa
+            <Trash2 className="h-3 w-3" /> {t('mentoring.memberStatusRemoved')}
           </span>
         )
       default:
@@ -229,7 +231,7 @@ export function MentoringGroupDetailPage() {
             className="inline-flex items-center gap-2 text-xs font-bold text-text-muted hover:text-primary-solid transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Danh sách nhóm Mentoring
+            {t('mentoring.mentoringGroupsNav')}
           </Link>
           <div className="flex items-center gap-2">
             {isLeader && (
@@ -240,7 +242,7 @@ export function MentoringGroupDetailPage() {
                 className="gap-1.5 rounded-xl text-xs font-bold shadow-xs"
               >
                 <Send className="h-3.5 w-3.5" />
-                Tạo Mentoring Request
+                {t('mentoring.createMentoringRequestBtn')}
               </Button>
             )}
             {isGroupOwner && (
@@ -251,7 +253,7 @@ export function MentoringGroupDetailPage() {
                 className="gap-1.5 rounded-xl border-danger-border text-danger hover:bg-danger-soft text-xs font-bold"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Giải tán nhóm
+                {t('mentoring.disbandGroupBtn')}
               </Button>
             )}
             {!isLeader && isCurrentUserJoined && (
@@ -262,7 +264,7 @@ export function MentoringGroupDetailPage() {
                 className="gap-1.5 rounded-xl border-danger-border text-danger hover:bg-danger-soft text-xs font-bold"
               >
                 <LogOut className="h-3.5 w-3.5" />
-                Rời nhóm
+                {t('mentoring.leaveGroupBtn')}
               </Button>
             )}
           </div>
@@ -287,11 +289,11 @@ export function MentoringGroupDetailPage() {
                         : 'bg-surface-3 text-text-muted dark:bg-surface-2'
                     }`}
                   >
-                    {group.status === 'ACTIVE' ? 'Đang hoạt động' : group.status}
+                    {group.status === 'ACTIVE' ? t('mentoring.statusActive') : group.status}
                   </span>
                   {isLeader && (
                     <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-solid">
-                      Bạn là Trưởng nhóm
+                      {t('mentoring.youAreLeader')}
                     </span>
                   )}
                 </div>
@@ -303,22 +305,22 @@ export function MentoringGroupDetailPage() {
                 <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-text-subtle">
                   <span className="flex items-center gap-1.5">
                     <Shield className="h-4 w-4 text-primary-solid" />
-                    Trưởng nhóm: <strong>{group.leaderName || 'Trưởng nhóm'}</strong>
+                    {t('mentoring.leaderLabel')} <strong>{group.leaderName || t('mentoring.groupLeader')}</strong>
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Users className="h-4 w-4 text-success" />
-                    <strong>{joinedMembers.length}</strong> thành viên chính thức
+                    <strong>{joinedMembers.length}</strong> {t('mentoring.officialMembersCount', { count: joinedMembers.length }).replace(String(joinedMembers.length) + ' ', '')}
                   </span>
                   {pendingMembers.length > 0 && (
                     <span className="flex items-center gap-1.5 text-warning font-bold">
                       <Clock className="h-4 w-4" />
-                      {pendingMembers.length} lời mời đang chờ
+                      {t('mentoring.pendingInvitationsCount', { count: pendingMembers.length })}
                     </span>
                   )}
                   {group.createdAt && (
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-4 w-4" />
-                      Tạo ngày {new Date(group.createdAt).toLocaleDateString('vi-VN')}
+                      {t('mentoring.createdDateAt', { date: new Date(group.createdAt).toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US') })}
                     </span>
                   )}
                 </div>
@@ -335,7 +337,7 @@ export function MentoringGroupDetailPage() {
                   className="gap-1.5 rounded-xl border-primary-soft-border text-primary-solid hover:bg-primary-soft text-xs font-bold"
                 >
                   <UserPlus className="h-4 w-4" />
-                  Mời thành viên
+                  {t('mentoring.inviteMembersBtn')}
                 </Button>
               )}
             </div>
@@ -344,19 +346,19 @@ export function MentoringGroupDetailPage() {
           {/* Navigation Tabs */}
           <div className="mt-6 border-t border-border pt-4">
             <MentoringFilterTabs
-              ariaLabel="Mục của nhóm"
+              ariaLabel={t('mentoring.groupSectionsAria')}
               value={activeTab}
               onChange={setActiveTab}
               options={[
-                { value: 'OVERVIEW', label: 'Tổng quan' },
+                { value: 'OVERVIEW', label: t('mentoring.tabOverview') },
                 {
                   value: 'MEMBERS',
                   label:
                     pendingMembers.length > 0
-                      ? `Thành viên (${joinedMembers.length}) · ${pendingMembers.length} chờ`
-                      : `Thành viên (${joinedMembers.length})`,
+                      ? t('mentoring.tabMembersWithPending', { joined: joinedMembers.length, pending: pendingMembers.length })
+                      : t('mentoring.tabMembersOnly', { joined: joinedMembers.length }),
                 },
-                { value: 'REQUESTS', label: `Yêu cầu Mentoring (${requests.length})` },
+                { value: 'REQUESTS', label: t('mentoring.tabRequests', { count: requests.length }) },
               ]}
             />
           </div>
@@ -372,7 +374,7 @@ export function MentoringGroupDetailPage() {
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
                     <Users className="h-4 w-4 text-primary-solid" />
-                    Thành viên chính thức ({joinedMembers.length})
+                    {t('mentoring.officialMembersHeading', { count: joinedMembers.length })}
                   </h3>
                   {isLeader && (
                     <Button
@@ -381,7 +383,7 @@ export function MentoringGroupDetailPage() {
                       onClick={() => setIsInviteModalOpen(true)}
                       className="text-xs font-bold text-primary-solid hover:text-primary-solid"
                     >
-                      + Mời thêm
+                      {t('mentoring.inviteMoreBtn')}
                     </Button>
                   )}
                 </div>
@@ -407,7 +409,7 @@ export function MentoringGroupDetailPage() {
                           </span>
                           {member.leader && (
                             <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-bold text-warning">
-                              Trưởng nhóm
+                              {t('mentoring.groupLeader')}
                             </span>
                           )}
                         </div>
@@ -425,7 +427,7 @@ export function MentoringGroupDetailPage() {
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
                     <FileText className="h-4 w-4 text-success" />
-                    Mentoring Requests liên kết ({requests.length})
+                    {t('mentoring.linkedRequestsHeading', { count: requests.length })}
                   </h3>
                   {isLeader && (
                     <Button
@@ -434,7 +436,7 @@ export function MentoringGroupDetailPage() {
                       onClick={() => navigate(`/app/mentoring/requests/create?groupId=${group.id}`)}
                       className="text-xs font-bold text-primary-solid hover:text-primary-solid"
                     >
-                      + Tạo yêu cầu mới
+                      {t('mentoring.createNewRequestBtn')}
                     </Button>
                   )}
                 </div>
@@ -442,12 +444,12 @@ export function MentoringGroupDetailPage() {
                 {loadingRequests ? (
                   <div className="py-8 text-center text-xs text-text-subtle">
                     <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary-solid mb-2" />
-                    Đang tải danh sách yêu cầu...
+                    {t('mentoring.loadingRequestsList')}
                   </div>
                 ) : requests.length === 0 ? (
                   <div className="py-8 text-center space-y-3">
                     <p className="text-xs text-text-subtle">
-                      Nhóm này chưa gửi Mentoring Request nào.
+                      {t('mentoring.groupNoRequestsYet')}
                     </p>
                     {isLeader && (
                       <Button
@@ -456,7 +458,7 @@ export function MentoringGroupDetailPage() {
                         onClick={() => navigate(`/app/mentoring/requests/create?groupId=${group.id}`)}
                         className="rounded-xl text-xs font-bold"
                       >
-                        Tạo Mentoring Request đầu tiên
+                        {t('mentoring.createFirstRequestBtn')}
                       </Button>
                     )}
                   </div>
@@ -475,9 +477,9 @@ export function MentoringGroupDetailPage() {
                             {req.title}
                           </Link>
                           <div className="flex items-center gap-3 text-xs text-text-subtle">
-                            <span>Loại: {req.requestType === 'DIRECT' ? 'Trực tiếp' : 'Mở (Matching)'}</span>
+                            <span>{t('mentoring.typePrefix', { type: req.requestType === 'DIRECT' ? t('mentoring.requestTypeDirectLabel') : t('mentoring.requestTypeMatchingLabel') })}</span>
                             <span>•</span>
-                            <span>{new Date(req.createdAt).toLocaleDateString('vi-VN')}</span>
+                            <span>{new Date(req.createdAt).toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -502,25 +504,25 @@ export function MentoringGroupDetailPage() {
             <div className="space-y-6">
               <Card hover={false} className="border border-primary-soft-border bg-brand-50/30 p-5 space-y-3 dark:bg-brand-700/20">
                 <h4 className="text-xs font-bold text-primary-solid uppercase tracking-wider">
-                  Quy trình Group-First
+                  {t('mentoring.processGroupFirstHeading')}
                 </h4>
                 <ul className="text-xs text-primary-solid space-y-2.5 leading-relaxed">
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-primary-solid shrink-0 mt-0.5">•</span>
                     <span className="flex-1">
-                      Nhóm hoạt động độc lập và có thể gửi nhiều Mentoring Requests khác nhau.
+                      {t('mentoring.processGroupFirstP1')}
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-primary-solid shrink-0 mt-0.5">•</span>
                     <span className="flex-1">
-                      Chỉ những thành viên có trạng thái <strong className="font-bold text-primary-solid underline decoration-primary-solid/40 underline-offset-2">Đã tham gia</strong> mới được đưa vào danh sách của Yêu cầu cố vấn.
+                      {t('mentoring.processGroupFirstP2')}
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-primary-solid shrink-0 mt-0.5">•</span>
                     <span className="flex-1">
-                      Thành viên là Mentor chủ động sẽ không thể tự nhận Request của nhóm mình (tránh xung đột lợi ích).
+                      {t('mentoring.processGroupFirstP3')}
                     </span>
                   </li>
                 </ul>
@@ -529,7 +531,7 @@ export function MentoringGroupDetailPage() {
               {/* Quick Actions */}
               <Card hover={false} className="border border-border p-5 space-y-3 dark:bg-surface">
                 <h4 className="text-xs font-bold text-text uppercase tracking-wider">
-                  Thao tác nhanh
+                  {t('mentoring.quickActionsHeading')}
                 </h4>
                 <div className="space-y-2">
                   {isLeader && (
@@ -540,7 +542,7 @@ export function MentoringGroupDetailPage() {
                         onClick={() => navigate(`/app/mentoring/requests/create?groupId=${group.id}`)}
                       >
                         <Send className="h-4 w-4" />
-                        Tạo Mentoring Request cho nhóm
+                        {t('mentoring.createRequestForGroupBtn')}
                       </Button>
                       <Button
                         variant="outline"
@@ -548,7 +550,7 @@ export function MentoringGroupDetailPage() {
                         onClick={() => setIsInviteModalOpen(true)}
                       >
                         <UserPlus className="h-4 w-4" />
-                        Mời thêm thành viên
+                        {t('mentoring.inviteMoreMembersBtn')}
                       </Button>
                     </>
                   )}
@@ -559,7 +561,7 @@ export function MentoringGroupDetailPage() {
                       onClick={() => setIsLeaveConfirmOpen(true)}
                     >
                       <LogOut className="h-4 w-4" />
-                      Rời khỏi nhóm
+                      {t('mentoring.leaveGroupActionBtn')}
                     </Button>
                   )}
                 </div>
@@ -576,10 +578,10 @@ export function MentoringGroupDetailPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
                 <div>
                   <h3 className="font-display text-sm font-bold text-text">
-                    Thành viên đang tham gia ({joinedMembers.length})
+                    {t('mentoring.activeMembersHeading', { count: joinedMembers.length })}
                   </h3>
                   <p className="text-xs text-text-subtle">
-                    Những thành viên này sẽ tự động có mặt trong snapshot khi bạn tạo Mentoring Request.
+                    {t('mentoring.activeMembersSubtext')}
                   </p>
                 </div>
                 {isLeader && (
@@ -589,7 +591,7 @@ export function MentoringGroupDetailPage() {
                     onClick={() => setIsInviteModalOpen(true)}
                     className="gap-1.5 rounded-xl text-xs font-bold"
                   >
-                    <UserPlus className="h-4 w-4" /> Mời thành viên
+                    <UserPlus className="h-4 w-4" /> {t('mentoring.inviteMembersBtn')}
                   </Button>
                 )}
               </div>
@@ -598,11 +600,11 @@ export function MentoringGroupDetailPage() {
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-border text-text-subtle font-bold">
-                      <th className="py-2.5 px-3">Thành viên</th>
-                      <th className="py-2.5 px-3">Chuyên ngành / Email</th>
-                      <th className="py-2.5 px-3">Trạng thái</th>
-                      <th className="py-2.5 px-3">Ngày tham gia</th>
-                      {isLeader && <th className="py-2.5 px-3 text-right">Thao tác</th>}
+                      <th className="py-2.5 px-3">{t('mentoring.tableHeaderMember')}</th>
+                      <th className="py-2.5 px-3">{t('mentoring.tableHeaderMajorEmail')}</th>
+                      <th className="py-2.5 px-3">{t('mentoring.tableHeaderStatus')}</th>
+                      <th className="py-2.5 px-3">{t('mentoring.tableHeaderJoinDate')}</th>
+                      {isLeader && <th className="py-2.5 px-3 text-right">{t('mentoring.tableHeaderActions')}</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -623,7 +625,7 @@ export function MentoringGroupDetailPage() {
                                 {member.fullName}
                                 {member.leader && (
                                   <span className="rounded-md bg-warning-soft px-1.5 py-0.2 text-xs font-bold text-warning">
-                                    Trưởng nhóm
+                                    {t('mentoring.groupLeader')}
                                   </span>
                                 )}
                               </div>
@@ -631,12 +633,12 @@ export function MentoringGroupDetailPage() {
                           </div>
                         </td>
                         <td className="py-3 px-3 text-text-muted">
-                          <div>{member.major || 'Chưa cập nhật'}</div>
+                          <div>{member.major || t('mentoring.notUpdated')}</div>
                           <div className="text-xs text-text-subtle">{member.email}</div>
                         </td>
                         <td className="py-3 px-3">{getStatusBadge(member.status)}</td>
                         <td className="py-3 px-3 text-text-subtle">
-                          {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString('vi-VN') : '—'}
+                          {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US') : '—'}
                         </td>
                         {isLeader && (
                           <td className="py-3 px-3 text-right">
@@ -647,7 +649,7 @@ export function MentoringGroupDetailPage() {
                                 className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold text-danger hover:bg-danger-soft transition-colors"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
-                                Xóa
+                                {t('common.delete')}
                               </button>
                             )}
                           </td>
@@ -665,10 +667,10 @@ export function MentoringGroupDetailPage() {
                 <div className="border-b border-warning-border pb-3">
                   <h3 className="font-display text-sm font-bold text-warning flex items-center gap-2">
                     <Clock className="h-4 w-4 text-warning" />
-                    Lời mời đang chờ chấp nhận ({pendingMembers.length})
+                    {t('mentoring.pendingInvitationsHeading', { count: pendingMembers.length })}
                   </h3>
                   <p className="text-xs text-warning">
-                    Người được mời chưa xác nhận tham gia. Họ sẽ không có mặt trong Mentoring Request cho đến khi Accept.
+                    {t('mentoring.pendingInvitationsSubtext')}
                   </p>
                 </div>
 
@@ -676,11 +678,11 @@ export function MentoringGroupDetailPage() {
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-warning-border text-warning font-bold">
-                        <th className="py-2 px-3">Người được mời</th>
+                        <th className="py-2 px-3">{t('mentoring.tableHeaderInvitedPerson')}</th>
                         <th className="py-2 px-3">Email</th>
-                        <th className="py-2 px-3">Thời gian mời</th>
-                        <th className="py-2 px-3">Trạng thái</th>
-                        {isLeader && <th className="py-2 px-3 text-right">Thao tác</th>}
+                        <th className="py-2 px-3">{t('mentoring.tableHeaderInviteTime')}</th>
+                        <th className="py-2 px-3">{t('mentoring.tableHeaderStatus')}</th>
+                        {isLeader && <th className="py-2 px-3 text-right">{t('mentoring.tableHeaderActions')}</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-warning-border">
@@ -691,7 +693,7 @@ export function MentoringGroupDetailPage() {
                           </td>
                           <td className="py-2.5 px-3 text-text-muted">{member.email}</td>
                           <td className="py-2.5 px-3 text-text-subtle">
-                            {new Date(member.invitedAt).toLocaleDateString('vi-VN')}
+                            {new Date(member.invitedAt).toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')}
                           </td>
                           <td className="py-2.5 px-3">{getStatusBadge(member.status)}</td>
                           {isLeader && (
@@ -702,7 +704,7 @@ export function MentoringGroupDetailPage() {
                                 className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold text-warning hover:bg-amber-200/50 transition-colors"
                               >
                                 <Ban className="h-3.5 w-3.5" />
-                                Thu hồi
+                                {t('mentoring.revokeInvitationAction')}
                               </button>
                             </td>
                           )}
@@ -719,10 +721,10 @@ export function MentoringGroupDetailPage() {
               <Card hover={false} className="border border-border p-5 space-y-4 dark:bg-surface">
                 <div className="border-b border-border pb-3">
                   <h3 className="font-display text-sm font-bold text-text">
-                    Lịch sử lời mời ({historyMembers.length})
+                    {t('mentoring.invitationHistoryHeading', { count: historyMembers.length })}
                   </h3>
                   <p className="text-xs text-text-subtle">
-                    Danh sách những người đã từ chối, bị thu hồi lời mời hoặc bị xóa khỏi nhóm. Bạn có thể gửi lại lời mời bất kỳ lúc nào.
+                    {t('mentoring.invitationHistorySubtext')}
                   </p>
                 </div>
 
@@ -730,10 +732,10 @@ export function MentoringGroupDetailPage() {
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-border text-text-subtle font-bold">
-                        <th className="py-2 px-3">Thành viên</th>
+                        <th className="py-2 px-3">{t('mentoring.tableHeaderMember')}</th>
                         <th className="py-2 px-3">Email</th>
-                        <th className="py-2 px-3">Trạng thái</th>
-                        <th className="py-2 px-3 text-right">Thao tác</th>
+                        <th className="py-2 px-3">{t('mentoring.tableHeaderStatus')}</th>
+                        <th className="py-2 px-3 text-right">{t('mentoring.tableHeaderActions')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -753,7 +755,7 @@ export function MentoringGroupDetailPage() {
                               className="h-7 text-xs font-bold gap-1 rounded-lg"
                             >
                               <RotateCcw className="h-3 w-3" />
-                              Mời lại
+                              {t('mentoring.reinviteAction')}
                             </Button>
                           </td>
                         </tr>
@@ -773,10 +775,10 @@ export function MentoringGroupDetailPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
                 <div>
                   <h3 className="font-display text-sm font-bold text-text">
-                    Tất cả Mentoring Requests của nhóm ({requests.length})
+                    {t('mentoring.allGroupRequestsHeading', { count: requests.length })}
                   </h3>
                   <p className="text-xs text-text-subtle">
-                    Một nhóm có thể tái sử dụng để tạo nhiều yêu cầu mentoring theo nhu cầu học tập.
+                    {t('mentoring.allGroupRequestsSubtext')}
                   </p>
                 </div>
                 {isLeader && (
@@ -786,7 +788,7 @@ export function MentoringGroupDetailPage() {
                     onClick={() => navigate(`/app/mentoring/requests/create?groupId=${group.id}`)}
                     className="gap-1.5 rounded-xl text-xs font-bold shadow-xs"
                   >
-                    <Send className="h-3.5 w-3.5" /> Tạo yêu cầu mới
+                    <Send className="h-3.5 w-3.5" /> {t('mentoring.createNewRequestBtn')}
                   </Button>
                 )}
               </div>
@@ -794,12 +796,12 @@ export function MentoringGroupDetailPage() {
               {loadingRequests ? (
                 <div className="py-12 text-center text-xs text-text-subtle">
                   <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary-solid mb-2" />
-                  Đang tải danh sách Mentoring Requests...
+                  {t('mentoring.loadingAllRequests')}
                 </div>
               ) : requests.length === 0 ? (
                 <div className="py-12 text-center space-y-3">
                   <p className="text-xs text-text-subtle">
-                    Chưa có Mentoring Request nào được tạo cho nhóm này.
+                    {t('mentoring.noGroupRequestsYet')}
                   </p>
                   {isLeader && (
                     <Button
@@ -808,7 +810,7 @@ export function MentoringGroupDetailPage() {
                       onClick={() => navigate(`/app/mentoring/requests/create?groupId=${group.id}`)}
                       className="rounded-xl text-xs font-bold"
                     >
-                      Bắt đầu tạo Mentoring Request
+                      {t('mentoring.startCreatingRequest')}
                     </Button>
                   )}
                 </div>
@@ -829,7 +831,7 @@ export function MentoringGroupDetailPage() {
                         </Link>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-text-subtle">
                           <span>
-                            Hình thức: <strong>{req.requestType === 'DIRECT' ? 'Chỉ định Mentor' : 'Matching tự động'}</strong>
+                            {t('mentoring.formatLabel')}<strong>{req.requestType === 'DIRECT' ? t('mentoring.directMentorAssigned') : t('mentoring.autoMatchingLabel')}</strong>
                           </span>
                           {req.targetMentorName && (
                             <span>
@@ -837,7 +839,7 @@ export function MentoringGroupDetailPage() {
                             </span>
                           )}
                           <span>
-                            Ngày tạo: {new Date(req.createdAt).toLocaleDateString('vi-VN')}
+                            {t('mentoring.createdDatePrefix')}{new Date(req.createdAt).toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')}
                           </span>
                         </div>
                       </div>
@@ -851,7 +853,7 @@ export function MentoringGroupDetailPage() {
                             to={`/app/mentoring/deals`}
                             className="rounded-lg border border-border px-2.5 py-1 text-xs font-bold text-text-muted hover:bg-surface-2"
                           >
-                            Xem Deal
+                            {t('mentoring.viewDeal')}
                           </Link>
                         )}
                         {req.taskId && (
@@ -859,7 +861,7 @@ export function MentoringGroupDetailPage() {
                             to={`/app/mentoring/tasks/${req.taskId}`}
                             className="rounded-lg border border-border px-2.5 py-1 text-xs font-bold text-text-muted hover:bg-surface-2"
                           >
-                            Xem Task
+                            {t('mentoring.viewTask')}
                           </Link>
                         )}
                       </div>
@@ -900,10 +902,10 @@ export function MentoringGroupDetailPage() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-display text-base font-bold text-text">
-                    Xác nhận xóa thành viên?
+                    {t('mentoring.confirmRemoveMemberTitle')}
                   </h3>
                   <p className="text-xs text-text-subtle leading-relaxed">
-                    Bạn có chắc chắn muốn loại <strong>{memberToRemove.fullName}</strong> khỏi nhóm mentoring này không?
+                    {t('mentoring.confirmRemoveMemberDesc', { name: memberToRemove.fullName })}
                   </p>
                 </div>
               </div>
@@ -914,7 +916,7 @@ export function MentoringGroupDetailPage() {
                   onClick={() => setMemberToRemove(null)}
                   disabled={removeMemberMutation.isPending}
                 >
-                  Hủy bỏ
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -923,7 +925,7 @@ export function MentoringGroupDetailPage() {
                   disabled={removeMemberMutation.isPending}
                   className="bg-danger hover:opacity-90 text-text-inverse"
                 >
-                  {removeMemberMutation.isPending ? 'Đang xóa...' : 'Xóa khỏi nhóm'}
+                  {removeMemberMutation.isPending ? t('mentoring.removingText') : t('mentoring.removeFromGroupBtn')}
                 </Button>
               </div>
             </DialogFrame>
@@ -943,10 +945,10 @@ export function MentoringGroupDetailPage() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-display text-base font-bold text-text">
-                    Thu hồi lời mời tham gia?
+                    {t('mentoring.confirmRevokeInvitationTitle')}
                   </h3>
                   <p className="text-xs text-text-subtle leading-relaxed">
-                    Sau khi thu hồi lời mời, <strong>{invitationToCancel.fullName}</strong> sẽ không thể chấp nhận để vào nhóm này nữa.
+                    {t('mentoring.confirmRevokeInvitationDesc', { name: invitationToCancel.fullName })}
                   </p>
                 </div>
               </div>
@@ -957,7 +959,7 @@ export function MentoringGroupDetailPage() {
                   onClick={() => setInvitationToCancel(null)}
                   disabled={cancelInvitationMutation.isPending}
                 >
-                  Hủy bỏ
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -966,7 +968,7 @@ export function MentoringGroupDetailPage() {
                   disabled={cancelInvitationMutation.isPending}
                   className="bg-primary-solid hover:bg-primary-hover text-on-primary"
                 >
-                  {cancelInvitationMutation.isPending ? 'Đang thu hồi...' : 'Thu hồi lời mời'}
+                  {cancelInvitationMutation.isPending ? t('mentoring.revokingText') : t('mentoring.revokeInvitationBtn')}
                 </Button>
               </div>
             </DialogFrame>
@@ -986,10 +988,10 @@ export function MentoringGroupDetailPage() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-display text-base font-bold text-text">
-                    Rời khỏi nhóm Mentoring?
+                    {t('mentoring.confirmLeaveGroupTitle')}
                   </h3>
                   <p className="text-xs text-text-subtle leading-relaxed">
-                    Bạn sẽ không còn là thành viên của nhóm <strong>{group.name}</strong> và không thể tham gia vào các Mentoring Request mới của nhóm.
+                    {t('mentoring.confirmLeaveGroupDesc', { name: group.name })}
                   </p>
                 </div>
               </div>
@@ -1000,7 +1002,7 @@ export function MentoringGroupDetailPage() {
                   onClick={() => setIsLeaveConfirmOpen(false)}
                   disabled={leaveGroupMutation.isPending}
                 >
-                  Hủy bỏ
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -1009,7 +1011,7 @@ export function MentoringGroupDetailPage() {
                   disabled={leaveGroupMutation.isPending}
                   className="bg-danger hover:opacity-90 text-text-inverse"
                 >
-                  {leaveGroupMutation.isPending ? 'Đang xử lý...' : 'Xác nhận rời nhóm'}
+                  {leaveGroupMutation.isPending ? t('mentoring.processingText') : t('mentoring.confirmLeaveBtn')}
                 </Button>
               </div>
             </DialogFrame>
@@ -1028,10 +1030,10 @@ export function MentoringGroupDetailPage() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-display text-base font-bold text-text">
-                    Giải tán nhóm Mentoring?
+                    {t('mentoring.confirmDisbandGroupTitle')}
                   </h3>
                   <p className="text-xs text-text-subtle leading-relaxed">
-                    Nhóm <strong>{group.name}</strong> sẽ bị giải tán, các lời mời đang chờ bị hủy và thành viên sẽ nhận được thông báo. Không thể giải tán khi nhóm còn Mentoring Request hoặc nhiệm vụ chưa kết thúc.
+                    {t('mentoring.confirmDisbandGroupDesc', { name: group.name })}
                   </p>
                 </div>
               </div>
@@ -1042,7 +1044,7 @@ export function MentoringGroupDetailPage() {
                   onClick={() => setIsDeleteConfirmOpen(false)}
                   disabled={deleteGroupMutation.isPending}
                 >
-                  Hủy bỏ
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -1051,7 +1053,7 @@ export function MentoringGroupDetailPage() {
                   disabled={deleteGroupMutation.isPending}
                   className="bg-danger hover:opacity-90 text-text-inverse"
                 >
-                  {deleteGroupMutation.isPending ? 'Đang xử lý...' : 'Xác nhận giải tán'}
+                  {deleteGroupMutation.isPending ? t('mentoring.processingText') : t('mentoring.confirmDisbandBtn')}
                 </Button>
               </div>
             </DialogFrame>

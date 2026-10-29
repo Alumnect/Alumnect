@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
@@ -19,6 +20,7 @@ import { Button } from '@/components/ui/Button'
 import { toast, FadeSwitch } from '@/components/ui'
 
 export function ForgotPasswordPage() {
+  const { t } = useTranslation()
   const [step, setStep] = useState<'email' | 'otp' | 'password'>('email')
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
@@ -136,10 +138,10 @@ export function ForgotPasswordPage() {
       setCooldown(300)
 
       setSuccessMsg(res.message)
-      toast.success(res.message || 'Đã gửi mã OTP đến email của bạn!')
+      toast.success(res.message || t('auth.otpSentSuccess'))
       changeStep('otp')
     } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi gửi yêu cầu khôi phục mật khẩu')
+      setErrorMsg(err.message || t('auth.otpSendError'))
     }
   }
 
@@ -154,10 +156,10 @@ export function ForgotPasswordPage() {
       setOtp(data.otp.trim())
       localStorage.setItem('forgot_password_otp', data.otp.trim())
       setSuccessMsg(res.message)
-      toast.success('Xác thực mã OTP thành công!')
+      toast.success(t('auth.otpVerifySuccess'))
       changeStep('password')
     } catch (err: any) {
-      setErrorMsg(err.message || 'Mã xác thực không hợp lệ')
+      setErrorMsg(err.message || t('auth.otpInvalid'))
       if (err.message && (err.message.includes('bị khóa') || err.message.includes('5 lần'))) {
         setCooldown(0)
         localStorage.removeItem('forgot_password_cooldown_expiry')
@@ -174,13 +176,13 @@ export function ForgotPasswordPage() {
         token: otp,
         newPassword: data.newPassword,
       })
-      setSuccessMsg(res.message || 'Đặt lại mật khẩu thành công!')
+      setSuccessMsg(res.message || t('auth.resetPasswordSuccess'))
       setIsResetSuccess(true)
       setResetCountdown(3)
       clearLocalStorage()
-      toast.success('Đặt lại mật khẩu thành công!')
+      toast.success(t('auth.resetPasswordSuccess'))
     } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi đặt lại mật khẩu')
+      setErrorMsg(err.message || t('auth.resetPasswordError'))
     }
   }
 
@@ -190,13 +192,13 @@ export function ForgotPasswordPage() {
     try {
       const res = await forgotM.mutateAsync({ email })
       setSuccessMsg(res.message)
-      toast.success('Đã gửi lại mã OTP mới đến email!')
+      toast.success(t('auth.resendOtpSuccess'))
 
       const expiry = Date.now() + 300000 // 5 minutes
       localStorage.setItem('forgot_password_cooldown_expiry', expiry.toString())
       setCooldown(300)
     } catch (err: any) {
-      setErrorMsg(err.message || 'Không thể gửi lại mã OTP')
+      setErrorMsg(err.message || t('auth.resendOtpError'))
     }
   }
 
@@ -209,12 +211,12 @@ export function ForgotPasswordPage() {
             to="/login"
             className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-text-subtle hover:text-text group transition-colors"
           >
-            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" /> Quay lại đăng nhập
+            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" /> {t('common.back')} {t('common.login')}
           </Link>
 
-          <h1 className="text-3xl font-extrabold text-text tracking-tight">Quên mật khẩu?</h1>
+          <h1 className="text-3xl font-extrabold text-text tracking-tight">{t('auth.forgotPassword')}</h1>
           <p className="mt-2 text-sm text-text-subtle leading-relaxed">
-            Nhập email tài khoản của bạn. Hệ thống sẽ gửi một mã OTP 6 chữ số để xác minh danh tính.
+            {t('auth.forgotPasswordIntro')}
           </p>
 
           {errorMsg && (
@@ -226,7 +228,7 @@ export function ForgotPasswordPage() {
 
           <form className="mt-8 space-y-4" onSubmit={handleSubmitEmail(handleSendOtp)} noValidate>
             <Field
-              label="Email đăng ký"
+              label={t('auth.email')}
               type="email"
               placeholder="you@fpt.edu.vn"
               trailing={<Mail size={16} />}
@@ -241,7 +243,7 @@ export function ForgotPasswordPage() {
               disabled={forgotM.isPending}
               rightIcon={forgotM.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
             >
-              {forgotM.isPending ? 'Đang gửi...' : 'Gửi mã xác nhận'}
+              {forgotM.isPending ? t('common.processing') : t('auth.sendOtp')}
             </Button>
           </form>
         </>
@@ -257,12 +259,12 @@ export function ForgotPasswordPage() {
             }}
             className="inline-flex items-center gap-1 text-xs font-bold text-primary-solid hover:text-primary-solid mb-6 group transition-colors"
           >
-            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" /> Quay lại nhập email
+            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" /> {t('auth.backToEnterEmail')}
           </button>
 
-          <h1 className="text-3xl font-extrabold text-text tracking-tight">Xác thực mã OTP</h1>
+          <h1 className="text-3xl font-extrabold text-text tracking-tight">{t('auth.verifyOtpHeading')}</h1>
           <p className="mt-2 text-sm text-text-subtle leading-relaxed">
-            Mã OTP 6 số đã được gửi tới email <strong className="text-text">{email}</strong>. Vui lòng nhập mã để tiếp tục.
+            {t('auth.verifyOtpSubheading', { email })}
           </p>
 
           {errorMsg && (
@@ -281,7 +283,7 @@ export function ForgotPasswordPage() {
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmitOtp(handleVerifyOtp)} noValidate>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-semibold text-text-muted">Mã xác thực OTP (6 chữ số)</span>
+              <span className="mb-1.5 block text-sm font-semibold text-text-muted">{t('auth.otpInputLabel')}</span>
               <input
                 type="text"
                 placeholder="123456"
@@ -308,14 +310,14 @@ export function ForgotPasswordPage() {
               disabled={verifyOtpM.isPending}
               rightIcon={verifyOtpM.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
             >
-              {verifyOtpM.isPending ? 'Đang xác thực...' : 'Xác nhận mã OTP'}
+              {verifyOtpM.isPending ? t('auth.verifyingText') : t('auth.confirmOtpBtn')}
             </Button>
           </form>
 
           <div className="mt-6 flex flex-col items-center justify-center gap-2">
             {cooldown > 0 ? (
               <p className="text-xs text-text-subtle">
-                Gửi lại mã OTP sau: <span className="font-semibold text-primary-solid">{Math.floor(cooldown / 60)} phút {cooldown % 60} giây</span>
+                {t('auth.resendOtpCountdown')}<span className="font-semibold text-primary-solid">{t('auth.minutesAndSeconds', { minutes: Math.floor(cooldown / 60), seconds: cooldown % 60 })}</span>
               </p>
             ) : (
               <button
@@ -324,7 +326,7 @@ export function ForgotPasswordPage() {
                 disabled={forgotM.isPending}
                 className="text-xs font-bold text-primary-solid hover:text-primary-solid transition-colors disabled:opacity-50"
               >
-                {forgotM.isPending ? 'Đang gửi...' : 'Gửi lại mã OTP mới'}
+                {forgotM.isPending ? t('auth.sendingText') : t('auth.resendNewOtpBtn')}
               </button>
             )}
           </div>
@@ -346,10 +348,10 @@ export function ForgotPasswordPage() {
 
             <div>
               <h1 className="text-2xl font-extrabold text-text tracking-tight">
-                Đặt lại mật khẩu thành công!
+                {t('auth.resetPasswordSuccess')}
               </h1>
               <p className="mt-2 text-sm text-text-muted leading-relaxed max-w-sm mx-auto">
-                Mật khẩu mới của bạn đã được cập nhật an toàn. Vui lòng đăng nhập bằng mật khẩu mới.
+                {t('auth.passwordResetSuccessDesc')}
               </p>
             </div>
 
@@ -358,8 +360,7 @@ export function ForgotPasswordPage() {
               <div className="flex items-center justify-center gap-2 text-xs font-semibold text-text-muted">
                 <Loader2 size={15} className="animate-spin text-primary-solid" />
                 <span>
-                  Đang chuyển hướng về trang Đăng nhập trong{' '}
-                  <strong className="text-primary-solid font-bold">{resetCountdown}s</strong>...
+                  {t('auth.redirectingToLogin', { seconds: resetCountdown })}
                 </span>
               </div>
 
@@ -381,19 +382,19 @@ export function ForgotPasswordPage() {
               className="w-full"
               rightIcon={<ArrowRight size={18} />}
             >
-              Đăng nhập ngay
+              {t('common.loginNow')}
             </Button>
           </div>
         ) : (
           <div className="animate-pop">
             <div className="flex items-center gap-2">
               <Sparkles size={20} className="text-primary-solid animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-wider text-primary-solid">Bước cuối cùng</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary-solid">{t('nav.changePassword')}</span>
             </div>
 
-            <h1 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Thiết lập mật khẩu mới</h1>
+            <h1 className="mt-1 text-3xl font-extrabold text-text tracking-tight">{t('nav.changePassword')}</h1>
             <p className="mt-2 text-sm text-text-subtle leading-relaxed">
-              Xác thực OTP thành công. Vui lòng nhập mật khẩu mới của bạn dưới đây.
+              {t('auth.resetPasswordStepDesc')}
             </p>
 
             {errorMsg && (
@@ -405,16 +406,16 @@ export function ForgotPasswordPage() {
 
             <form className="mt-6 space-y-4" onSubmit={handleSubmitPassword(handleResetPassword)} noValidate>
               <Field
-                label="Mật khẩu mới"
+                label={t('auth.password')}
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
+                placeholder="••••••••"
                 disabled={resetPasswordM.isPending}
                 trailing={
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     className="flex h-6 w-6 items-center justify-center text-text-subtle hover:text-text-muted transition-colors cursor-pointer"
-                    aria-label="Ẩn/hiện mật khẩu"
+                    aria-label={t('auth.togglePasswordVisibility')}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -424,16 +425,16 @@ export function ForgotPasswordPage() {
               />
 
               <Field
-                label="Xác nhận mật khẩu mới"
+                label={t('auth.confirmPassword')}
                 type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Nhập lại mật khẩu mới"
+                placeholder="••••••••"
                 disabled={resetPasswordM.isPending}
                 trailing={
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
                     className="flex h-6 w-6 items-center justify-center text-text-subtle hover:text-text-muted transition-colors cursor-pointer"
-                    aria-label="Ẩn/hiện mật khẩu"
+                    aria-label={t('auth.togglePasswordVisibility')}
                   >
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -450,7 +451,7 @@ export function ForgotPasswordPage() {
                 disabled={resetPasswordM.isPending}
                 rightIcon={resetPasswordM.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
               >
-                {resetPasswordM.isPending ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
+                {resetPasswordM.isPending ? t('common.processing') : t('nav.changePassword')}
               </Button>
             </form>
           </div>

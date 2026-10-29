@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Briefcase, Handshake, RefreshCw, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, ButtonLink, Container, EmptyState, Pagination } from '@/components/ui'
 import { MentoringTermsGate, MentorPageHeader, MentoringTaskCard, useMyTasks } from '@/features/mentorship'
 import { MentoringFilterTabs, type MentoringFilterOption } from '@/features/mentorship/components/MentoringUi'
@@ -8,27 +9,34 @@ import { cn } from '@/lib/utils'
 
 type TaskFilter = 'ACTIVE' | 'DISPUTED' | 'CLOSED' | 'ALL'
 
-const TASK_TABS: MentoringFilterOption<TaskFilter>[] = [
-  { value: 'ACTIVE', label: 'Đang chạy' },
-  { value: 'DISPUTED', label: 'Tranh chấp' },
-  { value: 'CLOSED', label: 'Đã kết thúc' },
-  { value: 'ALL', label: 'Tất cả' },
-]
-
-const EMPTY_HINT: Record<TaskFilter, string> = {
-  ACTIVE: 'Không có Task nào đang chuẩn bị, thực hiện hoặc chờ nghiệm thu.',
-  DISPUTED: 'Không có Task nào đang tranh chấp.',
-  CLOSED: 'Chưa có Task nào hoàn thành, bị hủy hoặc được phân xử.',
-  ALL: 'Task được tạo tự động sau khi thỏa thuận được chốt và Học viên thanh toán thành công.',
-}
-
 const PAGE_SIZE = 12
 
 /** Danh sách Mentoring Task của người dùng (UC106), dùng chung cho Học viên và Mentor. */
 function MyMentoringTasksContent() {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState<TaskFilter>('ACTIVE')
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(0)
+
+  const taskTabs: MentoringFilterOption<TaskFilter>[] = useMemo(
+    () => [
+      { value: 'ACTIVE', label: t('mentoring.tabTasksActive') },
+      { value: 'DISPUTED', label: t('mentoring.tabTasksDisputed') },
+      { value: 'CLOSED', label: t('mentoring.tabTasksClosed') },
+      { value: 'ALL', label: t('mentoring.tabTasksAll') },
+    ],
+    [t],
+  )
+
+  const emptyHints: Record<TaskFilter, string> = useMemo(
+    () => ({
+      ACTIVE: t('mentoring.emptyTasksHintActive'),
+      DISPUTED: t('mentoring.emptyTasksHintDisputed'),
+      CLOSED: t('mentoring.emptyTasksHintClosed'),
+      ALL: t('mentoring.emptyTasksHintAll'),
+    }),
+    [t],
+  )
 
   const { data: pageData, isLoading, isError, error, refetch, isFetching } = useMyTasks(
     filter === 'ACTIVE' || filter === 'CLOSED' ? filter : undefined,
@@ -54,9 +62,9 @@ function MyMentoringTasksContent() {
     <div className="space-y-5">
       <MentorPageHeader
         icon={<Briefcase className="h-4 w-4" />}
-        eyebrow="Không gian làm việc"
-        title="Công việc của tôi"
-        description="Theo dõi tiến độ, nhật ký làm việc và kết quả các Task bạn đang tham gia."
+        eyebrow={t('mentoring.tasksEyebrow')}
+        title={t('mentoring.tasksTitle')}
+        description={t('mentoring.tasksSubtitle')}
         actions={
           <>
             <Button
@@ -66,10 +74,10 @@ function MyMentoringTasksContent() {
               disabled={isFetching}
               leftIcon={<RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />}
             >
-              Làm mới
+              {t('mentoring.refreshBtn')}
             </Button>
             <ButtonLink to="/app/mentoring/deals" variant="outline" size="sm" leftIcon={<Handshake className="h-4 w-4" />}>
-              Thỏa thuận
+              {t('mentoring.dealsBtn')}
             </ButtonLink>
           </>
         }
@@ -77,8 +85,8 @@ function MyMentoringTasksContent() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <MentoringFilterTabs
-          ariaLabel="Lọc Task"
-          options={TASK_TABS}
+          ariaLabel={t('mentoring.filterTask')}
+          options={taskTabs}
           value={filter}
           onChange={(v) => {
             setFilter(v)
@@ -88,9 +96,9 @@ function MyMentoringTasksContent() {
         <div className="relative w-full sm:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
           <input
-            aria-label="Tìm theo tiêu đề, người tham gia..."
+            aria-label={t('mentoring.searchTasksPlaceholder')}
             type="search"
-            placeholder="Tìm theo tiêu đề, người tham gia..."
+            placeholder={t('mentoring.searchTasksPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(MENTORING_INPUT, 'py-2 pl-9')}
@@ -107,23 +115,23 @@ function MyMentoringTasksContent() {
       ) : isError ? (
         <EmptyState
           icon={<Briefcase className="h-6 w-6" />}
-          title="Không thể tải danh sách Task"
-          description={error?.message || 'Đã có lỗi xảy ra, vui lòng thử lại.'}
+          title={t('mentoring.loadTasksError')}
+          description={error?.message || t('common.error')}
           action={
             <Button variant="outline" size="sm" onClick={() => refetch()} leftIcon={<RefreshCw className="h-4 w-4" />}>
-              Thử lại
+              {t('common.tryAgain')}
             </Button>
           }
         />
       ) : filteredTasks.length === 0 ? (
         <EmptyState
           icon={<Briefcase className="h-6 w-6" />}
-          title={searchQuery.trim() ? 'Không tìm thấy Task phù hợp' : 'Chưa có Task nào'}
-          description={searchQuery.trim() ? 'Thử từ khóa khác hoặc xóa ô tìm kiếm.' : EMPTY_HINT[filter]}
+          title={searchQuery.trim() ? t('mentoring.noTasksFound') : t('mentoring.emptyTasksTitle')}
+          description={searchQuery.trim() ? t('mentoring.searchTasksOther') : emptyHints[filter]}
           action={
             filter !== 'ALL' && !searchQuery.trim() ? (
               <Button variant="outline" size="sm" onClick={() => setFilter('ALL')}>
-                Xem tất cả Task
+                {t('mentoring.viewAllTasks')}
               </Button>
             ) : undefined
           }
@@ -131,7 +139,9 @@ function MyMentoringTasksContent() {
       ) : (
         <div className="space-y-4">
           <p className="text-xs text-text-subtle">
-            {searchQuery.trim() ? `${filteredTasks.length} kết quả trong trang này` : `${totalElements} Task`}
+            {searchQuery.trim()
+              ? t('mentoring.taskResultsCountFormat', { count: filteredTasks.length })
+              : t('mentoring.taskCountFormat', { count: totalElements })}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filteredTasks.map((task) => (

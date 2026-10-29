@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next'
 import { MentoringTermsGate, MentorRegistrationForm } from '@/features/mentorship'
 import { Container, Card } from '@/components/ui/primitives'
 import { useAuthStore } from '@/store/authStore'
 import { Award } from 'lucide-react'
 
 function BecomeMentorContent() {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const isAlumni = user?.role === 'ALUMNI'
 
@@ -14,10 +16,10 @@ function BecomeMentorContent() {
           <Award className="h-7 w-7" />
         </div>
         <h2 className="font-display text-xl font-bold text-text">
-          Tính năng dành cho cựu sinh viên
+          {t('mentoring.alumniOnlyFeature')}
         </h2>
         <p className="mt-2 text-sm text-text-muted leading-relaxed">
-          Bạn cần là cựu sinh viên đã xác thực để đăng ký trở thành Mentor.
+          {t('mentoring.alumniOnlyDesc')}
         </p>
       </Card>
     )

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ExternalLink, Calendar, Briefcase, Award, FileText } from 'lucide-react'
 import { Avatar } from '@/components/ui'
@@ -14,6 +15,7 @@ interface SharedPostBubbleCardProps {
 const postCache = new Map<string, Post>()
 
 export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps) {
+  const { t } = useTranslation()
   const [post, setPost] = useState<Post | null>(() => postCache.get(postId) || null)
   const [loading, setLoading] = useState(!postCache.has(postId))
   const [error, setError] = useState(false)
@@ -72,7 +74,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
           to={`/app/posts/${postId}`}
           className="inline-flex items-center gap-1.5 text-xs underline font-medium text-primary-solid hover:text-primary-solid"
         >
-          <span>Xem bài viết #{postId}</span>
+          <span>{t('messages.viewPostWithId', { id: postId, defaultValue: `Xem bài viết #${postId}` })}</span>
           <ExternalLink size={12} />
         </Link>
       </div>
@@ -86,7 +88,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
       return (
         <span className="inline-flex items-center gap-1 rounded-md bg-purple-100 px-1.5 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
           <Calendar size={10} />
-          Sự kiện
+          {t('feed.event', 'Sự kiện')}
         </span>
       )
     }
@@ -94,7 +96,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
       return (
         <span className="inline-flex items-center gap-1 rounded-md bg-success-soft px-1.5 py-0.5 text-xs font-semibold text-success">
           <Briefcase size={10} />
-          Tuyển dụng
+          {t('feed.recruitment', 'Tuyển dụng')}
         </span>
       )
     }
@@ -102,7 +104,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
       return (
         <span className="inline-flex items-center gap-1 rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-semibold text-warning">
           <Award size={10} />
-          Thành tích
+          {t('feed.achievement', 'Thành tích')}
         </span>
       )
     }
@@ -182,7 +184,7 @@ export function SharedPostBubbleCard({ postId, isMe }: SharedPostBubbleCardProps
         <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2 text-xs font-medium text-primary-solid">
           <span className="inline-flex items-center gap-1">
             <FileText size={12} />
-            Xem bài viết
+            {t('messages.viewPost', 'Xem bài viết')}
           </span>
           <ExternalLink size={12} className="transition-transform group-hover:translate-x-0.5" />
         </div>

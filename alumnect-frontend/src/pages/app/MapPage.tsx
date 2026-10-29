@@ -12,6 +12,7 @@
  * Use cases: UC53, UC54, UC55
  */
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Map as MapIcon, SlidersHorizontal, Search, MapPin, Loader2, GraduationCap, ChevronDown, Check } from 'lucide-react'
 import { PageHeader, Badge, Card, EmptyState, Skeleton, Avatar } from '@/components/ui'
 import { Reveal } from '@/components/motion'
@@ -75,10 +76,10 @@ function normalizeLocation(value: string) {
 }
 
 /** Gom các địa chỉ chi tiết về cùng một thành phố để tính Top hubs. */
-function getHubCity(location?: string, locationCity?: string, locationCountry?: string) {
+function getHubCity(location?: string, locationCity?: string, locationCountry?: string, fallback = 'Chưa xác định') {
   const rawLocation = location?.trim()
   const rawCity = locationCity?.trim()
-  if (!rawLocation && !rawCity) return 'Chưa xác định'
+  if (!rawLocation && !rawCity) return fallback
 
   // Ưu tiên tên thành phố geocode, nhưng vẫn chạy qua alias để gom
   // "Đà Nẵng" và "Thành phố Đà Nẵng" thành cùng một hub.
@@ -87,7 +88,7 @@ function getHubCity(location?: string, locationCity?: string, locationCountry?: 
   if (alias) return alias.label
 
   if (rawCity && locationCountry) return `${rawCity}, ${locationCountry}`
-  return rawLocation ?? rawCity ?? 'Chưa xác định'
+  return rawLocation ?? rawCity ?? fallback
 }
 
 // ---------------------------------------------------------------------------
@@ -95,6 +96,8 @@ function getHubCity(location?: string, locationCity?: string, locationCountry?: 
 // ---------------------------------------------------------------------------
 
 export function MapPage() {
+  const { t } = useTranslation()
+
   // ── Filter state ──────────────────────────────────────────────────────────
   const [selectedMajorId, setSelectedMajorId] = useState<number | null>(null)
   const [isMajorMenuOpen, setIsMajorMenuOpen] = useState(false)
@@ -173,14 +176,15 @@ export function MapPage() {
   // ── Top hubs ──────────────────────────────────────────────────────────────
   const topHubs = useMemo(() => {
     const counts: Record<string, number> = {}
+    const undeterminedLabel = t('map.undetermined')
     filteredAlumni.forEach((a) => {
-      const city = getHubCity(a.city, a.locationCity, a.locationCountry)
+      const city = getHubCity(a.city, a.locationCity, a.locationCountry, undeterminedLabel)
       counts[city] = (counts[city] || 0) + 1
     })
     return Object.entries(counts)
       .map(([city, count]) => ({ city, count }))
       .sort((a, b) => b.count - a.count)
-  }, [filteredAlumni])
+  }, [filteredAlumni, t])
 
   // ── Thống kê ──────────────────────────────────────────────────────────────
   const stats = useMemo(() => ({
@@ -224,8 +228,8 @@ export function MapPage() {
       <div className="mx-auto max-w-7xl px-4 py-6">
         <EmptyState
           icon={<MapIcon size={22} />}
-          title="Lỗi tải dữ liệu"
-          description={error.message || 'Không thể kết nối đến máy chủ.'}
+          title={t('map.loadErrorTitle')}
+          description={error.message || t('map.serverConnectionError')}
         />
       </div>
     )
@@ -236,11 +240,11 @@ export function MapPage() {
   const renderTopHubs = () => (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-text text-sm">Khu vực nổi bật</h3>
-        <Badge tone="aqua">Trực tiếp</Badge>
+        <h3 className="font-bold text-text text-sm">{t('map.topHubs')}</h3>
+        <Badge tone="aqua">{t('map.live')}</Badge>
       </div>
       {topHubs.length === 0 ? (
-        <EmptyState icon={<MapIcon size={18} />} title="Chưa có dữ liệu" description="" />
+        <EmptyState icon={<MapIcon size={18} />} title={t('map.noData')} description="" />
       ) : (
         <ul className="max-h-[min(60vh,38rem)] space-y-3 overflow-y-auto overscroll-contain pr-1 xl:max-h-[calc(100dvh-15rem)]">
           {topHubs.map((h, i) => {
@@ -250,7 +254,7 @@ export function MapPage() {
                 <div className="flex items-center gap-3">
                   <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-surface-2 text-xs font-bold text-text-subtle">{i + 1}</span>
                   <span className="flex-1 text-xs font-semibold text-text truncate">{h.city}</span>
-                  <span className="text-xs font-bold text-primary-solid shrink-0">{h.count} người</span>
+                  <span className="text-xs font-bold text-primary-solid shrink-0">{t('map.people', { count: h.count })}</span>
                 </div>
                 <div className="h-1.5 w-full bg-plum-950/[0.04] rounded-full overflow-hidden">
                   <div className="h-full bg-primary-solid rounded-full" style={{ width: `${pct}%` }} />
@@ -269,8 +273,8 @@ export function MapPage() {
     <div className="mx-auto flex min-h-0 w-full flex-col px-1 sm:px-2 xl:h-[calc(100dvh-88px)] xl:overflow-hidden">
       {/* Header siêu tối giản đồng bộ toàn hệ thống */}
       <PageHeader
-        title="Bản đồ mạng lưới Alumni"
-        subtitle="Khám phá cộng đồng cựu sinh viên FPTU trên toàn cầu."
+        title={t('map.title')}
+        subtitle={t('map.subtitle')}
         icon={<MapIcon size={18} />}
         className="mb-2"
       />
@@ -283,17 +287,17 @@ export function MapPage() {
           <Card hover={false} className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-surface p-5 shadow-soft">
             <div className="mb-4 shrink-0">
               <h3 className="font-bold text-text text-sm flex items-center justify-between">
-                <span>Danh sách Alumni</span>
+                <span>{t('map.alumniList')}</span>
                 <span className="text-xs bg-primary-soft text-primary-solid px-2 py-0.5 rounded-full font-semibold">
-                  {searchedAlumni.length} kết quả
+                  {t('map.results', { count: searchedAlumni.length })}
                 </span>
               </h3>
               <div className="relative mt-3">
                 <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
                 <input
-                  aria-label="Tìm theo tên, công ty, vị trí..."
+                  aria-label={t('map.searchPlaceholder')}
                   type="text"
-                  placeholder="Tìm theo tên, công ty, vị trí..."
+                  placeholder={t('map.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-9 rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-brand-500/50 focus:bg-surface focus:outline-none focus:ring-1 focus:ring-primary/30 transition"
@@ -314,7 +318,7 @@ export function MapPage() {
                 : searchedAlumni.length === 0
                   ? (
                     <div className="h-40 flex items-center justify-center text-xs text-text-subtle text-center">
-                      Không tìm thấy alumni nào khớp với từ khóa.
+                      {t('map.noMatchingAlumni')}
                     </div>
                   )
                   : searchedAlumni.map((alumni) => {
@@ -338,7 +342,7 @@ export function MapPage() {
                             </p>
                             <div className="flex items-center gap-1 mt-1 text-xs text-text-subtle font-semibold">
                               <MapPin size={10} className="text-primary-solid shrink-0" />
-                              <span className="truncate">{alumni.city || 'Chưa xác định'}</span>
+                              <span className="truncate">{alumni.city || t('map.undetermined')}</span>
                               {alumni.cohort && (
                                 <>
                                   <span className="text-plum-300">•</span>
@@ -364,7 +368,7 @@ export function MapPage() {
               <div className="flex items-center gap-1.5 rounded-2xl border border-white/80 bg-surface p-1.5 shadow-soft backdrop-blur-xl">
                 <div className="hidden items-center gap-1.5 px-2 text-xs font-extrabold uppercase tracking-[0.12em] text-text-subtle sm:flex">
                   <SlidersHorizontal size={13} className="text-primary-solid" />
-                  <span>Khám phá</span>
+                  <span>{t('nav.more')}</span>
                 </div>
                 <button
                   type="button"
@@ -379,7 +383,7 @@ export function MapPage() {
                   )}
                 >
                   <GraduationCap size={14} className="shrink-0" />
-                  <span className="truncate">{selectedMajor ? selectedMajor.name : 'Tất cả ngành'}</span>
+                  <span className="truncate">{selectedMajor ? selectedMajor.name : t('map.allMajors')}</span>
                   <ChevronDown size={14} className={cn('shrink-0 transition-transform', isMajorMenuOpen && 'rotate-180')} />
                 </button>
                 <span className="hidden min-w-7 rounded-lg bg-surface-2 px-1.5 py-1 text-center text-xs font-extrabold text-text-subtle sm:inline-block">
@@ -390,7 +394,7 @@ export function MapPage() {
               {isMajorMenuOpen && (
                 <div className="absolute left-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface p-2 shadow-xl backdrop-blur-xl z-20">
                   <div className="border-b border-border px-2 pb-2 pt-1">
-                    <p className="text-xs font-extrabold text-text">Lọc theo ngành</p>
+                    <p className="text-xs font-extrabold text-text">{t('map.selectMajor')}</p>
                   </div>
                   <div className="mt-1 max-h-64 overflow-y-auto pr-0.5">
                     <button
@@ -406,7 +410,7 @@ export function MapPage() {
                       <span className="grid h-7 min-w-7 place-items-center rounded-lg bg-primary-soft px-1.5 text-xs font-extrabold text-primary-solid">
                         {rawCountData.length}
                       </span>
-                      <span className="flex-1 font-bold">Tất cả ngành</span>
+                      <span className="flex-1 font-bold">{t('map.allMajors')}</span>
                       {selectedMajorId === null && <Check size={14} className="text-primary-solid" />}
                     </button>
                     {sortedMajors.map((major) => {
@@ -442,7 +446,7 @@ export function MapPage() {
             {switchingState === 'switching' && (
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-surface backdrop-blur-md px-3 py-2 rounded-xl border border-border shadow-soft">
                 <Loader2 size={13} className="animate-spin text-primary-solid" />
-                <span className="text-xs font-semibold text-text-muted">Đang tải bản đồ...</span>
+                <span className="text-xs font-semibold text-text-muted">{t('map.loadingMap')}</span>
               </div>
             )}
 
@@ -466,7 +470,7 @@ export function MapPage() {
             {/* Bộ chuyển đổi chủ đề – floating bottom-left */}
             <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-1.5 bg-surface backdrop-blur-md px-3 py-2 rounded-2xl border border-border shadow-soft">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-extrabold text-text-subtle uppercase tracking-wider pr-1">Chủ đề:</span>
+                <span className="text-xs font-extrabold text-text-subtle uppercase tracking-wider pr-1">{t('map.themeLabel')}</span>
                 {AVAILABLE_THEMES.map((entry) => (
                   <button
                     key={entry.theme}

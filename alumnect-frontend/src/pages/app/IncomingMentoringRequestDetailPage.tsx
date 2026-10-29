@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   AlertCircle,
   ArrowLeft,
@@ -35,19 +36,19 @@ import { cn } from '@/lib/utils'
 
 const CARD = 'rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6'
 
-function formatDateTime(value?: string | null) {
+function formatDateTime(value?: string | null, lang: string = 'vi') {
   if (!value) return '—'
   const d = new Date(value)
   return Number.isNaN(d.getTime())
     ? value
-    : d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
+    : d.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function formatBudget(min?: number | null, max?: number | null) {
-  if (min == null && max == null) return 'Thỏa thuận'
+function formatBudget(min?: number | null, max?: number | null, t?: (key: string) => string) {
+  if (min == null && max == null) return t ? t('mentoring.negotiable') : 'Thỏa thuận'
   if (min != null && max != null && min !== max) return `${formatVnd(min)} – ${formatVnd(max)}`
   const value = max ?? min ?? 0
-  return value === 0 ? 'Miễn phí' : formatVnd(value)
+  return value === 0 ? (t ? t('mentoring.freeBudget') : 'Miễn phí') : formatVnd(value)
 }
 
 function formatFileSize(bytes?: number) {
@@ -74,6 +75,7 @@ function Fact({ icon, label, value }: { icon: ReactNode; label: string; value: R
  * Bố cục: nội dung yêu cầu bên trái; khung "Phản hồi của bạn" cố định bên phải để Mentor thao tác ngay.
  */
 function IncomingMentoringRequestDetailContent() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const requestId = id ? Number(id) : undefined
@@ -97,20 +99,20 @@ function IncomingMentoringRequestDetailContent() {
   }
 
   if (isError || !data) {
-    const errorMsg = (error as Error)?.message || 'Không tìm thấy yêu cầu Mentoring.'
+    const errorMsg = (error as Error)?.message || t('mentoring.requestNotFound')
     const isForbidden = errorMsg.includes('không có quyền') || errorMsg.includes('Forbidden')
     return (
       <EmptyState
         icon={<AlertCircle className="h-6 w-6" />}
-        title={isForbidden ? 'Bạn không xem được yêu cầu này' : 'Không tìm thấy yêu cầu'}
-        description={isForbidden ? 'Yêu cầu này không được gửi hoặc phân phối cho tài khoản Mentor của bạn.' : errorMsg}
+        title={isForbidden ? t('mentoring.cannotViewRequest') : t('mentoring.requestNotFoundTitle')}
+        description={isForbidden ? t('mentoring.requestNotSentToYou') : errorMsg}
         action={
           <div className="flex flex-wrap justify-center gap-2">
             <ButtonLink to="/app/mentoring/incoming-requests" size="sm" leftIcon={<ArrowLeft className="h-4 w-4" />}>
-              Về danh sách
+              {t('mentoring.backToList')}
             </ButtonLink>
             <Button variant="outline" size="sm" onClick={() => refetch()} leftIcon={<RefreshCw className="h-4 w-4" />}>
-              Thử lại
+              {t('common.retry')}
             </Button>
           </div>
         }
@@ -119,7 +121,7 @@ function IncomingMentoringRequestDetailContent() {
   }
 
   const { responseStatus, canRespond, canMessage, attachments } = data
-  const taskLabel = TASK_TYPE_OPTIONS.find((t) => t.value === data.taskType)?.label || data.taskType || 'Không xác định'
+  const taskLabel = TASK_TYPE_OPTIONS.find((t) => t.value === data.taskType)?.label || data.taskType || t('mentoring.undetermined')
 
   const handleModalSubmit = async (responseNote?: string) => {
     if (!requestId || !modalType) return
@@ -142,7 +144,7 @@ function IncomingMentoringRequestDetailContent() {
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted transition-colors hover:text-primary-solid"
         >
           <ArrowLeft className="h-4 w-4" />
-          Yêu cầu gửi đến
+          {t('mentoring.incomingRequestsNav')}
         </Link>
         <Button
           variant="outline"
@@ -151,7 +153,7 @@ function IncomingMentoringRequestDetailContent() {
           disabled={isFetching}
           leftIcon={<RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />}
         >
-          Làm mới
+          {t('mentoring.refreshBtn')}
         </Button>
       </div>
 
@@ -160,13 +162,13 @@ function IncomingMentoringRequestDetailContent() {
           <MentorResponseStatusBadge status={responseStatus} />
           <RequestTypeBadge type={data.requestType} />
           {data.requestStatus !== 'OPEN' && <RequestStatusBadge status={data.requestStatus} />}
-          {data.sameIndustry && <MentoringBadge tone="navy">Cùng ngành</MentoringBadge>}
-          {data.sameFormat && <MentoringBadge tone="mint">Cùng hình thức</MentoringBadge>}
+          {data.sameIndustry && <MentoringBadge tone="navy">{t('mentoring.sameIndustryBadge')}</MentoringBadge>}
+          {data.sameFormat && <MentoringBadge tone="mint">{t('mentoring.sameFormatBadge')}</MentoringBadge>}
         </div>
         <h1 className="mt-3 font-display text-xl font-bold tracking-tight text-text sm:text-2xl">{data.title}</h1>
         <p className="mt-2 text-xs text-text-subtle">
-          Nhận lúc {formatDateTime(data.distributedAt || data.createdAt)}
-          {data.industryName ? ` · Ngành ${data.industryName}` : ''}
+          {t('mentoring.receivedTimeAt', { time: formatDateTime(data.distributedAt || data.createdAt, i18n.language) })}
+          {data.industryName ? t('mentoring.industryWithDot', { industry: data.industryName }) : ''}
         </p>
       </header>
 
@@ -174,15 +176,15 @@ function IncomingMentoringRequestDetailContent() {
         {/* Khung phản hồi: hiện trước trên di động, cố định bên phải trên màn hình rộng */}
         <aside className="space-y-5 lg:order-2 lg:col-span-4">
           <section className={cn(CARD, 'lg:sticky lg:top-4')}>
-            <h2 className="font-display text-base font-bold text-text">Phản hồi của bạn</h2>
+            <h2 className="font-display text-base font-bold text-text">{t('mentoring.yourResponseHeading')}</h2>
 
             {responseStatus === 'WAITING' && canRespond && (
               <div className="mt-3 space-y-3">
                 <p className="text-sm leading-relaxed text-text-muted">
-                  Đồng ý để mở trao đổi với {data.studentName}. Thỏa thuận và thanh toán chỉ được tạo khi hai bên thống nhất.
+                  {t('mentoring.acceptExchangePrompt', { name: data.studentName })}
                 </p>
                 <Button className="w-full" onClick={() => setModalType('ACCEPT')} leftIcon={<CheckCircle2 className="h-4 w-4" />}>
-                  Đồng ý trao đổi
+                  {t('mentoring.agreeToDiscussBtn')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -190,7 +192,7 @@ function IncomingMentoringRequestDetailContent() {
                   leftIcon={<XCircle className="h-4 w-4" />}
                   className="w-full border border-danger-border text-danger hover:bg-danger-soft hover:text-danger"
                 >
-                  Từ chối
+                  {t('mentoring.declineExchangeBtn')}
                 </Button>
               </div>
             )}
@@ -199,7 +201,7 @@ function IncomingMentoringRequestDetailContent() {
               <div className="mt-3 flex items-start gap-2 rounded-xl bg-warning-soft p-3 text-xs leading-relaxed text-warning">
                 <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
-                  Chưa thể phản hồi: yêu cầu đã đóng, hoặc hồ sơ Mentor của bạn cần đang hoạt động và gói thành viên còn hạn.
+                  {t('mentoring.cannotRespondNotice')}
                 </span>
               </div>
             )}
@@ -207,12 +209,12 @@ function IncomingMentoringRequestDetailContent() {
             {responseStatus === 'ACCEPTED' && (
               <div className="mt-3 space-y-3">
                 <div className="rounded-xl bg-success-soft p-3 text-xs leading-relaxed text-success">
-                  <p className="font-semibold">Bạn đã đồng ý trao đổi · {formatDateTime(data.respondedAt)}</p>
+                  <p className="font-semibold">{t('mentoring.youAgreedToDiscuss', { time: formatDateTime(data.respondedAt, i18n.language) })}</p>
                   {data.responseNote && <p className="mt-1">“{data.responseNote}”</p>}
                 </div>
                 {data.otherMentorSelected && (
                   <p className="rounded-xl bg-warning-soft p-3 text-xs text-warning">
-                    Học viên đã chọn Mentor khác. Cuộc trò chuyện được giữ lại ở chế độ chỉ đọc.
+                    {t('mentoring.otherMentorSelectedNotice')}
                   </p>
                 )}
                 {canMessage && data.conversationId && (
@@ -221,7 +223,7 @@ function IncomingMentoringRequestDetailContent() {
                     leftIcon={<MessageSquare className="h-4 w-4" />}
                     className="w-full"
                   >
-                    Mở trao đổi
+                    {t('mentoring.openChatBtn')}
                   </ButtonLink>
                 )}
               </div>
@@ -229,20 +231,20 @@ function IncomingMentoringRequestDetailContent() {
 
             {responseStatus === 'DECLINED' && (
               <div className="mt-3 rounded-xl bg-danger-soft p-3 text-xs leading-relaxed text-danger">
-                <p className="font-semibold">Bạn đã từ chối · {formatDateTime(data.respondedAt)}</p>
-                {data.responseNote && <p className="mt-1">Lý do: “{data.responseNote}”</p>}
+                <p className="font-semibold">{t('mentoring.youDeclinedRequest', { time: formatDateTime(data.respondedAt, i18n.language) })}</p>
+                {data.responseNote && <p className="mt-1">{t('mentoring.declineReasonPrefix', { reason: data.responseNote })}</p>}
               </div>
             )}
 
             {responseStatus === 'EXPIRED' && (
               <p className="mt-3 rounded-xl bg-surface-2 p-3 text-xs text-text-muted dark:bg-white/[0.04]">
-                Yêu cầu đã quá hạn phản hồi.
+                {t('mentoring.requestExpiredNotice')}
               </p>
             )}
           </section>
 
           <section className={CARD}>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">Người gửi</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">{t('mentoring.senderHeading')}</h2>
             <div className="mt-3 flex items-center gap-3">
               <Avatar src={data.studentAvatar || undefined} name={data.studentName} size={44} />
               <div className="min-w-0">
@@ -254,26 +256,26 @@ function IncomingMentoringRequestDetailContent() {
         </aside>
 
         <section className={cn(CARD, 'lg:order-1 lg:col-span-8')}>
-          <h2 className="font-display text-base font-bold text-text">Nội dung yêu cầu</h2>
+          <h2 className="font-display text-base font-bold text-text">{t('mentoring.requestContentHeading')}</h2>
           <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-text">
             {data.description}
           </p>
 
           <dl className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            <Fact icon={<Coins />} label="Ngân sách" value={formatBudget(data.budgetMin, data.budgetMax)} />
-            <Fact icon={<Briefcase />} label="Loại công việc" value={taskLabel} />
+            <Fact icon={<Coins />} label={t('mentoring.budgetLabel')} value={formatBudget(data.budgetMin, data.budgetMax, t)} />
+            <Fact icon={<Briefcase />} label={t('mentoring.taskTypeFact')} value={taskLabel} />
             <Fact
               icon={<Laptop />}
-              label="Hình thức làm việc"
-              value={data.workingMode ? WORKING_MODE_LABELS[data.workingMode] : 'Linh hoạt'}
+              label={t('mentoring.workingModeFact')}
+              value={data.workingMode ? WORKING_MODE_LABELS[data.workingMode] : t('mentoring.flexibleWorkingMode')}
             />
             <Fact
               icon={<Users />}
-              label="Hình thức tham gia"
-              value={data.participationType ? PARTICIPATION_TYPE_LABELS[data.participationType] : 'Cá nhân'}
+              label={t('mentoring.participationTypeFact')}
+              value={data.participationType ? PARTICIPATION_TYPE_LABELS[data.participationType] : t('mentoring.individualParticipation')}
             />
             {data.expectedDeadline && (
-              <Fact icon={<CalendarClock />} label="Hạn chót mong muốn" value={formatDateTime(data.expectedDeadline)} />
+              <Fact icon={<CalendarClock />} label={t('mentoring.expectedDeadlineFact')} value={formatDateTime(data.expectedDeadline, i18n.language)} />
             )}
           </dl>
 
@@ -281,7 +283,7 @@ function IncomingMentoringRequestDetailContent() {
             <div className="mt-5 border-t border-border pt-4">
               <h3 className="flex items-center gap-1.5 text-sm font-semibold text-text">
                 <Paperclip className="h-4 w-4 text-text-subtle" />
-                Tài liệu đính kèm ({attachments.length})
+                {t('mentoring.attachedDocumentsHeading', { count: attachments.length })}
               </h3>
               <ul className="mt-2.5 space-y-2">
                 {attachments.map((file, idx) => (
@@ -293,7 +295,7 @@ function IncomingMentoringRequestDetailContent() {
                       className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5 transition-colors hover:border-brand-500/40 hover:bg-surface-2 dark:hover:bg-white/[0.04]"
                     >
                       <span className="flex min-w-0 items-center gap-2 text-sm text-text">
-                        <span className="truncate font-medium">{file.fileName || `Tài liệu ${idx + 1}`}</span>
+                        <span className="truncate font-medium">{file.fileName || t('mentoring.defaultDocumentTitle', { index: idx + 1 })}</span>
                         {file.fileSize ? <span className="shrink-0 text-xs text-text-subtle">{formatFileSize(file.fileSize)}</span> : null}
                       </span>
                       <Download className="h-4 w-4 shrink-0 text-text-subtle" />
@@ -330,3 +332,4 @@ export default function IncomingMentoringRequestDetailPage() {
     </MentoringTermsGate>
   )
 }
+

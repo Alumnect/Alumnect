@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import {
   Flag,
   Loader2,
@@ -17,7 +18,6 @@ import { cn } from '@/lib/utils'
 import { useCreatePostReport } from '../hooks/useCreatePostReport'
 import {
   createPostReportSchema,
-  REPORT_REASON_LABELS,
   REPORT_REASONS,
   type CreatePostReportInput,
   type ReportReason,
@@ -27,7 +27,8 @@ interface ReasonConfig {
   icon: typeof Ban
   iconColor: string
   iconBg: string
-  description: string
+  labelKey: string
+  descKey: string
 }
 
 const REASON_CONFIG: Record<ReportReason, ReasonConfig> = {
@@ -35,31 +36,36 @@ const REASON_CONFIG: Record<ReportReason, ReasonConfig> = {
     icon: Ban,
     iconColor: 'text-warning',
     iconBg: 'bg-warning-soft',
-    description: 'Nội dung lặp lại, quảng cáo rác hoặc không liên quan.',
+    labelKey: 'feed.reportReasonSpamTitle',
+    descKey: 'feed.reportReasonSpam',
   },
   INAPPROPRIATE: {
     icon: EyeOff,
     iconColor: 'text-danger',
     iconBg: 'bg-danger-soft',
-    description: 'Nội dung bạo lực, phản cảm hoặc vi phạm chuẩn mực.',
+    labelKey: 'feed.reportReasonInappropriateTitle',
+    descKey: 'feed.reportReasonInappropriate',
   },
   MISINFORMATION: {
     icon: AlertTriangle,
     iconColor: 'text-orange-600 dark:text-orange-400',
     iconBg: 'bg-orange-500/10',
-    description: 'Thông tin sai sự thật, gây hoang mang hoặc hiểu nhầm.',
+    labelKey: 'feed.reportReasonMisinformationTitle',
+    descKey: 'feed.reportReasonMisinformation',
   },
   SCAM_OR_FRAUD: {
     icon: ShieldAlert,
     iconColor: 'text-danger',
     iconBg: 'bg-danger-soft',
-    description: 'Dấu hiệu lừa đảo tài chính, giả mạo danh tính.',
+    labelKey: 'feed.reportReasonScamTitle',
+    descKey: 'feed.reportReasonScam',
   },
   OTHER: {
     icon: HelpCircle,
     iconColor: 'text-info',
     iconBg: 'bg-info-soft',
-    description: 'Vấn đề khác cần được quản trị viên xem xét riêng.',
+    labelKey: 'feed.reportReasonOtherTitle',
+    descKey: 'feed.reportReasonOther',
   },
 }
 
@@ -72,6 +78,7 @@ export function ReportPostModal({
   postId: string
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const createReport = useCreatePostReport()
   const {
     register,
@@ -103,11 +110,11 @@ export function ReportPostModal({
       { postId, input },
       {
         onSuccess: () => {
-          toast.success('Đã gửi báo cáo vi phạm thành công')
+          toast.success(t('feed.reportSuccess'))
           onClose()
         },
         onError: (err: any) => {
-          toast.error(err?.message || 'Không thể gửi báo cáo')
+          toast.error(err?.message || t('feed.reportError'))
         },
       },
     )
@@ -117,7 +124,7 @@ export function ReportPostModal({
     <Modal
       isOpen={open}
       onClose={close}
-      title="Báo cáo bài viết"
+      title={t('feed.reportPostTitle')}
       icon={<Flag size={18} className="text-danger" />}
       maxWidthClassName="max-w-[480px]"
       footer={(
@@ -128,7 +135,7 @@ export function ReportPostModal({
             disabled={createReport.isPending}
             className="rounded-xl px-4 py-2 font-semibold text-xs text-text-muted"
           >
-            Hủy
+            {t('common.cancel')}
           </Button>
           <Button
             form="report-post-form"
@@ -137,7 +144,7 @@ export function ReportPostModal({
             className="rounded-xl px-5 py-2 font-bold text-xs bg-primary-solid hover:bg-[#d96010] text-on-primary shadow-xs disabled:opacity-50"
             leftIcon={createReport.isPending ? <Loader2 size={15} className="animate-spin" /> : <Flag size={15} />}
           >
-            {createReport.isPending ? 'Đang gửi...' : 'Gửi báo cáo'}
+            {createReport.isPending ? t('feed.sendingReport') : t('feed.sendReport')}
           </Button>
         </div>
       )}
@@ -146,10 +153,10 @@ export function ReportPostModal({
         {/* Danh sách lý do báo cáo */}
         <fieldset>
           <legend className="text-xs font-bold uppercase tracking-wider text-text-subtle mb-2">
-            Lý do báo cáo <span className="text-danger">*</span>
+            {t('feed.reportReason')} <span className="text-danger">*</span>
           </legend>
           <input type="hidden" {...register('reason')} />
-          <div role="radiogroup" aria-label="Lý do báo cáo" className="space-y-1.5">
+          <div role="radiogroup" aria-label={t('feed.reportReason')} className="space-y-1.5">
             {REPORT_REASONS.map((value) => {
               const selected = reason === value
               const cfg = REASON_CONFIG[value]
@@ -175,10 +182,10 @@ export function ReportPostModal({
                     </span>
                     <div className="min-w-0">
                       <span className={cn('text-xs font-bold block truncate', selected ? 'text-primary-solid dark:text-primary' : 'text-text')}>
-                        {REPORT_REASON_LABELS[value]}
+                        {t(cfg.labelKey)}
                       </span>
                       <p className="text-xs text-text-subtle truncate">
-                        {cfg.description}
+                        {t(cfg.descKey)}
                       </p>
                     </div>
                   </div>
@@ -204,7 +211,12 @@ export function ReportPostModal({
         {/* Ô mô tả chi tiết */}
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1">
-            Mô tả chi tiết {reason === 'OTHER' ? <span className="text-danger">*</span> : <span className="text-text-subtle font-normal normal-case">(không bắt buộc)</span>}
+            {t('feed.reportDescription')}{' '}
+            {reason === 'OTHER' ? (
+              <span className="text-danger">*</span>
+            ) : (
+              <span className="text-text-subtle font-normal normal-case">{t('feed.reportOptional')}</span>
+            )}
           </label>
           <textarea
             {...register('description')}
@@ -213,8 +225,8 @@ export function ReportPostModal({
             aria-invalid={!!errors.description}
             placeholder={
               reason === 'OTHER'
-                ? 'Vui lòng mô tả cụ thể vi phạm của bài viết...'
-                : 'Bổ sung thông tin giúp chúng tôi xem xét nhanh hơn...'
+                ? t('feed.reportRequiredOther')
+                : t('feed.reportPlaceholderGeneral')
             }
             className={cn(
               'w-full resize-none rounded-xl border bg-surface px-3 py-2 text-xs text-text placeholder:text-text-subtle outline-none transition dark:placeholder:text-text-subtle',
@@ -233,7 +245,7 @@ export function ReportPostModal({
 
         {createReport.isError && (
           <p role="alert" className="rounded-xl border border-danger-border bg-danger-soft px-3 py-2 text-xs font-medium text-danger">
-            {createReport.error instanceof Error ? createReport.error.message : 'Không thể gửi báo cáo. Vui lòng thử lại.'}
+            {createReport.error instanceof Error ? createReport.error.message : t('feed.reportError')}
           </p>
         )}
       </form>

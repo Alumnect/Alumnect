@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { CheckCircle2, Clock, Users, XCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
@@ -34,18 +35,19 @@ export function RequestResponseSummaryCard({
   directMentorStatus = 'WAITING',
   className,
 }: RequestResponseSummaryCardProps) {
+  const { t } = useTranslation()
   if (requestType === 'DIRECT') {
     const hint =
       directMentorStatus === 'ACCEPTED'
-        ? 'Mentor đã đồng ý. Mở tin nhắn để trao đổi chi tiết.'
+        ? t('mentoring.mentorAcceptedMessage', 'Mentor đã đồng ý. Mở tin nhắn để trao đổi chi tiết.')
         : directMentorStatus === 'DECLINED'
-          ? 'Mentor chưa sắp xếp được. Bạn có thể gửi yêu cầu cho Mentor khác.'
-          : 'Mentor đang xem xét. Bạn sẽ nhận thông báo khi có phản hồi.'
+          ? t('mentoring.mentorUnavailableMessage', 'Mentor chưa sắp xếp được. Bạn có thể gửi yêu cầu cho Mentor khác.')
+          : t('mentoring.mentorReviewingMessage', 'Mentor đang xem xét. Bạn sẽ nhận thông báo khi có phản hồi.')
     return (
       <section className={cn(CARD, className)}>
-        <h2 className="font-display text-base font-bold text-text">Phản hồi của Mentor</h2>
+        <h2 className="font-display text-base font-bold text-text">{t('mentoring.mentorResponseHeading')}</h2>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <span className="truncate text-sm font-medium text-text">{targetMentorName || 'Mentor đã chọn'}</span>
+          <span className="truncate text-sm font-medium text-text">{targetMentorName || t('mentoring.selectedMentorDefault')}</span>
           <MentorResponseStatusBadge status={directMentorStatus || 'WAITING'} />
         </div>
         <p className="mt-2 text-xs leading-relaxed text-text-subtle">{hint}</p>
@@ -62,10 +64,10 @@ export function RequestResponseSummaryCard({
   return (
     <section className={cn(CARD, className)}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-display text-base font-bold text-text">Phản hồi của Mentor</h2>
+        <h2 className="font-display text-base font-bold text-text">{t('mentoring.mentorResponseHeading')}</h2>
         <span className="inline-flex items-center gap-1 text-xs text-text-subtle">
           <Users className="h-3.5 w-3.5" />
-          {total} Mentor nhận
+          {t('mentoring.mentorsReceivedCount', { total })}
         </span>
       </div>
 
@@ -78,17 +80,17 @@ export function RequestResponseSummaryCard({
       )}
 
       <div className="mt-3 grid grid-cols-3 gap-2">
-        <Stat icon={<CheckCircle2 />} label="Đồng ý" value={accepted} className="text-success" />
-        <Stat icon={<Clock />} label="Đang chờ" value={waiting} className="text-warning" />
-        <Stat icon={<XCircle />} label="Từ chối" value={declined} className="text-danger" />
+        <Stat icon={<CheckCircle2 />} label={t('mentoring.responseStatAgreed')} value={accepted} className="text-success" />
+        <Stat icon={<Clock />} label={t('mentoring.responseStatWaiting')} value={waiting} className="text-warning" />
+        <Stat icon={<XCircle />} label={t('mentoring.responseStatDeclined')} value={declined} className="text-danger" />
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-text-subtle">
         {accepted > 0
-          ? `${accepted} Mentor đã đồng ý trao đổi. Bấm "Nhắn tin" ở phản hồi của Mentor để bắt đầu.`
+          ? t('mentoring.matchingAcceptedMessage', { count: accepted, defaultValue: `${accepted} Mentor đã đồng ý trao đổi. Bấm "Nhắn tin" ở phản hồi của Mentor để bắt đầu.` })
           : total === 0
-            ? 'Hệ thống đang tìm Mentor phù hợp với yêu cầu này.'
-            : `Đang chờ ${waiting} Mentor phản hồi.`}
+            ? t('mentoring.matchingSearchingMessage', 'Hệ thống đang tìm Mentor phù hợp với yêu cầu này.')
+            : t('mentoring.matchingWaitingCountMessage', { count: waiting, defaultValue: `Đang chờ ${waiting} Mentor phản hồi.` })}
       </p>
     </section>
   )

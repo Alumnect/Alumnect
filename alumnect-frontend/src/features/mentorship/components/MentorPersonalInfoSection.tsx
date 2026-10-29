@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { User, Mail, Phone, GraduationCap, Building2, ExternalLink } from 'lucide-react'
 import type { PersonalInfo } from '../model/mentorRegistrationTypes'
 
@@ -8,6 +9,8 @@ interface Props {
 }
 
 export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => {
+  const { t } = useTranslation()
+
   return (
     <div className="bg-surface rounded-2xl border border-cream-300/80 dark:border-border p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-border dark:border-border mb-6">
@@ -16,9 +19,9 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
             1
           </div>
           <div>
-            <h3 className="font-semibold text-text text-lg">Thông tin cá nhân</h3>
+            <h3 className="font-semibold text-text text-lg">{t('mentoring.personalInfoStepTitle')}</h3>
             <p className="text-xs text-text-subtle">
-              Đồng bộ tự động từ hồ sơ cá nhân của bạn
+              {t('mentoring.syncFromProfileDesc')}
             </p>
           </div>
         </div>
@@ -28,7 +31,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
           target="_blank"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-solid hover:text-primary-solid bg-primary-soft hover:bg-primary-soft px-3.5 py-2 rounded-xl border border-primary-soft-border transition-colors"
         >
-          <span>Chỉnh sửa tại hồ sơ</span>
+          <span>{t('mentoring.editInProfileBtn')}</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -55,7 +58,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
           <div className="p-3.5 rounded-xl bg-cream-100/80 dark:bg-bg/60 border border-cream-300/60 dark:border-border">
             <span className="text-xs font-semibold text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-1.5">
               <User className="w-3.5 h-3.5 text-primary-solid" />
-              <span>Họ và tên</span>
+              <span>{t('mentoring.fullName')}</span>
             </span>
             <div className="text-sm font-bold text-text truncate">
               {personalInfo?.fullName || '—'}
@@ -66,7 +69,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
           <div className="p-3.5 rounded-xl bg-cream-100/80 dark:bg-bg/60 border border-cream-300/60 dark:border-border">
             <span className="text-xs font-semibold text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-1.5">
               <Mail className="w-3.5 h-3.5 text-text-subtle" />
-              <span>Email liên hệ</span>
+              <span>{t('mentoring.contactEmail')}</span>
             </span>
             <div className="text-sm font-semibold text-text-muted truncate" title={personalInfo?.email}>
               {personalInfo?.email || '—'}
@@ -77,10 +80,10 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
           <div className="p-3.5 rounded-xl bg-cream-100/80 dark:bg-bg/60 border border-cream-300/60 dark:border-border">
             <span className="text-xs font-semibold text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-1.5">
               <Phone className="w-3.5 h-3.5 text-primary-solid" />
-              <span>Số điện thoại</span>
+              <span>{t('mentoring.phoneNumber')}</span>
             </span>
             <div className="text-sm font-semibold text-text truncate">
-              {personalInfo?.phone || <span className="text-text-subtle dark:text-text-subtle font-normal italic">Chưa cập nhật</span>}
+              {personalInfo?.phone || <span className="text-text-subtle dark:text-text-subtle font-normal italic">{t('mentoring.notUpdated')}</span>}
             </div>
           </div>
 
@@ -88,10 +91,10 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
           <div className="p-3.5 rounded-xl bg-cream-100/80 dark:bg-bg/60 border border-cream-300/60 dark:border-border">
             <span className="text-xs font-semibold text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-1.5">
               <Building2 className="w-3.5 h-3.5 text-primary-solid" />
-              <span>Cơ sở đào tạo</span>
+              <span>{t('mentoring.campus')}</span>
             </span>
             <div className="text-sm font-semibold text-text truncate">
-              {personalInfo?.campus || <span className="text-text-subtle dark:text-text-subtle font-normal italic">Chưa cập nhật</span>}
+              {personalInfo?.campus || <span className="text-text-subtle dark:text-text-subtle font-normal italic">{t('mentoring.notUpdated')}</span>}
             </div>
           </div>
 
@@ -99,10 +102,10 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
           <div className="p-3.5 rounded-xl bg-cream-100/80 dark:bg-bg/60 border border-cream-300/60 dark:border-border">
             <span className="text-xs font-semibold text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-primary-solid" />
-              <span>Chuyên ngành & Mã SV</span>
+              <span>{t('mentoring.majorAndStudentCode')}</span>
             </span>
             <div className="text-sm font-semibold text-text flex items-center justify-between gap-2">
-              <span className="truncate">{personalInfo?.majorName || 'Chưa cập nhật'}</span>
+              <span className="truncate">{personalInfo?.majorName || t('mentoring.notUpdated')}</span>
               {personalInfo?.studentCode && (
                 <span className="px-1.5 py-0.5 rounded bg-cream-300/70 dark:bg-surface-2 text-text-muted font-mono text-xs shrink-0">
                   {personalInfo.studentCode}
@@ -115,10 +118,10 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
           <div className="p-3.5 rounded-xl bg-cream-100/80 dark:bg-bg/60 border border-cream-300/60 dark:border-border">
             <span className="text-xs font-semibold text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-text-subtle" />
-              <span>Năm tốt nghiệp</span>
+              <span>{t('mentoring.graduationYear')}</span>
             </span>
             <div className="text-sm font-semibold text-text truncate">
-              {personalInfo?.graduationYear || <span className="text-text-subtle dark:text-text-subtle font-normal italic">Chưa cập nhật</span>}
+              {personalInfo?.graduationYear || <span className="text-text-subtle dark:text-text-subtle font-normal italic">{t('mentoring.notUpdated')}</span>}
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Crown, Loader2, Lock, Search, ShieldCheck, ShieldOff, UserX, X } from 'lucide-react'
+import { useTranslation, Trans } from 'react-i18next'
 import { Avatar, Badge, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
@@ -17,9 +18,8 @@ import { GROUP_SEARCH_MAX } from '../model/group'
 import type { GroupMember, GroupRole } from '../model/group'
 import { ConfirmDialog } from './ConfirmDialog'
 
-const ROLE_LABEL: Record<GroupRole, string> = { OWNER: 'Chủ sở hữu', ADMIN: 'Quản trị viên', MEMBER: 'Thành viên' }
-
 export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }: { groupId: number; canView: boolean; viewerRole: GroupRole | null; viewerUserId: number | null }) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const keyword = useDebouncedValue(search, 400)
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } = useGroupMembers(groupId, keyword, canView)
@@ -28,14 +28,25 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
   const roleMut = useChangeMemberRole(groupId)
   const [toRemove, setToRemove] = useState<GroupMember | null>(null)
 
+  const getRoleLabel = (role: GroupRole): string => {
+    switch (role) {
+      case 'OWNER':
+        return t('groups.ownerRole')
+      case 'ADMIN':
+        return t('groups.adminRole')
+      default:
+        return t('groups.memberRole')
+    }
+  }
+
   if (!canView) {
     return (
       <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border-strong px-6 py-10 text-center">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
           <Lock size={22} />
         </span>
-        <p className="font-bold text-text">Danh sách thành viên chỉ dành cho thành viên nhóm</p>
-        <p className="max-w-sm text-sm text-text-subtle">Hãy tham gia hội nhóm để xem thành viên và nội dung dành riêng cho thành viên.</p>
+        <p className="font-bold text-text">{t('groups.membersOnlyListTitle')}</p>
+        <p className="max-w-sm text-sm text-text-subtle">{t('groups.membersOnlyListDesc')}</p>
       </div>
     )
   }
@@ -54,8 +65,8 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
     roleMut.mutate(
       { userId: m.userId, role },
       {
-        onSuccess: (res) => toast.success(res.message || 'Đã cập nhật vai trò.'),
-        onError: (err) => toast.error((err as Error).message || 'Không thể thay đổi vai trò.'),
+        onSuccess: (res) => toast.success(res.message || t('groups.roleUpdated')),
+        onError: (err) => toast.error((err as Error).message || t('groups.roleUpdateError')),
       },
     )
   }
@@ -64,10 +75,10 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
     if (!toRemove) return
     removeMut.mutate(toRemove.userId, {
       onSuccess: (res) => {
-        toast.success(res.message || 'Đã xóa thành viên.')
+        toast.success(res.message || t('groups.memberRemoved')),
         setToRemove(null)
       },
-      onError: (err) => toast.error((err as Error).message || 'Không thể xóa thành viên.'),
+      onError: (err) => toast.error((err as Error).message || t('groups.memberRemoveError')),
     })
   }
 
@@ -76,15 +87,15 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
       <div className="relative mb-4">
         <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
         <input
-          aria-label="Tìm thành viên theo tên…"
+          aria-label={t('groups.searchMemberPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           maxLength={GROUP_SEARCH_MAX}
-          placeholder="Tìm thành viên theo tên…"
+          placeholder={t('groups.searchMemberPlaceholder')}
           className="h-10 w-full rounded-xl bg-surface-2 pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
         {search && (
-          <button onClick={() => setSearch('')} aria-label="Xóa tìm kiếm" className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle hover:bg-border">
+          <button onClick={() => setSearch('')} aria-label={t('groups.clearSearch')} className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle hover:bg-border">
             <X size={13} />
           </button>
         )}
@@ -97,12 +108,12 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
           ))}
         </div>
       ) : isError ? (
-        <p className="rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">{(error as Error)?.message ?? 'Không tải được danh sách thành viên.'}</p>
+        <p className="rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">{(error as Error)?.message ?? t('groups.loadMembersError')}</p>
       ) : members.length === 0 ? (
-        <EmptyState icon={<Search size={22} />} title="Không tìm thấy thành viên" description={keyword ? 'Thử từ khóa khác.' : 'Hội nhóm chưa có thành viên.'} className="py-10" />
+        <EmptyState icon={<Search size={22} />} title={t('groups.noMembers')} description={keyword ? t('groups.noMembersMatch') : t('groups.noMembersDesc')} className="py-10" />
       ) : (
         <>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">{total} thành viên</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">{t('groups.membersCount', { count: total })}</p>
           <ul className="divide-y divide-border">
             {members.map((m) => (
               <li key={m.userId} className="flex items-center gap-3 py-3">
@@ -117,7 +128,7 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
                 </div>
                 {m.role !== 'MEMBER' && (
                   <Badge tone={m.role === 'OWNER' ? 'gold' : 'brand'} icon={m.role === 'OWNER' ? <Crown size={10} /> : <ShieldCheck size={10} />} className="px-2 py-0.5 text-xs">
-                    {ROLE_LABEL[m.role]}
+                    {getRoleLabel(m.role)}
                   </Badge>
                 )}
                 {(canChangeRole(m) || canRemove(m)) && (
@@ -131,7 +142,7 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
                         leftIcon={m.role === 'ADMIN' ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
                         className="w-auto px-3.5 justify-center rounded-full border-border-strong text-xs font-semibold text-text-muted hover:bg-surface-2"
                       >
-                        {m.role === 'ADMIN' ? 'Gỡ quyền Quản trị' : 'Bổ nhiệm Quản trị'}
+                        {m.role === 'ADMIN' ? t('groups.revokeAdmin') : t('groups.assignAdmin')}
                       </Button>
                     )}
                     {canRemove(m) && (
@@ -139,11 +150,11 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
                         variant="outline"
                         size="sm"
                         onClick={() => setToRemove(m)}
-                        aria-label={`Xóa ${m.fullName} khỏi nhóm`}
+                        aria-label={t('groups.removeMemberAria', { name: m.fullName })}
                         leftIcon={<UserX size={14} />}
                         className="w-auto px-3.5 justify-center rounded-full border-danger-border text-xs font-semibold text-danger hover:bg-danger-soft hover:border-danger-border"
                       >
-                        Xóa
+                        {t('groups.deleteAction')}
                       </Button>
                     )}
                   </div>
@@ -154,7 +165,7 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
           {hasNextPage && (
             <div className="pt-3 text-center">
               <Button variant="secondary" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage} leftIcon={isFetchingNextPage ? <Loader2 size={14} className="animate-spin" /> : undefined}>
-                {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm thành viên'}
+                {isFetchingNextPage ? t('common.loading') : t('groups.loadMoreMembers')}
               </Button>
             </div>
           )}
@@ -163,13 +174,15 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
 
       <ConfirmDialog
         open={toRemove !== null}
-        title="Xóa thành viên"
+        title={t('groups.removeMember')}
         message={
-          <>
-            Bạn có chắc muốn xóa <b>{toRemove?.fullName}</b> khỏi hội nhóm? Người này sẽ mất quyền truy cập nội dung dành cho thành viên.
-          </>
+          <Trans
+            i18nKey="groups.removeMemberConfirmText"
+            values={{ name: toRemove?.fullName }}
+            components={{ b: <b /> }}
+          />
         }
-        confirmLabel="Xóa khỏi nhóm"
+        confirmLabel={t('groups.removeMemberFromGroupConfirm')}
         danger
         loading={removeMut.isPending}
         onConfirm={confirmRemove}

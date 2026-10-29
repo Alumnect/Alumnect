@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, UserX, AlertTriangle, Search, Sparkles, UserCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { Container } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui'
@@ -33,6 +34,8 @@ function DirectRequestSkeleton() {
  * Trạng thái Không tìm thấy Mentor (Not Found).
  */
 function MentorNotFoundState({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation()
+
   return (
     <Card hover={false} className="p-8 sm:p-12 text-center max-w-lg mx-auto space-y-5 border border-border dark:bg-surface">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-danger-soft text-danger">
@@ -40,10 +43,10 @@ function MentorNotFoundState({ onBack }: { onBack: () => void }) {
       </div>
       <div className="space-y-1.5">
         <h3 className="font-display text-xl font-bold text-text">
-          Không tìm thấy hồ sơ Mentor
+          {t('mentoring.mentorNotFoundTitle')}
         </h3>
         <p className="text-xs text-text-subtle leading-relaxed">
-          Mentor bạn đang tìm kiếm không tồn tại hoặc đã ngừng cung cấp dịch vụ cố vấn trên hệ thống AlumNect.
+          {t('mentoring.mentorNotFoundDesc')}
         </p>
       </div>
       <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -52,9 +55,9 @@ function MentorNotFoundState({ onBack }: { onBack: () => void }) {
           size="md"
           onClick={onBack}
           leftIcon={<ArrowLeft className="h-4 w-4" />}
-          className="w-full sm:w-auto rounded-xl font-bold"
+          className="w-full sm:w-auto rounded-xl font-bold cursor-pointer"
         >
-          Quay lại
+          {t('common.back')}
         </Button>
         <Link to="/app/mentoring/discover" className="w-full sm:w-auto">
           <Button
@@ -63,7 +66,7 @@ function MentorNotFoundState({ onBack }: { onBack: () => void }) {
             leftIcon={<Search className="h-4 w-4" />}
             className="w-full rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
-            Khám phá Mentor khác
+            {t('mentoring.exploreOtherMentors')}
           </Button>
         </Link>
       </div>
@@ -75,6 +78,7 @@ function MentorNotFoundState({ onBack }: { onBack: () => void }) {
  * Trạng thái Người dùng tự gửi yêu cầu cho chính mình (Self Mentoring Request).
  */
 function SelfRequestState({ mentorId }: { mentorId: number }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   return (
@@ -84,13 +88,10 @@ function SelfRequestState({ mentorId }: { mentorId: number }) {
       </div>
       <div className="space-y-2">
         <h3 className="font-display text-xl font-bold text-text">
-          Đây là hồ sơ Mentor của bạn
+          {t('mentoring.selfRequestTitle')}
         </h3>
         <p className="text-sm font-semibold text-text-muted">
-          Bạn không thể tự gửi yêu cầu cố vấn cho chính tài khoản của mình.
-        </p>
-        <p className="text-xs text-text-subtle bg-surface-2 p-3 rounded-2xl">
-          Để cấu hình thông tin cố vấn hoặc quản lý các yêu cầu nhận được từ sinh viên, vui lòng truy cập trang Quản lý Trạng thái Cố vấn.
+          {t('mentoring.selfRequestDesc')}
         </p>
       </div>
       <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -99,9 +100,9 @@ function SelfRequestState({ mentorId }: { mentorId: number }) {
           size="md"
           onClick={() => navigate(`/app/mentoring/mentors/${mentorId}`)}
           leftIcon={<ArrowLeft className="h-4 w-4" />}
-          className="w-full sm:w-auto rounded-xl font-bold"
+          className="w-full sm:w-auto rounded-xl font-bold cursor-pointer"
         >
-          Xem hồ sơ công khai
+          {t('mentoring.viewPublicProfile')}
         </Button>
         <Link to="/app/mentoring/status" className="w-full sm:w-auto">
           <Button
@@ -109,7 +110,7 @@ function SelfRequestState({ mentorId }: { mentorId: number }) {
             size="md"
             className="w-full rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
-            Quản lý cố vấn của tôi
+            {t('mentoring.manageMyMentoring')}
           </Button>
         </Link>
       </div>
@@ -127,6 +128,7 @@ function EmptySupportedFieldsState({
   mentorName: string
   mentorId: number
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   return (
@@ -136,13 +138,13 @@ function EmptySupportedFieldsState({
       </div>
       <div className="space-y-2">
         <h3 className="font-display text-xl font-bold text-text">
-          Mentor chưa thiết lập lĩnh vực hỗ trợ
+          {t('mentoring.mentorNoExpertise', 'Mentor chưa thiết lập lĩnh vực hỗ trợ')}
         </h3>
         <p className="text-sm font-semibold text-text-muted">
-          Mentor <strong>{mentorName}</strong> hiện chưa đăng ký bất kỳ lĩnh vực chuyên môn hỗ trợ nào.
+          {t('mentoring.mentorNoIndustryTitle')}: <strong>{mentorName}</strong>
         </p>
         <p className="text-xs text-warning bg-warning-soft p-3 rounded-2xl border border-warning-border">
-          Yêu cầu cố vấn trực tiếp cần ít nhất một lĩnh vực chuyên môn phù hợp để phân loại nhiệm vụ.
+          {t('mentoring.mentorNoIndustryHint')}
         </p>
       </div>
       <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -153,7 +155,7 @@ function EmptySupportedFieldsState({
           leftIcon={<ArrowLeft className="h-4 w-4" />}
           className="w-full sm:w-auto rounded-xl font-bold"
         >
-          Quay lại
+          {t('common.back', 'Quay lại')}
         </Button>
         <Link to="/app/mentoring/discover" className="w-full sm:w-auto">
           <Button
@@ -162,7 +164,7 @@ function EmptySupportedFieldsState({
             leftIcon={<Search className="h-4 w-4" />}
             className="w-full rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
-            Tìm Mentor khác
+            {t('mentoring.findAnotherMentor', 'Tìm Mentor khác')}
           </Button>
         </Link>
       </div>
@@ -182,6 +184,7 @@ function MentorUnavailableState({
   reason?: string | null
   mentorId: number
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   return (
@@ -191,13 +194,13 @@ function MentorUnavailableState({
       </div>
       <div className="space-y-2">
         <h3 className="font-display text-xl font-bold text-text">
-          Mentor hiện không thể tiếp nhận yêu cầu
+          {t('mentoring.mentorUnavailable', 'Mentor hiện không thể tiếp nhận yêu cầu')}
         </h3>
         <p className="text-sm font-semibold text-text-muted">
-          Mentor <strong>{mentorName}</strong> hiện đang tạm ngưng nhận các yêu cầu cố vấn mới.
+          {t('mentoring.mentorUnavailableTitle')}: <strong>{mentorName}</strong>
         </p>
         <p className="text-xs text-danger bg-danger-soft p-3 rounded-2xl border border-danger-border">
-          Lý do: {reason || 'Gói cố vấn của Mentor đã hết hạn hoặc Mentor đang trong trạng thái tạm ngưng.'}
+          {t('mentoring.reasonPrefix')}{reason || t('mentoring.defaultUnavailableReason')}
         </p>
       </div>
       <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -208,7 +211,7 @@ function MentorUnavailableState({
           leftIcon={<ArrowLeft className="h-4 w-4" />}
           className="w-full sm:w-auto rounded-xl font-bold"
         >
-          Xem hồ sơ Mentor
+          {t('mentoring.viewMentorProfile', 'Xem hồ sơ Mentor')}
         </Button>
         <Link to="/app/mentoring/discover" className="w-full sm:w-auto">
           <Button
@@ -217,7 +220,7 @@ function MentorUnavailableState({
             leftIcon={<Search className="h-4 w-4" />}
             className="w-full rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
-            Tìm Mentor khác
+            {t('mentoring.findAnotherMentor', 'Tìm Mentor khác')}
           </Button>
         </Link>
       </div>
@@ -229,6 +232,7 @@ function MentorUnavailableState({
  * Nội dung trang Gửi yêu cầu Mentoring trực tiếp (UC101 — Direct Mentoring Request).
  */
 function CreateDirectMentoringRequestContent() {
+  const { t } = useTranslation()
   const { mentorId: paramMentorId, id: paramId } = useParams<{ mentorId?: string; id?: string }>()
   const mentorId = paramMentorId || paramId || ''
   const navigate = useNavigate()
@@ -310,9 +314,9 @@ function CreateDirectMentoringRequestContent() {
       >
         <MentorPageHeader
           icon={<Sparkles className="h-4 w-4" />}
-          eyebrow={`Gửi riêng tới ${mentor.fullName}`}
-          title="Gửi yêu cầu cố vấn"
-          description="Yêu cầu này chỉ được gửi đến Mentor bạn đã chọn."
+          eyebrow={t('mentoring.directRequestEyebrow')}
+          title={t('mentoring.directRequestTitle')}
+          description={t('mentoring.createRequestSubtitle')}
         />
 
         {/* Selected Mentor Card Display */}

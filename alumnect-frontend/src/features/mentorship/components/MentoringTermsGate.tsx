@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMentoringTermsStatus } from '../hooks/useMentoringTerms'
 import { MentoringTermsConsentModal } from './MentoringTermsConsentModal'
 import type { MentoringEntrySource } from '../model/mentoringTermsTypes'
@@ -13,17 +14,12 @@ interface MentoringTermsGateProps {
 
 /**
  * Route Guard / Gate kiểm soát quyền truy cập module Mentoring (UC90).
- * Nhiệm vụ:
- * 1. Gọi GET /mentoring/terms/status để kiểm tra trạng thái điều khoản từ Backend.
- * 2. Hiển thị Shimmer Skeleton trong khi đang tải (tránh flash UI).
- * 3. Nếu accepted = true: cho phép kết xuất nội dung bên trong ({children}).
- * 4. Nếu accepted = false: khóa nội dung và hiển thị popup xác nhận bắt buộc (UC90).
- * 5. Nếu xảy ra lỗi: hiển thị thông báo lỗi và nút Thử lại, không tự động cho vào.
  */
 export function MentoringTermsGate({
   children,
   source = 'MENTORING_HOME',
 }: MentoringTermsGateProps) {
+  const { t } = useTranslation()
   const { data, isLoading, isError, error, refetch, isFetching } = useMentoringTermsStatus()
 
   // 1. Trạng thái Loading: Hiển thị Shimmer Skeleton chuẩn Pastel
@@ -60,10 +56,10 @@ export function MentoringTermsGate({
             <AlertTriangle className="h-7 w-7" />
           </div>
           <h2 className="font-display text-lg font-bold text-text">
-            Không thể kiểm tra trạng thái điều khoản
+            {t('mentoring.termsCheckErrorTitle')}
           </h2>
           <p className="mt-2 text-sm text-text-muted">
-            {error?.message || 'Đã có lỗi xảy ra khi xác thực trạng thái điều khoản. Vui lòng thử lại.'}
+            {error?.message || t('mentoring.termsCheckErrorDesc')}
           </p>
           <div className="mt-6 flex justify-center">
             <Button
@@ -73,7 +69,7 @@ export function MentoringTermsGate({
               disabled={isFetching}
               leftIcon={<RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />}
             >
-              {isFetching ? 'Đang thử lại...' : 'Thử lại ngay'}
+              {isFetching ? t('mentoring.retryingNow') : t('mentoring.retryNow')}
             </Button>
           </div>
         </Card>

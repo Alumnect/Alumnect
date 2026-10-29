@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CreditCard, Calendar, Clock, ArrowRight, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Badge } from '@/components/ui/primitives'
 import { ButtonLink, Button } from '@/components/ui/Button'
 import { useCancelMentorPayment } from '../hooks/useMentorPayment'
@@ -14,6 +15,7 @@ interface MentorSubscriptionSummaryCardProps {
  * Hiển thị chi tiết gói, thời gian hiệu lực, đếm ngược số ngày và thanh tiến độ.
  */
 export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSummaryCardProps) {
+  const { t, i18n } = useTranslation()
   const {
     hasSubscription,
     packageName,
@@ -35,13 +37,16 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
   // Định dạng tiền tệ VND
   const formatCurrency = (val?: number | null) => {
     if (!val) return '0 ₫'
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
+    return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(val)
   }
 
   // Định dạng ngày tháng
   const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return 'Chưa kích hoạt'
-    return new Date(dateStr).toLocaleDateString('vi-VN', {
+    if (!dateStr) return t('mentoring.notDetermined')
+    return new Date(dateStr).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'vi-VN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -72,14 +77,14 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
           </div>
           <div>
             <h3 className="font-display text-lg font-bold text-text">
-              Gói Dịch Vụ Mentor
+              {t('mentoring.servicePackageTitle')}
             </h3>
-            <p className="text-xs text-text-subtle">Chưa có gói dịch vụ nào đang hoạt động</p>
+            <p className="text-xs text-text-subtle">{t('mentoring.noActivePackage')}</p>
           </div>
         </div>
 
         <p className="text-sm text-text-muted leading-relaxed">
-          Kích hoạt gói dịch vụ Mentor để chính thức hiện diện trên mạng lưới AlumNect, mở khóa tính năng kết nối và đồng hành chia sẻ.
+          {t('mentoring.activatePackagePitch')}
         </p>
 
         <div className="pt-2">
@@ -89,7 +94,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
             size="md"
             rightIcon={<ArrowRight className="h-4 w-4" />}
           >
-            Khám phá danh mục gói Mentor
+            {t('mentoring.explorePackages')}
           </ButtonLink>
         </div>
       </Card>
@@ -114,27 +119,27 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-display text-lg sm:text-xl font-bold text-text">
-                {packageName || 'Gói Dịch Vụ Mentor'}
+                {packageName || t('mentoring.servicePackageTitle')}
               </h3>
               {active ? (
                 <Badge tone="success" icon={<CheckCircle2 className="h-3 w-3" />} className="text-xs font-bold">
-                  Đang hoạt động
+                  {t('mentoring.statusActive', 'Đang hoạt động')}
                 </Badge>
               ) : isPending ? (
                 <Badge tone="gold" icon={<Clock className="h-3 w-3" />} className="text-xs font-bold">
-                  Chờ thanh toán
+                  {t('mentoring.statusPendingPayment', 'Chờ thanh toán')}
                 </Badge>
               ) : isExpired ? (
                 <Badge tone="danger" icon={<AlertCircle className="h-3 w-3" />} className="text-xs font-bold">
-                  Đã hết hạn
+                  {t('mentoring.statusExpired', 'Đã hết hạn')}
                 </Badge>
               ) : null}
             </div>
             <p className="mt-1 text-sm text-text-subtle">
-              <span className="font-semibold">{durationMonths || 1} tháng</span>
+              <span className="font-semibold">{t('mentoring.durationMonthsFormat', { count: durationMonths || 1 })}</span>
               <span aria-hidden="true"> · </span>
               <span className="font-semibold">{formatCurrency(priceAtPurchase)}</span>
-              {packageCode && <span className="sr-only">Mã gói {packageCode}</span>}
+              {packageCode && <span className="sr-only">Code {packageCode}</span>}
             </p>
           </div>
         </div>
@@ -148,7 +153,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
               size="sm"
               rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
             >
-              Xem các gói khác
+              {t('mentoring.viewOtherPackages')}
             </ButtonLink>
           ) : isPending ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -158,7 +163,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
                 size="sm"
                 rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
               >
-                {pendingPaymentOrderCode ? 'Tiếp tục thanh toán VietQR' : 'Thanh toán ngay'}
+                {pendingPaymentOrderCode ? t('mentoring.continueVietQR') : t('mentoring.payNow')}
               </ButtonLink>
               {pendingPaymentOrderCode && (
                 <Button
@@ -168,7 +173,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
                   disabled={cancelMutation.isPending}
                   onClick={() => cancelMutation.mutate(pendingPaymentOrderCode)}
                 >
-                  Hủy đơn
+                  {t('mentoring.cancelOrder')}
                 </Button>
               )}
             </div>
@@ -179,7 +184,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
               size="sm"
               rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
             >
-              Gia hạn gói mới
+              {t('mentoring.renewNewPackage')}
             </ButtonLink>
           )}
         </div>
@@ -190,7 +195,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
         <div className="rounded-2xl border border-border bg-surface-2 p-4 space-y-1">
           <div className="flex items-center gap-1.5 text-xs text-text-subtle">
             <Calendar className="h-3.5 w-3.5 text-primary-solid" />
-            <span>Ngày kích hoạt</span>
+            <span>{t('mentoring.activationDate')}</span>
           </div>
           <p className="font-display text-base font-bold text-text">
             {formatDate(startDate)}
@@ -200,7 +205,7 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
         <div className="rounded-2xl border border-border bg-surface-2 p-4 space-y-1">
           <div className="flex items-center gap-1.5 text-xs text-text-subtle">
             <Calendar className="h-3.5 w-3.5 text-danger" />
-            <span>Ngày hết hạn</span>
+            <span>{t('mentoring.expiryDate')}</span>
           </div>
           <p className="font-display text-base font-bold text-text">
             {formatDate(endDate)}
@@ -210,16 +215,16 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
         <div className="rounded-2xl border border-border bg-surface-2 p-4 space-y-1">
           <div className="flex items-center gap-1.5 text-xs text-text-subtle">
             <Clock className="h-3.5 w-3.5 text-warning" />
-            <span>Thời gian còn lại</span>
+            <span>{t('mentoring.remainingTime')}</span>
           </div>
           <p className="font-display text-base font-bold text-text">
             {displayedRemainingDays !== null
-              ? `Còn ${displayedRemainingDays} ngày`
+              ? t('mentoring.daysRemaining', { count: displayedRemainingDays })
               : isExpired
-                ? 'Đã hết hạn'
+                ? t('mentoring.statusExpired', 'Đã hết hạn')
                 : isPending
-                  ? 'Chờ thanh toán'
-                  : 'Chưa xác định'}
+                  ? t('mentoring.statusPendingPayment', 'Chờ thanh toán')
+                  : t('mentoring.notDetermined')}
           </p>
         </div>
       </div>
@@ -228,8 +233,8 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
       {active && startDate && endDate && (
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between text-xs text-text-subtle">
-            <span>Tiến độ chu kỳ gói</span>
-            <span className="font-semibold text-text-muted">{progress}% thời gian</span>
+            <span>{t('mentoring.packageCycleProgress')}</span>
+            <span className="font-semibold text-text-muted">{t('mentoring.timePercentFormat', { percent: progress })}</span>
           </div>
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-surface-3">
             <div
@@ -245,9 +250,9 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
         <div className="rounded-2xl border border-danger-border bg-danger-soft p-4 text-xs text-danger flex items-start gap-3">
           <AlertCircle className="h-5 w-5 shrink-0 text-danger mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold">Gói dịch vụ đã hết hạn!</p>
+            <p className="font-bold">{t('mentoring.packageExpiredAlertTitle')}</p>
             <p className="leading-relaxed">
-              Tài khoản Mentor của bạn tạm thời chuyển sang trạng thái hết hạn và không thể tiếp nhận yêu cầu kết nối mới. Hãy gia hạn gói để tiếp tục đồng hành cùng các thành viên trong mạng lưới. Lịch sử Mentor trước đây vẫn được lưu trữ bảo toàn.
+              {t('mentoring.packageExpiredAlertDesc')}
             </p>
           </div>
         </div>
@@ -257,9 +262,9 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
         <div className="rounded-2xl border border-warning-border bg-warning-soft p-4 text-xs text-warning dark:text-gold-300 flex items-start gap-3">
           <Clock className="h-5 w-5 shrink-0 text-warning mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold">Đang chờ xác nhận thanh toán</p>
+            <p className="font-bold">{t('mentoring.awaitingPaymentAlertTitle')}</p>
             <p className="leading-relaxed">
-              Bạn đã chọn gói nhưng chưa hoàn tất chuyển khoản. Ngay sau khi cổng thanh toán ghi nhận thành công, hệ thống sẽ tự động kích hoạt tài khoản Mentor ngay lập tức.
+              {t('mentoring.awaitingPaymentAlertDesc')}
             </p>
           </div>
         </div>
@@ -267,3 +272,5 @@ export function MentorSubscriptionSummaryCard({ status }: MentorSubscriptionSumm
     </Card>
   )
 }
+
+

@@ -8,6 +8,7 @@ import {
   Link2,
   Sparkles,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, DialogFrame } from '@/components/ui'
 import { useSubmitTaskCompletion } from '../hooks/useMentoringTaskCompletion'
 
@@ -26,6 +27,7 @@ export function MentoringTaskCompletionModal({
   taskTitle,
   onSuccess,
 }: MentoringTaskCompletionModalProps) {
+  const { t } = useTranslation()
   const [finalSummary, setFinalSummary] = useState('')
   const [deliverables, setDeliverables] = useState('')
   const [attachmentUrls, setAttachmentUrls] = useState('')
@@ -40,12 +42,12 @@ export function MentoringTaskCompletionModal({
     setErrorMsg(null)
 
     if (!finalSummary.trim()) {
-      setErrorMsg('Vui lòng nhập tóm tắt kết quả hoàn thành nhiệm vụ.')
+      setErrorMsg(t('mentoring.summaryRequired'))
       return
     }
 
     if (finalSummary.trim().length < 10) {
-      setErrorMsg('Mô tả kết quả phải có tối thiểu 10 ký tự.')
+      setErrorMsg(t('mentoring.summaryMinLength'))
       return
     }
 
@@ -66,7 +68,7 @@ export function MentoringTaskCompletionModal({
       setErrorMsg(
         err?.response?.data?.message ||
           err?.message ||
-          'Không thể nộp kết quả nghiệm thu. Vui lòng thử lại.'
+          t('mentoring.submitCompletionError')
       )
     }
   }
@@ -87,14 +89,14 @@ export function MentoringTaskCompletionModal({
             </div>
             <div>
               <h3 className="text-base font-bold text-text">
-                Nộp kết quả hoàn thành Task
+                {t('mentoring.submitTaskCompletionTitle')}
               </h3>
               <p className="text-xs text-text-subtle mt-0.5">
-                {taskTitle ? `Nhiệm vụ: ${taskTitle}` : 'Gửi sản phẩm bàn giao chờ học viên nghiệm thu'}
+                {taskTitle ? t('mentoring.submitTaskSubtitleFormat', { title: taskTitle }) : t('mentoring.submitTaskDefaultSubtitle')}
               </p>
             </div>
           </div>
-          <button aria-label="Đóng"
+          <button aria-label={t('common.close')}
             type="button"
             onClick={onClose}
             className="p-1.5 text-text-subtle hover:text-text-muted rounded-lg hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -116,38 +118,37 @@ export function MentoringTaskCompletionModal({
           <div className="p-3.5 bg-info-soft border border-info rounded-xl text-xs text-info leading-relaxed flex items-start gap-2.5">
             <Sparkles className="w-4 h-4 text-info shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold">Quy trình nghiệm thu:</span> Khi bạn nộp kết quả, Task sẽ chuyển sang trạng thái{' '}
-              <span className="font-bold text-info">Chờ nghiệm thu (SUBMITTED)</span>. Học viên sẽ kiểm tra và xác nhận hoàn thành để kích hoạt quyết toán thù lao cho bạn.
+              <span className="font-semibold">{t('mentoring.acceptanceProcessTitle')}</span> {t('mentoring.acceptanceProcessDesc')}
             </div>
           </div>
 
           {/* Field: Final Summary */}
           <div>
             <label className="block text-xs font-semibold text-text mb-1.5">
-              Mô tả kết quả cuối cùng <span className="text-danger">*</span>
+              {t('mentoring.finalSummaryLabel')} <span className="text-danger">*</span>
             </label>
             <textarea
               rows={4}
               value={finalSummary}
               onChange={(e) => setFinalSummary(e.target.value)}
-              placeholder="Tóm tắt những mục tiêu đã đạt được, kiến thức hoặc sản phẩm đã hoàn thiện trong suốt quá trình hướng dẫn..."
+              placeholder={t('mentoring.finalSummaryPlaceholder')}
               className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
             <p className="text-xs text-text-subtle mt-1">
-              Mô tả chi tiết giúp học viên nắm rõ khối lượng công việc đã hoàn thành để nghiệm thu nhanh chóng.
+              {t('mentoring.finalSummaryHelp')}
             </p>
           </div>
 
           {/* Field: Deliverables */}
           <div>
             <label className="block text-xs font-semibold text-text mb-1.5">
-              Sản phẩm bàn giao / Deliverables (Tùy chọn)
+              {t('mentoring.deliverablesLabel')}
             </label>
             <textarea
               rows={3}
               value={deliverables}
               onChange={(e) => setDeliverables(e.target.value)}
-              placeholder="Ví dụ: Link GitHub Repository, Google Drive slide thuyết trình, tài liệu hướng dẫn cài đặt..."
+              placeholder={t('mentoring.deliverablesPlaceholder')}
               className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
           </div>
@@ -156,7 +157,7 @@ export function MentoringTaskCompletionModal({
           <div>
             <label className="flex items-center gap-1.5 text-xs font-semibold text-text mb-1.5">
               <Link2 className="w-3.5 h-3.5 text-info" />
-              Đường dẫn liên kết / Tệp đính kèm (Mỗi dòng 1 link)
+              {t('mentoring.attachmentUrlsLabel')}
             </label>
             <textarea
               rows={2}
@@ -175,7 +176,7 @@ export function MentoringTaskCompletionModal({
               onClick={onClose}
               disabled={submitMutation.isPending}
             >
-              Hủy bỏ
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -185,12 +186,12 @@ export function MentoringTaskCompletionModal({
               {submitMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang gửi kết quả...
+                  {t('mentoring.submittingBtn')}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  Nộp kết quả nghiệm thu
+                  {t('mentoring.submitDeliverablesBtn')}
                 </>
               )}
             </Button>

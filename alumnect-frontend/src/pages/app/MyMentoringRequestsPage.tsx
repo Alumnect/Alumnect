@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { BookOpen, Plus, RefreshCw, Send } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, ButtonLink, Container, EmptyState, Pagination, Skeleton, FadeSwitch } from '@/components/ui'
 import {
   MentoringTermsGate,
@@ -13,17 +14,21 @@ import { cn } from '@/lib/utils'
 
 type RequestFilter = 'ALL' | MentoringRequestType
 
-const TYPE_TABS: MentoringFilterOption<RequestFilter>[] = [
-  { value: 'ALL', label: 'Tất cả' },
-  { value: 'GENERAL', label: 'Yêu cầu chung' },
-  { value: 'DIRECT', label: 'Gửi trực tiếp', icon: <Send /> },
-]
-
 /** Danh sách yêu cầu Mentoring người dùng đã gửi và phản hồi từ Mentor (UC102). */
 function MyMentoringRequestsContent() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<RequestFilter>('ALL')
   const [page, setPage] = useState(0)
   const pageSize = 10
+
+  const typeTabs: MentoringFilterOption<RequestFilter>[] = useMemo(
+    () => [
+      { value: 'ALL', label: t('mentoring.tabAll') },
+      { value: 'GENERAL', label: t('mentoring.tabGeneral') },
+      { value: 'DIRECT', label: t('mentoring.tabDirect'), icon: <Send /> },
+    ],
+    [t],
+  )
 
   const { data, isLoading, isError, error, refetch, isFetching } = useMyMentoringRequests({ page, size: pageSize })
 
@@ -40,9 +45,9 @@ function MyMentoringRequestsContent() {
     <div className="space-y-5">
       <MentorPageHeader
         icon={<BookOpen className="h-4 w-4" />}
-        eyebrow="Dành cho người học"
-        title="Yêu cầu của tôi"
-        description="Theo dõi trạng thái và phản hồi của Mentor cho các yêu cầu bạn đã gửi."
+        eyebrow={t('mentoring.menteeEyebrow')}
+        title={t('mentoring.myRequestsTitle')}
+        description={t('mentoring.myRequestsDesc')}
         actions={
           <>
             <Button
@@ -52,16 +57,16 @@ function MyMentoringRequestsContent() {
               disabled={isFetching}
               leftIcon={<RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />}
             >
-              Làm mới
+              {t('mentoring.refresh')}
             </Button>
             <ButtonLink to="/app/mentoring/requests/create" size="sm" leftIcon={<Plus className="h-4 w-4" />}>
-              Tạo yêu cầu
+              {t('mentoring.createRequest')}
             </ButtonLink>
           </>
         }
       />
 
-      <MentoringFilterTabs ariaLabel="Lọc theo loại yêu cầu" options={TYPE_TABS} value={activeTab} onChange={setActiveTab} />
+      <MentoringFilterTabs ariaLabel={t('mentoring.myRequestsTitle')} options={typeTabs} value={activeTab} onChange={setActiveTab} />
 
       <FadeSwitch id={activeTab}>
 {isLoading ? (
@@ -77,32 +82,32 @@ function MyMentoringRequestsContent() {
       ) : isError ? (
         <EmptyState
           icon={<BookOpen className="h-6 w-6" />}
-          title="Không thể tải danh sách yêu cầu"
-          description={(error as Error)?.message || 'Vui lòng kiểm tra kết nối mạng và thử lại.'}
+          title={t('common.error')}
+          description={(error as Error)?.message || t('common.tryAgain')}
           action={
             <Button variant="outline" size="sm" onClick={() => refetch()} leftIcon={<RefreshCw className="h-4 w-4" />}>
-              Thử lại
+              {t('common.tryAgain')}
             </Button>
           }
         />
       ) : filteredRequests.length === 0 ? (
         <EmptyState
           icon={<BookOpen className="h-6 w-6" />}
-          title={activeTab === 'ALL' ? 'Bạn chưa gửi yêu cầu nào' : 'Không có yêu cầu thuộc loại này'}
+          title={activeTab === 'ALL' ? t('mentoring.emptyMyRequestsAll') : t('mentoring.emptyMyRequestsType')}
           description={
             activeTab === 'ALL'
-              ? 'Tạo yêu cầu để được kết nối với Mentor phù hợp. Mentor cùng ngành sẽ được ưu tiên.'
-              : 'Chuyển sang tab "Tất cả" để xem các yêu cầu khác.'
+              ? t('mentoring.emptyMyRequestsAllDesc')
+              : t('mentoring.emptyMyRequestsTypeDesc')
           }
           action={
             <ButtonLink to="/app/mentoring/requests/create" size="sm" leftIcon={<Plus className="h-4 w-4" />}>
-              Tạo yêu cầu
+              {t('mentoring.createRequest')}
             </ButtonLink>
           }
         />
       ) : (
         <div className="space-y-3">
-          <p className="text-xs text-text-subtle">{totalElements} yêu cầu</p>
+          <p className="text-xs text-text-subtle">{t('mentoring.requestsCount', { count: totalElements })}</p>
           {filteredRequests.map((req) => (
             <MyRequestCard key={req.id} request={req} />
           ))}

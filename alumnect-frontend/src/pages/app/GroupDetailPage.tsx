@@ -9,6 +9,7 @@
  *     + Cột bên (32% sticky): Tóm tắt thông tin cộng đồng và nội quy nhanh.
  */
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -43,6 +44,7 @@ import {
 type TabKey = 'discussions' | 'about' | 'members' | 'manage'
 
 export function GroupDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const user = useAuthStore((s) => s.user)
@@ -96,21 +98,21 @@ export function GroupDetailPage() {
           </span>
           <div>
             <h2 className="text-xl font-extrabold text-text">
-              {notFound ? 'Không tìm thấy hội nhóm' : 'Không tải được hội nhóm'}
+              {notFound ? t('groups.notFoundTitle') : t('groups.loadErrorTitle')}
             </h2>
             <p className="mt-1.5 text-sm text-text-subtle">
-              {notFound ? 'Hội nhóm này không tồn tại hoặc đã bị xóa.' : ((error as Error)?.message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.')}
+              {notFound ? t('groups.notFoundDesc') : ((error as Error)?.message ?? t('common.error'))}
             </p>
           </div>
           <div className="flex gap-2.5 pt-2">
             {!notFound && (
               <Button variant="secondary" size="sm" onClick={() => refetch()}>
-                Thử lại
+                {t('common.tryAgain')}
               </Button>
             )}
             <Link to="/app/groups">
               <Button variant="primary" size="sm" leftIcon={<ArrowLeft size={14} />}>
-                Về danh sách hội nhóm
+                {t('groups.backToGroupList')}
               </Button>
             </Link>
           </div>
@@ -136,11 +138,11 @@ export function GroupDetailPage() {
       { id: group.id },
       {
         onSuccess: (res) => {
-          toast.success(res.message || 'Đã rời khỏi hội nhóm.')
+          toast.success(res.message || t('groups.leaveSuccess'))
           setConfirmLeave(false)
           setActiveTab('discussions')
         },
-        onError: (err) => toast.error((err as Error).message || 'Không thể rời nhóm, vui lòng thử lại.'),
+        onError: (err) => toast.error((err as Error).message || t('groups.leaveError')),
       },
     )
   }
@@ -148,15 +150,15 @@ export function GroupDetailPage() {
 
   // Danh sách các tab
   const tabs: { key: TabKey; label: string; icon: typeof MessagesSquare; badge?: number }[] = [
-    { key: 'discussions', label: 'Thảo luận', icon: MessagesSquare },
-    { key: 'about', label: 'Giới thiệu', icon: Info },
-    { key: 'members', label: 'Thành viên', icon: Users },
+    { key: 'discussions', label: t('groups.discussions'), icon: MessagesSquare },
+    { key: 'about', label: t('groups.about'), icon: Info },
+    { key: 'members', label: t('groups.membersTab'), icon: Users },
   ]
 
   if (isManager) {
     tabs.push({
       key: 'manage',
-      label: 'Quản trị nhóm',
+      label: t('groups.manage'),
       icon: Settings2,
       badge: pendingRequests > 0 ? pendingRequests : undefined,
     })
@@ -169,7 +171,7 @@ export function GroupDetailPage() {
         to="/app/groups"
         className="inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-primary-solid"
       >
-        <ArrowLeft size={16} /> Tất cả hội nhóm
+        <ArrowLeft size={16} /> {t('groups.allGroups')}
       </Link>
 
       {/* Ảnh bìa và thông tin hội nhóm */}
@@ -183,7 +185,7 @@ export function GroupDetailPage() {
       {group.status === 'INACTIVE' && (
         <div className="flex items-center gap-2.5 rounded-2xl bg-warning-soft px-5 py-3 text-sm font-medium text-warning">
           <Info size={17} className="shrink-0 text-warning" />
-          <span>Hội nhóm đang tạm ngừng hoạt động và không nhận thêm thành viên mới.</span>
+          <span>{t('groups.inactiveNotice')}</span>
         </div>
       )}
 
@@ -241,7 +243,7 @@ export function GroupDetailPage() {
                     </div>
                     <div className="max-w-md">
                       <h3 className="text-xl font-extrabold text-text">
-                        Hội nhóm riêng tư
+                        {t('groups.privateGroupTitle')}
                       </h3>
                     </div>
                   </Card>
@@ -271,7 +273,7 @@ export function GroupDetailPage() {
                 className="space-y-5"
               >
                 <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
-                  <h3 className="text-lg font-black text-text">Mô tả hội nhóm</h3>
+                  <h3 className="text-lg font-black text-text">{t('groups.groupDescriptionTitle')}</h3>
                   <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-text-muted">
                     {group.description}
                   </p>
@@ -279,7 +281,7 @@ export function GroupDetailPage() {
                   {group.topics.length > 0 && (
                     <div className="mt-5 border-t border-border pt-4">
                       <h4 className="mb-2 text-xs font-black uppercase tracking-wider text-text-subtle">
-                        Chủ đề hoạt động
+                        {t('groups.activityTopicsTitle')}
                       </h4>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {group.topics.map((t) => (
@@ -296,7 +298,7 @@ export function GroupDetailPage() {
                 <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
                   <div className="flex items-center gap-2 text-text">
                     <ScrollText size={20} className="text-primary-solid" />
-                    <h3 className="text-lg font-black">Nội quy & Chuẩn mực cộng đồng</h3>
+                    <h3 className="text-lg font-black">{t('groups.rulesAndStandardsTitle')}</h3>
                   </div>
 
                   {group.joinRules ? (
@@ -305,7 +307,7 @@ export function GroupDetailPage() {
                     </div>
                   ) : (
                     <p className="mt-2 text-sm text-text-subtle">
-                      Hội nhóm này áp dụng các quy tắc văn hóa và ứng xử chung của nền tảng AlumNect.
+                      {t('groups.defaultRulesNotice')}
                     </p>
                   )}
 
@@ -316,8 +318,8 @@ export function GroupDetailPage() {
                         1
                       </span>
                       <div>
-                        <strong className="text-sm font-bold text-text">Tôn trọng & Lắng nghe</strong>
-                        <p className="text-xs text-text-subtle">Luôn giữ tinh thần hòa nhã, lịch sự trong giao tiếp và tranh luận mang tính xây dựng.</p>
+                        <strong className="text-sm font-bold text-text">{t('groups.sampleRule1Title')}</strong>
+                        <p className="text-xs text-text-subtle">{t('groups.sampleRule1Desc')}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 rounded-2xl border border-border p-3.5">
@@ -325,8 +327,8 @@ export function GroupDetailPage() {
                         2
                       </span>
                       <div>
-                        <strong className="text-sm font-bold text-text">Không quảng cáo rác & Spam</strong>
-                        <p className="text-xs text-text-subtle">Mọi bài viết thương mại hoặc tuyển dụng cần được sự đồng ý của ban quản trị nhóm.</p>
+                        <strong className="text-sm font-bold text-text">{t('groups.sampleRule2Title')}</strong>
+                        <p className="text-xs text-text-subtle">{t('groups.sampleRule2Desc')}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 rounded-2xl border border-border p-3.5">
@@ -334,8 +336,8 @@ export function GroupDetailPage() {
                         3
                       </span>
                       <div>
-                        <strong className="text-sm font-bold text-text">Bảo mật thông tin nội bộ</strong>
-                        <p className="text-xs text-text-subtle">Không mang nội dung thảo luận riêng tư của các thành viên ra các kênh công cộng khi chưa được phép.</p>
+                        <strong className="text-sm font-bold text-text">{t('groups.sampleRule3Title')}</strong>
+                        <p className="text-xs text-text-subtle">{t('groups.sampleRule3Desc')}</p>
                       </div>
                     </div>
                   </div>
@@ -351,8 +353,8 @@ export function GroupDetailPage() {
                 <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-black text-text">Thành viên hội nhóm</h3>
-                      <p className="text-xs text-text-subtle">Danh sách những người đang sinh hoạt và kết nối trong cộng đồng</p>
+                      <h3 className="text-lg font-black text-text">{t('groups.membersTitle')}</h3>
+                      <p className="text-xs text-text-subtle">{t('groups.membersSubtitle')}</p>
                     </div>
                   </div>
 
@@ -380,19 +382,19 @@ export function GroupDetailPage() {
       {/* Modal xác nhận rời nhóm */}
       <ConfirmDialog
         open={confirmLeave}
-        title="Rời khỏi hội nhóm"
+        title={t('groups.leaveGroupConfirmTitle')}
         message={
           isSoleOwner ? (
             <>
-              Bạn là thành viên cuối cùng của <b>{group.name}</b>. Nếu rời nhóm, hội nhóm sẽ bị xóa vĩnh viễn. Bạn có chắc chắn muốn tiếp tục?
+              {t('groups.soleOwnerLeaveWarning', { name: group.name })}
             </>
           ) : (
             <>
-              Bạn có chắc muốn rời khỏi <b>{group.name}</b>? Bạn sẽ mất quyền truy cập nội dung dành riêng cho thành viên.
+              {t('groups.memberLeaveWarning', { name: group.name })}
             </>
           )
         }
-        confirmLabel={leaveMut.isPending ? 'Đang xử lý…' : 'Rời nhóm'}
+        confirmLabel={leaveMut.isPending ? t('common.processing') : t('groups.leaveGroup')}
         danger
         loading={leaveMut.isPending}
         onConfirm={confirmLeaveNow}

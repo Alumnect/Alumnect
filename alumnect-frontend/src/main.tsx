@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from '@/lib/queryClient'
 import './index.css'
 import '@/store/themeStore'
+import '@/i18n'
 import { installAutoLabel } from '@/lib/autoLabel'
 import App from './App.tsx'
 

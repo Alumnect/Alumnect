@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Send, Edit3, Loader2, DollarSign } from 'lucide-react'
@@ -121,11 +122,11 @@ export function MentoringDealFormModal({
         expectedResult: data.expectedResult,
         changeNote: data.changeNote || undefined,
       })
-      toast.success(`Đã gửi Deal Ticket phiên bản ${created.version}. Đang chờ Học viên phản hồi.`)
+      toast.success(t('mentoring.dealTicketSentWaitingResponse', { version: created.version }))
       onSuccess?.(created)
       onClose()
     } catch (error) {
-      toast.error(error instanceof Error && error.message ? error.message : 'Không thể gửi Deal Ticket. Vui lòng thử lại.')
+      toast.error(error instanceof Error && error.message ? error.message : t('mentoring.dealTicketSendError'))
     }
   }
 
@@ -156,10 +157,10 @@ export function MentoringDealFormModal({
           </span>
           <div>
             <h3 className="font-display text-lg font-bold text-text">
-              {deal ? `Deal lại — tạo phiên bản ${deal.version + 1}` : 'Tạo Deal Ticket'}
+              {deal ? t('mentoring.redealCreateVersion', { version: deal.version + 1 }) : t('mentoring.createDealTicketHeading')}
             </h3>
             <p className="text-xs text-text-subtle">
-              Bạn được tính là đã xác nhận phiên bản này khi gửi. Học viên cần xác nhận để khóa Deal và thanh toán.
+              {t('mentoring.mentorConfirmedOnSubmitNotice')}
             </p>
           </div>
         </div>
@@ -168,29 +169,29 @@ export function MentoringDealFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="font-bold text-text">
-                Loại nhiệm vụ <span className="text-danger">*</span>
+                {t('mentoring.taskTypeRequired')} <span className="text-danger">*</span>
               </label>
               <SelectDropdown
                 value={watch('taskType')}
                 onChange={(val) => setValue('taskType', val as ProposeDealFormData['taskType'], { shouldValidate: true, shouldDirty: true })}
                 options={MENTORING_DEAL_TASK_TYPES.map((type) => ({ value: type, label: MENTORING_TASK_TYPE_LABELS[type] }))}
-                placeholder="Chọn loại nhiệm vụ"
+                placeholder={t('mentoring.selectTaskTypePlaceholder')}
               />
               {errors.taskType && <p className="text-danger text-xs font-medium">{errors.taskType.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <label className="font-bold text-text">
-                Hình thức tham gia <span className="text-danger">*</span>
+                {t('mentoring.participationRequired')} <span className="text-danger">*</span>
               </label>
               <SelectDropdown
                 value={watch('participationType')}
                 onChange={(val) => setValue('participationType', val as ProposeDealFormData['participationType'], { shouldValidate: true, shouldDirty: true })}
                 options={[
-                  { value: 'INDIVIDUAL', label: 'Kèm cặp cá nhân 1-1' },
-                  { value: 'GROUP', label: 'Hướng dẫn theo nhóm học viên' },
+                  { value: 'INDIVIDUAL', label: t('mentoring.partIndividualOption') },
+                  { value: 'GROUP', label: t('mentoring.partGroupOption') },
                 ]}
-                placeholder="Chọn hình thức tham gia"
+                placeholder={t('mentoring.selectParticipationPlaceholder')}
               />
               {errors.participationType && (
                 <p className="text-danger text-xs font-medium">{errors.participationType.message}</p>
@@ -201,24 +202,24 @@ export function MentoringDealFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="font-bold text-text">
-                Hình thức làm việc <span className="text-danger">*</span>
+                {t('mentoring.workingModeRequired')} <span className="text-danger">*</span>
               </label>
               <SelectDropdown
                 value={watch('workingMode')}
                 onChange={(val) => setValue('workingMode', val as ProposeDealFormData['workingMode'], { shouldValidate: true, shouldDirty: true })}
                 options={[
-                  { value: 'ONLINE', label: 'Trực tuyến (Online)' },
-                  { value: 'OFFLINE', label: 'Trực tiếp (Offline)' },
-                  { value: 'BOTH', label: 'Linh hoạt (Online & Offline)' },
+                  { value: 'ONLINE', label: t('mentoring.modeOnlineOption') },
+                  { value: 'OFFLINE', label: t('mentoring.modeOfflineOption') },
+                  { value: 'BOTH', label: t('mentoring.modeBothOption') },
                 ]}
-                placeholder="Chọn hình thức làm việc"
+                placeholder={t('mentoring.selectWorkingModePlaceholder')}
               />
               {errors.workingMode && <p className="text-danger text-xs font-medium">{errors.workingMode.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <label className="font-bold text-text">
-                Mức giá thỏa thuận (VND) <span className="text-danger">*</span>
+                {t('mentoring.agreedPriceVndRequired')} <span className="text-danger">*</span>
               </label>
               <div className="relative">
                 <input
@@ -226,7 +227,7 @@ export function MentoringDealFormModal({
                   min="0"
                   step="any"
                   {...register('agreedPrice', { valueAsNumber: true })}
-                  placeholder="Ví dụ: 500000 (từ 0 VNĐ trở lên)"
+                  placeholder={t('mentoring.agreedPricePlaceholder')}
                   className={`${inputClass} pl-9`}
                 />
                 <DollarSign className="absolute left-3 top-3.5 h-4 w-4 text-text-subtle" />
@@ -237,7 +238,7 @@ export function MentoringDealFormModal({
 
           <div className="space-y-1.5">
             <label className="font-bold text-text">
-              Hạn chót hoàn thành (Deadline) <span className="text-danger">*</span>
+              {t('mentoring.completionDeadlineRequired')} <span className="text-danger">*</span>
             </label>
             <DateTimePicker
               mode="datetime"
@@ -250,12 +251,12 @@ export function MentoringDealFormModal({
 
           <div className="space-y-1.5">
             <label className="font-bold text-text">
-              Phạm vi công việc (Task Scope) <span className="text-danger">*</span>
+              {t('mentoring.taskScopeRequired')} <span className="text-danger">*</span>
             </label>
             <textarea
               rows={4}
               {...register('taskScope')}
-              placeholder="Mô tả chi tiết những gì Mentor sẽ hướng dẫn và Học viên cần hoàn thành..."
+              placeholder={t('mentoring.taskScopePlaceholder')}
               className={`${inputClass} font-normal leading-relaxed`}
             />
             {errors.taskScope && <p className="text-danger text-xs font-medium">{errors.taskScope.message}</p>}
@@ -263,12 +264,12 @@ export function MentoringDealFormModal({
 
           <div className="space-y-1.5">
             <label className="font-bold text-text">
-              Kết quả kỳ vọng đầu ra (Expected Result) <span className="text-danger">*</span>
+              {t('mentoring.expectedResultRequired')} <span className="text-danger">*</span>
             </label>
             <textarea
               rows={3}
               {...register('expectedResult')}
-              placeholder="Sản phẩm, tài liệu hoặc kỹ năng cụ thể đạt được sau khi hoàn thành Task..."
+              placeholder={t('mentoring.expectedResultPlaceholder')}
               className={`${inputClass} font-normal leading-relaxed`}
             />
             {errors.expectedResult && (
@@ -277,11 +278,11 @@ export function MentoringDealFormModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-bold text-text">Ghi chú phiên bản (tùy chọn)</label>
+            <label className="font-bold text-text">{t('mentoring.versionNoteOptional')}</label>
             <input
               type="text"
               {...register('changeNote')}
-              placeholder="Ví dụ: Điều chỉnh giá theo số buổi đã trao đổi..."
+              placeholder={t('mentoring.versionNotePlaceholder')}
               className={`${inputClass} font-normal`}
             />
             {errors.changeNote && <p className="text-danger text-xs font-medium">{errors.changeNote.message}</p>}
@@ -298,7 +299,7 @@ export function MentoringDealFormModal({
               leftIcon={isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               className="rounded-xl font-bold bg-primary-solid hover:bg-primary-hover shadow-raised"
             >
-              {isPending ? 'Đang gửi...' : 'Gửi Deal Ticket cho Học viên'}
+              {isPending ? t('common.sending') : t('mentoring.sendDealTicketToStudentBtn')}
             </Button>
           </div>
         </form>

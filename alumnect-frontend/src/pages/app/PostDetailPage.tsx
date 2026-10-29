@@ -9,6 +9,7 @@
  *  - Thành viên (Student/Alumni) đăng bình luận qua ô soạn (UC18); Guest được mời đăng nhập.
  */
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -54,21 +55,22 @@ import { useNavigate } from 'react-router-dom'
 
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
-const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
-  achievement: { label: 'Thành tựu', tone: 'gold' },
-  recruitment: { label: 'Tuyển dụng', tone: 'aqua' },
-  event: { label: 'Sự kiện', tone: 'violet' },
-  normal: { label: 'Bài viết', tone: 'brand' },
+const TYPE_META: Record<string, { labelKey: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
+  achievement: { labelKey: 'feed.achievement', tone: 'gold' },
+  recruitment: { labelKey: 'feed.recruitment', tone: 'aqua' },
+  event: { labelKey: 'feed.event', tone: 'violet' },
+  normal: { labelKey: 'feed.normal', tone: 'brand' },
 }
 
 /** Nút quay lại bảng tin, hiển thị ở đầu mọi trạng thái của trang. */
 function BackToFeed() {
+  const { t } = useTranslation()
   return (
     <Link
       to="/app"
       className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-text"
     >
-      <ArrowLeft size={16} /> Quay lại bảng tin
+      <ArrowLeft size={16} /> {t('common.back')} {t('nav.feed')}
     </Link>
   )
 }
@@ -100,30 +102,32 @@ function PostDetailSkeleton() {
  * @param onRetry Hàm gọi lại API
  */
 function PostError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-coral-300/40 text-coral-600">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-text">Không tải được bài viết</p>
-        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">{t('feed.loadPostError', 'Không tải được bài viết')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('feed.systemError', 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.')}</p>
       </div>
-      <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
+      <Button variant="secondary" size="sm" onClick={onRetry}>{t('common.tryAgain', 'Thử lại')}</Button>
     </Card>
   )
 }
 
 /** Trạng thái bài viết không tồn tại hoặc đã bị ẩn/gỡ (404 — MSG-POST-02, BR-08/BR-11). */
 function PostNotAvailable() {
+  const { t } = useTranslation()
   return (
     <EmptyState
       icon={<Inbox size={24} />}
-      title="Bài viết này không còn khả dụng"
-      description="Bài viết có thể đã bị gỡ hoặc không tồn tại."
+      title={t('feed.postUnavailableTitle', 'Bài viết này không còn khả dụng')}
+      description={t('feed.postUnavailableDesc', 'Bài viết có thể đã bị gỡ hoặc không tồn tại.')}
       action={
         <ButtonLink to="/app" variant="secondary" size="sm">
-          Về bảng tin
+          {t('common.backToFeed', 'Về bảng tin')}
         </ButtonLink>
       }
     />
@@ -132,20 +136,21 @@ function PostNotAvailable() {
 
 /** Trạng thái Guest cố xem bài MEMBERS (403 — MSG-POST-04, BR-12): mời đăng nhập. */
 function PostForbidden() {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-soft text-primary-solid">
         <Lock size={24} />
       </span>
       <div>
-        <p className="font-bold text-text">Bài viết dành cho thành viên</p>
-        <p className="mt-1 text-sm text-text-subtle">Đăng nhập để xem nội dung bài viết này.</p>
+        <p className="font-bold text-text">{t('auth.membersOnlyPost')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{t('auth.membersOnlyPostDesc')}</p>
       </div>
       <Link
         to="/login"
         className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary-solid px-4 text-sm font-semibold text-on-primary shadow-sm transition-transform hover:bg-primary-hover"
       >
-        Đăng nhập <ArrowRight size={15} />
+        {t('common.login')} <ArrowRight size={15} />
       </Link>
     </Card>
   )
@@ -180,7 +185,18 @@ function PostDetailCard({
   onCancelEvent?: () => void
 }) {
 
+  const { t } = useTranslation()
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
+  const typeLabel = post.type === 'normal'
+    ? t('feed.normal')
+    : post.type === 'achievement'
+    ? t('feed.achievement')
+    : post.type === 'recruitment'
+    ? t('feed.recruitment')
+    : post.type === 'event'
+    ? t('feed.event')
+    : t(meta.labelKey)
+
   const isAuthor = post.authorId != null
     ? !!currentUserId && post.authorId === currentUserId
     : !!currentUserName && post.author === currentUserName
@@ -212,7 +228,7 @@ function PostDetailCard({
    */
   const handleLike = () => {
     if (!canInteract) {
-      promptLogin('Đăng nhập để thích và tương tác với bài viết.')
+      promptLogin(t('feed.loginToInteract'))
       return
     }
     const next = !liked
@@ -238,7 +254,7 @@ function PostDetailCard({
    */
   const handleSave = () => {
     if (!canInteract) {
-      promptLogin('Đăng nhập để lưu bài viết.')
+      promptLogin(t('feed.loginToSave'))
       return
     }
     const next = !saved
@@ -264,7 +280,7 @@ function PostDetailCard({
           <Link
             to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
             className="shrink-0 transition-transform duration-200 hover:scale-105"
-            title={`Xem hồ sơ của ${post.author}`}
+            title={t('feed.viewProfile', { name: post.author })}
           >
             <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
           </Link>
@@ -273,11 +289,11 @@ function PostDetailCard({
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
                 className="truncate hover:underline hover:text-primary-solid transition-colors"
-                title={`Xem hồ sơ của ${post.author}`}
+                title={t('feed.viewProfile', { name: post.author })}
               >
                 {post.author}
               </Link>
-              <Badge tone={meta.tone} className="px-2 py-0.5 text-xs">{meta.label}</Badge>
+              <Badge tone={meta.tone} className="px-2 py-0.5 text-xs">{typeLabel}</Badge>
             </p>
             <p className="truncate text-xs text-text-subtle">{post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}</p>
           </div>
@@ -309,7 +325,7 @@ function PostDetailCard({
               </span>
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">
-                  Cơ hội việc làm
+                  {t('feed.jobOpportunity', 'Cơ hội việc làm')}
                 </span>
                 <h3 className="text-lg font-bold text-text leading-snug">
                   {post.job.title}
@@ -329,13 +345,13 @@ function PostDetailCard({
             {/* Box Kêu gọi Ứng tuyển (tương tự RSVP của Sự kiện) */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 p-4 shadow-xs dark:border-border dark:bg-surface-2">
               <div className="min-w-0">
-                <p className="text-sm font-bold text-text">Ứng tuyển vị trí này</p>
+                <p className="text-sm font-bold text-text">{t('feed.applyThisJob', 'Ứng tuyển vị trí này')}</p>
                 <p className="text-xs text-text-subtle mt-0.5">
                   {post.job.applyUrl
-                    ? 'Gửi hồ sơ trực tiếp qua liên kết tuyển dụng của doanh nghiệp'
+                    ? t('feed.applyViaDirectLink', 'Gửi hồ sơ trực tiếp qua liên kết tuyển dụng của doanh nghiệp')
                     : post.job.contactEmail
-                    ? `Liên hệ ứng tuyển qua email: ${post.job.contactEmail}`
-                    : 'Liên hệ người đăng bài để biết thêm thông tin ứng tuyển'}
+                    ? t('feed.applyViaEmail', { email: post.job.contactEmail })
+                    : t('feed.applyContactPoster', 'Liên hệ người đăng bài để biết thêm thông tin ứng tuyển')}
                 </p>
               </div>
 
@@ -344,10 +360,10 @@ function PostDetailCard({
                   <a
                     href={`mailto:${post.job.contactEmail}?subject=${encodeURIComponent(`Ứng tuyển vị trí ${post.job.title} - ${post.job.company}`)}`}
                     className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-bold text-text-muted hover:bg-surface-2 hover:text-text transition-colors shadow-2xs dark:hover:bg-[#323334]"
-                    title="Gửi email cho nhà tuyển dụng"
+                    title={t('feed.sendEmailToEmployer', 'Gửi email cho nhà tuyển dụng')}
                   >
                     <Mail size={14} className="text-text-subtle" />
-                    <span>Gửi CV</span>
+                    <span>{t('feed.sendCv', 'Gửi CV')}</span>
                   </a>
                 )}
                 {post.job.applyUrl && (
@@ -357,7 +373,7 @@ function PostDetailCard({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-bold text-on-primary shadow-sm hover:bg-primary-hover transition cursor-pointer"
                   >
-                    <span>Ứng tuyển ngay</span>
+                    <span>{t('feed.applyNow', 'Ứng tuyển ngay')}</span>
                     <ExternalLink size={13} />
                   </a>
                 )}
@@ -367,25 +383,25 @@ function PostDetailCard({
             {/* Thông tin chi tiết: Mức lương, Email, Địa điểm (Grid trực quan tương tự Sự kiện) */}
             <div className="mb-6 grid gap-4 rounded-xl border border-border bg-surface-2 p-5 sm:grid-cols-2">
               <div>
-                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Mức lương</p>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.salaryLabel', 'Mức lương')}</p>
                 <div className="flex items-center gap-1.5 text-sm font-semibold">
                   <Coins size={16} className="text-success shrink-0" />
                   {(post.job.salaryMin || post.job.salaryMax) ? (
                     <span className="text-success font-bold">
                       {post.job.salaryMin && post.job.salaryMax
-                        ? `${post.job.salaryMin.toLocaleString('vi-VN')} - ${post.job.salaryMax.toLocaleString('vi-VN')} VNĐ`
+                        ? t('feed.salaryRange', { min: post.job.salaryMin.toLocaleString(), max: post.job.salaryMax.toLocaleString() })
                         : post.job.salaryMin
-                        ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VNĐ`
-                        : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VNĐ`}
+                        ? t('feed.salaryFrom', { amount: post.job.salaryMin.toLocaleString() })
+                        : t('feed.salaryUpTo', { amount: post.job.salaryMax?.toLocaleString() })}
                     </span>
                   ) : (
-                    <span className="text-text-subtle font-medium">Thỏa thuận</span>
+                    <span className="text-text-subtle font-medium">{t('feed.salaryNegotiable', 'Thỏa thuận')}</span>
                   )}
                 </div>
               </div>
 
               <div>
-                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Liên hệ tuyển dụng</p>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.recruitmentContact', 'Liên hệ tuyển dụng')}</p>
                 <div className="flex items-center gap-1.5 text-sm font-semibold">
                   <Mail size={16} className="text-info shrink-0" />
                   {post.job.contactEmail ? (
@@ -404,7 +420,7 @@ function PostDetailCard({
 
               {post.job.location && (
                 <div className="col-span-1 sm:col-span-2 mt-2 border-t border-border pt-4">
-                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">Địa điểm làm việc</p>
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.workLocation', 'Địa điểm làm việc')}</p>
                   <p className="flex items-start gap-1.5 text-sm font-medium text-text">
                     <MapPin size={16} className="text-primary-solid shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{post.job.location}</span>
@@ -416,7 +432,7 @@ function PostDetailCard({
             {/* Mô tả tuyển dụng */}
             {post.text && (
               <div className="mb-6">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">Mô tả công việc:</p>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">{t('feed.jobDescription', 'Mô tả công việc:')}</p>
                 <p className="whitespace-pre-line text-[15px] leading-relaxed text-text">
                   {post.text}
                 </p>
@@ -429,7 +445,7 @@ function PostDetailCard({
               if (imgs.length === 0) return null
               return (
                 <div className="overflow-hidden rounded-xl border border-border shadow-sm">
-                  <ImageCarousel images={imgs} height={420} altPrefix="Ảnh tuyển dụng" />
+                  <ImageCarousel images={imgs} height={420} altPrefix={t('feed.recruitmentImage', 'Ảnh tuyển dụng')} />
                 </div>
               )
             })()}
@@ -444,11 +460,11 @@ function PostDetailCard({
           <div className="bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 px-6 py-4 dark:border-border">
             <h3 className="flex items-center gap-2 font-bold text-info text-lg dark:text-text">
               <CalendarPlus size={20} className="text-info" />
-              <span>Sự kiện: <span className="text-text">{post.event.title}</span></span>
+              <span>{t('feed.event')}: <span className="text-text">{post.event.title}</span></span>
             </h3>
             {post.event.status === 'CANCELLED' ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-3 py-1 text-xs font-bold text-danger">
-                <Ban size={13} /> Đã hủy
+                <Ban size={13} /> {t('feed.eventCancelled', 'Đã hủy')}
               </span>
             ) : isAuthor && !isEventEnded && onCancelEvent ? (
               <Button
@@ -457,9 +473,9 @@ function PostDetailCard({
                 size="sm"
                 onClick={onCancelEvent}
                 className="border-danger-border text-danger hover:bg-danger-soft text-xs px-3 h-8 font-semibold"
-                title="Hủy tổ chức sự kiện này"
+                title={t('event.cancelEventTooltip', 'Hủy tổ chức sự kiện này')}
               >
-                <Ban size={13} className="mr-1" /> Hủy sự kiện
+                <Ban size={13} className="mr-1" /> {t('event.cancelEventAction', 'Hủy sự kiện')}
               </Button>
             ) : null}
           </div>
@@ -468,7 +484,7 @@ function PostDetailCard({
             {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 p-4 shadow-xs dark:border-border dark:bg-surface-2">
               <div className="min-w-0">
-                <p className="text-sm font-bold text-text">Đăng ký tham gia sự kiện</p>
+                <p className="text-sm font-bold text-text">{t('event.registerEvent', 'Đăng ký tham gia sự kiện')}</p>
               </div>
               <EventRsvpButton
                 eventId={post.event.id ?? post.eventId}
@@ -488,7 +504,7 @@ function PostDetailCard({
             <div className="mb-6 grid gap-4 rounded-xl border border-border bg-surface-2 p-5 sm:grid-cols-2">
               {post.event.startTime && (
                 <div>
-                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Bắt đầu</p>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.startTime', 'Bắt đầu')}</p>
                   <p className="flex items-center gap-1.5 text-sm font-semibold text-text">
                     <Clock size={15} className="text-info" />
                     {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
@@ -498,7 +514,7 @@ function PostDetailCard({
               )}
               {post.event.endTime ? (
                 <div>
-                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Kết thúc</p>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.endTime', 'Kết thúc')}</p>
                   <p className="flex items-center gap-1.5 text-sm font-semibold text-text">
                     <Clock size={15} className="text-danger" />
                     {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
@@ -507,13 +523,13 @@ function PostDetailCard({
                 </div>
               ) : (
                 <div>
-                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Kết thúc</p>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.endTime', 'Kết thúc')}</p>
                   <p className="text-sm font-semibold text-text-subtle">—</p>
                 </div>
               )}
               {(post.event.location || post.event.capacity) && (
                 <div className="col-span-1 sm:col-span-2 mt-2 border-t border-border pt-4">
-                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">Địa điểm & Sức chứa</p>
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.locationAndCapacity', 'Địa điểm & Sức chứa')}</p>
                   <div className="flex flex-wrap items-center gap-5">
                     {post.event.location && (
                       <p className="flex items-center gap-1.5 text-sm font-medium text-text">
@@ -522,7 +538,7 @@ function PostDetailCard({
                     )}
                     {post.event.capacity && (
                       <p className="flex items-center gap-1.5 text-sm font-medium text-text">
-                        <Users size={15} className="text-aqua-600" /> Tối đa {post.event.capacity} người
+                        <Users size={15} className="text-aqua-600" /> {t('feed.maxAttendees', { count: post.event.capacity })}
                       </p>
                     )}
                   </div>
@@ -533,7 +549,7 @@ function PostDetailCard({
             {/* Mô tả sự kiện */}
             {post.text && (
               <div className="mb-6">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-info">Mô tả sự kiện:</p>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-info">{t('feed.eventDescription', 'Mô tả sự kiện:')}</p>
                 <p className="whitespace-pre-line text-[15px] leading-relaxed text-text">
                   {post.text}
                 </p>
@@ -546,7 +562,7 @@ function PostDetailCard({
               if (imgs.length === 0) return null
               return (
                 <div className="overflow-hidden rounded-xl border border-border shadow-sm">
-                  <ImageCarousel images={imgs} height={420} altPrefix="Ảnh sự kiện" />
+                  <ImageCarousel images={imgs} height={420} altPrefix={t('feed.eventPhotos', 'Ảnh sự kiện')} />
                 </div>
               )
             })()}
@@ -558,7 +574,7 @@ function PostDetailCard({
       {post.type !== 'event' && post.type !== 'recruitment' && post.images && post.images.length > 0 && (
         <ImageCarousel
           images={post.images}
-          altPrefix={`Ảnh đính kèm bài viết của ${post.author}`}
+          altPrefix={t('feed.postAttachedImagesOf', { name: post.author })}
         />
       )}
 
@@ -587,7 +603,7 @@ function PostDetailCard({
               <Heart size={16} className={cn(liked && 'fill-danger text-danger')} />
             </motion.span>
           </AnimatePresence>
-          <span>{compact(likeCount)} thích</span>
+          <span>{compact(likeCount)} {t('feed.likeAction', 'thích')}</span>
         </button>
         <button
           disabled={!canInteract}
@@ -597,7 +613,7 @@ function PostDetailCard({
           }}
           className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition duration-200 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
-          <MessageCircle size={16} /> <span>{compact(post.comments)} bình luận</span>
+          <MessageCircle size={16} /> <span>{compact(post.comments)} {t('feed.comment', 'bình luận')}</span>
         </button>
         <button
           disabled={!canInteract}
@@ -605,13 +621,13 @@ function PostDetailCard({
           className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition duration-200 enabled:hover:text-violet-500 dark:enabled:hover:text-violet-400 disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
           <Repeat size={16} />
-          <span>Chia sẻ</span>
+          <span>{t('feed.share', 'Chia sẻ')}</span>
         </button>
         {!isAuthor && (canReport ? (
           <button
             type="button"
             onClick={onReport}
-            aria-label="Báo cáo bài viết"
+            aria-label={t('feed.reportPostTitle', 'Báo cáo bài viết')}
             className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-text-subtle transition duration-200 hover:bg-danger-soft hover:text-danger cursor-pointer"
           >
             <Flag size={16} />
@@ -619,14 +635,14 @@ function PostDetailCard({
         ) : !canInteract ? (
           <button
             disabled
-            aria-label="Đăng nhập để báo cáo bài viết"
+            aria-label={t('feed.loginToReport', 'Đăng nhập để báo cáo bài viết')}
             className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-text-subtle dark:text-text-subtle disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Flag size={16} />
           </button>
         ) : null)}
         <button
-          aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+          aria-label={saved ? t('feed.unsavePost', 'Bỏ lưu bài viết') : t('feed.save', 'Lưu bài viết')}
           onClick={handleSave}
           className={cn(
             'inline-flex items-center justify-center rounded-xl p-2 transition duration-200 cursor-pointer',
@@ -667,6 +683,7 @@ function CommentItem({
   onReply?: (id: string, name: string) => void
   onDelete?: (comment: Comment) => void
 }) {
+  const { t } = useTranslation()
   const isReply = !!comment.parentId
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(comment.text)
@@ -686,10 +703,10 @@ function CommentItem({
       {
         onSuccess: () => {
           setIsEditing(false)
-          toast.success('Đã cập nhật bình luận!')
+          toast.success(t('feed.editCommentSuccess', 'Đã cập nhật bình luận!'))
         },
         onError: (err: any) => {
-          toast.error(err.response?.data?.message || err.message || 'Không thể cập nhật bình luận.')
+          toast.error(err.response?.data?.message || err.message || t('feed.editCommentError', 'Không thể cập nhật bình luận.'))
         },
       }
     )
@@ -736,7 +753,7 @@ function CommentItem({
                   type="button"
                   onClick={handleStartEdit}
                   className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
-                  aria-label="Chỉnh sửa bình luận"
+                  aria-label={t('feed.editComment', 'Chỉnh sửa bình luận')}
                 >
                   <Pencil size={13} />
                 </button>
@@ -746,7 +763,7 @@ function CommentItem({
                   type="button"
                   onClick={() => onDelete(comment)}
                   className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
-                  aria-label="Xóa bình luận"
+                  aria-label={t('feed.deleteCommentTitle', 'Xóa bình luận')}
                 >
                   <Trash2 size={13} />
                 </button>
@@ -771,7 +788,7 @@ function CommentItem({
                   disabled={updateComment.isPending}
                   className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
                 >
-                  Hủy
+                  {t('common.cancel', 'Hủy')}
                 </button>
                 <button
                   type="submit"
@@ -779,7 +796,7 @@ function CommentItem({
                   className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
                 >
                   {updateComment.isPending ? <Loader2 size={13} className="animate-spin" /> : null}
-                  <span>{updateComment.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}</span>
+                  <span>{updateComment.isPending ? t('common.saving', 'Đang lưu...') : t('common.saveChanges', 'Lưu thay đổi')}</span>
                 </button>
               </div>
             </form>
@@ -804,7 +821,7 @@ function CommentItem({
               onClick={() => onReply(comment.parentId || comment.id, comment.author)}
               className="mt-1.5 inline-block text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
             >
-              Trả lời
+              {t('forum.reply', 'Trả lời')}
             </button>
           )}
         </div>
@@ -839,6 +856,7 @@ function InlineReplyForm({
   onCancel: () => void
   onSuccess: () => void
 }) {
+  const { t } = useTranslation()
   const viewer = useAuthStore((s) => s.user)
   const [text, setText] = useState('')
   const createComment = useCreateComment(postId)
@@ -853,11 +871,11 @@ function InlineReplyForm({
       {
         onSuccess: () => {
           setText('')
-          toast.success('Đã gửi phản hồi!')
+          toast.success(t('feed.replySentSuccess', 'Đã gửi phản hồi!'))
           onSuccess()
         },
         onError: (err: any) => {
-          toast.error(err.response?.data?.message || err.message || 'Không thể gửi phản hồi.')
+          toast.error(err.response?.data?.message || err.message || t('feed.replySentError', 'Không thể gửi phản hồi.'))
         },
       }
     )
@@ -866,13 +884,13 @@ function InlineReplyForm({
   return (
     <div className="relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
       <form onSubmit={handleSubmit} className="flex items-start gap-2.5 rounded-2xl bg-surface-2 p-3">
-        <Avatar src={viewer?.avatarUrl ?? undefined} name={viewer?.name ?? 'Bạn'} size={28} verified={viewer?.verified} className="shrink-0" />
+        <Avatar src={viewer?.avatarUrl ?? undefined} name={viewer?.name ?? t('common.you', 'Bạn')} size={28} verified={viewer?.verified} className="shrink-0" />
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-center justify-between text-xs text-text-subtle">
             <span>
-              Trả lời <strong className="text-primary-solid">@{replyingTo.name}</strong>
+              {t('forum.replyingTo', { name: replyingTo.name })}
             </span>
-            <button aria-label="Đóng" type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
+            <button aria-label={t('common.close', 'Đóng')} type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
               <X size={13} />
             </button>
           </div>
@@ -882,7 +900,7 @@ function InlineReplyForm({
             maxLength={1000}
             rows={2}
             autoFocus
-            placeholder={`Viết phản hồi cho ${replyingTo.name}...`}
+            placeholder={t('feed.writeReplyPlaceholder', { name: replyingTo.name })}
             className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           <div className="flex justify-end gap-2">
@@ -891,7 +909,7 @@ function InlineReplyForm({
               onClick={onCancel}
               className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
             >
-              Hủy
+              {t('common.cancel', 'Hủy')}
             </button>
             <button
               type="submit"
@@ -899,7 +917,7 @@ function InlineReplyForm({
               className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
             >
               {createComment.isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-              <span>Gửi phản hồi</span>
+              <span>{t('feed.sendReply', 'Gửi phản hồi')}</span>
             </button>
           </div>
         </div>
@@ -912,6 +930,7 @@ function InlineReplyForm({
  * Ô soạn bình luận chính ở đầu danh sách (dạng thanh pill thanh lịch như hội nhóm).
  */
 function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
+  const { t } = useTranslation()
   const viewer = useAuthStore((s) => s.user)
   const promptLogin = useLoginPrompt((s) => s.open)
   const [content, setContent] = useState('')
@@ -920,13 +939,13 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
   if (isGuest || !viewer) {
     return (
       <div className="flex items-center justify-between rounded-xl bg-surface p-3 border border-border shadow-2xs">
-        <p className="text-xs text-text-subtle">Đăng nhập để tham gia bình luận.</p>
+        <p className="text-xs text-text-subtle">{t('auth.loginToComment')}</p>
         <button
           type="button"
-          onClick={() => promptLogin('Đăng nhập để tham gia bình luận.')}
+          onClick={() => promptLogin(t('auth.loginToComment'))}
           className="text-xs font-bold text-primary-solid hover:underline flex items-center gap-1 cursor-pointer"
         >
-          Đăng nhập <ArrowRight size={12} />
+          {t('common.login')} <ArrowRight size={12} />
         </button>
       </div>
     )
@@ -942,10 +961,10 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
       {
         onSuccess: () => {
           setContent('')
-          toast.success('Đã gửi bình luận!')
+          toast.success(t('feed.commentSent', 'Đã gửi bình luận!'))
         },
         onError: (err: any) => {
-          toast.error(err.response?.data?.message || err.message || 'Không thể gửi bình luận.')
+          toast.error(err.response?.data?.message || err.message || t('feed.createCommentError', 'Không thể gửi bình luận.'))
         },
       }
     )
@@ -956,18 +975,18 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
       <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
       <div className="relative flex-1">
         <input
-          aria-label="Viết bình luận công khai..."
+          aria-label={t('feed.writePublicComment', 'Viết bình luận công khai...')}
           type="text"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           maxLength={1000}
-          placeholder="Viết bình luận công khai..."
+          placeholder={t('feed.writePublicComment', 'Viết bình luận công khai...')}
           className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
         />
         <button
           type="submit"
           disabled={!content.trim() || createComment.isPending}
-          aria-label="Gửi bình luận"
+          aria-label={t('feed.sendCommentAria', 'Gửi bình luận')}
           className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
         >
           {createComment.isPending ? (
@@ -987,6 +1006,7 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
  * xử lý đầy đủ các trạng thái loading / not-available (404) / forbidden (403) / error / thành công.
  */
 export function PostDetailPage() {
+  const { t } = useTranslation()
   // === Bước 1: Lấy ID bài viết từ URL ===
   const { id = '' } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -1089,7 +1109,7 @@ export function PostDetailPage() {
                   { eventId },
                   {
                     onSuccess: (res) => {
-                      toast.success(res.message || 'Đã hủy sự kiện thành công!')
+                      toast.success(res.message || t('event.cancelEventSuccess', 'Đã hủy sự kiện thành công!'))
                       setCancelEventModalOpen(false)
                       refetch()
                     },
@@ -1097,7 +1117,7 @@ export function PostDetailPage() {
                       toast.error(
                         err.response?.data?.message ||
                           err.message ||
-                          'Không thể hủy sự kiện. Vui lòng thử lại.'
+                          t('event.cancelEventError', 'Không thể hủy sự kiện. Vui lòng thử lại.')
                       )
                     },
                   }
@@ -1132,6 +1152,7 @@ function CommentsSection({
   commentCount: number
   isGuest: boolean
 }) {
+  const { t } = useTranslation()
   const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null)
   const [deletingComment, setDeletingComment] = useState<Comment | null>(null)
   const currentUser = useAuthStore((s) => s.user)
@@ -1227,11 +1248,11 @@ function CommentsSection({
         </div>
       ) : isError ? (
         <Card hover={false} className="flex items-center justify-between gap-3 p-4">
-          <p className="text-sm text-text-subtle">Không tải được bình luận.</p>
-          <Button variant="secondary" size="sm" onClick={() => refetch()}>Thử lại</Button>
+          <p className="text-sm text-text-subtle">{t('feed.loadCommentsError', 'Không tải được bình luận.')}</p>
+          <Button variant="secondary" size="sm" onClick={() => refetch()}>{t('common.tryAgain', 'Thử lại')}</Button>
         </Card>
       ) : comments.length === 0 ? (
-        <p className="py-6 text-center text-sm text-text-subtle">Chưa có bình luận nào — hãy là người đầu tiên bình luận.</p>
+        <p className="py-6 text-center text-sm text-text-subtle">{t('feed.noCommentsYet', 'Chưa có bình luận nào — hãy là người đầu tiên bình luận.')}</p>
       ) : (
         <div className="space-y-3">
           {rootComments.map((root) => {
@@ -1303,7 +1324,7 @@ function CommentsSection({
                 disabled={isFetchingNextPage}
                 leftIcon={isFetchingNextPage ? <Loader2 size={15} className="animate-spin" /> : undefined}
               >
-                {isFetchingNextPage ? 'Đang tải…' : 'Xem thêm bình luận'}
+                {isFetchingNextPage ? t('feed.loadingMore', 'Đang tải…') : t('feed.viewMoreComments', 'Xem thêm bình luận')}
               </Button>
             </div>
           )}

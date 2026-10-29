@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { FileText, Download, ZoomIn, Clock, Check, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -20,6 +21,7 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ message, isMe, isGroup, position = 'single' }: MessageBubbleProps) {
+  const { t } = useTranslation()
   const isFirst = position === 'single' || position === 'first'
   const isLast = position === 'single' || position === 'last'
   const [previewImage, setPreviewImage] = useState<{ url: string; fileName?: string } | null>(null)
@@ -55,7 +57,7 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
         <div className="max-w-md overflow-hidden rounded-2xl border border-warning-border border-l-4 border-l-amber-500 bg-[#fdfaf5] p-3.5 text-xs text-text shadow-sm dark:bg-[#252422]">
           <div className="flex items-center justify-between gap-2 pb-2 border-b border-warning-border">
             <span className="font-heading font-black text-warning">
-              TICKET YÊU CẦU ĐIỀU CHỈNH
+              {t('messages.adjustmentTicket', 'TICKET YÊU CẦU ĐIỀU CHỈNH')}
             </span>
             <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-bold text-warning">
               v{adj.version}
@@ -65,7 +67,7 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
             "{adj.note}"
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-text-subtle">
-            <span>{adj.senderName} yêu cầu điều chỉnh</span>
+            <span>{t('messages.adjustmentRequested', { name: adj.senderName, defaultValue: `${adj.senderName} yêu cầu điều chỉnh` })}</span>
             {formattedTime && <span>{formattedTime}</span>}
           </div>
         </div>
@@ -130,7 +132,7 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
                     >
                       <img
                         src={att.url}
-                        alt={att.fileName || 'Hình ảnh'}
+                        alt={att.fileName || t('common.image', 'Hình ảnh')}
                         className="max-h-80 w-auto rounded-2xl object-cover"
                         loading="lazy"
                       />
@@ -196,7 +198,7 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
                     <FileText size={20} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-text">{att.fileName || 'Tài liệu đính kèm'}</p>
+                    <p className="truncate font-bold text-text">{att.fileName || t('messages.attachedDocument', 'Tài liệu đính kèm')}</p>
                     <p className="text-xs text-text-subtle">
                       {formatFileSize(att.fileSize)}
                       {!hasText && ` • ${formattedTime}`}
@@ -257,17 +259,17 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
                     <div className={cn('flex items-center gap-1 px-1 pt-0.5 text-xs text-text-subtle', isMe ? 'justify-end' : 'justify-start')}>
                       <span>{formattedTime}</span>
                       {isMe && message.status === 'sending' && (
-                        <span title="Đang gửi..." className="inline-flex items-center">
+                        <span title={t('messages.sending', 'Đang gửi...')} className="inline-flex items-center">
                           <Clock size={11} className="animate-spin" />
                         </span>
                       )}
                       {isMe && message.status === 'error' && (
-                        <span title="Gửi thất bại" className="inline-flex items-center text-danger">
+                        <span title={t('messages.sendFailed', 'Gửi thất bại')} className="inline-flex items-center text-danger">
                           <AlertCircle size={11} />
                         </span>
                       )}
                       {isMe && (!message.status || message.status === 'sent') && (
-                        <span title="Đã gửi" className="inline-flex items-center">
+                        <span title={t('messages.sent', 'Đã gửi')} className="inline-flex items-center">
                           <Check size={11} />
                         </span>
                       )}
@@ -289,17 +291,17 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
                     >
                       <span>{formattedTime}</span>
                       {isMe && message.status === 'sending' && (
-                        <span title="Đang gửi..." className="inline-flex items-center text-primary-solid">
+                        <span title={t('messages.sending', 'Đang gửi...')} className="inline-flex items-center text-primary-solid">
                           <Clock size={11} className="animate-spin" />
                         </span>
                       )}
                       {isMe && message.status === 'error' && (
-                        <span title="Gửi thất bại" className="inline-flex items-center text-danger">
+                        <span title={t('messages.sendFailed', 'Gửi thất bại')} className="inline-flex items-center text-danger">
                           <AlertCircle size={11} />
                         </span>
                       )}
                       {isMe && (!message.status || message.status === 'sent') && (
-                        <span title="Đã gửi" className="inline-flex items-center text-success">
+                        <span title={t('messages.sent', 'Đã gửi')} className="inline-flex items-center text-success">
                           <Check size={11} />
                         </span>
                       )}
@@ -325,17 +327,17 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
                     >
                       <span>{formattedTime}</span>
                       {isMe && message.status === 'sending' && (
-                        <span title="Đang gửi..." className="inline-flex items-center text-primary-solid">
+                        <span title={t('messages.sending', 'Đang gửi...')} className="inline-flex items-center text-primary-solid">
                           <Clock size={11} className="animate-spin" />
                         </span>
                       )}
                       {isMe && message.status === 'error' && (
-                        <span title="Gửi thất bại" className="inline-flex items-center text-danger">
+                        <span title={t('messages.sendFailed', 'Gửi thất bại')} className="inline-flex items-center text-danger">
                           <AlertCircle size={11} />
                         </span>
                       )}
                       {isMe && (!message.status || message.status === 'sent') && (
-                        <span title="Đã gửi" className="inline-flex items-center text-success">
+                        <span title={t('messages.sent', 'Đã gửi')} className="inline-flex items-center text-success">
                           <Check size={11} />
                         </span>
                       )}
@@ -357,17 +359,17 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
                     >
                       <span>{formattedTime}</span>
                       {isMe && message.status === 'sending' && (
-                        <span title="Đang gửi..." className="inline-flex items-center text-primary-solid">
+                        <span title={t('messages.sending', 'Đang gửi...')} className="inline-flex items-center text-primary-solid">
                           <Clock size={11} className="animate-spin" />
                         </span>
                       )}
                       {isMe && message.status === 'error' && (
-                        <span title="Gửi thất bại" className="inline-flex items-center text-danger">
+                        <span title={t('messages.sendFailed', 'Gửi thất bại')} className="inline-flex items-center text-danger">
                           <AlertCircle size={11} />
                         </span>
                       )}
                       {isMe && (!message.status || message.status === 'sent') && (
-                        <span title="Đã gửi" className="inline-flex items-center text-success">
+                        <span title={t('messages.sent', 'Đã gửi')} className="inline-flex items-center text-success">
                           <Check size={11} />
                         </span>
                       )}

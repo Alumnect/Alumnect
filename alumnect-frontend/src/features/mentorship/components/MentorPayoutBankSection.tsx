@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Building, User, Hash } from 'lucide-react'
 import { SelectDropdown, type SelectOption } from '@/components/ui'
 import { usePayoutBanks } from '../hooks/usePayoutBanks'
@@ -24,6 +25,7 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
   onBankAccountNumberChange,
   onBankAccountHolderChange,
 }) => {
+  const { t } = useTranslation()
   const { banks, isLoading, isError, refetch } = usePayoutBanks()
   const selectedBank = banks.find((bank) => bank.bin === bankBin)
   // Giữ lựa chọn đã lưu trước đó dù ngân hàng không còn trong danh sách hiện tại.
@@ -49,14 +51,14 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
     if (missingSavedBank) {
       list.unshift({
         value: bankBin,
-        label: bankName || 'Ngân hàng đã lưu',
+        label: bankName || t('mentoring.savedBank'),
         sublabel: `BIN ${bankBin}`,
         icon: <Building className="h-4 w-4 text-text-subtle shrink-0" />,
       })
     }
 
     return list
-  }, [banks, bankBin, bankName, missingSavedBank])
+  }, [banks, bankBin, bankName, missingSavedBank, t])
 
   return (
     <div className="bg-surface rounded-2xl border border-cream-300/80 dark:border-border p-6 shadow-sm">
@@ -67,7 +69,7 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
           </div>
           <div>
             <h3 className="font-semibold text-text text-lg">
-              Tài khoản nhận thanh toán <span className="text-danger">*</span>
+              {t('mentoring.payoutBankStepTitle')} <span className="text-danger">*</span>
             </h3>
           </div>
         </div>
@@ -78,13 +80,13 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
           {/* Tên ngân hàng */}
           <div className="sm:col-span-2">
             <label className="block text-xs font-semibold text-text-muted mb-1.5 flex items-center gap-1.5">
-              <Building className="w-3.5 h-3.5 text-primary-solid" /> Ngân hàng <span className="text-danger">*</span>
+              <Building className="w-3.5 h-3.5 text-primary-solid" /> {t('mentoring.bankLabel')} <span className="text-danger">*</span>
             </label>
             <SelectDropdown
               value={bankBin}
               disabled={isLoading}
-              placeholder={isLoading ? 'Đang tải danh sách ngân hàng...' : 'Chọn ngân hàng nhận tiền'}
-              searchPlaceholder="Tìm ngân hàng theo tên viết tắt, tên đầy đủ hoặc mã BIN..."
+              placeholder={isLoading ? t('mentoring.bankLoading') : t('mentoring.bankSelectPlaceholder')}
+              searchPlaceholder={t('mentoring.bankSearchPlaceholder')}
               options={bankOptions}
               onChange={(selectedVal) => {
                 const selected = banks.find((bank) => bank.bin === selectedVal)
@@ -97,9 +99,9 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
             />
             {isError && (
               <p className="mt-1 text-xs text-danger">
-                Không tải được danh sách ngân hàng từ VietQR.{' '}
+                {t('mentoring.bankLoadError')}{' '}
                 <button type="button" className="underline font-semibold" onClick={() => refetch()}>
-                  Thử lại
+                  {t('mentoring.retry')}
                 </button>
               </p>
             )}
@@ -116,12 +118,12 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
           {/* Số tài khoản */}
           <div>
             <label className="block text-xs font-semibold text-text-muted mb-1.5 flex items-center gap-1.5">
-              <Hash className="w-3.5 h-3.5 text-primary-solid" /> Số tài khoản <span className="text-danger">*</span>
+              <Hash className="w-3.5 h-3.5 text-primary-solid" /> {t('mentoring.accountNumberLabel')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               maxLength={50}
-              placeholder="VD: 0123456789"
+              placeholder={t('mentoring.accountNumberPlaceholder')}
               value={bankAccountNumber}
               onChange={(e) => onBankAccountNumberChange(e.target.value.replace(/\s+/g, ''))}
               className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition placeholder:text-text-subtle dark:placeholder:text-text-subtle"
@@ -131,12 +133,12 @@ export const MentorPayoutBankSection: React.FC<Props> = ({
           {/* Tên chủ tài khoản */}
           <div>
             <label className="block text-xs font-semibold text-text-muted mb-1.5 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-primary-solid" /> Chủ tài khoản (IN HOA, không dấu) <span className="text-danger">*</span>
+              <User className="w-3.5 h-3.5 text-primary-solid" /> {t('mentoring.accountHolderLabel')} <span className="text-danger">*</span>
             </label>
             <input
               type="text"
               maxLength={150}
-              placeholder="VD: NGUYEN VAN A"
+              placeholder={t('mentoring.accountHolderPlaceholder')}
               value={bankAccountHolder}
               onChange={(e) => onBankAccountHolderChange(e.target.value.toUpperCase())}
               className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text text-sm font-semibold tracking-wide uppercase focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition placeholder:text-text-subtle dark:placeholder:text-text-subtle"

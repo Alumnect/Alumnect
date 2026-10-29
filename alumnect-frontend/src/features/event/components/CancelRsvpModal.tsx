@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, CalendarX, Loader2 } from 'lucide-react'
 import { Modal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -21,6 +22,8 @@ export function CancelRsvpModal({
   isPending,
   eventTitle,
 }: CancelRsvpModalProps) {
+  const { t } = useTranslation()
+
   const handleClose = () => {
     if (!isPending) onClose()
   }
@@ -29,7 +32,7 @@ export function CancelRsvpModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Hủy đăng ký sự kiện"
+      title={t('event.cancelRsvpModalTitle')}
       icon={<CalendarX size={18} className="text-danger" />}
       maxWidthClassName="max-w-md"
       footer={
@@ -41,7 +44,7 @@ export function CancelRsvpModal({
             onClick={handleClose}
             disabled={isPending}
           >
-            Giữ lại đăng ký
+            {t('event.keepRsvp')}
           </Button>
           <Button
             type="button"
@@ -58,7 +61,7 @@ export function CancelRsvpModal({
             }
             className="border-danger bg-danger text-text-inverse hover:opacity-90"
           >
-            {isPending ? 'Đang hủy…' : 'Xác nhận hủy'}
+            {isPending ? t('common.processing') : t('event.confirmCancelRsvp')}
           </Button>
         </div>
       }
@@ -67,18 +70,12 @@ export function CancelRsvpModal({
         <div className="flex items-center gap-2.5 rounded-xl border border-warning-border bg-warning-soft p-3 text-xs text-warning">
           <AlertTriangle size={16} className="shrink-0 text-warning" />
           <p className="text-warning">
-            <strong className="text-warning">Lưu ý:</strong> Bạn có thể mất suất tham dự nếu sự kiện hết chỗ khi đăng ký lại.
+            {t('event.cancelRsvpWarning')}
           </p>
         </div>
 
         <p className="text-sm leading-relaxed text-text-muted">
-          Bạn có chắc chắn muốn hủy đăng ký tham gia sự kiện{' '}
-          {eventTitle ? (
-            <span className="font-bold text-text">"{eventTitle}"</span>
-          ) : (
-            'này'
-          )}{' '}
-          không?
+          {t('event.cancelRsvpConfirmText', { title: eventTitle || t('event.thisEvent') })}
         </p>
       </div>
     </Modal>

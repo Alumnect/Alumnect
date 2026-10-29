@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   Users,
@@ -34,6 +35,7 @@ export function EventAttendeesModal({
   capacity,
   status,
 }: EventAttendeesModalProps) {
+  const { t, i18n } = useTranslation()
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
 
@@ -75,7 +77,7 @@ export function EventAttendeesModal({
     if (!isoString) return ''
     try {
       const d = new Date(isoString)
-      return d.toLocaleDateString('vi-VN', {
+      return d.toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -94,7 +96,7 @@ export function EventAttendeesModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Danh sách người tham gia"
+      title={t('event.attendeesListTitle')}
       icon={<Users size={18} className="text-primary-solid" />}
       maxWidthClassName="max-w-xl"
     >
@@ -110,20 +112,19 @@ export function EventAttendeesModal({
             <p className="mt-0.5 flex items-center gap-1.5 text-xs text-text-subtle">
               <UserCheck size={13} className="text-primary-solid" />
               <span>
-                <strong className="text-text">{attendees.length}</strong>
-                {capacity ? ` / ${compact(capacity)}` : ''} người đã đăng ký
+                {capacity
+                  ? t('event.registeredCountWithCapacity', { registered: attendees.length, capacity: compact(capacity) })
+                  : t('event.registeredCount', { count: attendees.length })}
               </span>
             </p>
           </div>
 
           {status === 'CANCELLED' && (
             <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-bold text-danger">
-              <Ban size={11} /> Sự kiện đã hủy
+              <Ban size={11} /> {t('event.eventCancelledBadge')}
             </span>
           )}
         </div>
-
-
 
         {/* Search Bar & Role Filter Pills */}
         <div className="space-y-2.5">
@@ -134,15 +135,16 @@ export function EventAttendeesModal({
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle"
             />
             <input
-              aria-label="Tìm theo họ tên, chức danh..."
+              aria-label={t('event.searchAttendeePlaceholder')}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm theo họ tên, chức danh..."
+              placeholder={t('event.searchAttendeePlaceholder')}
               className="w-full rounded-xl border border-border bg-surface-2 py-2 pl-9 pr-8 text-xs sm:text-sm text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-hidden focus:ring-1 focus:ring-primary transition"
             />
             {search && (
-              <button aria-label="Đóng"
+              <button
+                aria-label={t('common.close')}
                 type="button"
                 onClick={() => setSearch('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"
@@ -164,7 +166,7 @@ export function EventAttendeesModal({
                   : 'bg-surface-2 text-text-muted hover:bg-slate-200/70'
               )}
             >
-              Tất cả ({attendees.length})
+              {t('event.roleAll', { count: attendees.length })}
             </button>
 
             <button
@@ -178,7 +180,7 @@ export function EventAttendeesModal({
               )}
             >
               <GraduationCap size={12} />
-              Sinh viên ({studentCount})
+              {t('event.roleStudentCount', { count: studentCount })}
             </button>
 
             <button
@@ -192,7 +194,7 @@ export function EventAttendeesModal({
               )}
             >
               <Sparkles size={11} />
-              Cựu sinh viên ({alumniCount})
+              {t('event.roleAlumniCount', { count: alumniCount })}
             </button>
           </div>
         </div>
@@ -202,15 +204,15 @@ export function EventAttendeesModal({
           <div className="flex h-52 items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="h-6 w-6 animate-spin text-primary-solid" />
-              <p className="text-xs font-medium text-text-subtle">Đang tải danh sách...</p>
+              <p className="text-xs font-medium text-text-subtle">{t('event.loadingAttendees')}</p>
             </div>
           </div>
         ) : isError ? (
           <div className="rounded-2xl border border-danger-border bg-danger-soft p-6 text-center space-y-2">
-            <p className="text-sm font-semibold text-danger">Không thể tải danh sách người tham gia</p>
-            <p className="text-xs text-danger">Đã xảy ra lỗi kết nối. Vui lòng kiểm tra lại.</p>
+            <p className="text-sm font-semibold text-danger">{t('event.loadAttendeesError')}</p>
+            <p className="text-xs text-danger">{t('event.loadAttendeesErrorDesc')}</p>
             <Button size="sm" variant="secondary" onClick={() => refetch()} className="mt-2 text-xs">
-              Thử lại
+              {t('common.tryAgain')}
             </Button>
           </div>
         ) : attendees.length === 0 ? (
@@ -219,19 +221,19 @@ export function EventAttendeesModal({
               <Users size={22} />
             </div>
             <h5 className="text-sm font-bold text-text">
-              {status === 'CANCELLED' ? 'Không có người đăng ký trước khi hủy' : 'Chưa có ai đăng ký tham gia'}
+              {status === 'CANCELLED' ? t('event.noAttendeesBeforeCancel') : t('event.noAttendeesYet')}
             </h5>
             <p className="mt-1 text-xs text-text-subtle max-w-xs mx-auto">
               {status === 'CANCELLED'
-                ? 'Sự kiện chưa ghi nhận lượt giữ chỗ nào trước thời điểm bị hủy.'
-                : 'Hãy là người đầu tiên đăng ký tham gia sự kiện này!'}
+                ? t('event.noAttendeesBeforeCancelDesc')
+                : t('event.noAttendeesYetDesc')}
             </p>
           </div>
         ) : filteredAttendees.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border py-10 text-center">
-            <p className="text-sm font-semibold text-text">Không tìm thấy người tham gia phù hợp</p>
+            <p className="text-sm font-semibold text-text">{t('event.noAttendeesMatch')}</p>
             <p className="mt-1 text-xs text-text-subtle">
-              Thử thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc vai trò khác.
+              {t('event.noAttendeesMatchDesc')}
             </p>
             <Button
               size="sm"
@@ -239,7 +241,7 @@ export function EventAttendeesModal({
               onClick={handleClearFilters}
               className="mt-3 text-xs"
             >
-              Xóa bộ lọc
+              {t('common.clearFilter')}
             </Button>
           </div>
         ) : (
@@ -267,7 +269,7 @@ export function EventAttendeesModal({
                     {attendee.headline ? (
                       <p className="truncate text-xs text-text-subtle">{attendee.headline}</p>
                     ) : (
-                      <p className="truncate text-xs text-text-subtle italic">Thành viên Alumnect</p>
+                      <p className="truncate text-xs text-text-subtle italic">{t('event.alumnectMember')}</p>
                     )}
                   </div>
                 </Link>
@@ -284,9 +286,9 @@ export function EventAttendeesModal({
                     )}
                   >
                     {attendee.role === 'ALUMNI'
-                      ? 'Cựu SV'
+                      ? t('event.roleAlumniShort')
                       : attendee.role === 'STUDENT'
-                      ? 'Sinh viên'
+                      ? t('event.roleStudentShort')
                       : attendee.role}
                   </span>
                   {attendee.registeredAt && (

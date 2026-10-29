@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   RefreshCw,
   Clock,
@@ -43,13 +44,14 @@ export function MentoringAdjustmentTicketEmbed({
   onViewDetail,
   isLatestSuperseded = false,
 }: MentoringAdjustmentTicketEmbedProps) {
+  const { t } = useTranslation()
   const formatVND = (amount?: number) => {
     if (typeof amount !== 'number') return '0đ'
     return new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
   }
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Chưa xác định'
+    if (!dateStr) return t('mentoring.undetermined', 'Chưa xác định')
     try {
       const d = new Date(dateStr)
       if (isNaN(d.getTime())) return dateStr
@@ -78,14 +80,14 @@ export function MentoringAdjustmentTicketEmbed({
       return (
         <span className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-text-muted dark:bg-surface-2">
           <Check className="h-3 w-3" />
-          Đã có Deal mới
+          {t('mentoring.hasNewDeal', 'Đã có Deal mới')}
         </span>
       )
     }
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning">
         <Clock className="h-3 w-3 text-warning" />
-        Chờ Mentor cập nhật Deal
+        {t('mentoring.waitingMentorUpdateDeal', 'Chờ Mentor cập nhật Deal')}
       </span>
     )
   }
@@ -105,7 +107,7 @@ export function MentoringAdjustmentTicketEmbed({
             {ticket.senderName}
           </span>
           <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-bold text-warning">
-            Học viên
+            {t('mentoring.student', 'Học viên')}
           </span>
           {timeString && (
             <span className="text-xs font-medium text-text-subtle">
@@ -130,11 +132,11 @@ export function MentoringAdjustmentTicketEmbed({
             </div>
             <div>
               <h4 className="font-display text-sm sm:text-base font-bold uppercase tracking-wider text-text">
-                TICKET YÊU CẦU ĐIỀU CHỈNH
+                {t('mentoring.adjustmentTicketHeading')}
               </h4>
               <p className="text-xs text-text-subtle font-medium">
                 {ticket.ticketCode}
-                {ticket.version ? ` · Điều chỉnh Deal Ticket v${ticket.version}` : ''}
+                {ticket.version ? t('mentoring.adjustDealTicketVersionSuffix', { version: ticket.version }) : ''}
               </p>
             </div>
           </div>
@@ -148,23 +150,23 @@ export function MentoringAdjustmentTicketEmbed({
           <div className="rounded-xl border border-warning-border bg-warning-soft p-3.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-warning mb-1.5">
               <MessageSquareQuote className="h-4 w-4 shrink-0 text-warning" />
-              <span>NỘI DUNG YÊU CẦU ĐIỀU CHỈNH:</span>
+              <span>{t('mentoring.adjustmentContentHeading')}</span>
             </div>
             <p className="text-sm sm:text-base font-bold text-warning whitespace-pre-wrap leading-relaxed">
-              "{ticket.adjustmentNote || 'Cần thỏa thuận lại các điều khoản'}"
+              "{ticket.adjustmentNote || t('mentoring.needRenegotiateTerms')}"
             </p>
           </div>
 
           {/* Chi tiết điều khoản Deal Ticket phiên bản đang điều chỉnh để tiện đối chiếu */}
           <div className="pt-1 space-y-2 text-xs sm:text-sm text-text-muted">
             <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
-              Thông tin Deal Ticket phiên bản {ticket.version} cần điều chỉnh:
+              {t('mentoring.dealTicketInfoToAdjust', { version: ticket.version })}
             </span>
 
             {/* Giá đề xuất */}
             <div className="flex items-center gap-2">
               <CircleDollarSign className="h-4 w-4 shrink-0 text-warning" />
-              <span className="text-text-subtle">Giá đề xuất:</span>
+              <span className="text-text-subtle">{t('mentoring.proposedPriceLabel')}</span>
               <span className="font-bold text-warning text-sm sm:text-base">
                 {formatVND(ticket.agreedPrice)}
               </span>
@@ -184,7 +186,7 @@ export function MentoringAdjustmentTicketEmbed({
               <div className="flex items-start gap-2">
                 <FileText className="h-4 w-4 shrink-0 text-warning mt-0.5" />
                 <div className="flex flex-wrap sm:flex-nowrap gap-1">
-                  <span className="text-text-subtle shrink-0">Phạm vi:</span>
+                  <span className="text-text-subtle shrink-0">{t('mentoring.scopeLabel')}</span>
                   <span className="font-semibold text-text line-clamp-2">
                     {ticket.taskScope}
                   </span>
@@ -195,10 +197,10 @@ export function MentoringAdjustmentTicketEmbed({
             {/* Hình thức */}
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 shrink-0 text-warning" />
-              <span className="text-text-subtle">Hình thức:</span>
+              <span className="text-text-subtle">{t('mentoring.modeLabel')}</span>
               <span className="font-medium text-text">
-                {MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || 'Linh hoạt'} ·{' '}
-                {MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || 'Cá nhân (1-1)'}
+                {MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || t('mentoring.flexible')} ·{' '}
+                {MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || t('mentoring.individual1on1')}
               </span>
             </div>
           </div>
@@ -212,7 +214,7 @@ export function MentoringAdjustmentTicketEmbed({
             onClick={onViewDetail}
             className="group flex items-center gap-1 text-xs font-bold text-warning hover:text-warning transition-colors"
           >
-            <span>Xem chi tiết</span>
+            <span>{t('mentoring.viewDetailBtn')}</span>
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </button>
 
@@ -223,20 +225,20 @@ export function MentoringAdjustmentTicketEmbed({
                 <button
                   type="button"
                   onClick={onReissue}
-                  title="Soạn và gửi phiên bản Deal Ticket mới"
+                  title={t('mentoring.draftNewDealTicketTooltip')}
                   className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
-                  <span>Tạo Deal Ticket mới</span>
+                  <span>{t('mentoring.createNewDealTicketBtn')}</span>
                 </button>
               ) : (
                 <span className="text-xs font-semibold text-text-subtle">
-                  {isSuperseded ? 'Đã có phiên bản Deal mới hơn' : 'Đang chờ xử lý'}
+                  {isSuperseded ? t('mentoring.hasNewerDealVersion') : t('mentoring.pendingProcessing')}
                 </span>
               )
             ) : (
               <span className="text-xs font-semibold text-warning">
-                {!isSuperseded ? 'Đang chờ Mentor gửi Deal mới' : 'Mentor đã cập nhật Deal mới'}
+                {!isSuperseded ? t('mentoring.waitingMentorSendNewDeal') : t('mentoring.mentorUpdatedNewDeal')}
               </span>
             )}
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Copy,
   MessageSquare,
@@ -48,6 +49,7 @@ interface RecipientItem {
 }
 
 export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps) {
+  const { t } = useTranslation()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const [viewMode, setViewMode] = useState<'options' | 'messenger'>('options')
   const [copied, setCopied] = useState(false)
@@ -137,7 +139,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
     // 1. Các cuộc trò chuyện gần đây
     const kw = searchKeyword.trim().toLowerCase()
     recentConversations.forEach((conv) => {
-      const title = conv.title || conv.recipientName || 'Hội thoại'
+      const title = conv.title || conv.recipientName || t('chat.conversation', 'Hội thoại')
       if (kw && !title.toLowerCase().includes(kw)) {
         return
       }
@@ -153,8 +155,8 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
         name: title,
         avatarUrl: conv.avatarUrl || conv.recipientAvatar,
         subtitle: conv.isGroup
-          ? `Nhóm trò chuyện • ${conv.memberCount || 2} thành viên`
-          : conv.recipientMajor || 'Đoạn chat gần đây',
+          ? t('chat.groupChatMembers', { count: conv.memberCount || 2, defaultValue: `Nhóm trò chuyện • ${conv.memberCount || 2} thành viên` })
+          : conv.recipientMajor || t('chat.recentChat', 'Đoạn chat gần đây'),
         isGroup: conv.isGroup,
       })
     })
@@ -168,7 +170,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           userId: u.userId,
           name: u.fullName,
           avatarUrl: u.avatarUrl,
-          subtitle: u.headline || u.major || 'Thành viên Alumnect',
+          subtitle: u.headline || u.major || t('chat.alumnectMember', 'Thành viên Alumnect'),
           isGroup: false,
         })
       }
@@ -177,10 +179,11 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
     return items
   }, [recentConversations, searchUsers, searchKeyword])
 
+  const defaultTypeLabel = t('feed.postTypeLabel')
   const resolvedUrl = shareItem?.url || (post ? `${window.location.origin}/app/posts/${post.id}` : (typeof window !== 'undefined' ? window.location.href : ''))
   const resolvedTitle = shareItem?.title || post?.author || 'Alumnect'
-  const resolvedSubtitle = shareItem?.subtitle || post?.text || 'Nội dung trên Alumnect'
-  const resolvedTypeLabel = shareItem?.typeLabel || 'bài viết'
+  const resolvedSubtitle = shareItem?.subtitle || post?.text || 'Alumnect'
+  const resolvedTypeLabel = shareItem?.typeLabel || defaultTypeLabel
   const thumbnail = shareItem !== undefined ? shareItem.thumbnail : (post?.image || (post?.images && post.images.length > 0 ? post.images[0] : null))
   const resolvedAvatar = shareItem?.avatarUrl !== undefined ? shareItem.avatarUrl : (post?.avatar || null)
 
@@ -188,11 +191,11 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
     try {
       await navigator.clipboard.writeText(resolvedUrl)
       setCopied(true)
-      toast.success(`Đã sao chép liên kết ${resolvedTypeLabel}!`)
+      toast.success(t('feed.copyLinkSuccess', { type: resolvedTypeLabel }))
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy link: ', err)
-      toast.error('Không thể sao chép liên kết')
+      toast.error(t('feed.copyLinkError'))
     }
   }
 
@@ -217,10 +220,10 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
       }
 
       setSentKeys((prev) => new Set(prev).add(item.id))
-      toast.success(`Đã gửi ${resolvedTypeLabel} tới ${item.name}!`)
+      toast.success(t('feed.sendSuccess', { type: resolvedTypeLabel, name: item.name }))
     } catch (err) {
       console.error(`Lỗi khi gửi ${resolvedTypeLabel} qua tin nhắn:`, err)
-      toast.error(`Không thể gửi tới ${item.name}. Vui lòng thử lại.`)
+      toast.error(t('feed.sendError', { name: item.name }))
     } finally {
       setSendingKey(null)
     }
@@ -240,18 +243,18 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
               type="button"
               onClick={() => setViewMode('options')}
               className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle hover:bg-surface-2 hover:text-text transition-colors"
-              title="Quay lại"
+              title={t('common.back')}
             >
               <ArrowLeft size={18} />
             </button>
-            <span className="font-bold text-text text-base">Gửi qua tin nhắn</span>
+            <span className="font-bold text-text text-base">{t('feed.sendViaMessage')}</span>
           </div>
         ) : (
           <div className="flex items-center gap-2.5">
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-primary-soft text-primary-solid">
               <Share2 size={16} />
             </div>
-            <span className="font-bold text-text text-base">Chia sẻ {resolvedTypeLabel}</span>
+            <span className="font-bold text-text text-base">{t('feed.shareType', { type: resolvedTypeLabel })}</span>
           </div>
         )
       }
@@ -264,7 +267,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
               onClick={onClose}
               className="rounded-xl px-4 text-xs font-semibold hover:bg-surface-2"
             >
-              Đóng
+              {t('common.close')}
             </Button>
           </div>
         ) : (
@@ -275,7 +278,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
               onClick={() => setViewMode('options')}
               className="rounded-xl px-3.5 text-xs font-semibold"
             >
-              Quay lại
+              {t('common.back')}
             </Button>
             <Button
               variant="primary"
@@ -283,7 +286,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
               onClick={onClose}
               className="rounded-xl px-4 text-xs font-semibold"
             >
-              {sentKeys.size > 0 ? 'Xong' : 'Đóng'}
+              {sentKeys.size > 0 ? t('feed.doneBtn') : t('common.close')}
             </Button>
           </div>
         )
@@ -309,7 +312,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
               />
             ) : (
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-text-muted">
-                {resolvedTypeLabel.includes('nhóm') && !resolvedTypeLabel.includes('bài viết') ? (
+                {shareItem?.type === 'group' || (resolvedTypeLabel.toLowerCase().includes('group') || resolvedTypeLabel.toLowerCase().includes('nhóm')) ? (
                   <Users size={18} />
                 ) : (
                   <FileText size={18} />
@@ -337,10 +340,10 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
             </div>
             <div className="min-w-0 flex-1">
               <span className="font-bold text-text text-sm group-hover:text-info transition-colors">
-                Gửi qua tin nhắn
+                {t('feed.sendViaMessage')}
               </span>
               <p className="text-xs text-text-subtle mt-0.5">
-                Gửi trực tiếp cho bạn bè hoặc các nhóm trò chuyện
+                {t('feed.sendViaMessageDesc')}
               </p>
             </div>
             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-text-subtle group-hover:text-info group-hover:translate-x-0.5 group-hover:bg-info-soft transition">
@@ -366,16 +369,16 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-text text-sm group-hover:text-text transition-colors">
-                  {copied ? 'Đã sao chép liên kết!' : 'Sao chép liên kết'}
+                  {copied ? t('feed.linkCopied') : t('feed.copyLink')}
                 </span>
                 {copied && (
                   <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">
-                    Đã chép
+                    {t('feed.copiedBadge')}
                   </span>
                 )}
               </div>
               <p className="text-xs text-text-subtle mt-0.5">
-                Sao chép đường dẫn {resolvedTypeLabel} vào bộ nhớ tạm
+                {t('feed.copyLinkDesc', { type: resolvedTypeLabel })}
               </p>
             </div>
             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-text-subtle group-hover:text-text-muted group-hover:translate-x-0.5 group-hover:bg-slate-200/50 transition dark:group-hover:bg-white/10">
@@ -403,7 +406,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
               />
             ) : (
               <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-surface-2 text-text-muted">
-                {resolvedTypeLabel.includes('nhóm') && !resolvedTypeLabel.includes('bài viết') ? (
+                {shareItem?.type === 'group' || (resolvedTypeLabel.toLowerCase().includes('group') || resolvedTypeLabel.toLowerCase().includes('nhóm')) ? (
                   <Users size={18} />
                 ) : (
                   <FileText size={18} />
@@ -427,11 +430,11 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           {/* 2. Ô nhập lời nhắn gửi kèm (Cố định, không cuộn) */}
           <div className="shrink-0">
             <textarea
-              aria-label="Viết lời nhắn gửi kèm (không bắt buộc)..."
+              aria-label={t('feed.writeMessageOptional')}
               rows={2}
               value={customNote}
               onChange={(e) => setCustomNote(e.target.value)}
-              placeholder="Viết lời nhắn gửi kèm (không bắt buộc)..."
+              placeholder={t('feed.writeMessageOptional')}
               className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:placeholder:text-text-subtle"
             />
           </div>
@@ -440,11 +443,11 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
           <div className="relative shrink-0">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
-              aria-label="Tìm kiếm bạn bè hoặc nhóm trò chuyện..."
+              aria-label={t('feed.searchFriendsOrGroups')}
               type="text"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="Tìm kiếm bạn bè hoặc nhóm trò chuyện..."
+              placeholder={t('feed.searchFriendsOrGroups')}
               className="w-full rounded-xl border border-border bg-surface py-1.5 pl-8 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:placeholder:text-text-subtle"
             />
             {isSearchingUsers && (
@@ -454,7 +457,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
 
           {/* 4. Nhãn danh sách (Cố định) */}
           <div className="shrink-0 text-xs font-semibold text-text-subtle">
-            {searchKeyword.trim() ? 'Kết quả tìm kiếm' : 'Gần đây'}
+            {searchKeyword.trim() ? t('feed.searchResults') : t('feed.recentChats')}
           </div>
 
           {/* 5. Danh sách người nhận (PHẦN DUY NHẤT ĐƯỢC CUỘN) */}
@@ -462,12 +465,12 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
             {isLoadingRecipients ? (
               <div className="flex h-36 flex-col items-center justify-center gap-2 text-xs text-text-subtle">
                 <Loader2 size={20} className="animate-spin text-primary-solid" />
-                <span>Đang tải danh sách liên hệ...</span>
+                <span>{t('feed.loadingContacts')}</span>
               </div>
             ) : recipientList.length === 0 ? (
               <div className="flex h-36 flex-col items-center justify-center gap-1 text-center text-xs text-text-subtle dark:text-text-subtle">
                 <User size={22} className="opacity-40" />
-                <span>Không tìm thấy người nhận hoặc nhóm phù hợp</span>
+                <span>{t('feed.noRecipientsFound')}</span>
               </div>
             ) : (
               recipientList.map((item) => {
@@ -514,17 +517,17 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
                       {isSending ? (
                         <>
                           <Loader2 size={12} className="animate-spin" />
-                          <span>Đang gửi...</span>
+                          <span>{t('feed.sendingBtn')}</span>
                         </>
                       ) : isSent ? (
                         <>
                           <Check size={12} className="text-success" />
-                          <span>Đã gửi</span>
+                          <span>{t('feed.sentBtn')}</span>
                         </>
                       ) : (
                         <>
                           <Send size={11} />
-                          <span>Gửi</span>
+                          <span>{t('feed.sendBtn')}</span>
                         </>
                       )}
                     </button>

@@ -1,4 +1,5 @@
 import { PenSquare } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '@/components/ui/primitives'
 import type { GroupDetail } from '../model/group'
 
@@ -8,6 +9,7 @@ interface GroupSidebarInfoProps {
 }
 
 export function GroupSidebarInfo({ group: _group }: GroupSidebarInfoProps) {
+  const { t } = useTranslation()
   return (
     <aside className="sticky top-20">
       <Card
@@ -19,12 +21,12 @@ export function GroupSidebarInfo({ group: _group }: GroupSidebarInfoProps) {
             <PenSquare size={16} />
           </div>
           <h3 className="font-bold text-sm text-text">
-            Đóng góp cho cộng đồng
+            {t('groups.communityContribution')}
           </h3>
         </div>
 
         <p className="mt-2.5 text-xs leading-relaxed text-text-muted">
-          Cảm ơn bạn đã đồng hành. Mỗi chia sẻ và thảo luận của bạn đều giúp cộng đồng ngày càng phát triển.
+          {t('groups.communityContributionDesc')}
         </p>
       </Card>
     </aside>

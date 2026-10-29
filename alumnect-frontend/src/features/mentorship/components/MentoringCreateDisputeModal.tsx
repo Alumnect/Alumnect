@@ -10,6 +10,7 @@ import {
   Trash2,
   Link as LinkIcon,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, SelectDropdown, DialogFrame } from '@/components/ui'
 import { useCreateDisputeTicket } from '../hooks/useMentoringTickets'
 import type { TicketEvidencePayload } from '../model/mentoringTaskTypes'
@@ -31,22 +32,22 @@ interface MentoringCreateDisputeModalProps {
 
 /** Danh mục lý do dành cho Bên tạo yêu cầu (Requester - Học viên hoặc Mentor thuê hướng dẫn) */
 const REQUESTER_DISPUTE_REASONS = [
-  { value: 'SUBSTANDARD_DELIVERABLE', label: 'Sản phẩm bàn giao không đạt chất lượng / Không đúng cam kết ban đầu' },
-  { value: 'MISSED_DEADLINE', label: 'Bên thực hiện trễ hạn bàn giao nghiêm trọng không có lý do chính đáng' },
-  { value: 'UNRESPONSIVE', label: 'Bên thực hiện không phản hồi liên lạc kéo dài (ngừng hỗ trợ / bỏ bê Task)' },
-  { value: 'UNREASONABLE_DEMAND', label: 'Bên thực hiện đòi hỏi chi phí phát sinh ngoài thỏa thuận' },
-  { value: 'DISAGREE_SETTLEMENT', label: 'Bất đồng về tỷ lệ phân chia tiền khi dừng Task' },
-  { value: 'OTHER', label: 'Lý do khác' },
+  { value: 'SUBSTANDARD_DELIVERABLE', labelKey: 'mentoring.reasonSubstandard' },
+  { value: 'MISSED_DEADLINE', labelKey: 'mentoring.reasonMissedDeadline' },
+  { value: 'UNRESPONSIVE', labelKey: 'mentoring.reasonUnresponsive' },
+  { value: 'UNREASONABLE_DEMAND', labelKey: 'mentoring.reasonUnreasonableDemand' },
+  { value: 'DISAGREE_SETTLEMENT', labelKey: 'mentoring.reasonDisagreeSettlement' },
+  { value: 'OTHER', labelKey: 'mentoring.reasonOther' },
 ]
 
 /** Danh mục lý do dành cho Bên thực hiện (Performer - Mentor nhận hướng dẫn / thực hiện Task) */
 const PERFORMER_DISPUTE_REASONS = [
-  { value: 'STUDENT_UNRESPONSIVE', label: 'Bên tạo yêu cầu không phản hồi, chậm trễ nghiệm thu / xác nhận kết quả' },
-  { value: 'OUT_OF_SCOPE_DEMAND', label: 'Bên tạo yêu cầu từ chối nghiệm thu vô cớ hoặc đòi hỏi ngoài thỏa thuận' },
-  { value: 'UNPAID_ADDITIONAL_FEE', label: 'Bên tạo yêu cầu không thanh toán khoản tiền bổ sung đã thỏa thuận' },
-  { value: 'DISAGREE_SETTLEMENT', label: 'Bất đồng về tỷ lệ phân chia tiền khi dừng Task' },
-  { value: 'STUDENT_MISCONDUCT', label: 'Bên tạo yêu cầu có hành vi thiếu chuẩn mực / vi phạm quy tắc hợp tác' },
-  { value: 'OTHER', label: 'Lý do khác' },
+  { value: 'STUDENT_UNRESPONSIVE', labelKey: 'mentoring.reasonStudentUnresponsive' },
+  { value: 'OUT_OF_SCOPE_DEMAND', labelKey: 'mentoring.reasonOutOfScopeDemand' },
+  { value: 'UNPAID_ADDITIONAL_FEE', labelKey: 'mentoring.reasonUnpaidAdditionalFee' },
+  { value: 'DISAGREE_SETTLEMENT', labelKey: 'mentoring.reasonDisagreeSettlement' },
+  { value: 'STUDENT_MISCONDUCT', labelKey: 'mentoring.reasonStudentMisconduct' },
+  { value: 'OTHER', labelKey: 'mentoring.reasonOther' },
 ]
 
 export function MentoringCreateDisputeModal({
@@ -58,6 +59,7 @@ export function MentoringCreateDisputeModal({
   isStudent = false,
   onSuccess,
 }: MentoringCreateDisputeModalProps) {
+  const { t } = useTranslation()
   // Xác định vai trò: ưu tiên isRequester, fallback sang isStudent
   const isRequesterRole = isRequester !== undefined ? isRequester : isStudent
   const disputeReasons = isRequesterRole ? REQUESTER_DISPUTE_REASONS : PERFORMER_DISPUTE_REASONS
@@ -92,7 +94,7 @@ export function MentoringCreateDisputeModal({
     setEvidences([
       ...evidences,
       {
-        title: newEvidenceTitle.trim() || 'Tài liệu / Ảnh chụp minh chứng',
+        title: newEvidenceTitle.trim() || t('mentoring.defaultEvidenceTitle'),
         fileUrl: newEvidenceUrl.trim(),
       },
     ])
@@ -109,17 +111,17 @@ export function MentoringCreateDisputeModal({
     setErrorMsg(null)
 
     if (!title.trim()) {
-      setErrorMsg('Vui lòng nhập tiêu đề khiếu nại.')
+      setErrorMsg(t('mentoring.disputeTitleRequired'))
       return
     }
 
     if (!description.trim() || description.trim().length < 10) {
-      setErrorMsg('Vui lòng mô tả chi tiết vấn đề phát sinh (tối thiểu 10 ký tự).')
+      setErrorMsg(t('mentoring.disputeDescMinLength'))
       return
     }
 
     if (!desiredSolution.trim()) {
-      setErrorMsg('Vui lòng nêu rõ phương án bạn mong muốn Ban Quản Trị giải quyết.')
+      setErrorMsg(t('mentoring.desiredResolutionRequired'))
       return
     }
 
@@ -142,7 +144,7 @@ export function MentoringCreateDisputeModal({
       setErrorMsg(
         err?.response?.data?.message ||
         err?.message ||
-        'Có lỗi xảy ra khi tạo khiếu nại tranh chấp.'
+        t('mentoring.createDisputeError')
       )
     }
   }
@@ -162,11 +164,11 @@ export function MentoringCreateDisputeModal({
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-text">Mở khiếu nại tranh chấp</h3>
-              <p className="text-xs text-text-subtle">Yêu cầu Ban Quản Trị can thiệp và phân xử công bằng</p>
+              <h3 className="font-bold text-lg text-text">{t('mentoring.disputeModalTitle')}</h3>
+              <p className="text-xs text-text-subtle">{t('mentoring.disputeModalSubtitle')}</p>
             </div>
           </div>
-          <button aria-label="Đóng"
+          <button aria-label={t('common.close')}
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-text-subtle hover:text-text-muted hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -187,20 +189,20 @@ export function MentoringCreateDisputeModal({
 
             <div className="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-border text-xs">
               <span className="text-text-subtle">
-                Vai trò của bạn khi mở khiếu nại:
+                {t('mentoring.disputeRoleLabel')}
               </span>
               <span className={`font-bold px-2.5 py-0.5 rounded-full text-xs ${
                 isRequesterRole 
                   ? 'bg-info-soft text-info' 
                   : 'bg-primary-soft text-primary-solid'
               }`}>
-                {isRequesterRole ? 'Bên tạo yêu cầu (Requester)' : 'Bên thực hiện (Mentor)'}
+                {isRequesterRole ? t('mentoring.requesterRole') : t('mentoring.mentorRole')}
               </span>
             </div>
 
             {taskTitle && (
               <div className="p-3 rounded-xl bg-surface-2 border border-border text-xs">
-                <span className="text-text-subtle">Nhiệm vụ khiếu nại: </span>
+                <span className="text-text-subtle">{t('mentoring.disputeTaskLabel')}{' '}</span>
                 <span className="font-semibold text-text">{taskTitle}</span>
               </div>
             )}
@@ -208,7 +210,7 @@ export function MentoringCreateDisputeModal({
             {/* Tiêu đề */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-text">
-                Tiêu đề khiếu nại <span className="text-danger">*</span>
+                {t('mentoring.disputeTitleLabel')} <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
@@ -217,8 +219,8 @@ export function MentoringCreateDisputeModal({
                 maxLength={255}
                 placeholder={
                   isRequesterRole
-                    ? 'Ví dụ: Khiếu nại Bên thực hiện không bàn giao kết quả đúng cam kết'
-                    : 'Ví dụ: Khiếu nại Bên tạo yêu cầu chậm trễ nghiệm thu và đòi hỏi ngoài thỏa thuận'
+                    ? t('mentoring.disputeTitlePlaceholderStudent')
+                    : t('mentoring.disputeTitlePlaceholderMentor')
                 }
                 className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition"
               />
@@ -227,13 +229,15 @@ export function MentoringCreateDisputeModal({
             {/* Lý do tranh chấp */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-text">
-                Lý do khiếu nại chính ({isRequesterRole ? 'Dành cho Bên tạo yêu cầu' : 'Dành cho Bên thực hiện'}) <span className="text-danger">*</span>
+                {t('mentoring.disputeReasonLabel', {
+                  role: isRequesterRole ? t('mentoring.requesterRole') : t('mentoring.mentorRole')
+                })} <span className="text-danger">*</span>
               </label>
               <SelectDropdown
                 value={disputeReason}
                 onChange={(val) => setDisputeReason(String(val))}
-                options={disputeReasons.map((r) => ({ value: r.value, label: r.label }))}
-                placeholder="Chọn lý do"
+                options={disputeReasons.map((r) => ({ value: r.value, label: t(r.labelKey) }))}
+                placeholder={t('mentoring.selectReasonPlaceholder')}
                 panelClassName="sm:max-w-none"
               />
               {disputeReason === 'OTHER' && (
@@ -241,7 +245,7 @@ export function MentoringCreateDisputeModal({
                   type="text"
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
-                  placeholder="Nhập lý do cụ thể..."
+                  placeholder={t('mentoring.enterSpecificReason')}
                   className="w-full mt-2 px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition"
                 />
               )}
@@ -250,25 +254,25 @@ export function MentoringCreateDisputeModal({
             {/* Chi tiết nội dung */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-text">
-                Mô tả chi tiết vấn đề phát sinh <span className="text-danger">*</span>
+                {t('mentoring.disputeDescLabel')} <span className="text-danger">*</span>
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={3000}
                 rows={4}
-                placeholder="Trình bày rõ các mốc thời gian, cam kết bị vi phạm và những trao đổi đã thực hiện..."
+                placeholder={t('mentoring.disputeDescPlaceholder')}
                 className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition resize-none"
               />
               <div className="text-right text-xs text-text-subtle">
-                {description.length}/3000 ký tự
+                {t('mentoring.charCountLimit', { current: description.length, max: 3000 })}
               </div>
             </div>
 
             {/* Phương án mong muốn */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-text">
-                Phương án mong muốn Admin xử lý <span className="text-danger">*</span>
+                {t('mentoring.desiredResolutionLabel')} <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
@@ -277,8 +281,8 @@ export function MentoringCreateDisputeModal({
                 maxLength={255}
                 placeholder={
                   isRequesterRole
-                    ? 'Ví dụ: Yêu cầu hoàn lại 80% tiền ký quỹ hoặc bàn giao đúng kết quả cam kết'
-                    : 'Ví dụ: Yêu cầu giải ngân 100% thù lao do đã bàn giao đầy đủ sản phẩm cam kết'
+                    ? t('mentoring.desiredResolutionPlaceholderStudent')
+                    : t('mentoring.desiredResolutionPlaceholderMentor')
                 }
                 className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-danger focus:border-danger transition"
               />
@@ -287,7 +291,7 @@ export function MentoringCreateDisputeModal({
             {/* Bằng chứng ban đầu (Evidence) */}
             <div className="space-y-2 p-3.5 rounded-xl border border-border bg-surface-2">
               <span className="text-xs font-semibold text-text block">
-                Bằng chứng ban đầu (Ảnh chụp / Tài liệu minh chứng)
+                {t('mentoring.initialEvidence')}
               </span>
 
               {evidences.length > 0 && (
@@ -301,7 +305,7 @@ export function MentoringCreateDisputeModal({
                         <LinkIcon className="w-3.5 h-3.5 text-info shrink-0" />
                         <span className="font-medium text-text truncate">{ev.title}</span>
                       </div>
-                      <button aria-label="Xóa"
+                      <button aria-label={t('common.delete')}
                         type="button"
                         onClick={() => handleRemoveEvidence(idx)}
                         className="text-text-subtle hover:text-danger p-1 rounded transition-colors"
@@ -318,14 +322,14 @@ export function MentoringCreateDisputeModal({
                   type="text"
                   value={newEvidenceTitle}
                   onChange={(e) => setNewEvidenceTitle(e.target.value)}
-                  placeholder="Tên tài liệu / mô tả..."
+                  placeholder={t('mentoring.evidenceTitlePlaceholder')}
                   className="px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-text"
                 />
                 <input
                   type="url"
                   value={newEvidenceUrl}
                   onChange={(e) => setNewEvidenceUrl(e.target.value)}
-                  placeholder="Đường dẫn file (https://...)"
+                  placeholder={t('mentoring.evidenceUrlPlaceholder')}
                   className="px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-text"
                 />
               </div>
@@ -338,7 +342,7 @@ export function MentoringCreateDisputeModal({
                 className="h-7 text-xs w-full"
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
-                Thêm bằng chứng vào danh sách
+                {t('mentoring.addEvidenceToList')}
               </Button>
             </div>
 
@@ -346,9 +350,9 @@ export function MentoringCreateDisputeModal({
             <div className="p-3.5 rounded-xl border border-warning-border bg-warning-soft text-warning text-xs flex items-start gap-2.5">
               <ShieldAlert className="w-5 h-5 shrink-0 text-warning mt-0.5" />
               <div className="space-y-1">
-                <p className="font-semibold">Lưu ý khi mở khiếu nại tranh chấp</p>
+                <p className="font-semibold">{t('mentoring.disputeWarningTitle')}</p>
                 <p className="text-xs leading-relaxed text-warning">
-                  Khi Dispute Ticket được tạo, nhiệm vụ sẽ chuyển sang trạng thái <strong>DISPUTED</strong>. Toàn bộ tiền thù lao và các thao tác nghiệm thu sẽ được <strong>đóng băng (ON_HOLD)</strong> để Ban Quản Trị đối soát và phân xử.
+                  {t('mentoring.disputeWarningDesc')}
                 </p>
               </div>
             </div>
@@ -361,7 +365,7 @@ export function MentoringCreateDisputeModal({
                 onClick={onClose}
                 disabled={createDisputeMutation.isPending}
               >
-                Hủy bỏ
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -371,12 +375,12 @@ export function MentoringCreateDisputeModal({
                 {createDisputeMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Đang tạo khiếu nại...
+                    {t('mentoring.creatingDispute')}
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Xác nhận mở Dispute Ticket
+                    {t('mentoring.confirmOpenDispute')}
                   </>
                 )}
               </Button>
@@ -385,3 +389,4 @@ export function MentoringCreateDisputeModal({
         </div>
       </DialogFrame>
 }
+

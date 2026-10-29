@@ -1,10 +1,13 @@
 import { forwardRef, useId } from 'react'
 import type { ReactNode, InputHTMLAttributes } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import loginBg from '@/assets/login-bg.jpg'
 
 export function AuthScaffold({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
+
   return (
     <div className="relative min-h-screen flex items-center justify-center lg:justify-between p-6 lg:p-24 overflow-hidden">
       {/* Background Image */}
@@ -19,7 +22,7 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
 
       <div className="relative z-10 hidden lg:flex flex-col max-w-lg mt-[-10vh]">
         {/* Logo */}
-        <Link to="/" className="mb-10 inline-flex items-center gap-4 transition-transform duration-200 hover:scale-105 cursor-pointer group" title="Về trang chủ AlumNect">
+        <Link to="/" className="mb-10 inline-flex items-center gap-4 transition-transform duration-200 hover:scale-105 cursor-pointer group" title={t('auth.backToHome')}>
           <div className="rounded bg-surface px-3 py-2 flex items-center transition-shadow group-hover:shadow-md">
             <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/FPT_logo_2010.svg" alt="FPT" className="h-6" />
           </div>
@@ -42,10 +45,10 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
         </Link>
 
         <p className="text-4xl font-extrabold text-white drop-shadow-md leading-tight">
-          Cộng đồng Cựu sinh viên <br /> Trường Đại học FPT
+          {t('auth.communityTitlePart1')} <br /> {t('auth.communityTitlePart2')}
         </p>
         <p className="mt-5 text-sm leading-relaxed text-white/90 drop-shadow">
-          Tham gia cộng đồng bạn sẽ có cơ hội kết nối, tìm kiếm và giao lưu với hàng chục nghìn cựu sinh viên FPTU trên khắp thế giới. Tìm kiếm những người có cùng sở thích, kinh nghiệm, hoặc đơn giản là muốn kết nối để chia sẻ những câu chuyện thú vị.
+          {t('auth.communitySubtitle')}
         </p>
       </div>
 

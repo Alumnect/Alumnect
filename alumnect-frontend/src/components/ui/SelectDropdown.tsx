@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, Check, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useClickOutside } from '@/hooks/useClickOutside'
@@ -39,12 +40,14 @@ export function SelectDropdown<T extends string | number = string | number>({
   buttonClassName,
   panelClassName,
   searchable = false,
-  searchPlaceholder = 'Tìm kiếm…',
+  searchPlaceholder,
   disabled = false,
   direction = 'auto',
   align = 'auto',
   label,
 }: SelectDropdownProps<T>) {
+  const { t } = useTranslation()
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t('common.searchPlaceholder')
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [actualDirection, setActualDirection] = useState<'top' | 'bottom'>('bottom')
@@ -226,12 +229,13 @@ export function SelectDropdown<T extends string | number = string | number>({
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={searchPlaceholder}
+                  placeholder={resolvedSearchPlaceholder}
                   autoFocus
                   className="w-full bg-transparent text-xs text-text placeholder:text-text-subtle focus:outline-none"
                 />
                 {query && (
-                  <button aria-label="Đóng"
+                  <button
+                    aria-label={t('common.close')}
                     type="button"
                     onClick={() => setQuery('')}
                     className="shrink-0 text-text-subtle hover:text-text-muted"
@@ -246,7 +250,7 @@ export function SelectDropdown<T extends string | number = string | number>({
             <div ref={listRef} role="listbox" aria-label={label ?? placeholder} className="max-h-60 overflow-y-auto space-y-0.5 [scrollbar-width:thin] pr-0.5">
               {filteredOptions.length === 0 ? (
                 <div className="px-3 py-4 text-center text-xs text-text-subtle">
-                  Không tìm thấy lựa chọn nào
+                  {t('common.noOptionsFound')}
                 </div>
               ) : (
                 filteredOptions.map((opt) => {

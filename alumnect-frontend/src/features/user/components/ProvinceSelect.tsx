@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MapPin, ChevronDown, Search, Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -75,6 +76,7 @@ interface ProvinceSelectProps {
 }
 
 export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProps) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
@@ -126,11 +128,11 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
       >
         <span className="flex items-center gap-2 truncate">
           <MapPin size={16} className={value ? 'text-primary-solid' : 'text-text-subtle'} />
-          <span>{value || '-- Chọn Tỉnh / Thành phố hiện tại --'}</span>
+          <span>{value || t('profile.selectProvincePlaceholder')}</span>
         </span>
         <div className="flex items-center gap-1">
           {value && !disabled && (
-            <button aria-label="Đóng"
+            <button aria-label={t('common.close')}
               type="button"
               onClick={handleClear}
               className="p-1 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"
@@ -156,12 +158,12 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
             <div className="relative flex items-center">
               <Search size={15} className="absolute left-3 text-text-subtle" />
               <input
-                aria-label="Tìm tên Tỉnh / Thành phố..."
+                aria-label={t('profile.searchProvincePlaceholder')}
                 type="text"
                 autoFocus
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Tìm tên Tỉnh / Thành phố..."
+                placeholder={t('profile.searchProvincePlaceholder')}
                 className="w-full rounded-xl border border-border bg-surface py-2 pl-9 pr-3 text-xs text-text placeholder-plum-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -191,7 +193,7 @@ export function ProvinceSelect({ value, onChange, disabled }: ProvinceSelectProp
               })
             ) : (
               <div className="p-4 text-center text-xs text-text-subtle font-medium">
-                Không tìm thấy Tỉnh / Thành phố phù hợp
+                {t('profile.noProvinceFound')}
               </div>
             )}
           </div>

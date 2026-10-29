@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -60,10 +61,10 @@ interface MentoringTaskResolutionBannerProps {
 type ProposalKind = 'EXTENSION' | 'AMENDMENT' | 'SETTLEMENT'
 type DialogState = { action: 'REJECT' | 'CANCEL' | 'DECLINE_TOPUP'; kind: ProposalKind; id: number }
 
-const KIND_LABEL: Record<ProposalKind, string> = {
-  EXTENSION: 'đề xuất gia hạn',
-  AMENDMENT: 'đề xuất điều chỉnh',
-  SETTLEMENT: 'đề xuất dừng Task',
+const KIND_KEY_MAP: Record<ProposalKind, string> = {
+  EXTENSION: 'mentoring.kindProposalExtension',
+  AMENDMENT: 'mentoring.kindProposalAmendment',
+  SETTLEMENT: 'mentoring.kindProposalSettlement',
 }
 
 function formatVnd(amount?: number | null) {
@@ -111,15 +112,20 @@ export function MentoringTaskResolutionBanner({
   taskStatus,
   canConfirmCompletion,
   canSubmitSettlementTicket,
+  canCreateDisputeTicket,
+  canSubmitDisputeEvidence,
   isStudent,
+  isMentor,
   onOpenTopUpPayment,
   onOpenReviewCompletion,
   onOpenSubmitSettlementTicket,
+  onOpenCreateDispute,
   onOpenAddEvidence,
   onOpenTaskReport,
   onOpenTicketDiscussion,
   onRefresh,
 }: MentoringTaskResolutionBannerProps) {
+  const { t } = useTranslation()
   const [dialog, setDialog] = useState<DialogState | null>(null)
   const [note, setNote] = useState('')
 
@@ -141,12 +147,12 @@ export function MentoringTaskResolutionBanner({
 
   const accept = (kind: ProposalKind, id: number) => {
     if (kind === 'EXTENSION') {
-      return run(() => respondExtension.mutateAsync({ extensionId: id, payload: { accept: true } }), 'Đã chấp nhận gia hạn.', 'Không thể chấp nhận gia hạn.')
+      return run(() => respondExtension.mutateAsync({ extensionId: id, payload: { accept: true } }), t('mentoring.extensionAcceptedSuccess'), t('mentoring.extensionAcceptError'))
     }
     if (kind === 'AMENDMENT') {
-      return run(() => respondAmendment.mutateAsync({ amendmentId: id, payload: { accept: true } }), 'Đã chấp nhận điều chỉnh.', 'Không thể chấp nhận điều chỉnh.')
+      return run(() => respondAmendment.mutateAsync({ amendmentId: id, payload: { accept: true } }), t('mentoring.amendmentAcceptedSuccess'), t('mentoring.amendmentAcceptError'))
     }
-    return run(() => respondSettlement.mutateAsync({ proposalId: id, payload: { accept: true } }), 'Đã đồng ý dừng Task. Hồ sơ đã được gửi Ban Quản Trị.', 'Không thể đồng ý đề xuất.')
+    return run(() => respondSettlement.mutateAsync({ proposalId: id, payload: { accept: true } }), t('mentoring.settlementAcceptedSuccess'), t('mentoring.settlementAcceptError'))
   }
 
   const closeDialog = () => {
@@ -167,14 +173,14 @@ export function MentoringTaskResolutionBanner({
             : kind === 'AMENDMENT'
               ? respondAmendment.mutateAsync({ amendmentId: id, payload })
               : respondSettlement.mutateAsync({ proposalId: id, payload }),
-        `Đã từ chối ${KIND_LABEL[kind]}.`,
-        'Không thể từ chối đề xuất.',
+        t('mentoring.proposalRejectedSuccess', { kind: t(KIND_KEY_MAP[kind]) }),
+        t('mentoring.proposalRejectError'),
       )
     } else {
       await run(
         () => closeProposal.mutateAsync({ kind, id, reason }),
-        action === 'DECLINE_TOPUP' ? 'Đã từ chối thanh toán bổ sung.' : `Đã hủy ${KIND_LABEL[kind]}.`,
-        'Không thể hủy đề xuất.',
+        action === 'DECLINE_TOPUP' ? t('mentoring.topupDeclinedSuccess') : t('mentoring.proposalCancelledSuccess', { kind: t(KIND_KEY_MAP[kind]) }),
+        t('mentoring.proposalCancelError'),
       )
     }
     closeDialog()
@@ -191,12 +197,12 @@ export function MentoringTaskResolutionBanner({
         key="completion"
         tone="mint"
         icon={<FileCheck />}
-        title="Mentor đã nộp kết quả hoàn thành"
-        badge={canReview ? 'Chờ bạn nghiệm thu' : 'Chờ Học viên nghiệm thu'}
+        title={t('mentoring.mentorSubmittedCompletionTitle')}
+        badge={canReview ? t('mentoring.waitingYourReview') : t('mentoring.waitingStudentReview')}
         actions={
           canReview ? (
             <MentoringActionButton intent="primary" icon={<Check className="h-3.5 w-3.5" />} onClick={onOpenReviewCompletion}>
-              Xem & nghiệm thu
+              {t('mentoring.viewAndAccept')}
             </MentoringActionButton>
           ) : undefined
         }
@@ -214,8 +220,8 @@ export function MentoringTaskResolutionBanner({
         key="extension"
         tone="navy"
         icon={<CalendarClock />}
-        title="Đề xuất gia hạn deadline"
-        badge={`Từ ${ext.createdByRole}`}
+        title={t('mentoring.deadlineExtensionTitle')}
+        badge={t('mentoring.fromRole', { role: ext.createdByRole })}
         actions={
           ext.canConfirm || ext.canReject ? (
             <>
@@ -230,7 +236,7 @@ export function MentoringTaskResolutionBanner({
             </>
           ) : (
             <>
-              <WaitingNote>Chờ Học viên phản hồi</WaitingNote>
+              <WaitingNote>{t('mentoring.waitingStudentResponse')}</WaitingNote>
               {ext.canCancel && (
                 <MentoringActionButton intent="ghost" icon={<Undo2 className="h-3.5 w-3.5" />} disabled={isBusy}
                   onClick={() => setDialog({ action: 'CANCEL', kind: 'EXTENSION', id: ext.id })}>
@@ -266,7 +272,7 @@ export function MentoringTaskResolutionBanner({
             </MentoringActionButton>
           )}
           <MentoringActionButton intent="primary" icon={<CreditCard className="h-3.5 w-3.5" />} disabled={isBusy} onClick={onOpenTopUpPayment}>
-            Thanh toán {formatVnd(amd.additionalAmount)}
+            {t('mentoring.payTopupBtn', { amount: formatVnd(amd.additionalAmount) })}
           </MentoringActionButton>
         </>
       )
@@ -286,11 +292,11 @@ export function MentoringTaskResolutionBanner({
     } else {
       actions = (
         <>
-          <WaitingNote>{awaitingTopUp ? 'Chờ Học viên thanh toán' : 'Chờ Học viên phản hồi'}</WaitingNote>
+          <WaitingNote>{awaitingTopUp ? t('mentoring.waitingStudentPaymentShort') : t('mentoring.waitingStudentResponse')}</WaitingNote>
           {amd.canCancel && (
             <MentoringActionButton intent="ghost" icon={<Undo2 className="h-3.5 w-3.5" />} disabled={isBusy}
               onClick={() => setDialog({ action: 'CANCEL', kind: 'AMENDMENT', id: amd.id })}>
-              Hủy đề xuất
+              {t('mentoring.cancelProposal')}
             </MentoringActionButton>
           )}
         </>
@@ -303,17 +309,17 @@ export function MentoringTaskResolutionBanner({
         key="amendment"
         tone="gold"
         icon={<FileEdit />}
-        title={`Đề xuất điều chỉnh Task (v${amd.version})`}
-        badge={awaitingTopUp ? 'Đã chấp nhận · chờ thanh toán' : `Từ ${amd.createdByRole}`}
+        title={t('mentoring.taskAmendmentTitle', { version: amd.version })}
+        badge={awaitingTopUp ? t('mentoring.acceptedWaitingPayment') : t('mentoring.fromRole', { role: amd.createdByRole })}
         actions={actions}
       >
         {(amd.additionalAmount > 0 || deadlineChanged) && (
           <p className="flex flex-wrap gap-x-4 gap-y-1">
-            {amd.additionalAmount > 0 && <Detail label="Tiền bổ sung">{formatVnd(amd.additionalAmount)}</Detail>}
-            {deadlineChanged && <Detail label="Deadline mới">{formatDt(amd.newDeadline)}</Detail>}
+            {amd.additionalAmount > 0 && <Detail label={t('mentoring.additionalAmountLabel')}>{formatVnd(amd.additionalAmount)}</Detail>}
+            {deadlineChanged && <Detail label={t('mentoring.newDeadlineLabel')}>{formatDt(amd.newDeadline)}</Detail>}
           </p>
         )}
-        {scopeChanged && <p className="line-clamp-2">Phạm vi mới: {amd.newScope}</p>}
+        {scopeChanged && <p className="line-clamp-2">{t('mentoring.newScopeLabel', { scope: amd.newScope })}</p>}
         {amd.reason && <p className="italic">“{amd.reason}”</p>}
       </MentoringActionCard>,
     )
@@ -328,8 +334,8 @@ export function MentoringTaskResolutionBanner({
         key="settlement"
         tone="coral"
         icon={<Scale />}
-        title="Đề xuất dừng Task & chia quỹ"
-        badge={`Từ ${prop.createdByRole}`}
+        title={t('mentoring.settlementTitle')}
+        badge={t('mentoring.fromRole', { role: prop.createdByRole })}
         actions={
           prop.canAccept || prop.canReject ? (
             <>
@@ -339,14 +345,14 @@ export function MentoringTaskResolutionBanner({
               </MentoringActionButton>
               <MentoringActionButton intent="primary" icon={<Check className="h-3.5 w-3.5" />} loading={respondSettlement.isPending}
                 disabled={isBusy || needsRefundAccount}
-                title={needsRefundAccount ? 'Cần khai báo tài khoản nhận hoàn tiền trước' : undefined}
+                title={needsRefundAccount ? t('mentoring.needRefundAccountFirst') : undefined}
                 onClick={() => accept('SETTLEMENT', prop.id)}>
                 Đồng ý
               </MentoringActionButton>
             </>
           ) : (
             <>
-              <WaitingNote>Chờ bên kia phản hồi</WaitingNote>
+              <WaitingNote>{t('mentoring.waitingOtherResponse')}</WaitingNote>
               {prop.canCancel && (
                 <MentoringActionButton intent="ghost" icon={<Undo2 className="h-3.5 w-3.5" />} disabled={isBusy}
                   onClick={() => setDialog({ action: 'CANCEL', kind: 'SETTLEMENT', id: prop.id })}>
@@ -358,14 +364,14 @@ export function MentoringTaskResolutionBanner({
         }
       >
         <p className="flex flex-wrap gap-x-4 gap-y-1">
-          <Detail label="Mentor nhận">{formatVnd(prop.mentorAmount)}</Detail>
-          <Detail label="Hoàn Học viên">{formatVnd(prop.studentRefund)}</Detail>
+          <Detail label={t('mentoring.mentorReceives')}>{formatVnd(prop.mentorAmount)}</Detail>
+          <Detail label={t('mentoring.studentRefund')}>{formatVnd(prop.studentRefund)}</Detail>
         </p>
         {prop.reason && <p className="italic">“{prop.reason}”</p>}
         {needsRefundAccount && (
           <p className="font-semibold text-danger">
-            Bạn cần khai báo tài khoản nhận hoàn tiền trước khi đồng ý.{' '}
-            <Link to="/app/mentoring/refunds" className="underline">Khai báo ngay</Link>
+            {t('mentoring.refundAccountDeclareNotice')}{' '}
+            <Link to="/app/mentoring/refunds" className="underline">{t('mentoring.declareNow')}</Link>
           </p>
         )}
       </MentoringActionCard>,
@@ -379,15 +385,15 @@ export function MentoringTaskResolutionBanner({
         key="settlement-ready"
         tone="coral"
         icon={<Scale />}
-        title="Hai bên đã đồng ý dừng Task"
-        badge="Cần gửi Ban Quản Trị"
+        title={t('mentoring.bothAgreedToStopTitle')}
+        badge={t('mentoring.needSubmitToAdminBadge')}
         actions={
           <MentoringActionButton intent="primary" icon={<ArrowRight className="h-3.5 w-3.5" />} onClick={onOpenSubmitSettlementTicket}>
-            Gửi Ban Quản Trị
+            {t('mentoring.submitToAdmin')}
           </MentoringActionButton>
         }
       >
-        <p>Gửi biên bản thỏa thuận để Ban Quản Trị chi trả cho Mentor và hoàn tiền cho Học viên.</p>
+        <p>{t('mentoring.sendAgreementToAdminDesc')}</p>
       </MentoringActionCard>,
     )
   }
@@ -396,29 +402,29 @@ export function MentoringTaskResolutionBanner({
   if (activeTicket) {
     const isDispute = activeTicket.ticketType === 'DISPUTE'
     const statusLabel =
-      activeTicket.status === 'OPEN' ? 'Chờ tiếp nhận' : activeTicket.status === 'IN_REVIEW' ? 'Đang xử lý' : 'Đã giải quyết'
+      activeTicket.status === 'OPEN' ? t('mentoring.waitingReception') : activeTicket.status === 'IN_REVIEW' ? t('mentoring.inReview') : t('mentoring.resolved')
     items.push(
       <MentoringActionCard
         key="ticket"
         tone={isDispute ? 'coral' : 'navy'}
         icon={isDispute ? <AlertTriangle /> : <FileCheck />}
-        title={isDispute ? `Khiếu nại #${activeTicket.ticketCode}` : `Dừng Task theo thỏa thuận #${activeTicket.ticketCode}`}
+        title={isDispute ? t('mentoring.disputeTitle', { code: activeTicket.ticketCode }) : t('mentoring.settlementAgreementTitle', { code: activeTicket.ticketCode })}
         badge={statusLabel}
         actions={
           <>
             {onOpenTicketDiscussion && (
               <MentoringActionButton icon={<MessageSquare className="h-3.5 w-3.5" />} onClick={onOpenTicketDiscussion}>
-                Trao đổi
+                {t('mentoring.discussion')}
               </MentoringActionButton>
             )}
             {onOpenAddEvidence && (
               <MentoringActionButton icon={<Paperclip className="h-3.5 w-3.5" />} onClick={onOpenAddEvidence}>
-                Bằng chứng
+                {t('mentoring.evidence')}
               </MentoringActionButton>
             )}
             {onOpenTaskReport && (
               <MentoringActionButton intent="ghost" icon={<FileText className="h-3.5 w-3.5" />} onClick={onOpenTaskReport}>
-                Báo cáo
+                {t('mentoring.report')}
               </MentoringActionButton>
             )}
           </>
@@ -426,8 +432,8 @@ export function MentoringTaskResolutionBanner({
       >
         {(activeTicket.mentorAmount != null || activeTicket.studentRefund != null) && (
           <p className="flex flex-wrap gap-x-4 gap-y-1">
-            {activeTicket.mentorAmount != null && <Detail label="Mentor nhận">{formatVnd(activeTicket.mentorAmount)}</Detail>}
-            {activeTicket.studentRefund != null && <Detail label="Hoàn Học viên">{formatVnd(activeTicket.studentRefund)}</Detail>}
+            {activeTicket.mentorAmount != null && <Detail label={t('mentoring.mentorReceives')}>{formatVnd(activeTicket.mentorAmount)}</Detail>}
+            {activeTicket.studentRefund != null && <Detail label={t('mentoring.studentRefund')}>{formatVnd(activeTicket.studentRefund)}</Detail>}
           </p>
         )}
         <p>
@@ -437,8 +443,8 @@ export function MentoringTaskResolutionBanner({
         </p>
         {isStudent && activeTicket.studentRefund != null && activeTicket.studentRefund > 0 && (
           <p>
-            Tiền hoàn sẽ chuyển về tài khoản tại mục{' '}
-            <Link to="/app/mentoring/refunds" className="font-semibold text-primary-solid underline">Hoàn tiền</Link>.
+            {t('mentoring.refundDestinationNoticePrefix')}{' '}
+            <Link to="/app/mentoring/refunds" className="font-semibold text-primary-solid underline">{t('mentoring.refundDestinationNoticeSuffix')}</Link>.
           </p>
         )}
       </MentoringActionCard>,
@@ -466,7 +472,7 @@ export function MentoringTaskResolutionBanner({
 
   return (
     <section className="space-y-2 border-b border-border bg-surface px-4 py-3 sm:px-6">
-      <p className="text-xs font-bold uppercase tracking-wide text-text-subtle">Cần xử lý</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-text-subtle">{t('mentoring.actionRequiredBadge')}</p>
       {items}
 
       <Modal
@@ -493,7 +499,7 @@ export function MentoringTaskResolutionBanner({
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Lý do (không bắt buộc)"
+              placeholder={t('mentoring.reasonOptionalPlaceholder')}
               className="w-full resize-none rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           )}

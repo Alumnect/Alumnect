@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { mentoringWalletApi } from '../api/mentoringWalletApi'
@@ -83,12 +84,12 @@ type TimelineItem =
   | { kind: 'message'; at: number; message: Message }
   | { kind: 'ticket'; at: number; snapshot: MentoringDealSnapshot }
 
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  PENDING: 'đang chờ thanh toán',
-  FAILED: 'thất bại',
-  EXPIRED: 'đã hết hạn',
-  CANCELLED: 'đã hủy',
-  PAID: 'thành công',
+const PAYMENT_STATUS_KEY_MAP: Record<string, string> = {
+  PENDING: 'mentoring.paymentStatusPending',
+  FAILED: 'mentoring.paymentStatusFailed',
+  EXPIRED: 'mentoring.paymentStatusExpired',
+  CANCELLED: 'mentoring.paymentStatusCancelled',
+  PAID: 'mentoring.paymentStatusPaid',
 }
 
 /**
@@ -101,6 +102,7 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
  * Mọi quyền thao tác (canConfirm, canPay, canCreateDealTicket, readOnly...) do backend tính và kiểm tra lại.
  */
 export function MentoringChatForTask({ conversationId, onBack }: MentoringChatForTaskProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const currentUserId = Number(useAuthStore((state) => state.user?.id)) || 0
 
@@ -113,7 +115,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const groupParticipants = ctx?.participants ?? []
   const isGroupChat = Boolean(ctx?.groupId) && groupParticipants.length > 2
   const partnerId = isMentor ? ctx?.studentId : ctx?.mentorUserId
-  const partnerName = (isMentor ? ctx?.studentName : ctx?.mentorName) || (isMentor ? 'Học viên' : 'Mentor')
+  const partnerName = (isMentor ? ctx?.studentName : ctx?.mentorName) || (isMentor ? t('common.student') : 'Mentor')
   const partnerAvatar = isMentor ? ctx?.studentAvatar : ctx?.mentorAvatar
   const { mutate: markConversationAsRead } = useMarkAsRead()
 
@@ -183,11 +185,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
     mutationFn: (payload: { rating: number; comment: string }) =>
       mentoringWalletApi.submitReview({ taskId: ctx!.taskId!, rating: payload.rating, comment: payload.comment || undefined }),
     onSuccess: () => {
-      toast.success('Cảm ơn bạn đã đánh giá Mentor!')
+      toast.success(t('mentoring.thankYouForReviewingMentor'))
       setIsReviewOpen(false)
       refetchReview()
     },
-    onError: (err: Error) => toast.error(err.message || 'Không thể gửi đánh giá'),
+    onError: (err: Error) => toast.error(err.message || t('mentoring.cannotSendReview')),
   })
 
   const proposeMutation = useProposeDeal()
@@ -306,7 +308,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
     try {
       await sendMessageMutation.mutateAsync({ conversationId, recipientId: partnerId, content, attachments })
     } catch (err) {
-      toast.error(err instanceof Error && err.message ? err.message : 'Không thể gửi tin nhắn.')
+      toast.error(err instanceof Error && err.message ? err.message : t('mentoring.cannotSendMessage'))
       refetch()
     }
   }
@@ -314,10 +316,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const handleAcceptByRequest = async () => {
     try {
       const created = await proposeMutation.mutateAsync({ conversationId, proposalSource: 'REQUEST_ACCEPTANCE' })
-      toast.success(`Đã gửi Deal Ticket phiên bản ${created.version} theo điều kiện của Request.`)
+      toast.success(t('mentoring.dealTicketSentByRequest', { version: created.version }))
       setIsAcceptByRequestOpen(false)
     } catch (err) {
-      toast.error(err instanceof Error && err.message ? err.message : 'Không thể chấp nhận Deal theo Request.')
+      toast.error(err instanceof Error && err.message ? err.message : t('mentoring.cannotAcceptDealByRequest'))
     }
   }
 
@@ -327,14 +329,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
     try {
       const updated = await confirmMutation.mutateAsync({ dealId: deal.id, version })
       if (updated.status === 'DEAL_CONFIRMED') {
-        toast.success('Deal đã được khóa và Mentor đã được chọn. Tiếp tục thanh toán để kích hoạt Task.')
+        toast.success(t('mentoring.dealLockedProceedPayment'))
         setPaymentDeal(updated)
         setIsPaymentOpen(true)
       } else {
-        toast.success('Đã xác nhận. Đang chờ bên còn lại xác nhận.')
+        toast.success(t('mentoring.dealConfirmedWaitingOther'))
       }
     } catch (err) {
-      toast.error(err instanceof Error && err.message ? err.message : 'Không thể xác nhận Deal.')
+      toast.error(err instanceof Error && err.message ? err.message : t('mentoring.dealConfirmError'))
     }
   }
 
@@ -346,11 +348,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         version: rejectTarget,
         reason: rejectReason.trim() || undefined,
       })
-      toast.success('Đã từ chối Deal Ticket. Hai bên có thể tiếp tục trao đổi.')
+      toast.success(t('mentoring.dealTicketRejected'))
       setRejectTarget(null)
       setRejectReason('')
     } catch (err) {
-      toast.error(err instanceof Error && err.message ? err.message : 'Không thể từ chối Deal Ticket.')
+      toast.error(err instanceof Error && err.message ? err.message : t('mentoring.dealTicketRejectError'))
     }
   }
 
@@ -362,11 +364,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         version: adjustTarget,
         note: adjustNote.trim() || undefined,
       })
-      toast.success('Đã gửi yêu cầu điều chỉnh. Mentor sẽ gửi phiên bản Deal Ticket mới.')
+      toast.success(t('mentoring.adjustmentRequestedSuccess'))
       setAdjustTarget(null)
       setAdjustNote('')
     } catch (err) {
-      toast.error(err instanceof Error && err.message ? err.message : 'Không thể gửi yêu cầu điều chỉnh.')
+      toast.error(err instanceof Error && err.message ? err.message : t('mentoring.adjustmentRequestError'))
     }
   }
 
@@ -399,7 +401,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         ? ctx?.studentName
         : status === 'REJECTED'
           ? deal?.status === 'CANCELLED'
-            ? 'Luồng Deal đã đóng'
+            ? t('mentoring.dealFlowClosed')
             : deal?.updatedByName || ctx?.studentName
           : undefined
 
@@ -498,11 +500,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       <div className="rounded-3xl border border-danger-border bg-danger-soft p-6 text-center space-y-3">
         <AlertCircle className="mx-auto h-8 w-8 text-danger" />
         <p className="text-sm font-bold text-danger">
-          {error?.message || 'Không thể tải cuộc trò chuyện.'}
+          {error?.message || t('mentoring.cannotLoadChat')}
         </p>
         {onBack && (
           <Button variant="secondary" size="sm" onClick={onBack}>
-            Quay lại
+            {t('common.back')}
           </Button>
         )}
       </div>
@@ -522,60 +524,60 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   let primaryAction: PrimaryAction | null = null
   if (isTaskFinished) {
     if (canReviewMentor && !myReview) {
-      primaryAction = { label: 'Đánh giá Mentor', icon: <Star className="h-3.5 w-3.5" />, onClick: () => setIsReviewOpen(true) }
+      primaryAction = { label: t('mentoring.reviewMentorAction'), icon: <Star className="h-3.5 w-3.5" />, onClick: () => setIsReviewOpen(true) }
     }
   } else if (isStudent && isDealLockedUnpaid && deal?.canPay) {
     primaryAction = {
-      label: lastPaymentStatus && lastPaymentStatus !== 'PENDING' ? 'Thanh toán lại' : 'Thanh toán',
+      label: lastPaymentStatus && lastPaymentStatus !== 'PENDING' ? t('mentoring.payAgainAction') : t('mentoring.payAction'),
       icon: <CreditCard className="h-3.5 w-3.5" />,
       onClick: openPayment,
     }
   } else if (isStudent && activeAmendment?.status === 'AWAITING_TOPUP' && activeAmendment.canTopUp) {
-    primaryAction = { label: 'Thanh toán bổ sung', icon: <CreditCard className="h-3.5 w-3.5" />, onClick: openTopUpPayment }
+    primaryAction = { label: t('mentoring.topUpPaymentAction'), icon: <CreditCard className="h-3.5 w-3.5" />, onClick: openTopUpPayment }
   } else if (permissions?.canConfirmCompletion && taskDetail?.latestCompletion) {
-    primaryAction = { label: 'Nghiệm thu', icon: <CheckCircle2 className="h-3.5 w-3.5" />, onClick: () => setIsReviewCompletionOpen(true) }
+    primaryAction = { label: t('mentoring.reviewCompletionAction'), icon: <CheckCircle2 className="h-3.5 w-3.5" />, onClick: () => setIsReviewCompletionOpen(true) }
   } else if (permissions?.canSubmitCompletion) {
-    primaryAction = { label: 'Nộp hoàn thành', icon: <FileCheck className="h-3.5 w-3.5" />, onClick: () => setIsSubmitCompletionOpen(true) }
+    primaryAction = { label: t('mentoring.submitCompletionAction'), icon: <FileCheck className="h-3.5 w-3.5" />, onClick: () => setIsSubmitCompletionOpen(true) }
   }
 
   type ActionItem = { label: string; hint?: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }
   const viewItems: ActionItem[] = []
-  if (ctx.taskId) viewItems.push({ label: 'Xem Task', hint: 'Tiến độ, Work Log, thông tin Deal', icon: <ClipboardCheck />, onClick: () => setIsTaskOpen(true) })
-  if (deal) viewItems.push({ label: 'Lịch sử phiên bản Deal', icon: <History />, onClick: () => setIsHistoryOpen(true) })
+  if (ctx.taskId) viewItems.push({ label: t('mentoring.viewTaskAction'), hint: t('mentoring.viewTaskHint'), icon: <ClipboardCheck />, onClick: () => setIsTaskOpen(true) })
+  if (deal) viewItems.push({ label: t('mentoring.dealVersionHistoryAction'), icon: <History />, onClick: () => setIsHistoryOpen(true) })
   viewItems.push({
-    label: 'Chi tiết yêu cầu',
+    label: t('mentoring.requestDetailsAction'),
     icon: <FileText />,
     onClick: () => navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`),
   })
-  if (ctx.taskId && isMentor) viewItems.push({ label: 'Báo cáo Task & tài chính', icon: <FileText />, onClick: () => setIsTaskReportOpen(true) })
+  if (ctx.taskId && isMentor) viewItems.push({ label: t('mentoring.taskFinancialReportAction'), icon: <FileText />, onClick: () => setIsTaskReportOpen(true) })
 
   const proposalItems: ActionItem[] = []
   if (isTaskActive && isMentor && permissions?.canRequestExtension && taskDetail?.activeExtension?.status !== 'PENDING') {
-    proposalItems.push({ label: 'Gia hạn deadline', hint: 'Gửi đề xuất hạn chót mới', icon: <CalendarClock />, onClick: () => setIsExtensionModalOpen(true) })
+    proposalItems.push({ label: t('mentoring.extendDeadlineAction'), hint: t('mentoring.extendDeadlineHint'), icon: <CalendarClock />, onClick: () => setIsExtensionModalOpen(true) })
   }
   if (isTaskActive && isMentor && permissions?.canRequestAmendment) {
-    proposalItems.push({ label: 'Điều chỉnh & tăng tiền', hint: 'Thay đổi phạm vi, deadline hoặc thêm tiền', icon: <Edit3 />, onClick: () => setIsAmendmentModalOpen(true) })
+    proposalItems.push({ label: t('mentoring.adjustAndIncreaseAction'), hint: t('mentoring.adjustAndIncreaseHint'), icon: <Edit3 />, onClick: () => setIsAmendmentModalOpen(true) })
   }
   if (isTaskActive && permissions?.canProposeSettlement) {
-    proposalItems.push({ label: 'Dừng Task & chia quỹ', hint: 'Thỏa thuận kết thúc sớm', icon: <Scale />, onClick: () => setIsSettlementModalOpen(true) })
+    proposalItems.push({ label: t('mentoring.settleAndSplitAction'), hint: t('mentoring.settleAndSplitHint'), icon: <Scale />, onClick: () => setIsSettlementModalOpen(true) })
   }
 
   const supportItems: ActionItem[] = []
   if (isTaskActive && permissions?.canSubmitSettlementTicket) {
-    supportItems.push({ label: 'Gửi thỏa thuận cho Ban Quản Trị', icon: <Send />, onClick: () => setIsSubmitSettlementTicketOpen(true) })
+    supportItems.push({ label: t('mentoring.submitAgreementToAdminAction'), icon: <Send />, onClick: () => setIsSubmitSettlementTicketOpen(true) })
   }
   if (taskDetail?.activeTicket) {
-    supportItems.push({ label: 'Trao đổi với Ban Quản Trị', icon: <MessagesSquare />, onClick: () => setIsTicketDiscussionOpen(true) })
-    supportItems.push({ label: 'Bằng chứng tranh chấp', icon: <Paperclip />, onClick: () => setIsAddEvidenceOpen(true) })
+    supportItems.push({ label: t('mentoring.discussWithAdminAction'), icon: <MessagesSquare />, onClick: () => setIsTicketDiscussionOpen(true) })
+    supportItems.push({ label: t('mentoring.disputeEvidenceAction'), icon: <Paperclip />, onClick: () => setIsAddEvidenceOpen(true) })
   }
   if (isTaskActive && permissions?.canCreateDisputeTicket) {
-    supportItems.push({ label: 'Mở khiếu nại', hint: 'Nhờ Ban Quản Trị phân xử', icon: <AlertTriangle />, onClick: () => setIsCreateDisputeOpen(true), danger: true })
+    supportItems.push({ label: t('mentoring.openDisputeAction'), hint: t('mentoring.openDisputeHint'), icon: <AlertTriangle />, onClick: () => setIsCreateDisputeOpen(true), danger: true })
   }
 
   const actionGroups = [
-    { title: 'Xem', items: viewItems },
-    { title: 'Đề xuất', items: proposalItems },
-    { title: 'Hỗ trợ', items: supportItems },
+    { title: t('mentoring.viewCategory'), items: viewItems },
+    { title: t('mentoring.proposalsCategory'), items: proposalItems },
+    { title: t('mentoring.supportCategory'), items: supportItems },
   ].filter((g) => g.items.length > 0)
 
   return (
@@ -588,21 +590,21 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             <div className="flex flex-wrap items-center gap-1.5">
               <h2 className="truncate font-display text-base font-bold text-text">{partnerName}</h2>
               <span className="rounded-full bg-surface-3 px-2 py-0.5 text-xs font-semibold text-text-muted">
-                {isMentor ? 'Học viên' : 'Mentor'}
+                {isMentor ? t('common.student') : 'Mentor'}
               </span>
               {isTaskOverdue && (
                 <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold text-danger">
-                  Quá hạn
+                  {t('mentoring.overdue')}
                 </span>
               )}
               {isGroupMember && (
                 <span className="rounded-full bg-info-soft px-2 py-0.5 text-xs font-semibold text-info">
-                  Thành viên nhóm
+                  {t('mentoring.groupMembers')}
                 </span>
               )}
             </div>
             <p className="truncate text-xs text-text-subtle">
-              Yêu cầu #{ctx.requestId} · {ctx.requestTitle}
+              {t('mentoring.requestChatHeading', { id: ctx.requestId, title: ctx.requestTitle })}
             </p>
             {ctx.groupId && groupParticipants.length > 0 && (
               <div className="mt-1 flex items-center gap-2" title={groupParticipants.map((p) => p.fullName).join(', ')}>
@@ -612,7 +614,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   ))}
                 </div>
                 <span className="truncate text-xs font-medium text-text-subtle">
-                  Nhóm {ctx.groupName} · {groupParticipants.length} người
+                  {t('mentoring.groupChatParticipantsCount', { groupName: ctx.groupName, count: groupParticipants.length })}
                 </span>
               </div>
             )}
@@ -636,7 +638,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 aria-expanded={isTaskActionMenuOpen}
                 className="h-9 rounded-xl text-xs"
               >
-                Thao tác
+                {t('mentoring.actionsDropdownBtn')}
               </Button>
               {isTaskActionMenuOpen && (
                 <div className="absolute right-0 top-full z-50 mt-1.5 max-h-[min(520px,calc(100vh-200px))] w-72 overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 shadow-2xl">
@@ -682,8 +684,8 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             <span className="shrink-0 font-bold">{MENTORING_REQUEST_FLOW_STATUS_LABELS[ctx.requestStatus] || ctx.requestStatus}</span>
             <span className="text-text-subtle">•</span>
             <span className="truncate">
-              Ngân sách {requestPrice ? formatVnd(requestPrice) : 'Thỏa thuận'}
-              {ctx.expectedDeadline ? ` • Mong muốn trước ${format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy')}` : ''}
+              {t('mentoring.budgetBudgetLabel', { budget: requestPrice ? formatVnd(requestPrice) : t('mentoring.negotiableBudget') })}
+              {ctx.expectedDeadline ? t('mentoring.desiredBeforeDate', { date: format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy') }) : ''}
             </span>
           </span>
           {isRequestPanelOpen ? <ChevronUp className="h-4 w-4 text-text-subtle" /> : <ChevronDown className="h-4 w-4 text-text-subtle" />}
@@ -692,19 +694,19 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           <div className="mt-2 grid gap-2 pb-1 text-text-muted sm:grid-cols-2">
             <p className="sm:col-span-2 whitespace-pre-wrap text-text">{ctx.requestDescription}</p>
             <p>
-              Loại yêu cầu: <b>{ctx.requestType === 'DIRECT' ? 'Gửi trực tiếp' : 'Yêu cầu chung'}</b>
+              {t('mentoring.requestTypeChatLabel')}<b>{ctx.requestType === 'DIRECT' ? t('mentoring.directRequestChat') : t('mentoring.generalRequestChat')}</b>
               {ctx.industryName ? ` · ${ctx.industryName}` : ''}
             </p>
             <p>
-              Nhiệm vụ: <b>{MENTORING_TASK_TYPE_LABELS[ctx.taskType || ''] || ctx.taskType}</b>
+              {t('mentoring.taskTypeChatLabel')}<b>{MENTORING_TASK_TYPE_LABELS[ctx.taskType || ''] || ctx.taskType}</b>
             </p>
             <p>
-              Hình thức: <b>{MENTORING_WORKING_MODE_LABELS[ctx.workingMode || ''] || ctx.workingMode}</b> ·{' '}
+              {t('mentoring.workingModeChatLabel')}<b>{MENTORING_WORKING_MODE_LABELS[ctx.workingMode || ''] || ctx.workingMode}</b> ·{' '}
               {MENTORING_PARTICIPATION_LABELS[ctx.participationType || ''] || ctx.participationType}
             </p>
             <p>
-              Phản hồi của Mentor: <b>{MENTORING_RESPONSE_STATUS_LABELS[ctx.responseStatus || ''] || ctx.responseStatus}</b>
-              {ctx.respondedAt ? ` lúc ${format(new Date(ctx.respondedAt), 'dd/MM/yyyy HH:mm')}` : ''}
+              {t('mentoring.mentorResponseChatLabel')}<b>{MENTORING_RESPONSE_STATUS_LABELS[ctx.responseStatus || ''] || ctx.responseStatus}</b>
+              {ctx.respondedAt ? t('mentoring.atTimeSuffix', { time: format(new Date(ctx.respondedAt), 'dd/MM/yyyy HH:mm') }) : ''}
             </p>
             <button
               type="button"
@@ -713,7 +715,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               }
               className="justify-self-start font-bold text-primary-solid hover:underline"
             >
-              Mở trang chi tiết Request →
+              {t('mentoring.openRequestDetailArrow')}
             </button>
           </div>
         )}
@@ -722,18 +724,18 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       {/* Dải trạng thái: chỉ đọc · Deal đã khóa chờ thanh toán · Task đang chạy · Task đã kết thúc */}
       {ctx.readOnly && !isTaskFinished && (
         <MentoringStatusStrip tone="gold" icon={<AlertTriangle />}>
-          {ctx.readOnlyReason} Cuộc trò chuyện chỉ còn để xem lại.
+          {t('mentoring.chatReadOnlyReviewOnly', { reason: ctx.readOnlyReason })}
         </MentoringStatusStrip>
       )}
       {isDealLockedUnpaid && (
         <MentoringStatusStrip
           tone="brand"
           icon={<CreditCard />}
-          action={!deal?.canPay ? <span className="font-medium">Chờ Học viên thanh toán</span> : undefined}
+          action={!deal?.canPay ? <span className="font-medium">{t('mentoring.waitingStudentPayment')}</span> : undefined}
         >
-          Deal v{deal?.version} đã chốt · {formatVnd(Number(deal?.agreedPrice))}
+          {t('mentoring.dealVersionFinalized', { version: deal?.version, price: formatVnd(Number(deal?.agreedPrice)) })}
           {lastPaymentStatus && lastPaymentStatus !== 'PAID'
-            ? ` · Lần thanh toán gần nhất ${PAYMENT_STATUS_LABELS[lastPaymentStatus] || lastPaymentStatus}`
+            ? t('mentoring.lastPaymentAttemptPrefix', { status: PAYMENT_STATUS_KEY_MAP[lastPaymentStatus] ? t(PAYMENT_STATUS_KEY_MAP[lastPaymentStatus]) : lastPaymentStatus })
             : ''}
         </MentoringStatusStrip>
       )}
@@ -755,14 +757,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         <MentoringStatusStrip
           tone={currentTaskStatus === 'COMPLETED' ? 'mint' : 'neutral'}
           icon={<CheckCircle2 />}
-          action={canReviewMentor && myReview ? <span className="font-semibold">Bạn đã đánh giá {myReview.rating}★</span> : undefined}
+          action={canReviewMentor && myReview ? <span className="font-semibold">{t('mentoring.youRatedRating', { rating: myReview.rating })}</span> : undefined}
         >
           {currentTaskStatus === 'COMPLETED'
-            ? 'Công việc đã hoàn thành.'
+            ? t('mentoring.taskCompleted')
             : currentTaskStatus === 'CANCELLED'
-              ? 'Công việc đã dừng.'
-              : 'Công việc đã được Ban Quản Trị giải quyết.'}{' '}
-          Cuộc trò chuyện chỉ còn để xem lại.
+              ? t('mentoring.taskStopped')
+              : t('mentoring.taskResolvedByAdmin')}{' '}
+          {t('mentoring.chatReadOnlyNotice')}
         </MentoringStatusStrip>
       )}
       {isReviewOpen && (
@@ -813,7 +815,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         {isFetchingNextPage && (
           <div className="flex justify-center py-2">
             <span className="rounded-full bg-surface px-3 py-1 text-xs font-bold text-text-subtle shadow-xs">
-              Đang tải tin nhắn cũ hơn...
+              {t('mentoring.loadingOlderMessages')}
             </span>
           </div>
         )}
@@ -829,11 +831,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary-solid">
               <MessagesSquare className="h-6 w-6" />
             </div>
-            <p className="font-display text-sm font-bold text-text">Bắt đầu trao đổi về Request</p>
+            <p className="font-display text-sm font-bold text-text">{t('mentoring.startChatAboutRequest')}</p>
             <p className="max-w-sm text-xs leading-relaxed text-text-subtle">
               {isMentor
-                ? 'Trao đổi với Học viên, sau đó dùng nút "Giao dịch" để Chấp nhận Deal theo Request hoặc tạo Deal Ticket mới.'
-                : 'Trao đổi với Mentor về phạm vi, giá và thời hạn. Deal Ticket của Mentor sẽ hiển thị tại đây.'}
+                ? t('mentoring.chatMentorInstructions')
+                : t('mentoring.chatMenteeInstructions')}
             </p>
           </div>
         ) : (
@@ -892,7 +894,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       <div className="border-t border-border bg-surface p-3">
         {!ctx.canSendMessage ? (
           <div className="rounded-2xl bg-surface-2 p-3 text-center text-xs font-bold text-text-subtle">
-            {isTaskFinished ? 'Công việc đã kết thúc, không thể nhắn tin thêm.' : ctx.readOnlyReason || 'Cuộc hội thoại này ở chế độ chỉ đọc.'}
+            {isTaskFinished ? t('mentoring.taskEndedCannotChat') : ctx.readOnlyReason || t('mentoring.conversationReadOnly')}
           </div>
         ) : (
           <MessageInput
@@ -903,11 +905,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   <button
                     type="button"
                     onClick={() => setIsDealMenuOpen((v) => !v)}
-                    title="Giao dịch Deal Ticket"
+                    title={t('mentoring.dealTicketTradeTitle')}
                     className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 px-3 text-xs font-bold text-primary-solid transition hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
                   >
                     <Handshake className="h-4 w-4 shrink-0" />
-                    <span className="font-display font-bold">Giao dịch</span>
+                    <span className="font-display font-bold">{t('mentoring.tradeBtnLabel')}</span>
                     <ChevronUp className={`h-3.5 w-3.5 transition-transform ${isDealMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isDealMenuOpen && (
@@ -925,11 +927,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                           <ThumbsUp className="h-4 w-4" />
                         </span>
                         <span className="min-w-0">
-                          <span className="block font-bold text-text">Chấp nhận Deal theo Request</span>
+                          <span className="block font-bold text-text">{t('mentoring.acceptDealByRequestOption')}</span>
                           <span className="block text-xs text-text-subtle">
                             {ctx.canAcceptDealByRequest
-                              ? `Giá ${formatVnd(requestPrice)} · deadline theo Request`
-                              : ctx.acceptByRequestUnavailableReason || 'Không khả dụng ở trạng thái hiện tại'}
+                              ? t('mentoring.priceAndDeadlineByRequest', { price: formatVnd(requestPrice) })
+                              : ctx.acceptByRequestUnavailableReason || t('mentoring.notAvailableInCurrentState')}
                           </span>
                         </span>
                       </button>
@@ -946,9 +948,9 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                           <Edit3 className="h-4 w-4" />
                         </span>
                         <span className="min-w-0">
-                          <span className="block font-bold text-text">Deal lại / Tạo Deal Ticket</span>
+                          <span className="block font-bold text-text">{t('mentoring.redealCreateTicketOption')}</span>
                           <span className="block text-xs text-text-subtle">
-                            {ctx.canCreateDealTicket ? 'Nhập phạm vi, giá, deadline và kết quả mới' : 'Deal đã khóa hoặc Request không còn mở'}
+                            {ctx.canCreateDealTicket ? t('mentoring.redealInputNewParams') : t('mentoring.dealLockedOrRequestClosed')}
                           </span>
                         </span>
                       </button>
@@ -968,19 +970,19 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           maxWidthClassName="max-w-md"
           className="space-y-4 p-6 text-left"
         >
-            <h4 className="font-display text-base font-bold text-text">Chấp nhận Deal theo Request</h4>
+            <h4 className="font-display text-base font-bold text-text">{t('mentoring.acceptDealByRequestHeading')}</h4>
             <p className="text-xs text-text-subtle">
-              Hệ thống tạo Deal Ticket từ điều kiện hiện tại của Request. Bạn được tính là đã xác nhận phiên bản này; Học viên cần xác nhận để khóa Deal.
+              {t('mentoring.createDealTicketFromRequestNotice')}
             </p>
             <ul className="space-y-1.5 rounded-2xl bg-cream-100/70 p-3 text-xs text-text-muted dark:bg-white/5">
-              <li>Giá: <b>{formatVnd(requestPrice)}</b> (ngân sách tối đa Học viên đề xuất)</li>
+              <li>{t('mentoring.dealPriceLabel')}<b>{formatVnd(requestPrice)}</b> {t('mentoring.studentMaxBudgetNote')}</li>
               <li>Deadline: <b>{ctx.expectedDeadline ? format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy HH:mm') : '—'}</b></li>
-              <li>Nhiệm vụ: <b>{MENTORING_TASK_TYPE_LABELS[ctx.taskType || ''] || ctx.taskType}</b></li>
-              <li>Hình thức: <b>{MENTORING_WORKING_MODE_LABELS[ctx.workingMode || ''] || ctx.workingMode}</b></li>
+              <li>{t('mentoring.taskTypeChatLabel')}<b>{MENTORING_TASK_TYPE_LABELS[ctx.taskType || ''] || ctx.taskType}</b></li>
+              <li>{t('mentoring.workingModeChatLabel')}<b>{MENTORING_WORKING_MODE_LABELS[ctx.workingMode || ''] || ctx.workingMode}</b></li>
             </ul>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" size="sm" onClick={() => setIsAcceptByRequestOpen(false)} disabled={proposeMutation.isPending}>
-                Hủy
+                {t('common.cancel')}
               </Button>
               <Button
                 size="sm"
@@ -989,7 +991,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 leftIcon={proposeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
                 className="rounded-xl font-bold"
               >
-                Gửi Deal Ticket
+                {t('mentoring.sendDealTicket')}
               </Button>
             </div>
           </DialogFrame>}
@@ -1001,23 +1003,23 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           maxWidthClassName="max-w-md"
           className="space-y-4 p-6 text-left"
         >
-            <h4 className="font-display text-base font-bold text-text">Từ chối Deal Ticket phiên bản {rejectTarget}</h4>
+            <h4 className="font-display text-base font-bold text-text">{t('mentoring.rejectDealTicketVersionHeading', { version: rejectTarget })}</h4>
             <p className="text-xs leading-relaxed text-text-muted">
-              Chỉ từ chối đề xuất hiện tại; Request vẫn giữ nguyên và hai bên có thể tiếp tục trao đổi.
+              {t('mentoring.rejectProposalNotice')}
             </p>
             <textarea
               rows={3}
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Lý do (ví dụ: mức giá chưa phù hợp, deadline quá gấp...)"
+              placeholder={t('mentoring.rejectDealReasonPlaceholder')}
               className="w-full rounded-2xl border border-border bg-surface p-3 text-xs text-text focus:border-danger focus:outline-none dark:bg-[#2d2e30]"
             />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" size="sm" onClick={() => setRejectTarget(null)} disabled={rejectMutation.isPending}>
-                Hủy
+                {t('common.cancel')}
               </Button>
               <Button size="sm" onClick={handleReject} disabled={rejectMutation.isPending} className="rounded-xl bg-danger text-text-inverse hover:opacity-90">
-                {rejectMutation.isPending ? 'Đang gửi...' : 'Từ chối'}
+                {rejectMutation.isPending ? t('common.processing') : t('mentoring.reject')}
               </Button>
             </div>
           </DialogFrame>}
@@ -1040,10 +1042,10 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 </div>
                 <div>
                   <h4 className="font-display text-base font-bold text-text">
-                    Gửi Ticket Yêu cầu điều chỉnh Deal
+                    {t('mentoring.sendAdjustmentTicketTitle')}
                   </h4>
                   <p className="text-xs text-warning font-bold">
-                    Điều chỉnh Deal Ticket phiên bản {adjustTarget}
+                    {t('mentoring.adjustDealTicketVersion', { version: adjustTarget })}
                   </p>
                 </div>
               </div>
@@ -1051,12 +1053,12 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               {/* Tóm tắt điều khoản phiên bản hiện tại */}
               <div className="rounded-2xl border border-warning-border bg-warning-soft p-3 text-xs text-text-muted space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-text-subtle">Giá đề xuất hiện tại:</span>
+                  <span className="text-text-subtle">{t('mentoring.currentProposedPriceLabel')}</span>
                   <span className="font-bold text-warning">{formatVnd(Number(currentPrice || 0))}</span>
                 </div>
                 {currentDeadline && (
                   <div className="flex justify-between">
-                    <span className="text-text-subtle">Deadline hiện tại:</span>
+                    <span className="text-text-subtle">{t('mentoring.currentDeadlineLabel')}</span>
                     <span className="font-semibold">{format(new Date(currentDeadline), 'dd/MM/yyyy HH:mm')}</span>
                   </div>
                 )}
@@ -1064,20 +1066,20 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-text">
-                  Nội dung điều chỉnh mong muốn (Ghi chú Ticket):
+                  {t('mentoring.desiredAdjustmentContent')}
                 </label>
                 <textarea
                   rows={3}
                   value={adjustNote}
                   onChange={(e) => setAdjustNote(e.target.value)}
-                  placeholder="Ví dụ: Mong muốn giảm giá xuống 200.000đ hoặc dời deadline thêm 3 ngày..."
+                  placeholder={t('mentoring.adjustDealNotePlaceholder')}
                   className="w-full rounded-2xl border border-border-strong bg-surface p-3 text-xs text-text focus:border-primary focus:outline-none"
                 />
               </div>
 
               <div className="flex justify-end gap-2 pt-1">
                 <Button variant="ghost" size="sm" onClick={() => setAdjustTarget(null)} disabled={adjustMutation.isPending}>
-                  Hủy
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   size="sm"
@@ -1086,7 +1088,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   className="rounded-xl font-bold bg-primary-solid text-on-primary hover:bg-primary-hover"
                   leftIcon={adjustMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                 >
-                  {adjustMutation.isPending ? 'Đang gửi...' : 'Gửi Ticket điều chỉnh'}
+                  {adjustMutation.isPending ? t('common.processing') : t('mentoring.sendAdjustmentTicketBtn')}
                 </Button>
               </div>
             </DialogFrame>

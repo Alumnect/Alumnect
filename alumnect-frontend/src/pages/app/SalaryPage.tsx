@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   LineChart, Plus, Filter, AlertTriangle, RefreshCw, ListChecks, Search, X, LayoutGrid,
   MapPin, Code2, Megaphone, Users, Palette, Briefcase,
@@ -21,7 +22,7 @@ import {
 import type { SalaryContribution, SalaryLevel } from '@/features/salary'
 import { EntitySelectField, type SelectOption } from '@/features/forum/components/EntitySelectField'
 
-const ALL_REGIONS = 'Tất cả khu vực'
+const ALL_REGIONS = '__ALL_REGIONS__'
 const JOB_TITLE_SEARCH_MAX_LENGTH = 150
 
 /** Ánh xạ thông minh icon và màu sắc chủ đạo theo từ khóa vị trí công việc */
@@ -64,23 +65,25 @@ function SalarySkeleton() {
 
 /** Trạng thái lỗi khi tải thống kê lương thất bại (UC53). */
 function SalaryStatsError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-text">Không tải được thống kê lương</p>
-        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">{t('salary.loadError')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('common.error')}</p>
       </div>
       <Button variant="secondary" size="sm" leftIcon={<RefreshCw size={14} />} onClick={onRetry}>
-        Thử lại
+        {t('common.tryAgain')}
       </Button>
     </Card>
   )
 }
 
 export function SalaryPage() {
+  const { t } = useTranslation()
   const role = useAuthStore((s) => s.user?.role)
   // Quy tắc nghiệp vụ (UC50, UC51, UC52): CHỈ ALUMNI mới có quyền đóng góp, sửa hoặc xóa dữ liệu lương.
   const canContribute = role === 'ALUMNI'
@@ -153,8 +156,8 @@ export function SalaryPage() {
       {/* Header */}
       <PageHeader
         icon={<LineChart size={20} />}
-        title="Bảng lương cộng đồng"
-        subtitle="Khám phá mức thu nhập thực tế theo vị trí, ngành nghề và cấp bậc do cựu sinh viên FPTU chia sẻ."
+        title={t('salary.title')}
+        subtitle={t('salary.subtitle')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -163,7 +166,7 @@ export function SalaryPage() {
               leftIcon={<History size={15} className="text-primary-solid" />}
               onClick={() => setFeedOpen(true)}
             >
-              Đóng góp gần đây
+              {t('salary.recentContributions')}
             </Button>
             {canContribute && (
               <>
@@ -173,7 +176,7 @@ export function SalaryPage() {
                   leftIcon={<ListChecks size={15} />}
                   onClick={() => setMyContributionsOpen(true)}
                 >
-                  Đóng góp của tôi
+                  {t('salary.myContributions')}
                 </Button>
                 <Button
                   variant="primary"
@@ -181,7 +184,7 @@ export function SalaryPage() {
                   leftIcon={<Plus size={15} />}
                   onClick={() => setContributeOpen(true)}
                 >
-                  Đóng góp dữ liệu
+                  {t('salary.contributeData')}
                 </Button>
               </>
             )}
@@ -196,17 +199,17 @@ export function SalaryPage() {
           <div className="relative">
             <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
-              aria-label="Tìm theo chức danh..."
+              aria-label={t('salary.searchJob')}
               value={jobTitleInput}
               onChange={(e) => setJobTitleInput(e.target.value)}
-              placeholder="Tìm theo chức danh..."
+              placeholder={t('salary.searchJob')}
               maxLength={JOB_TITLE_SEARCH_MAX_LENGTH}
               className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors dark:placeholder-[#b0b3b8]"
             />
             {jobTitleInput && (
               <button
                 onClick={() => setJobTitleInput('')}
-                aria-label="Xóa tìm kiếm"
+                aria-label={t('common.clearSearch')}
                 className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
               >
                 <X size={13} />
@@ -219,8 +222,8 @@ export function SalaryPage() {
             items={industries}
             value={industryId}
             onChange={setIndustryId}
-            placeholder="Tất cả ngành nghề"
-            searchPlaceholder="Tìm kiếm ngành nghề…"
+            placeholder={t('salary.allIndustries')}
+            searchPlaceholder={t('salary.searchIndustry')}
             searchable
             itemIcon={(name) => {
               const Icon = getIndustryIcon(name)
@@ -234,8 +237,8 @@ export function SalaryPage() {
             items={regionOptions}
             value={region !== ALL_REGIONS ? region : null}
             onChange={(val) => setRegion(val ?? ALL_REGIONS)}
-            placeholder="Tất cả khu vực"
-            searchPlaceholder="Tìm tỉnh / thành phố…"
+            placeholder={t('salary.allRegions')}
+            searchPlaceholder={t('salary.searchRegion')}
             searchable
             buttonIcon={<MapPin size={15} className="text-primary-solid" />}
           />
@@ -245,7 +248,7 @@ export function SalaryPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-border">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold text-text-subtle mr-1 flex items-center gap-1">
-              <Filter size={12} className="text-text-subtle" /> Cấp bậc:
+              <Filter size={12} className="text-text-subtle" /> {t('salary.level')}:
             </span>
             <button
               type="button"
@@ -257,7 +260,7 @@ export function SalaryPage() {
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               )}
             >
-              Tất cả
+              {t('common.all')}
             </button>
             {levels.map((lv) => (
               <button
@@ -281,7 +284,7 @@ export function SalaryPage() {
               onClick={clearFilters}
               className="flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger shrink-0 ml-auto"
             >
-              <X size={13} /> Xóa bộ lọc
+              <X size={13} /> {t('common.clearFilter')}
             </button>
           )}
         </div>
@@ -293,9 +296,9 @@ export function SalaryPage() {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-base sm:text-lg font-bold text-text">
-                Mức lương theo vị trí
+                {t('salary.salaryByPosition')}
               </h2>
-              <span className="text-xs text-text-subtle font-medium">(Triệu VNĐ / tháng)</span>
+              <span className="text-xs text-text-subtle font-medium">{t('salary.millionPerMonth')}</span>
             </div>
           </div>
 
@@ -306,13 +309,9 @@ export function SalaryPage() {
           ) : rows.length === 0 ? (
             <EmptyState
               icon={<LineChart size={24} />}
-              title={isFiltering ? 'Không có vị trí nào khớp với bộ lọc này' : 'Chưa có vị trí nào đủ 5 mẫu khảo sát'}
-              description={
-                isFiltering
-                  ? 'Hãy thử thay đổi hoặc xóa bớt tiêu chí lọc để xem thêm dữ liệu.'
-                  : 'Dữ liệu sẽ tự động tổng hợp khi mỗi vị trí nhận đủ 5 lượt đóng góp.'
-              }
-              action={isFiltering ? <Button size="sm" variant="secondary" onClick={clearFilters}>Xóa bộ lọc</Button> : undefined}
+              title={t('salary.emptyTitle')}
+              description={t('salary.emptyDesc')}
+              action={isFiltering ? <Button size="sm" variant="secondary" onClick={clearFilters}>{t('common.clearFilter')}</Button> : undefined}
             />
           ) : (
             <Stagger className="space-y-4" gap={0.06}>
@@ -337,7 +336,7 @@ export function SalaryPage() {
                               <span className="ml-1.5 font-normal text-xs text-text-subtle">· {s.region}</span>
                             </h3>
                             <span className="shrink-0 text-xs font-medium text-text-subtle flex items-center gap-1">
-                              <Users size={12} /> {s.samples} lượt chia sẻ
+                              <Users size={12} /> {t('salary.sharesCount', { count: s.samples })}
                             </span>
                           </div>
                         </div>
@@ -346,12 +345,12 @@ export function SalaryPage() {
                       {/* Tóm tắt mức lương rõ ràng, dễ hiểu */}
                       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-xs text-text-subtle font-medium">Mức phổ biến:</span>
-                          <span className="text-base sm:text-lg font-extrabold text-primary-solid">{s.median} Triệu</span>
-                          <span className="text-xs text-text-subtle">/ tháng</span>
+                          <span className="text-xs text-text-subtle font-medium">{t('salary.commonSalary')}</span>
+                          <span className="text-base sm:text-lg font-extrabold text-primary-solid">{s.median} {t('salary.millionVndUnit')}</span>
+                          <span className="text-xs text-text-subtle"> {t('salary.perMonth')}</span>
                         </div>
                         <div className="text-xs text-text-subtle">
-                          Khoảng lương: <strong className="text-text font-bold">{s.p25} – {s.p75} Triệu</strong>
+                          {t('salary.salaryRangeText', { min: s.p25, max: s.p75 })}
                         </div>
                       </div>
 
@@ -372,9 +371,9 @@ export function SalaryPage() {
 
                         {/* 3 mốc số bên dưới: Khởi điểm | Phổ biến nhất | Cao nhất */}
                         <div className="flex items-center justify-between text-xs text-text-subtle font-medium pt-0.5">
-                          <span>Từ <strong>{s.p25} Tr</strong></span>
-                          <span className="text-primary-solid font-bold">Phổ biến: {s.median} Tr</span>
-                          <span>Đến <strong>{s.p75} Tr</strong></span>
+                          <span>{t('salary.fromSalary', { val: s.p25 })}</span>
+                          <span className="text-primary-solid font-bold">{t('salary.medianSalary', { val: s.median })}</span>
+                          <span>{t('salary.toSalary', { val: s.p75 })}</span>
                         </div>
                       </div>
                     </div>
@@ -426,8 +425,8 @@ export function SalaryPage() {
             setEditingContribution(null)
             toast.success(
               wasEdit
-                ? 'Đã cập nhật dữ liệu lương thành công!'
-                : 'Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!'
+                ? t('salary.updateSuccess')
+                : t('salary.contributeSuccess')
             )
           }}
         />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { Scale, Send } from 'lucide-react'
 import { Modal } from '@/components/ui'
@@ -32,6 +33,7 @@ export function MentoringSettlementProposalModal({
   requiresRefundAccount,
   onSuccess,
 }: MentoringSettlementProposalModalProps) {
+  const { t } = useTranslation()
   const total = Math.max(0, Math.round(totalBudget))
   const [mentorAmount, setMentorAmount] = useState(Math.round(total / 2))
   const [reason, setReason] = useState('')
@@ -51,14 +53,14 @@ export function MentoringSettlementProposalModal({
 
   const submit = async () => {
     setErrorMsg(null)
-    if (blockedByRefundAccount) return setErrorMsg('Vui lòng khai báo tài khoản nhận hoàn tiền trước khi đề xuất có hoàn tiền.')
-    if (reason.trim().length < 10) return setErrorMsg('Vui lòng nêu lý do dừng Task (tối thiểu 10 ký tự).')
+    if (blockedByRefundAccount) return setErrorMsg(t('mentoring.declareRefundAccountFirst'))
+    if (reason.trim().length < 10) return setErrorMsg(t('mentoring.settlementReasonRequired10'))
     try {
       await createMutation.mutateAsync({ mentorAmount, studentRefund, reason: reason.trim() })
       onSuccess?.()
       close()
     } catch (err) {
-      setErrorMsg(apiErrorMessage(err, 'Không thể gửi đề xuất dừng Task.'))
+      setErrorMsg(apiErrorMessage(err, t('mentoring.cannotSendSettlementProposal')))
     }
   }
 
@@ -66,13 +68,13 @@ export function MentoringSettlementProposalModal({
     <Modal
       isOpen={isOpen}
       onClose={close}
-      title="Dừng Task & chia quỹ"
+      title={t('mentoring.settlementModalTitle')}
       icon={<Scale className="h-5 w-5" />}
       maxWidthClassName="max-w-lg"
       footer={
         <div className="flex justify-end gap-2">
           <MentoringActionButton intent="ghost" onClick={close} disabled={createMutation.isPending}>
-            Hủy
+            {t('common.cancel')}
           </MentoringActionButton>
           <MentoringActionButton
             intent="primary"
@@ -81,7 +83,7 @@ export function MentoringSettlementProposalModal({
             disabled={blockedByRefundAccount}
             onClick={submit}
           >
-            Gửi đề xuất
+            {t('mentoring.sendProposal')}
           </MentoringActionButton>
         </div>
       }
@@ -91,7 +93,7 @@ export function MentoringSettlementProposalModal({
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 px-3.5 py-3 dark:bg-white/[0.04]">
           <div>
-            <p className="text-xs text-text-subtle">Quỹ đang giữ của Task</p>
+            <p className="text-xs text-text-subtle">{t('mentoring.holdingFundOfTask')}</p>
             <p className="font-display text-xl font-bold text-text">{formatVnd(total)}</p>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -119,12 +121,12 @@ export function MentoringSettlementProposalModal({
           </div>
           <div className="flex justify-between text-xs font-semibold">
             <span className="text-primary-solid">Mentor {mentorPercent}%</span>
-            <span className="text-info">Học viên {100 - mentorPercent}%</span>
+            <span className="text-info">{t('common.student')} {100 - mentorPercent}%</span>
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <MentoringField label="Mentor nhận (VND)">
+          <MentoringField label={t('mentoring.mentorReceivesVnd')}>
             <input
               type="number"
               inputMode="numeric"
@@ -136,7 +138,7 @@ export function MentoringSettlementProposalModal({
               className={MENTORING_INPUT}
             />
           </MentoringField>
-          <MentoringField label="Hoàn Học viên (VND)">
+          <MentoringField label={t('mentoring.menteeRefundVnd')}>
             <input
               type="number"
               inputMode="numeric"
@@ -152,18 +154,18 @@ export function MentoringSettlementProposalModal({
 
         {blockedByRefundAccount && (
           <div className="rounded-xl border border-danger-border bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
-            Bạn cần khai báo tài khoản nhận hoàn tiền trước khi đề xuất có hoàn tiền.{' '}
-            <Link to="/app/mentoring/refunds" className="font-semibold underline">Khai báo ngay</Link>
+            {t('mentoring.refundAccountRequiredNotice')}{' '}
+            <Link to="/app/mentoring/refunds" className="font-semibold underline">{t('mentoring.declareNow')}</Link>
           </div>
         )}
 
-        <MentoringField label="Lý do" required hint="Hai bên đồng ý thì Task dừng ngay và hồ sơ được gửi Ban Quản Trị để chi trả, hoàn tiền.">
+        <MentoringField label={t('mentoring.reasonLabel')} required hint={t('mentoring.settlementReasonHint')}>
           <textarea
             rows={3}
             maxLength={1000}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Khối lượng công việc đã hoàn thành, lý do không thể tiếp tục..."
+            placeholder={t('mentoring.settlementReasonPlaceholder')}
             className={`${MENTORING_INPUT} resize-none`}
           />
         </MentoringField>

@@ -7,6 +7,7 @@ import {
   X,
   Filter,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { SelectDropdown, type SelectOption } from '@/components/ui'
 import type {
   MentorFilterOptions,
@@ -38,6 +39,7 @@ export function MentorFilterBar({
   onClearFilters,
   activeFilterCount,
 }: MentorFilterBarProps) {
+  const { t } = useTranslation()
   const handleFieldChange = (val: string) => {
     const fieldId = val ? Number(val) : undefined
     onFilterChange({ fieldId, page: 0 })
@@ -68,7 +70,7 @@ export function MentorFilterBar({
 
   // Chuẩn bị danh sách options cho các dropdown tùy chỉnh
   const industryOptions: SelectOption<number | ''>[] = [
-    { value: '', label: 'Tất cả lĩnh vực' },
+    { value: '', label: t('mentoring.allFields') },
     ...industries.map((ind) => ({
       value: ind.id,
       label: ind.name,
@@ -76,7 +78,7 @@ export function MentorFilterBar({
   ]
 
   const majorOptions: SelectOption<number | ''>[] = [
-    { value: '', label: 'Tất cả chuyên ngành' },
+    { value: '', label: t('mentoring.allSpecializations') },
     ...majors.map((maj) => ({
       value: maj.id,
       label: maj.name,
@@ -85,17 +87,17 @@ export function MentorFilterBar({
   ]
 
   const workingModeOptions: SelectOption<string>[] = [
-    { value: '', label: 'Hình thức làm việc' },
-    { value: 'ONLINE', label: 'Trực tuyến (Online)' },
-    { value: 'OFFLINE', label: 'Trực tiếp (Offline)' },
-    { value: 'BOTH', label: 'Linh hoạt (Cả hai)' },
+    { value: '', label: t('mentoring.workingMode') },
+    { value: 'ONLINE', label: t('mentoring.workingModeOnline') },
+    { value: 'OFFLINE', label: t('mentoring.workingModeOffline') },
+    { value: 'BOTH', label: t('mentoring.workingModeBoth') },
   ]
 
   const mentoringTypeOptions: SelectOption<string>[] = [
-    { value: '', label: 'Hình thức hướng dẫn' },
-    { value: 'INDIVIDUAL', label: '1 kèm 1' },
-    { value: 'GROUP', label: 'Theo nhóm' },
-    { value: 'BOTH', label: 'Cả 1-1 & Nhóm' },
+    { value: '', label: t('mentoring.mentoringFormat') },
+    { value: 'INDIVIDUAL', label: t('mentoring.mentoringFormat1on1') },
+    { value: 'GROUP', label: t('mentoring.mentoringFormatGroup') },
+    { value: 'BOTH', label: t('mentoring.mentoringFormatBoth') },
   ]
 
   return (
@@ -105,11 +107,11 @@ export function MentorFilterBar({
         <div className="flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-primary-solid" />
           <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
-            Bộ lọc tiêu chí
+            {t('mentoring.filterCriteria')}
           </span>
           {activeFilterCount > 0 && (
             <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
-              {activeFilterCount} đang áp dụng
+              {t('mentoring.appliedFilters', { count: activeFilterCount })}
             </span>
           )}
         </div>
@@ -121,7 +123,7 @@ export function MentorFilterBar({
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-solid transition-colors hover:text-primary-solid cursor-pointer"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            <span>Xóa bộ lọc</span>
+            <span>{t('mentoring.clearFilter')}</span>
           </button>
         )}
       </div>
@@ -133,7 +135,7 @@ export function MentorFilterBar({
           value={params.fieldId ?? ''}
           onChange={(val) => handleFieldChange(String(val))}
           options={industryOptions}
-          placeholder="Tất cả lĩnh vực"
+          placeholder={t('mentoring.allFields')}
           icon={<Briefcase className="h-3.5 w-3.5" />}
         />
 
@@ -142,7 +144,7 @@ export function MentorFilterBar({
           value={params.majorId ?? ''}
           onChange={(val) => handleMajorChange(String(val))}
           options={majorOptions}
-          placeholder="Tất cả chuyên ngành"
+          placeholder={t('mentoring.allSpecializations')}
           icon={<GraduationCap className="h-3.5 w-3.5" />}
         />
 
@@ -151,7 +153,7 @@ export function MentorFilterBar({
           value={params.workingMode ?? ''}
           onChange={(val) => handleWorkingModeChange(val)}
           options={workingModeOptions}
-          placeholder="Hình thức làm việc"
+          placeholder={t('mentoring.workingMode')}
           icon={<Laptop className="h-3.5 w-3.5" />}
         />
 
@@ -160,7 +162,7 @@ export function MentorFilterBar({
           value={params.mentoringType ?? ''}
           onChange={(val) => handleMentoringTypeChange(val)}
           options={mentoringTypeOptions}
-          placeholder="Hình thức hướng dẫn"
+          placeholder={t('mentoring.mentoringFormat')}
           align="right"
           icon={<Users className="h-3.5 w-3.5" />}
         />
@@ -170,16 +172,16 @@ export function MentorFilterBar({
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border">
           <span className="text-xs font-semibold text-text-subtle">
-            Đang lọc theo:
+            {t('mentoring.filteringBy')}
           </span>
 
           {params.keyword && (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-solid ring-1 ring-inset ring-brand-300">
-              <span>Từ khóa: &quot;{params.keyword}&quot;</span>
+              <span>{t('mentoring.keywordFilterLabel', { keyword: params.keyword })}</span>
               <button
                 type="button"
                 onClick={() => onFilterChange({ keyword: undefined, page: 0 })}
-                aria-label="Xóa lọc từ khóa"
+                aria-label={t('mentoring.clearKeywordFilterAria')}
                 className="hover:text-primary-solid"
               >
                 <X className="h-3 w-3" />
@@ -189,11 +191,11 @@ export function MentorFilterBar({
 
           {selectedIndustry && (
             <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-text ring-1 ring-inset ring-plum-300">
-              <span>Lĩnh vực: {selectedIndustry.name}</span>
+              <span>{t('mentoring.industryFilterLabel', { name: selectedIndustry.name })}</span>
               <button
                 type="button"
                 onClick={() => onFilterChange({ fieldId: undefined, page: 0 })}
-                aria-label="Xóa lọc lĩnh vực"
+                aria-label={t('mentoring.clearIndustryFilterAria')}
                 className="hover:text-text"
               >
                 <X className="h-3 w-3" />
@@ -203,11 +205,11 @@ export function MentorFilterBar({
 
           {selectedMajor && (
             <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-text ring-1 ring-inset ring-plum-300">
-              <span>Ngành: {selectedMajor.name}</span>
+              <span>{t('mentoring.majorFilterLabel', { name: selectedMajor.name })}</span>
               <button
                 type="button"
                 onClick={() => onFilterChange({ majorId: undefined, page: 0 })}
-                aria-label="Xóa lọc chuyên ngành"
+                aria-label={t('mentoring.clearMajorFilterAria')}
                 className="hover:text-text"
               >
                 <X className="h-3 w-3" />
@@ -218,12 +220,12 @@ export function MentorFilterBar({
           {params.workingMode && (
             <span className="inline-flex items-center gap-1 rounded-full bg-aqua-50 px-2.5 py-0.5 text-xs font-semibold text-aqua-800 ring-1 ring-inset ring-aqua-300 dark:bg-aqua-950/40 dark:text-aqua-300">
               <span>
-                Hình thức: {params.workingMode === 'ONLINE' ? 'Trực tuyến' : params.workingMode === 'OFFLINE' ? 'Trực tiếp' : 'Linh hoạt'}
+                {t('mentoring.workingModeFilterLabel', { mode: params.workingMode === 'ONLINE' ? t('mentoring.formatOnlineShort') : params.workingMode === 'OFFLINE' ? t('mentoring.formatOfflineShort') : t('mentoring.formatHybridShort') })}
               </span>
               <button
                 type="button"
                 onClick={() => onFilterChange({ workingMode: undefined, page: 0 })}
-                aria-label="Xóa lọc hình thức làm việc"
+                aria-label={t('mentoring.clearWorkingModeFilterAria')}
                 className="hover:text-aqua-900"
               >
                 <X className="h-3 w-3" />
@@ -234,12 +236,12 @@ export function MentorFilterBar({
           {params.mentoringType && (
             <span className="inline-flex items-center gap-1 rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-semibold text-info ring-1 ring-inset ring-info-border">
               <span>
-                Phương thức: {params.mentoringType === 'INDIVIDUAL' ? '1 kèm 1' : params.mentoringType === 'GROUP' ? 'Theo nhóm' : '1-1 & Nhóm'}
+                {t('mentoring.mentoringTypeFilterLabel', { type: params.mentoringType === 'INDIVIDUAL' ? t('mentoring.method1on1Short') : params.mentoringType === 'GROUP' ? t('mentoring.methodGroupShort') : t('mentoring.methodBothShort') })}
               </span>
               <button
                 type="button"
                 onClick={() => onFilterChange({ mentoringType: undefined, page: 0 })}
-                aria-label="Xóa lọc phương thức hướng dẫn"
+                aria-label={t('mentoring.clearMentoringTypeFilterAria')}
                 className="hover:text-info"
               >
                 <X className="h-3 w-3" />

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Trophy, Award, Medal, Star, Flame, CheckCircle2, ArrowRight } from 'lucide-react'
 import { Card, Avatar } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,7 @@ interface RankStyle {
 }
 
 export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
+  const { t } = useTranslation()
   if (topMentors.length === 0) {
     return null
   }
@@ -81,8 +83,8 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
               </Link>
               <p className="mt-0.5 min-h-[32px] line-clamp-2 text-xs leading-relaxed text-text-subtle dark:text-text-subtle">
                 {mentor.currentPosition
-                  ? `${mentor.currentPosition}${mentor.currentCompany ? ` tại ${mentor.currentCompany}` : ''}`
-                  : mentor.headline || 'Cố vấn chuyên môn'}
+                  ? `${mentor.currentPosition}${mentor.currentCompany ? ` @ ${mentor.currentCompany}` : ''}`
+                  : mentor.headline || t('mentoring.expertAdvisor')}
               </p>
             </div>
 
@@ -90,7 +92,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
               <div className="rounded-xl bg-warning-soft p-2 text-center">
                 <span className="flex items-center justify-center gap-1 text-xs font-bold text-warning">
                   <Flame className="h-3.5 w-3.5 text-warning" />
-                  Uy tín
+                  {t('mentoring.reputationScore')}
                 </span>
                 <p className="mt-0.5 text-sm font-bold text-warning">
                   {mentor.reputationScore}
@@ -100,7 +102,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
               <div className="rounded-xl bg-primary-soft p-2 text-center">
                 <span className="flex items-center justify-center gap-1 text-xs font-bold text-primary-solid">
                   <CheckCircle2 className="h-3.5 w-3.5 text-primary-solid" />
-                  Nhiệm vụ
+                  {t('mentoring.completedTasks')}
                 </span>
                 <p className="mt-0.5 text-sm font-bold text-primary-solid">
                   {mentor.completedTasks}
@@ -113,7 +115,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
                 <Star className="h-3.5 w-3.5 fill-warning text-warning" />
                 <span className="font-bold">{Number(mentor.rating).toFixed(1)}</span>
                 {mentor.reviewCount > 0 && (
-                  <span className="text-xs text-text-subtle">({mentor.reviewCount} đánh giá)</span>
+                  <span className="text-xs text-text-subtle">({t('mentoring.ratingWithCount', { count: mentor.reviewCount })})</span>
                 )}
               </div>
             )}
@@ -124,7 +126,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
               to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-2 text-xs font-bold text-text-muted transition-colors hover:bg-primary-solid hover:text-on-primary"
             >
-              <span>Xem chi tiết cố vấn</span>
+              <span>{t('mentoring.viewMentorProfile')}</span>
               <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
@@ -138,7 +140,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
       <div className="flex items-center gap-2">
         <Trophy className="h-4 w-4 text-warning" />
         <h2 className="font-display text-base font-bold text-text">
-          Top 3 cố vấn dẫn đầu
+          {t('mentoring.top3PodiumTitle')}
         </h2>
       </div>
 
@@ -148,7 +150,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
           border: 'border-warning ring-2 ring-warning',
           shadow: 'shadow-lg shadow-gold-500/15',
           icon: <Trophy className="h-3.5 w-3.5 text-text" />,
-          rankTitle: 'Quán quân #1',
+          rankTitle: t('mentoring.champion'),
         })}
 
         {second && renderPodiumCard(second, 2, {
@@ -156,7 +158,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
           border: 'border-border-strong',
           shadow: 'hover:shadow-plum-400/20',
           icon: <Medal className="h-3.5 w-3.5 text-text-muted" />,
-          rankTitle: 'Hạng 2',
+          rankTitle: t('mentoring.runnerUp'),
         })}
 
         {third && renderPodiumCard(third, 3, {
@@ -164,7 +166,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
           border: 'border-warning-border',
           shadow: 'hover:shadow-amber-500/20',
           icon: <Award className="h-3.5 w-3.5 text-warning" />,
-          rankTitle: 'Hạng 3',
+          rankTitle: t('mentoring.thirdPlace'),
         })}
       </div>
     </div>

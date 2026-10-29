@@ -9,6 +9,7 @@
  *  - UC42: bình chọn/bỏ bình chọn câu hỏi (chỉ Student/Alumni đã đăng nhập; Guest bấm → popup mời đăng nhập).
  */
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronUp, Clock, AlertTriangle, SearchX, Pencil, Trash2 } from 'lucide-react'
 import { Badge, Card, Avatar, ImageCarousel } from '@/components/ui'
@@ -19,12 +20,12 @@ import { useLoginPrompt } from '@/store/loginPrompt'
 import { useQuestionDetail, AnswersSection, AskQuestionModal, DeleteQuestionModal, useToggleVoteQuestion } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
 
-/** Chuyển mốc ISO-8601 sang ngày giờ đọc được (VD: "11/07/2026 09:30"), rỗng nếu không hợp lệ. */
-function formatDateTime(iso: string): string {
+/** Chuyển mốc ISO-8601 sang ngày giờ đọc được, rỗng nếu không hợp lệ. */
+function formatDateTime(iso: string, lang = 'vi'): string {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString('vi-VN', {
+  return d.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -35,12 +36,13 @@ function formatDateTime(iso: string): string {
 
 /** Liên kết quay lại danh sách câu hỏi. */
 function BackLink() {
+  const { t } = useTranslation()
   return (
     <Link
       to="/app/forum"
       className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-text-subtle transition-colors hover:text-primary-solid"
     >
-      <ArrowLeft size={16} /> Quay lại danh sách câu hỏi
+      <ArrowLeft size={16} /> {t('forum.backToQuestions')}
     </Link>
   )
 }
@@ -73,19 +75,20 @@ function DetailSkeleton() {
  * Trạng thái không tìm thấy câu hỏi (HTTP 404 — câu hỏi không tồn tại hoặc đã bị ẩn/xóa).
  */
 function NotFoundState() {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
         <SearchX size={24} />
       </span>
       <div>
-        <p className="font-bold text-text">Không tìm thấy câu hỏi</p>
+        <p className="font-bold text-text">{t('forum.questionNotFound')}</p>
         <p className="mt-1 text-sm text-text-subtle">
-          Câu hỏi này không tồn tại hoặc đã bị ẩn/xóa khỏi diễn đàn.
+          {t('forum.questionNotFoundDesc')}
         </p>
       </div>
       <ButtonLink to="/app/forum" variant="secondary" size="sm" leftIcon={<ArrowLeft size={16} />}>
-        Về danh sách câu hỏi
+        {t('forum.backToQuestions')}
       </ButtonLink>
     </Card>
   )
@@ -97,16 +100,17 @@ function NotFoundState() {
  * @param onRetry Hàm gọi lại API
  */
 function DetailError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-text">Không tải được chi tiết câu hỏi</p>
-        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">{t('forum.loadError')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('common.error')}</p>
       </div>
-      <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
+      <Button variant="secondary" size="sm" onClick={onRetry}>{t('common.tryAgain')}</Button>
     </Card>
   )
 }
@@ -125,7 +129,8 @@ function QuestionDetailContent({
   onEdit: () => void
   onDelete: () => void
 }) {
-  const postedAt = formatDateTime(q.createdAt)
+  const { t, i18n } = useTranslation()
+  const postedAt = formatDateTime(q.createdAt, i18n.language)
 
   // Bình chọn (UC42): state cục bộ cập nhật lạc quan, cùng pattern với "Thích bài viết" (UC17 - useToggleLike).
   const [voted, setVoted] = useState(q.voted)
@@ -140,7 +145,7 @@ function QuestionDetailContent({
 
   const handleVote = () => {
     if (!canVote) {
-      promptLogin('Đăng nhập để bình chọn câu hỏi.')
+      promptLogin(t('forum.promptLoginVoteQuestion'))
       return
     }
     const next = !voted
@@ -169,7 +174,7 @@ function QuestionDetailContent({
           type="button"
           onClick={handleVote}
           aria-pressed={voted}
-          aria-label={voted ? 'Bỏ bình chọn câu hỏi' : 'Bình chọn câu hỏi'}
+          aria-label={voted ? t('forum.unvoteQuestionAria') : t('forum.voteQuestionAria')}
           className={cn(
             'grid h-11 w-11 place-items-center rounded-xl ring-1 ring-inset transition-colors',
             voted ? 'bg-primary-soft text-primary-solid ring-primary/30' : 'bg-surface-2 text-text-subtle ring-border hover:bg-surface-3',
@@ -178,7 +183,7 @@ function QuestionDetailContent({
           <ChevronUp size={20} />
         </button>
         <span className="text-sm font-bold text-text">{votes}</span>
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-subtle">bình chọn</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-subtle">{t('forum.votes')}</span>
       </div>
 
       {/* Cột phải: chủ đề, tiêu đề, thông tin tác giả, nội dung đầy đủ */}
@@ -197,14 +202,14 @@ function QuestionDetailContent({
                   onClick={onEdit}
                   className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-primary-solid"
                 >
-                  <Pencil size={13} /> Chỉnh sửa
+                  <Pencil size={13} /> {t('common.edit')}
                 </button>
                 <button
                   type="button"
                   onClick={onDelete}
                   className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition hover:border-danger hover:bg-danger-soft hover:text-danger"
                 >
-                  <Trash2 size={13} /> Xóa
+                  <Trash2 size={13} /> {t('common.delete')}
                 </button>
               </div>
             )}
@@ -234,13 +239,13 @@ function QuestionDetailContent({
 
         {/* Nội dung đầy đủ của câu hỏi — giữ nguyên xuống dòng của người dùng */}
         <div className="mt-5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-text-muted">
-          {q.body || 'Câu hỏi này chưa có nội dung chi tiết.'}
+          {q.body || t('forum.noQuestionDetail')}
         </div>
 
         {/* Ảnh đính kèm của câu hỏi — carousel dùng chung với bài đăng (kéo/vuốt xem tất cả ảnh) */}
         {q.images.length > 0 && (
           <div className="mt-5 overflow-hidden rounded-xl border border-border shadow-sm">
-            <ImageCarousel images={q.images} height={420} altPrefix="Ảnh câu hỏi" />
+            <ImageCarousel images={q.images} height={420} altPrefix={t('forum.altQuestionImage')} />
           </div>
         )}
 
@@ -255,7 +260,7 @@ function QuestionDetailContent({
               voted ? 'bg-primary-soft text-primary-solid' : 'text-text-subtle hover:bg-border',
             )}
           >
-            <ChevronUp size={15} /> {votes} bình chọn
+            <ChevronUp size={15} /> {votes} {t('forum.votes')}
           </button>
         </div>
       </div>

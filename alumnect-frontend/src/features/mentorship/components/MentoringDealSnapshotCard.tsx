@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
-import { vi } from 'date-fns/locale'
+import { vi, enUS } from 'date-fns/locale'
+import { useTranslation } from 'react-i18next'
 import {
   Calendar,
   DollarSign,
@@ -21,25 +22,25 @@ interface MentoringDealSnapshotCardProps {
   className?: string
 }
 
-const WORKING_MODE_LABELS: Record<string, string> = {
-  ONLINE: 'Trực tuyến (Online qua Google Meet/Zoom)',
-  OFFLINE: 'Trực tiếp (Offline gặp mặt trao đổi)',
-  BOTH: 'Linh hoạt (Cả trực tuyến và trực tiếp)',
+const WORKING_MODE_KEY_MAP: Record<string, string> = {
+  ONLINE: 'mentoring.modeOnline',
+  OFFLINE: 'mentoring.modeOffline',
+  BOTH: 'mentoring.modeBoth',
 }
 
-const PARTICIPATION_LABELS: Record<string, string> = {
-  INDIVIDUAL: 'Cá nhân (Kèm cặp 1-1 chuyên sâu)',
-  GROUP: 'Nhóm (Hướng dẫn theo nhóm học viên)',
+const PARTICIPATION_KEY_MAP: Record<string, string> = {
+  INDIVIDUAL: 'mentoring.partIndividual',
+  GROUP: 'mentoring.partGroup',
 }
 
-const TASK_TYPE_LABELS: Record<string, string> = {
-  CONSULTATION: 'Tư vấn định hướng học tập & nghề nghiệp',
-  ASSIGNMENT_GUIDANCE: 'Hướng dẫn bài tập / Đồ án tốt nghiệp',
-  PROJECT_MENTORING: 'Cố vấn thực chiến dự án phần mềm',
-  RESUME_REVIEW: 'Đánh giá & Chỉnh sửa hồ sơ CV',
-  MOCK_INTERVIEW: 'Phỏng vấn thử việc (Mock Interview)',
-  SKILL_TRAINING: 'Đào tạo kỹ năng chuyên sâu',
-  OTHER: 'Nhiệm vụ theo thỏa thuận',
+const TASK_TYPE_KEY_MAP: Record<string, string> = {
+  CONSULTATION: 'mentoring.taskConsultation',
+  ASSIGNMENT_GUIDANCE: 'mentoring.taskAssignmentGuidance',
+  PROJECT_MENTORING: 'mentoring.taskProjectMentoring',
+  RESUME_REVIEW: 'mentoring.taskResumeReview',
+  MOCK_INTERVIEW: 'mentoring.taskMockInterview',
+  SKILL_TRAINING: 'mentoring.taskSkillTraining',
+  OTHER: 'mentoring.taskOther',
 }
 
 /**
@@ -50,9 +51,11 @@ export function MentoringDealSnapshotCard({
   deal,
   className = '',
 }: MentoringDealSnapshotCardProps) {
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'en' ? enUS : vi
   const formattedDeadline = deal.deadline
-    ? format(new Date(deal.deadline), 'dd/MM/yyyy HH:mm', { locale: vi })
-    : 'Chưa xác định'
+    ? format(new Date(deal.deadline), 'dd/MM/yyyy HH:mm', { locale: dateLocale })
+    : t('mentoring.undetermined')
 
   const formattedPrice = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
@@ -76,12 +79,12 @@ export function MentoringDealSnapshotCard({
                 Deal Snapshot #{deal.id}
               </h3>
               <span className="rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-bold text-text-muted">
-                Phiên bản {deal.version}
+                {t('mentoring.dealVersionLabel', { version: deal.version })}
               </span>
             </div>
             <p className="text-xs text-text-subtle">
-              Cập nhật gần nhất:{' '}
-              {format(new Date(deal.updatedAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
+              {t('mentoring.latestUpdated')}{' '}
+              {format(new Date(deal.updatedAt), 'dd/MM/yyyy HH:mm', { locale: dateLocale })}
             </p>
           </div>
         </div>
@@ -97,10 +100,10 @@ export function MentoringDealSnapshotCard({
           </span>
           <div className="text-xs space-y-0.5">
             <p className="font-bold text-success">
-              Snapshot đã được cả hai bên xác nhận và khóa an toàn
+              {t('mentoring.snapshotConfirmedLockedNotice')}
             </p>
             <p className="text-success">
-              Không bên nào được tự ý sửa điều khoản. Thỏa thuận đã sẵn sàng tiến hành thanh toán.
+              {t('mentoring.termsLockedReadyForPayment')}
             </p>
           </div>
         </div>
@@ -119,14 +122,14 @@ export function MentoringDealSnapshotCard({
           <div className="flex items-center gap-2.5 min-w-0">
             <Avatar
               src={deal.studentAvatar || undefined}
-              name={deal.studentName || 'Học viên'}
+              name={deal.studentName || t('mentoring.roleStudent')}
               size={36}
             />
             <div className="min-w-0">
               <p className="truncate text-xs font-bold text-text">
-                {deal.studentName || 'Học viên'}
+                {deal.studentName || t('mentoring.roleStudent')}
               </p>
-              <p className="text-xs text-text-subtle">Sinh viên (Student)</p>
+              <p className="text-xs text-text-subtle">{t('mentoring.studentStudentRole')}</p>
             </div>
           </div>
 
@@ -134,17 +137,17 @@ export function MentoringDealSnapshotCard({
             {deal.studentConfirmed ? (
               <span className="inline-flex items-center gap-1 text-xs font-bold text-success">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>Đã xác nhận</span>
+                <span>{t('mentoring.confirmedBadge')}</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-xs font-bold text-warning">
                 <Clock className="h-3.5 w-3.5" />
-                <span>Chưa xác nhận</span>
+                <span>{t('mentoring.unconfirmedBadge')}</span>
               </span>
             )}
             {deal.studentConfirmedAt && (
               <p className="text-xs text-text-subtle dark:text-text-subtle">
-                {format(new Date(deal.studentConfirmedAt), 'HH:mm dd/MM', { locale: vi })}
+                {format(new Date(deal.studentConfirmedAt), 'HH:mm dd/MM', { locale: dateLocale })}
               </p>
             )}
           </div>
@@ -161,14 +164,14 @@ export function MentoringDealSnapshotCard({
           <div className="flex items-center gap-2.5 min-w-0">
             <Avatar
               src={deal.mentorAvatar || undefined}
-              name={deal.mentorName || 'Cố vấn'}
+              name={deal.mentorName || t('mentoring.roleMentor')}
               size={36}
             />
             <div className="min-w-0">
               <p className="truncate text-xs font-bold text-text">
-                {deal.mentorName || 'Cố vấn'}
+                {deal.mentorName || t('mentoring.roleMentor')}
               </p>
-              <p className="text-xs text-text-subtle">Cố vấn (Mentor)</p>
+              <p className="text-xs text-text-subtle">{t('mentoring.mentorMentorRole')}</p>
             </div>
           </div>
 
@@ -176,17 +179,17 @@ export function MentoringDealSnapshotCard({
             {deal.mentorConfirmed ? (
               <span className="inline-flex items-center gap-1 text-xs font-bold text-success">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>Đã xác nhận</span>
+                <span>{t('mentoring.confirmedBadge')}</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-xs font-bold text-warning">
                 <Clock className="h-3.5 w-3.5" />
-                <span>Chưa xác nhận</span>
+                <span>{t('mentoring.unconfirmedBadge')}</span>
               </span>
             )}
             {deal.mentorConfirmedAt && (
               <p className="text-xs text-text-subtle dark:text-text-subtle">
-                {format(new Date(deal.mentorConfirmedAt), 'HH:mm dd/MM', { locale: vi })}
+                {format(new Date(deal.mentorConfirmedAt), 'HH:mm dd/MM', { locale: dateLocale })}
               </p>
             )}
           </div>
@@ -200,7 +203,7 @@ export function MentoringDealSnapshotCard({
           <div className="rounded-2xl bg-success-soft p-3.5 border border-success-border space-y-1">
             <div className="flex items-center gap-1.5 text-success font-semibold">
               <DollarSign className="h-4 w-4 text-success" />
-              <span>Mức giá thỏa thuận</span>
+              <span>{t('mentoring.agreedPriceLabel')}</span>
             </div>
             <p className="text-lg font-bold text-success">
               {formattedPrice}
@@ -210,7 +213,7 @@ export function MentoringDealSnapshotCard({
           <div className="rounded-2xl bg-cream-100/50 p-3.5 border border-border dark:bg-white/5 space-y-1">
             <div className="flex items-center gap-1.5 text-text-muted font-semibold">
               <Calendar className="h-4 w-4 text-primary-solid" />
-              <span>Hạn chót hoàn thành (Deadline)</span>
+              <span>{t('mentoring.completionDeadlineLabel')}</span>
             </div>
             <p className="text-base font-bold text-text">
               {formattedDeadline}
@@ -223,30 +226,30 @@ export function MentoringDealSnapshotCard({
           <div className="rounded-2xl bg-cream-100/40 p-3 border border-border dark:bg-white/5 space-y-1">
             <div className="flex items-center gap-1.5 text-text-subtle dark:text-text-subtle">
               <Laptop className="h-3.5 w-3.5 text-primary-solid" />
-              <span className="font-semibold">Hình thức làm việc</span>
+              <span className="font-semibold">{t('mentoring.workingModeHeading')}</span>
             </div>
             <p className="font-bold text-text">
-              {WORKING_MODE_LABELS[deal.workingMode] || deal.workingMode}
+              {WORKING_MODE_KEY_MAP[deal.workingMode] ? t(WORKING_MODE_KEY_MAP[deal.workingMode]) : deal.workingMode}
             </p>
           </div>
 
           <div className="rounded-2xl bg-cream-100/40 p-3 border border-border dark:bg-white/5 space-y-1">
             <div className="flex items-center gap-1.5 text-text-subtle dark:text-text-subtle">
               <Users className="h-3.5 w-3.5 text-primary-solid" />
-              <span className="font-semibold">Hình thức tham gia</span>
+              <span className="font-semibold">{t('mentoring.participationHeading')}</span>
             </div>
             <p className="font-bold text-text">
-              {PARTICIPATION_LABELS[deal.participationType] || deal.participationType}
+              {PARTICIPATION_KEY_MAP[deal.participationType] ? t(PARTICIPATION_KEY_MAP[deal.participationType]) : deal.participationType}
             </p>
           </div>
 
           <div className="rounded-2xl bg-cream-100/40 p-3 border border-border dark:bg-white/5 space-y-1">
             <div className="flex items-center gap-1.5 text-text-subtle dark:text-text-subtle">
               <Target className="h-3.5 w-3.5 text-primary-solid" />
-              <span className="font-semibold">Loại nhiệm vụ</span>
+              <span className="font-semibold">{t('mentoring.taskTypeHeading')}</span>
             </div>
             <p className="font-bold text-text">
-              {TASK_TYPE_LABELS[deal.taskType] || deal.taskType}
+              {TASK_TYPE_KEY_MAP[deal.taskType] ? t(TASK_TYPE_KEY_MAP[deal.taskType]) : deal.taskType}
             </p>
           </div>
         </div>
@@ -255,7 +258,7 @@ export function MentoringDealSnapshotCard({
         <div className="space-y-1.5 rounded-2xl bg-cream-100/50 p-4 border border-border dark:bg-white/5">
           <div className="flex items-center gap-1.5 text-xs font-bold text-text">
             <FileText className="h-4 w-4 text-primary-solid" />
-            <span>Phạm vi công việc (Task Scope)</span>
+            <span>{t('mentoring.taskScopeHeading')}</span>
           </div>
           <p className="whitespace-pre-wrap text-text-muted leading-relaxed">
             {deal.taskScope}
@@ -266,7 +269,7 @@ export function MentoringDealSnapshotCard({
         <div className="space-y-1.5 rounded-2xl bg-brand-50/40 p-4 border border-brand-200/40 dark:bg-brand-700/20 dark:border-brand-700/30">
           <div className="flex items-center gap-1.5 text-xs font-bold text-primary-solid">
             <Sparkles className="h-4 w-4 text-primary-solid" />
-            <span>Kết quả kỳ vọng đầu ra (Expected Result)</span>
+            <span>{t('mentoring.expectedResultHeading')}</span>
           </div>
           <p className="whitespace-pre-wrap text-brand-700/85 dark:text-brand-300/90 leading-relaxed">
             {deal.expectedResult}

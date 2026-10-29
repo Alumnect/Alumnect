@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { Container } from '@/components/ui/primitives'
 import { useMentorIndustries } from '@/features/mentorship/hooks/useMentorRegistration'
@@ -12,6 +13,7 @@ import { MentorRankingList } from '@/features/mentorship/components/MentorRankin
  * Đường dẫn: /app/mentoring/ranking
  */
 export function MentorRankingPage() {
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // 1. Tải danh mục ngành nghề / lĩnh vực chuyên môn
@@ -65,10 +67,10 @@ export function MentorRankingPage() {
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3 px-1">
           <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
-            Chọn Lĩnh Vực Chuyên Môn
+            {t('mentoring.selectField')}
           </h2>
           <span className="text-xs text-text-subtle">
-            {industries.length} lĩnh vực
+            {t('mentoring.fieldsCount', { count: industries.length })}
           </span>
         </div>
 

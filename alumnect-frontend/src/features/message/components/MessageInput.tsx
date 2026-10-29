@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import type { KeyboardEvent, ChangeEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Paperclip, Send, X, Loader2, Image as ImageIcon } from 'lucide-react'
 import { toast } from '@/components/ui'
 import { chatApi } from '../api/chatApi'
@@ -19,6 +20,7 @@ interface MessageInputProps {
 }
 
 export function MessageInput({ onSendMessage, disabled, leftActions }: MessageInputProps) {
+  const { t } = useTranslation()
   const [content, setContent] = useState('')
   const [attachments, setAttachments] = useState<PendingAttachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -38,7 +40,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
         setAttachments((prev) => [...prev, uploaded])
       }
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Tải tệp lên thất bại. Vui lòng thử lại.')
+      toast.error(error instanceof Error ? error.message : t('messages.uploadFailed', 'Tải tệp lên thất bại. Vui lòng thử lại.'))
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) {
@@ -62,7 +64,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
       setContent('')
       setAttachments([])
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Không thể gửi tin nhắn. Vui lòng thử lại.')
+      toast.error(error instanceof Error ? error.message : t('messages.sendError', 'Không thể gửi tin nhắn. Vui lòng thử lại.'))
     } finally {
       setIsSending(false)
       window.setTimeout(() => messageInputRef.current?.focus(), 0)
@@ -92,7 +94,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
                 <Paperclip size={14} className="text-primary-solid" />
               )}
               <span className="max-w-[140px] truncate font-medium">{att.fileName}</span>
-              <button aria-label="Đóng"
+              <button aria-label={t('common.close', 'Đóng')}
                 type="button"
                 onClick={() => handleRemoveAttachment(idx)}
                 className="ml-1 rounded-full p-0.5 hover:bg-brand-200 text-primary-solid transition-colors"
@@ -120,7 +122,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isSending || disabled}
-          aria-label="Đính kèm tệp"
+          aria-label={t('messages.attachFile', 'Đính kèm tệp')}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:opacity-50"
         >
           {isUploading ? (
@@ -135,12 +137,12 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
 
         {/* Khung nhập văn bản */}
         <input
-          aria-label="Nhập tin nhắn..."
+          aria-label={t('messages.typeMessage', 'Nhập tin nhắn...')}
           ref={messageInputRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Nhập tin nhắn..."
+          placeholder={t('messages.typeMessage', 'Nhập tin nhắn...')}
           disabled={isSending || disabled}
           className="h-11 min-w-0 flex-1 rounded-full bg-surface-2 px-5 text-[15px] text-text placeholder:text-text-subtle transition-colors focus:bg-surface-3 focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:opacity-50"
         />
@@ -150,7 +152,7 @@ export function MessageInput({ onSendMessage, disabled, leftActions }: MessageIn
           type="button"
           onClick={handleSend}
           disabled={(!content.trim() && attachments.length === 0) || isSending || isUploading || disabled}
-          aria-label="Gửi tin nhắn"
+          aria-label={t('messages.sendMessage', 'Gửi tin nhắn')}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-solid text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-40"
         >
           {isSending ? (

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Handshake, MessageSquare, Target, CheckCircle2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { MentoringDealSummary } from '../model/mentoringTaskTypes'
@@ -36,7 +37,7 @@ export function MentoringTaskDealSection({
           </div>
           <div>
             <h4 className="text-base font-bold text-text">
-              Thỏa thuận Mentoring Deal gốc
+              {t('mentoring.originalDealTitle')}
             </h4>
             <span className="text-xs font-mono font-bold text-text-subtle">
               #DEAL-{deal.id} (Phiên bản v{deal.version})
@@ -50,7 +51,7 @@ export function MentoringTaskDealSection({
             className="inline-flex items-center gap-2 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-soft"
           >
             <MessageSquare className="h-4 w-4" />
-            <span>Mở tin nhắn</span>
+            <span>{t('mentoring.openMessage')}</span>
           </Link>
         )}
       </div>
@@ -58,7 +59,7 @@ export function MentoringTaskDealSection({
       <div className="mt-5 space-y-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
-            Phạm vi công việc đã chốt
+            {t('mentoring.finalizedTaskScope')}
           </span>
           <p className="mt-1 text-sm leading-relaxed text-text">
             {deal.taskScope}
@@ -67,7 +68,7 @@ export function MentoringTaskDealSection({
 
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
-            Kết quả kỳ vọng đầu ra (Expected Result)
+            {t('mentoring.expectedOutputResult')}
           </span>
           <div className="mt-1 flex items-start gap-2 rounded-2xl border border-border bg-cream-100/70 p-3.5 text-sm text-text-muted dark:bg-bg">
             <Target className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
@@ -77,22 +78,22 @@ export function MentoringTaskDealSection({
 
         <div className="grid grid-cols-2 gap-3 pt-2">
           <div className="rounded-2xl border border-border bg-cream-100/70 p-3.5 dark:bg-bg">
-            <span className="text-xs font-bold text-text-subtle">Mức giá thỏa thuận</span>
+            <span className="text-xs font-bold text-text-subtle">{t('mentoring.agreedDealPrice')}</span>
             <p className="mt-1 text-sm font-bold text-primary-solid">
               {formatPrice(deal.agreedPrice)}
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-cream-100/70 p-3.5 dark:bg-bg">
-            <span className="text-xs font-bold text-text-subtle">Thời hạn Deal</span>
+            <span className="text-xs font-bold text-text-subtle">{t('mentoring.dealDeadline')}</span>
             <p className="mt-1 text-sm font-bold text-text">
               {formatDeadline(deal.deadline)}
             </p>
           </div>
           <div className="col-span-2 rounded-2xl border border-border bg-cream-100/70 p-3.5 dark:bg-bg">
-            <span className="text-xs font-bold text-text-subtle">Trạng thái thanh toán</span>
+            <span className="text-xs font-bold text-text-subtle">{t('mentoring.dealPaymentStatus')}</span>
             <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-success">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-              <span>Đã thanh toán (PAID)</span>
+              <span>{t('mentoring.paidStatusText')}</span>
             </p>
           </div>
         </div>

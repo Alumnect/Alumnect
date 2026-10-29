@@ -1,4 +1,5 @@
 import { AlertCircle, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Skeleton } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
 import { useMentorStatus } from '../hooks/useMentorStatus'
@@ -11,6 +12,7 @@ import { MentorSubscriptionSummaryCard } from './MentorSubscriptionSummaryCard'
  * Kết nối với React Query hook useMentorStatus để đồng bộ dữ liệu liên tục từ Spring Boot.
  */
 export function MentorStatusDashboard() {
+  const { t } = useTranslation()
   const { data: status, isLoading, isError, error, refetch, isFetching } = useMentorStatus()
 
   // Trạng thái Loading bằng hiệu ứng Shimmer Skeleton màu kem ấm
@@ -44,10 +46,10 @@ export function MentorStatusDashboard() {
             <AlertCircle className="h-7 w-7" />
           </div>
           <h2 className="font-display text-xl font-bold text-text">
-            Không thể tải trạng thái Mentor
+            {t('mentoring.loadStatusErrorTitle')}
           </h2>
           <p className="mt-2 text-sm text-text-muted leading-relaxed">
-            {error?.message || 'Đã có lỗi xảy ra khi kết nối tới máy chủ. Vui lòng thử lại sau.'}
+            {error?.message || t('mentoring.loadStatusErrorDesc')}
           </p>
           <div className="mt-6 flex justify-center">
             <Button
@@ -56,7 +58,7 @@ export function MentorStatusDashboard() {
               leftIcon={<RefreshCw className="h-4 w-4" />}
               onClick={() => refetch()}
             >
-              Thử tải lại
+              {t('mentoring.retryLoading')}
             </Button>
           </div>
         </Card>

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { MessageSquare, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Skeleton } from '@/components/ui/primitives'
 import { Reveal } from '@/components/motion'
 import { Button } from '@/components/ui/Button'
@@ -25,6 +26,7 @@ export function GroupDiscussionsFeed({
   topics = [],
   sharedPostId,
 }: GroupDiscussionsFeedProps) {
+  const { t } = useTranslation()
   const [activeTopic, setActiveTopic] = useState<string>('all')
   const visibleTopic = topics.includes(activeTopic) ? activeTopic : 'all'
 
@@ -50,12 +52,12 @@ export function GroupDiscussionsFeed({
     <div className="space-y-5">
       {sharedPostId && sharedPostError && (
         <Card hover={false} className="rounded-2xl border border-border p-4 text-sm text-text-subtle dark:bg-surface">
-          Bài viết được chia sẻ không còn khả dụng.
+          {t('groups.sharedPostUnavailable')}
         </Card>
       )}
       {sharedPost && !sharedPostError && (
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-primary-solid">Bài viết được chia sẻ</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-primary-solid">{t('groups.sharedPostTitle')}</p>
           <GroupPostCard post={sharedPost} groupId={groupId} isActiveMember={isActiveMember} isGroupActive={isGroupActive} topics={topics} />
         </div>
       )}
@@ -71,10 +73,10 @@ export function GroupDiscussionsFeed({
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="text-sm font-extrabold text-text">
-                Tham gia {groupName} để cùng thảo luận
+                {t('groups.joinGroupToDiscuss', { name: groupName })}
               </h4>
               <p className="text-xs text-text-subtle">
-                Trở thành thành viên để đăng bài viết, bình luận và kết nối với các cựu sinh viên khác.
+                {t('groups.joinGroupToDiscussDesc')}
               </p>
             </div>
           </div>
@@ -94,7 +96,7 @@ export function GroupDiscussionsFeed({
                 : 'bg-surface-2 text-text-muted hover:bg-surface-3',
             )}
           >
-            Tất cả
+            {t('common.all')}
           </button>
           {topics.map((t) => (
             <button
@@ -140,10 +142,10 @@ export function GroupDiscussionsFeed({
                 {isFetchingNextPage ? (
                   <>
                     <Loader2 size={14} className="mr-2 animate-spin" />
-                    Đang tải thêm...
+                    {t('common.loadingMore')}
                   </>
                 ) : (
-                  'Xem thêm thảo luận cũ hơn'
+                  t('groups.loadMoreDiscussions')
                 )}
               </Button>
             </div>
@@ -153,7 +155,7 @@ export function GroupDiscussionsFeed({
           {!hasNextPage && (
             <div className="flex items-center justify-center gap-2.5 py-6 text-xs text-text-subtle">
               <span className="h-px w-12 bg-surface-3" />
-              <span className="font-medium">Đã xem hết thảo luận gần đây</span>
+              <span className="font-medium">{t('groups.allDiscussionsSeen')}</span>
               <span className="h-px w-12 bg-surface-3" />
             </div>
           )}
@@ -164,12 +166,12 @@ export function GroupDiscussionsFeed({
             <MessageSquare size={22} />
           </div>
           <h4 className="mt-3 text-sm font-bold text-text">
-            {visibleTopic === 'all' ? 'Chưa có bài thảo luận nào' : `Chưa có bài thảo luận về ${visibleTopic}`}
+            {visibleTopic === 'all' ? t('groups.noDiscussionsYet') : t('groups.noDiscussionsTopic', { topic: visibleTopic })}
           </h4>
           <p className="mt-1 text-xs text-text-subtle">
             {isActiveMember
-              ? 'Hãy là người đầu tiên đăng bài viết khởi động các cuộc thảo luận sôi nổi trong nhóm!'
-              : 'Hãy tham gia nhóm để bắt đầu chia sẻ và trao đổi cùng mọi người.'}
+              ? t('groups.firstPostPrompt')
+              : t('groups.joinToDiscussPrompt')}
           </p>
         </div>
       )}

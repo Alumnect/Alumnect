@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { MessageSquare, UserRound } from 'lucide-react'
 import { Avatar } from '@/components/ui'
@@ -51,8 +52,8 @@ export function MentorResponseCard({ response }: MentorResponseCardProps) {
 
       {(response.selected || response.sameIndustry || fields.length > 0) && (
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          {response.selected && <MentoringBadge tone="mint">Mentor được chọn</MentoringBadge>}
-          {response.sameIndustry && <MentoringBadge tone="navy">Cùng ngành</MentoringBadge>}
+          {response.selected && <MentoringBadge tone="mint">{t('mentoring.selectedMentorBadge')}</MentoringBadge>}
+          {response.sameIndustry && <MentoringBadge tone="navy">{t('mentoring.sameIndustryBadge')}</MentoringBadge>}
           {fields.slice(0, MAX_FIELDS).map((field) => (
             <MentoringBadge key={field}>{field}</MentoringBadge>
           ))}
@@ -62,7 +63,7 @@ export function MentorResponseCard({ response }: MentorResponseCardProps) {
 
       {response.responseNote && (
         <p className="mt-3 rounded-xl bg-surface-2 px-3 py-2 text-sm text-text-muted dark:bg-white/[0.04]">
-          <span className="font-semibold">Lời nhắn: </span>
+          <span className="font-semibold">{t('mentoring.messageLabelPrefix')}</span>
           {response.responseNote}
         </p>
       )}
@@ -70,7 +71,7 @@ export function MentorResponseCard({ response }: MentorResponseCardProps) {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
         <span className="text-xs text-text-subtle">
           {isAccepted
-            ? 'Mentor đồng ý trao đổi — nhắn tin để thống nhất thỏa thuận.'
+            ? t('mentoring.mentorAgreedChatHint')
             : response.respondedAt
               ? `Phản hồi lúc ${formatTimestamp(response.respondedAt)}`
               : `Đã gửi lúc ${formatTimestamp(response.distributedAt)}`}

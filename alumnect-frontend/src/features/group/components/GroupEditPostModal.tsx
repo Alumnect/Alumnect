@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Check, ChevronDown, ImagePlus, Loader2, Pencil, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -19,6 +20,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
   topics: string[]
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [content, setContent] = useState(post.content)
   const [topic, setTopic] = useState(topics.includes(post.topic ?? '') ? post.topic ?? '' : '')
   const [topicOpen, setTopicOpen] = useState(false)
@@ -52,7 +54,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
       setImages((current) => [...current, ...urls.filter((_, index) => files[index].type.startsWith('image/'))])
       setVideos((current) => [...current, ...urls.filter((_, index) => files[index].type.startsWith('video/'))])
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Không thể tải ảnh lên. Vui lòng thử lại.')
+      toast.error(error instanceof Error ? error.message : t('groups.uploadError'))
     } finally {
       setUploading(false)
     }
@@ -62,7 +64,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
     event.preventDefault()
     const trimmed = content.trim()
     if (!trimmed) {
-      toast.error('Vui lòng nhập nội dung bài viết.')
+      toast.error(t('groups.contentRequiredToast'))
       return
     }
     updateMutation.mutate(
@@ -75,21 +77,21 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
     <Modal
       isOpen
       onClose={busy ? () => undefined : onClose}
-      title="Chỉnh sửa bài viết"
+      title={t('groups.editPostTitle')}
       icon={<Pencil size={17} />}
       maxWidthClassName="max-w-xl"
       footer={
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>Hủy</Button>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>{t('common.cancel')}</Button>
           <Button type="submit" form={`group-edit-post-${post.id}`} disabled={busy || !content.trim()} leftIcon={busy ? <Loader2 size={16} className="animate-spin" /> : undefined}>
-            {updateMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+            {updateMutation.isPending ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>
       }
     >
       <form id={`group-edit-post-${post.id}`} onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor={`group-edit-content-${post.id}`} className="mb-1.5 block text-sm font-semibold">Nội dung bài viết</label>
+          <label htmlFor={`group-edit-content-${post.id}`} className="mb-1.5 block text-sm font-semibold">{t('groups.postContent')}</label>
           <textarea
             id={`group-edit-content-${post.id}`}
             value={content}
@@ -104,7 +106,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
         {topics.length > 0 && (
           <div className="relative">
             <label className="mb-1.5 block text-sm font-semibold text-text">
-              Chủ đề / sở thích
+              {t('groups.topicsLabel')}
             </label>
             <div className="relative" ref={dropdownRef}>
               <button
@@ -118,7 +120,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
                       #{topic}
                     </span>
                   ) : (
-                    <span className="text-text-subtle">Không chọn chủ đề</span>
+                    <span className="text-text-subtle">{t('groups.noTopicSelected')}</span>
                   )}
                 </div>
                 <ChevronDown
@@ -141,10 +143,10 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
                   >
                     <div className="mb-1 flex items-center justify-between px-2 py-1">
                       <span className="text-xs font-black uppercase tracking-wider text-text-subtle">
-                        Chọn chủ đề
+                        {t('groups.selectTopic')}
                       </span>
                       <span className="text-xs font-medium text-text-subtle">
-                        {topics.length} lựa chọn
+                        {t('groups.topicOptionsCount', { count: topics.length })}
                       </span>
                     </div>
 
@@ -161,7 +163,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
                           : 'font-medium text-text-muted hover:bg-surface-2',
                       )}
                     >
-                      <span>Không chọn chủ đề</span>
+                      <span>{t('groups.noTopicSelected')}</span>
                       {!topic && (
                         <span className="grid h-4.5 w-4.5 place-items-center rounded-full bg-primary-solid text-on-primary">
                           <Check size={11} strokeWidth={3} />
@@ -203,16 +205,16 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
         )}
 
         <div>
-          <p className="mb-2 text-sm font-semibold">Ảnh/video đính kèm ({images.length + videos.length}/{MAX_IMAGES})</p>
+          <p className="mb-2 text-sm font-semibold">{t('groups.attachedMediaCount', { current: images.length + videos.length, max: MAX_IMAGES })}</p>
           {images.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-2">
               {images.map((url, index) => (
                 <div key={`${url}-${index}`} className="relative h-20 w-20 overflow-hidden rounded-xl">
-                  <img src={url} alt={`Ảnh ${index + 1}`} className="h-full w-full object-cover" />
+                  <img src={url} alt={t('feed.imageIndex', { index: index + 1 })} className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}
-                    aria-label={`Gỡ ảnh ${index + 1}`}
+                    aria-label={t('groups.removeImageAria', { index: index + 1 })}
                     className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white"
                   ><X size={12} /></button>
                 </div>
@@ -225,7 +227,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
                 <div key={`${url}-${index}`} className="relative h-20 w-28 overflow-hidden rounded-xl bg-black">
                   <video src={url} muted preload="metadata" className="h-full w-full object-cover" />
                   <button type="button" onClick={() => setVideos((current) => current.filter((_, videoIndex) => videoIndex !== index))}
-                    aria-label={`Gỡ video ${index + 1}`} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white">
+                    aria-label={t('groups.removeVideoAria', { index: index + 1 })} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white">
                     <X size={12} />
                   </button>
                 </div>
@@ -234,7 +236,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
           )}
           <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} />
           <Button type="button" variant="secondary" size="sm" disabled={busy || images.length + videos.length >= MAX_IMAGES} onClick={() => fileInputRef.current?.click()} leftIcon={<ImagePlus size={15} />}>
-            Thêm ảnh/video
+            {t('groups.addMedia')}
           </Button>
         </div>
       </form>

@@ -1,4 +1,5 @@
 import { AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Skeleton, EmptyState, Pagination } from '@/components/ui'
 import { MentorRankingCard } from './MentorRankingCard'
 import { MentorRankingPodium } from './MentorRankingPodium'
@@ -26,6 +27,7 @@ export function MentorRankingList({
   onPageChange,
   fieldName = 'lĩnh vực này',
 }: MentorRankingListProps) {
+  const { t } = useTranslation()
   // 1. Trạng thái Đang tải dữ liệu (Loading Skeleton)
   if (isLoading && !data) {
     return (
@@ -75,9 +77,9 @@ export function MentorRankingList({
         <div className="flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-danger mt-0.5 shrink-0" />
           <div className="space-y-1">
-            <h3 className="font-display text-sm font-bold">Không thể tải bảng xếp hạng Mentor</h3>
+            <h3 className="font-display text-sm font-bold">{t('mentoring.loadRankingError')}</h3>
             <p className="text-xs leading-relaxed opacity-90">
-              {error?.message || 'Hệ thống tạm thời không phản hồi. Vui lòng thử lại sau.'}
+              {error?.message || t('mentoring.loadMentorsErrorDesc')}
             </p>
           </div>
         </div>
@@ -93,8 +95,8 @@ export function MentorRankingList({
   if (mentors.length === 0) {
     return (
       <EmptyState
-        title="Chưa có Mentor hoạt động trong lĩnh vực này"
-        description={`Hiện tại chưa có Mentor nào thuộc lĩnh vực ${fieldName} đang ở trạng thái hoạt động với gói dịch vụ còn hiệu lực. Hãy chọn một lĩnh vực khác hoặc quay lại sau.`}
+        title={t('mentoring.rankingEmptyTitle')}
+        description={t('mentoring.rankingEmptyDesc', { field: fieldName })}
       />
     )
   }
@@ -112,10 +114,10 @@ export function MentorRankingList({
       <div className="space-y-3 sm:space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 px-1">
           <h2 className="font-display text-base font-bold text-text">
-            Danh sách thứ hạng ({totalElements})
+            {t('mentoring.rankingListTitle', { count: totalElements })}
           </h2>
           <span className="text-xs text-text-subtle dark:text-text-subtle">
-            Trang {page + 1} / {totalPages || 1}
+            {t('mentoring.pageFormat', { page: page + 1, total: totalPages || 1 })}
           </span>
         </div>
 

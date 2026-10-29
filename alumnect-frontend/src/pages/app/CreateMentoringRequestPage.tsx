@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   MentoringTermsGate,
   MentorPageHeader,
@@ -11,6 +12,7 @@ import {
 import { Container } from '@/components/ui/primitives'
 
 function CreateMentoringRequestContent() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [successData, setSuccessData] = useState<CreateMentoringRequestData | null>(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
@@ -29,9 +31,9 @@ function CreateMentoringRequestContent() {
     <div className="w-full space-y-4 text-left">
       <MentorPageHeader
         icon={<Sparkles className="h-4 w-4" />}
-        eyebrow="Kết nối tự động"
-        title="Tạo yêu cầu cố vấn"
-        description="Chia sẻ mục tiêu và kỳ vọng của bạn để hệ thống kết nối với Mentor phù hợp."
+        eyebrow={t('mentoring.autoConnect')}
+        title={t('mentoring.createRequestTitle')}
+        description={t('mentoring.createRequestSubtitle')}
       />
 
       <CreateMentoringRequestForm

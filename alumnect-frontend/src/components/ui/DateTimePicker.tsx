@@ -1,12 +1,14 @@
 import { forwardRef, useMemo, type ReactNode } from 'react'
 import DatePicker, { registerLocale } from 'react-datepicker'
 import { format, isValid, parse } from 'date-fns'
-import { vi } from 'date-fns/locale'
+import { vi, enUS } from 'date-fns/locale'
+import { useTranslation } from 'react-i18next'
 import { CalendarDays, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import 'react-datepicker/dist/react-datepicker.css'
 
 registerLocale('vi', vi)
+registerLocale('en', enUS)
 
 export type DateTimePickerMode = 'date' | 'time' | 'datetime'
 
@@ -107,21 +109,29 @@ export function DateTimePicker({
   const selected = useMemo(() => toDate(value, mode), [value, mode])
   const minDate = useMemo(() => toDate(min, mode) ?? undefined, [min, mode])
   const maxDate = useMemo(() => toDate(max, mode) ?? undefined, [max, mode])
+  const { t, i18n } = useTranslation()
   const iconSize = size === 'sm' ? 14 : 16
   const leading = mode === 'time' ? <Clock size={iconSize} /> : <CalendarDays size={iconSize} />
+  const currentLang = i18n.language === 'en' ? 'en' : 'vi'
+  const defaultPlaceholder =
+    mode === 'time'
+      ? t('common.selectTime')
+      : mode === 'datetime'
+      ? t('common.selectDateTime')
+      : t('common.selectDate')
 
   return (
     <DatePicker
       id={id}
       selected={selected}
       onChange={(date: Date | null) => onChange(date ? format(date, VALUE_FORMAT[mode]) : '')}
-      locale="vi"
+      locale={currentLang}
       dateFormat={DISPLAY_FORMAT[mode]}
       showTimeSelect={mode !== 'date'}
       showTimeSelectOnly={mode === 'time'}
       timeFormat="HH:mm"
       timeIntervals={15}
-      timeCaption="Giờ"
+      timeCaption={t('common.timeCaption')}
       minDate={mode === 'time' ? undefined : minDate}
       maxDate={mode === 'time' ? undefined : maxDate}
       showMonthDropdown={mode !== 'time'}
@@ -129,7 +139,7 @@ export function DateTimePicker({
       dropdownMode="select"
       isClearable={clearable && !disabled}
       disabled={disabled}
-      placeholderText={placeholder ?? PLACEHOLDER[mode]}
+      placeholderText={placeholder ?? defaultPlaceholder}
       wrapperClassName="w-full"
       popperClassName="alumnect-datepicker-popper"
       popperPlacement={popperPlacement}

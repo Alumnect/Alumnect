@@ -20,16 +20,18 @@ import { EventAttendeesModal } from './EventAttendeesModal'
 import { useEventHistory } from '../hooks/useEventHistory'
 import type { EventHistoryFilter, EventHistoryItem } from '../model/event'
 import { compact, cn } from '@/lib/utils'
-
-const FILTER_OPTIONS: { key: EventHistoryFilter; label: string }[] = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'upcoming', label: 'Sắp diễn ra' },
-  { key: 'past', label: 'Đã tham gia' },
-  { key: 'cancelled', label: 'Đã hủy' },
-]
+import { useTranslation } from 'react-i18next'
 
 export function EventHistoryView() {
+  const { t, i18n } = useTranslation()
   const [filter, setFilter] = useState<EventHistoryFilter>('all')
+
+  const filterOptions = useMemo<{ key: EventHistoryFilter; label: string }[]>(() => [
+    { key: 'all', label: t('event.filterAll') },
+    { key: 'upcoming', label: t('event.filterUpcoming') },
+    { key: 'past', label: t('event.filterPast') },
+    { key: 'cancelled', label: t('event.filterCancelled') },
+  ], [t])
   const [attendeeModalTarget, setAttendeeModalTarget] = useState<{
     id: string | number
     title?: string
@@ -44,14 +46,14 @@ export function EventHistoryView() {
   }, [data])
 
   const getEventDateInfo = (isoString?: string | null) => {
-    if (!isoString) return { month: 'TH--', day: '--', dateStr: 'Chưa xác định', timeStr: '' }
+    if (!isoString) return { month: 'TH--', day: '--', dateStr: t('event.unknownDate'), timeStr: '' }
     const date = new Date(isoString)
-    const month = 'TH' + (date.getMonth() + 1)
+    const month = (i18n.language === 'vi' ? 'TH' : 'M') + (date.getMonth() + 1)
     return {
       month,
       day: date.getDate().toString().padStart(2, '0'),
-      dateStr: date.toLocaleDateString('vi-VN', { dateStyle: 'medium' }),
-      timeStr: date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      dateStr: date.toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'medium' }),
+      timeStr: date.toLocaleTimeString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' }),
     }
   }
 
@@ -59,7 +61,7 @@ export function EventHistoryView() {
     if (!isoString) return ''
     try {
       const d = new Date(isoString)
-      return d.toLocaleDateString('vi-VN', {
+      return d.toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -75,42 +77,42 @@ export function EventHistoryView() {
     switch (item.attendanceState) {
       case 'UPCOMING':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-info-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
-            <Clock size={12} className="text-sky-100 shrink-0" />
-            <span>Sắp diễn ra</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-sky-300 border border-sky-400/30 backdrop-blur-md shadow-sm">
+            <Clock size={13} className="text-sky-400 shrink-0" />
+            <span>{t('event.upcoming')}</span>
           </span>
         )
       case 'ONGOING':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
-            <Radio size={12} className="animate-pulse text-amber-100 shrink-0" />
-            <span>Đang diễn ra</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-amber-300 border border-amber-400/30 backdrop-blur-md shadow-sm">
+            <Radio size={13} className="animate-pulse text-amber-400 shrink-0" />
+            <span>{t('event.ongoing')}</span>
           </span>
         )
       case 'PAST':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
-            <CheckCircle2 size={12} className="text-emerald-100 shrink-0" />
-            <span>Đã tham gia</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-emerald-300 border border-emerald-400/30 backdrop-blur-md shadow-sm">
+            <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+            <span>{t('event.past')}</span>
           </span>
         )
       case 'REGISTRATION_CANCELLED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
-            <XCircle size={12} className="text-rose-100 shrink-0" />
-            <span>Đã hủy đăng ký</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-rose-300 border border-rose-400/30 backdrop-blur-md shadow-sm">
+            <XCircle size={13} className="text-rose-400 shrink-0" />
+            <span>{t('event.regCancelled')}</span>
           </span>
         )
       case 'EVENT_CANCELLED':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-danger px-3 py-1 text-xs font-bold uppercase tracking-wide text-text-inverse shadow-md ring-1 ring-white/25 backdrop-blur-xs">
-            <Ban size={12} className="text-red-100 shrink-0" />
-            <span>Sự kiện bị hủy</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-rose-300 border border-rose-500/35 backdrop-blur-md shadow-sm">
+            <Ban size={13} className="text-rose-400 shrink-0" />
+            <span>{t('event.cancelled')}</span>
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md ring-1 ring-white/25 backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white/90 border border-white/15 backdrop-blur-md shadow-sm">
             <span>{item.registrationStatus}</span>
           </span>
         )
@@ -121,7 +123,7 @@ export function EventHistoryView() {
     <div className="space-y-6">
       {/* Filter Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-4">
-        {FILTER_OPTIONS.map((opt) => (
+        {filterOptions.map((opt) => (
           <button
             key={opt.key}
             type="button"
@@ -143,17 +145,17 @@ export function EventHistoryView() {
         <div className="flex h-64 items-center justify-center">
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="h-8 w-8 animate-spin text-primary-solid" />
-            <p className="text-sm font-medium text-text-subtle">Đang tải lịch sử tham gia...</p>
+            <p className="text-sm font-medium text-text-subtle">{t('event.loadingHistory')}</p>
           </div>
         </div>
       ) : isError ? (
         <EmptyState
           icon={<CalendarDays size={24} />}
-          title="Không tải được lịch sử sự kiện"
-          description="Đã xảy ra lỗi khi kết nối tới máy chủ. Vui lòng thử lại sau."
+          title={t('event.loadHistoryError')}
+          description={t('event.loadHistoryErrorDesc')}
           action={
             <Button size="sm" variant="secondary" onClick={() => refetch()}>
-              Thử lại
+              {t('common.tryAgain')}
             </Button>
           }
         />
@@ -162,22 +164,22 @@ export function EventHistoryView() {
           icon={<CalendarCheck size={28} className="text-primary-solid" />}
           title={
             filter === 'all'
-              ? 'Bạn chưa tham gia sự kiện nào'
+              ? t('event.noHistoryAll')
               : filter === 'upcoming'
-              ? 'Không có sự kiện nào sắp tới'
+              ? t('event.noHistoryUpcoming')
               : filter === 'past'
-              ? 'Chưa có sự kiện nào đã tham gia'
-              : 'Không có sự kiện nào đã hủy'
+              ? t('event.noHistoryPast')
+              : t('event.noHistoryCancelled')
           }
           description={
             filter === 'all'
-              ? 'Hãy khám phá các sự kiện hấp dẫn và đăng ký tham gia ngay hôm nay!'
-              : 'Hãy thử đổi bộ lọc để xem các sự kiện khác trong lịch sử.'
+              ? t('event.noHistoryAllDesc')
+              : t('event.noHistoryOtherDesc')
           }
           action={
             filter !== 'all' ? (
               <Button size="sm" variant="secondary" onClick={() => setFilter('all')}>
-                Xem tất cả lịch sử
+                {t('event.viewAllHistory')}
               </Button>
             ) : undefined
           }
@@ -203,7 +205,7 @@ export function EventHistoryView() {
                       <Link to={postLink} className="block h-full w-full">
                         <SmartImage
                           src={cover}
-                          alt={item.title || 'Sự kiện'}
+                          alt={item.title || t('event.titleFallback', 'Sự kiện')}
                           className="h-full w-full"
                           imgClassName="object-cover transition-transform duration-700 group-hover:scale-105"
                         />
@@ -213,7 +215,7 @@ export function EventHistoryView() {
                       <>
                         <SmartImage
                           src={cover}
-                          alt={item.title || 'Sự kiện'}
+                          alt={item.title || t('event.titleFallback', 'Sự kiện')}
                           className="h-full w-full"
                           imgClassName="object-cover"
                         />
@@ -241,12 +243,12 @@ export function EventHistoryView() {
                       {postLink ? (
                         <Link to={postLink} className="block group/title">
                           <h3 className="text-base font-bold text-text line-clamp-2 transition-colors group-hover/title:text-brand-600 group-hover/title:underline">
-                            {item.title || 'Sự kiện chưa đặt tên'}
+                            {item.title || t('event.unnamedEvent')}
                           </h3>
                         </Link>
                       ) : (
                         <h3 className="text-base font-bold text-text line-clamp-2">
-                          {item.title || 'Sự kiện chưa đặt tên'}
+                          {item.title || t('event.unnamedEvent')}
                         </h3>
                       )}
 
@@ -266,7 +268,7 @@ export function EventHistoryView() {
 
                       {item.registeredAt && (
                         <p className="mt-2 text-xs text-text-subtle">
-                          Đã đăng ký: {formatRegisteredAt(item.registeredAt)}
+                          {t('event.registeredAt', { date: formatRegisteredAt(item.registeredAt) })}
                         </p>
                       )}
                     </div>
@@ -282,15 +284,15 @@ export function EventHistoryView() {
                               : '/app/profile'
                           }
                           className="flex items-center gap-2 min-w-0 hover:text-primary-solid transition-colors group/author"
-                          title={item.organizerName || 'Ban tổ chức'}
+                          title={item.organizerName || t('event.organizerDefault')}
                         >
                           <Avatar
                             src={item.organizerAvatar || undefined}
-                            name={item.organizerName || 'Ban tổ chức'}
+                            name={item.organizerName || t('event.organizerDefault')}
                             size={26}
                           />
                           <span className="text-xs font-medium text-text truncate group-hover/author:underline group-hover/author:text-brand-600">
-                            {item.organizerName || 'Ban tổ chức'}
+                            {item.organizerName || t('event.organizerDefault')}
                           </span>
                         </Link>
                         <button
@@ -306,7 +308,7 @@ export function EventHistoryView() {
                             })
                           }}
                           className="shrink-0 hidden sm:inline-flex items-center gap-1 text-xs text-text-subtle hover:text-primary-solid hover:bg-primary-soft py-0.5 px-1.5 rounded transition-colors"
-                          title="Bấm để xem danh sách người tham gia"
+                          title={t('event.viewAttendeesTooltip')}
                         >
                           <Users size={11} className="text-primary-solid" />
                           <span>
@@ -354,7 +356,7 @@ export function EventHistoryView() {
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
             >
-              {isFetchingNextPage ? 'Đang tải...' : 'Tải thêm lịch sử'}
+              {isFetchingNextPage ? t('common.loading') : t('event.loadMoreHistory')}
             </Button>
           </div>
         </Reveal>

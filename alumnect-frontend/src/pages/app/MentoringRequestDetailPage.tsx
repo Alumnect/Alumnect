@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   AlertCircle,
   ArrowLeft,
@@ -35,19 +36,19 @@ import { cn } from '@/lib/utils'
 
 const CARD = 'rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6'
 
-function formatDateTime(value?: string | null) {
+function formatDateTime(value?: string | null, lang: string = 'vi') {
   if (!value) return '—'
   const d = new Date(value)
   return Number.isNaN(d.getTime())
     ? value
-    : d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
+    : d.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function formatBudget(min?: number | null, max?: number | null) {
-  if (min == null && max == null) return 'Thỏa thuận'
+function formatBudget(min?: number | null, max?: number | null, t?: (key: string) => string) {
+  if (min == null && max == null) return t ? t('mentoring.negotiable') : 'Thỏa thuận'
   if (min != null && max != null && min !== max) return `${formatVnd(min)} – ${formatVnd(max)}`
   const value = max ?? min ?? 0
-  return value === 0 ? 'Miễn phí' : formatVnd(value)
+  return value === 0 ? (t ? t('mentoring.freeBudget') : 'Miễn phí') : formatVnd(value)
 }
 
 function formatFileSize(bytes?: number) {
@@ -74,6 +75,7 @@ function Fact({ icon, label, value }: { icon: ReactNode; label: string; value: R
  * Phản hồi của Mentor đặt lên đầu vì đó là việc người học cần xem và thao tác.
  */
 function MentoringRequestDetailContent() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const requestId = id ? Number(id) : undefined
   const [showOtherMentors, setShowOtherMentors] = useState(false)
@@ -85,12 +87,12 @@ function MentoringRequestDetailContent() {
   const cancelMutation = useMutation({
     mutationFn: () => mentoringRequestApi.cancelRequest(requestId!),
     onSuccess: () => {
-      toast.success('Đã hủy yêu cầu')
+      toast.success(t('mentoring.requestCancelledSuccess'))
       setConfirmCancel(false)
       queryClient.invalidateQueries({ queryKey: ['mentoring'] })
       refetch()
     },
-    onError: (err: Error) => toast.error(err.message || 'Không thể hủy yêu cầu'),
+    onError: (err: Error) => toast.error(err.message || t('mentoring.cancelRequestError')),
   })
 
   if (isLoading) {
@@ -107,20 +109,20 @@ function MentoringRequestDetailContent() {
   }
 
   if (isError || !data) {
-    const errorMsg = (error as Error)?.message || 'Không tìm thấy yêu cầu Mentoring.'
+    const errorMsg = (error as Error)?.message || t('mentoring.requestNotFound')
     const isForbidden = errorMsg.includes('không có quyền') || errorMsg.includes('Forbidden')
     return (
       <EmptyState
         icon={<AlertCircle className="h-6 w-6" />}
-        title={isForbidden ? 'Bạn không xem được yêu cầu này' : 'Không tìm thấy yêu cầu'}
-        description={isForbidden ? 'Yêu cầu này thuộc về người dùng khác.' : errorMsg}
+        title={isForbidden ? t('mentoring.cannotViewRequest') : t('mentoring.requestNotFoundTitle')}
+        description={isForbidden ? t('mentoring.requestBelongsToOther') : errorMsg}
         action={
           <div className="flex flex-wrap justify-center gap-2">
             <ButtonLink to="/app/mentoring/requests" size="sm" leftIcon={<ArrowLeft className="h-4 w-4" />}>
-              Về danh sách
+              {t('mentoring.backToList')}
             </ButtonLink>
             <Button variant="outline" size="sm" onClick={() => refetch()} leftIcon={<RefreshCw className="h-4 w-4" />}>
-              Thử lại
+              {t('common.retry')}
             </Button>
           </div>
         }
@@ -147,7 +149,7 @@ function MentoringRequestDetailContent() {
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted transition-colors hover:text-primary-solid"
         >
           <ArrowLeft className="h-4 w-4" />
-          Yêu cầu của tôi
+          {t('mentoring.myRequestsNav')}
         </Link>
         <div className="flex items-center gap-2">
           {data.canCancel && (
@@ -158,7 +160,7 @@ function MentoringRequestDetailContent() {
               leftIcon={<XCircle className="h-4 w-4" />}
               className="border border-danger-border text-danger hover:bg-danger-soft hover:text-danger"
             >
-              Hủy yêu cầu
+              {t('mentoring.cancelRequestBtn')}
             </Button>
           )}
           <Button
@@ -168,7 +170,7 @@ function MentoringRequestDetailContent() {
             disabled={isFetching}
             leftIcon={<RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />}
           >
-            Làm mới
+            {t('mentoring.refreshBtn')}
           </Button>
         </div>
       </div>
@@ -180,8 +182,8 @@ function MentoringRequestDetailContent() {
         </div>
         <h1 className="mt-3 font-display text-xl font-bold tracking-tight text-text sm:text-2xl">{data.title}</h1>
         <p className="mt-2 text-xs text-text-subtle">
-          Tạo lúc {formatDateTime(data.createdAt)}
-          {data.industryName ? ` · Ngành ${data.industryName}` : ''}
+          {t('mentoring.createdTimeAt', { time: formatDateTime(data.createdAt, i18n.language) })}
+          {data.industryName ? t('mentoring.industryWithDot', { industry: data.industryName }) : ''}
         </p>
       </header>
 
@@ -190,23 +192,23 @@ function MentoringRequestDetailContent() {
           <section className="space-y-3">
             <div>
               <h2 className="font-display text-base font-bold text-text">
-                Phản hồi từ Mentor ({mentorResponses.length})
+                {t('mentoring.mentorResponsesHeading', { count: mentorResponses.length })}
               </h2>
               <p className="text-xs text-text-subtle">
                 {isDirect
-                  ? 'Yêu cầu được gửi riêng cho Mentor bạn chọn.'
-                  : 'Yêu cầu được gửi tới mọi Mentor; Mentor cùng ngành được xếp lên trước.'}
+                  ? t('mentoring.directRequestNotice')
+                  : t('mentoring.publicRequestNotice')}
               </p>
             </div>
 
             {mentorResponses.length === 0 ? (
               <EmptyState
                 icon={<Search className="h-6 w-6" />}
-                title="Chưa có Mentor nhận yêu cầu"
-                description="Hệ thống sẽ thông báo khi có Mentor phù hợp. Bạn cũng có thể chủ động tìm và gửi yêu cầu trực tiếp."
+                title={t('mentoring.noMentorAcceptedTitle')}
+                description={t('mentoring.noMentorAcceptedDesc')}
                 action={
                   <ButtonLink to="/app/mentoring/discover" size="sm" leftIcon={<Search className="h-4 w-4" />}>
-                    Khám phá Mentor
+                    {t('mentoring.exploreMentorsBtn')}
                   </ButtonLink>
                 }
               />
@@ -214,7 +216,7 @@ function MentoringRequestDetailContent() {
               <>
                 {primaryResponses.length === 0 && (
                   <p className="rounded-2xl border border-dashed border-border-strong px-4 py-5 text-center text-sm text-text-subtle">
-                    Chưa có Mentor cùng ngành hoặc Mentor nào đồng ý. Xem danh sách Mentor khác bên dưới.
+                    {t('mentoring.noSameIndustryMentorDesc')}
                   </p>
                 )}
                 {primaryResponses.map((response) => (
@@ -231,10 +233,10 @@ function MentoringRequestDetailContent() {
                     >
                       <span>
                         <span className="block text-sm font-semibold text-text">
-                          Mentor khác đã nhận yêu cầu ({otherResponses.length})
+                          {t('mentoring.otherMentorsReceived', { count: otherResponses.length })}
                         </span>
                         <span className="block text-xs text-text-subtle">
-                          Khác ngành, chưa phản hồi. Mentor nào đồng ý sẽ được đưa lên danh sách chính.
+                          {t('mentoring.otherMentorsNote')}
                         </span>
                       </span>
                       <ChevronDown className={cn('h-5 w-5 shrink-0 text-text-subtle transition-transform', showOtherMentors && 'rotate-180')} />
@@ -253,25 +255,25 @@ function MentoringRequestDetailContent() {
           </section>
 
           <section className={CARD}>
-            <h2 className="font-display text-base font-bold text-text">Nội dung yêu cầu</h2>
+            <h2 className="font-display text-base font-bold text-text">{t('mentoring.requestContentHeading')}</h2>
             <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-text">
               {data.description}
             </p>
             <dl className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <Fact icon={<Briefcase />} label="Nhu cầu hỗ trợ" value={taskLabel} />
-              <Fact icon={<Coins />} label="Ngân sách" value={formatBudget(data.budgetMin, data.budgetMax)} />
+              <Fact icon={<Briefcase />} label={t('mentoring.supportNeedLabel')} value={taskLabel} />
+              <Fact icon={<Coins />} label={t('mentoring.budgetLabel')} value={formatBudget(data.budgetMin, data.budgetMax, t)} />
               <Fact
                 icon={<Laptop />}
-                label="Hình thức làm việc"
-                value={data.workingMode ? WORKING_MODE_LABELS[data.workingMode] : 'Linh hoạt'}
+                label={t('mentoring.workingModeFact')}
+                value={data.workingMode ? WORKING_MODE_LABELS[data.workingMode] : t('mentoring.flexibleWorkingMode')}
               />
               <Fact
                 icon={<Users />}
-                label="Hình thức tham gia"
-                value={data.participationType ? PARTICIPATION_TYPE_LABELS[data.participationType] : 'Cá nhân'}
+                label={t('mentoring.participationTypeFact')}
+                value={data.participationType ? PARTICIPATION_TYPE_LABELS[data.participationType] : t('mentoring.individualParticipation')}
               />
               {data.expectedDeadline && (
-                <Fact icon={<CalendarClock />} label="Hạn chót mong muốn" value={formatDateTime(data.expectedDeadline)} />
+                <Fact icon={<CalendarClock />} label={t('mentoring.expectedDeadlineFact')} value={formatDateTime(data.expectedDeadline, i18n.language)} />
               )}
             </dl>
 
@@ -279,7 +281,7 @@ function MentoringRequestDetailContent() {
               <div className="mt-5 border-t border-border pt-4">
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold text-text">
                   <Paperclip className="h-4 w-4 text-text-subtle" />
-                  Tài liệu đính kèm ({data.attachments.length})
+                  {t('mentoring.attachedDocumentsHeading', { count: data.attachments.length })}
                 </h3>
                 <ul className="mt-2.5 space-y-2">
                   {data.attachments.map((file) => (
@@ -319,11 +321,11 @@ function MentoringRequestDetailContent() {
                 {data.group.name}
               </h2>
               <p className="mt-1 text-xs text-text-subtle">
-                {activeMembers.length}/{data.group.maxMembers} thành viên · cùng tham gia trao đổi với Mentor
+                {t('mentoring.groupMembersExchangeNote', { count: activeMembers.length, max: data.group.maxMembers })}
               </p>
               <div className="mt-3 flex -space-x-2">
                 {activeMembers.slice(0, 8).map((member) => (
-                  <span key={member.userId} title={`${member.fullName}${member.leader ? ' · Trưởng nhóm' : ''}`}>
+                  <span key={member.userId} title={`${member.fullName}${member.leader ? t('mentoring.groupLeaderSuffix') : ''}`}>
                     <Avatar
                       src={member.avatarUrl || undefined}
                       name={member.fullName}
@@ -337,18 +339,18 @@ function MentoringRequestDetailContent() {
           )}
 
           <section className={CARD}>
-            <h2 className="text-sm font-semibold text-text">Lưu ý</h2>
+            <h2 className="text-sm font-semibold text-text">{t('mentoring.notesHeading')}</h2>
             <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-text-muted">
-              <li>• Mentor "đồng ý" chỉ là đồng ý trao đổi, chưa phải thỏa thuận.</li>
-              <li>• Task được tạo sau khi hai bên chốt thỏa thuận và bạn thanh toán.</li>
-              <li>• Chưa có phản hồi sau 48 giờ? Hãy tìm Mentor khác hoặc tạo yêu cầu mới.</li>
+              <li>{t('mentoring.noteExchangeNotDeal')}</li>
+              <li>{t('mentoring.noteTaskCreatedAfterPayment')}</li>
+              <li>{t('mentoring.noteNoResponse48h')}</li>
             </ul>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <ButtonLink to="/app/mentoring/discover" variant="outline" size="sm" leftIcon={<Search className="h-4 w-4" />}>
-                Tìm Mentor
+                {t('mentoring.findMentorBtn')}
               </ButtonLink>
               <ButtonLink to="/app/mentoring/requests/create" variant="outline" size="sm" leftIcon={<Plus className="h-4 w-4" />}>
-                Yêu cầu mới
+                {t('mentoring.newRequestBtn')}
               </ButtonLink>
             </div>
           </section>
@@ -359,10 +361,10 @@ function MentoringRequestDetailContent() {
         isOpen={confirmCancel}
         onClose={() => setConfirmCancel(false)}
         onConfirm={() => cancelMutation.mutate()}
-        title="Hủy yêu cầu này?"
-        message="Các trao đổi với Mentor sẽ chuyển sang chỉ đọc và Mentor không thể phản hồi thêm."
-        confirmText="Hủy yêu cầu"
-        cancelText="Giữ lại"
+        title={t('mentoring.cancelRequestModalTitle')}
+        message={t('mentoring.cancelRequestModalMessage')}
+        confirmText={t('mentoring.cancelRequestModalConfirm')}
+        cancelText={t('mentoring.cancelRequestModalKeep')}
         variant="danger"
         isLoading={cancelMutation.isPending}
       />
@@ -383,3 +385,4 @@ export function MentoringRequestDetailPage() {
     </Container>
   )
 }
+

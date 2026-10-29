@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { UserPlus, UserCheck, Loader2, Users } from 'lucide-react'
 import { Avatar, Card } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -14,6 +15,7 @@ interface ConnectionSuggestionCardProps {
 }
 
 export function ConnectionSuggestionCard({ user }: ConnectionSuggestionCardProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -54,18 +56,22 @@ export function ConnectionSuggestionCard({ user }: ConnectionSuggestionCardProps
 
   // Tiêu đề chức vụ/công việc hoặc headline
   const primaryRole = user.primaryExperience
-    ? `${user.primaryExperience.title} tại ${user.primaryExperience.company}`
-    : user.headline || (user.role === 'ALUMNI' ? 'Cựu sinh viên FPT University' : 'Sinh viên FPT University')
+    ? t('profile.experienceAt', {
+        title: user.primaryExperience.title,
+        company: user.primaryExperience.company,
+        defaultValue: `${user.primaryExperience.title} tại ${user.primaryExperience.company}`
+      })
+    : user.headline || (user.role === 'ALUMNI' ? t('profile.roleAlumniFpt', 'Cựu sinh viên FPT University') : t('profile.roleStudentFpt', 'Sinh viên FPT University'))
 
   // Dòng ngữ cảnh kết nối: ưu tiên bạn chung, nếu không có thì hiện Khóa/Chuyên ngành/Địa phương
   const contextLine = user.mutualFollowsCount && user.mutualFollowsCount > 0 ? (
     <span className="inline-flex items-center gap-1 font-medium text-success">
       <Users size={12} className="shrink-0" />
-      {user.mutualFollowsCount} bạn chung
+      {t('profile.mutualFriendsCount', { count: user.mutualFollowsCount, defaultValue: `${user.mutualFollowsCount} bạn chung` })}
     </span>
   ) : (
     <span className="text-text-subtle">
-      {user.cohort ? `Khóa K${user.cohort}` : ''}
+      {user.cohort ? t('profile.cohortFormat', { cohort: user.cohort, defaultValue: `Khóa K${user.cohort}` }) : ''}
       {user.cohort && (user.major?.code || user.city) ? ' • ' : ''}
       {user.major?.code || user.city || ''}
     </span>
@@ -137,7 +143,7 @@ export function ConnectionSuggestionCard({ user }: ConnectionSuggestionCardProps
                   )
                 }
               >
-                {isFollowingLocal ? 'Đang theo dõi' : 'Theo dõi'}
+                {isFollowingLocal ? t('profile.following', 'Đang theo dõi') : t('profile.follow', 'Theo dõi')}
               </Button>
             )}
 
@@ -147,7 +153,7 @@ export function ConnectionSuggestionCard({ user }: ConnectionSuggestionCardProps
               className={isOwn ? 'w-full text-xs' : 'px-3 text-xs text-text-muted hover:text-text'}
               onClick={() => navigate(`/app/profile?userId=${user.userId}`)}
             >
-              Hồ sơ
+              {t('profile.profileBtn', 'Hồ sơ')}
             </Button>
           </div>
         </div>

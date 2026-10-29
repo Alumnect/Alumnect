@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { BookOpen, Handshake, RefreshCw } from 'lucide-react'
 import { Button, ButtonLink, Container, EmptyState, Pagination, FadeSwitch } from '@/components/ui'
 import {
@@ -15,21 +16,22 @@ import { MentoringFilterTabs, type MentoringFilterOption } from '@/features/ment
 
 type DealFilter = 'ALL' | MentoringDealStatus
 
-const DEAL_TABS: MentoringFilterOption<DealFilter>[] = [
-  { value: 'ALL', label: 'Tất cả' },
-  { value: 'DEAL_CONFIRMED', label: 'Đã chốt' },
-  { value: 'CANCELLED', label: 'Đã hủy' },
-]
-
 /**
  * Danh sách thỏa thuận Mentoring (UC104 & UC105).
  * Thỏa thuận luôn thuộc phần trao đổi của một Request: trang này chỉ liệt kê và dẫn tới đó, không tạo thỏa thuận độc lập.
  */
 function MentoringDealsContent() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [filter, setFilter] = useState<DealFilter>('ALL')
   const [page, setPage] = useState(0)
   const [selectedDeal, setSelectedDeal] = useState<MentoringDeal | null>(null)
+
+  const dealTabs: MentoringFilterOption<DealFilter>[] = [
+    { value: 'ALL', label: t('mentoring.allFilter') },
+    { value: 'DEAL_CONFIRMED', label: t('mentoring.dealConfirmedFilter') },
+    { value: 'CANCELLED', label: t('mentoring.dealCancelledFilter') },
+  ]
 
   const { data: pageData, isLoading, isError, error, refetch, isFetching } = useMyDeals(
     filter === 'ALL' ? undefined : filter,
@@ -47,9 +49,9 @@ function MentoringDealsContent() {
     <div className="space-y-5">
       <MentorPageHeader
         icon={<Handshake className="h-4 w-4" />}
-        eyebrow="Thỏa thuận và thanh toán"
-        title="Thỏa thuận"
-        description="Theo dõi các thỏa thuận hợp tác. Task chỉ bắt đầu sau khi hai bên chốt nội dung và Học viên thanh toán."
+        eyebrow={t('mentoring.dealsEyebrow')}
+        title={t('mentoring.dealsPageTitle')}
+        description={t('mentoring.dealsPageDesc')}
         actions={
           <Button
             variant="outline"
@@ -58,14 +60,14 @@ function MentoringDealsContent() {
             disabled={isFetching}
             leftIcon={<RefreshCw className={isFetching ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />}
           >
-            Làm mới
+            {t('mentoring.refreshBtn')}
           </Button>
         }
       />
 
       <MentoringFilterTabs
-        ariaLabel="Lọc thỏa thuận"
-        options={DEAL_TABS}
+        ariaLabel={t('mentoring.dealsFilterAria')}
+        options={dealTabs}
         value={filter}
         onChange={(v) => {
           setFilter(v)
@@ -83,26 +85,26 @@ function MentoringDealsContent() {
       ) : isError ? (
         <EmptyState
           icon={<Handshake className="h-6 w-6" />}
-          title="Không thể tải danh sách thỏa thuận"
-          description={error?.message || 'Đã có lỗi xảy ra, vui lòng thử lại.'}
+          title={t('mentoring.cannotLoadDealsTitle')}
+          description={error?.message || t('mentoring.dealsDefaultError')}
           action={
             <Button variant="outline" size="sm" onClick={() => refetch()} leftIcon={<RefreshCw className="h-4 w-4" />}>
-              Thử lại
+              {t('common.retry')}
             </Button>
           }
         />
       ) : deals.length === 0 ? (
         <EmptyState
           icon={<Handshake className="h-6 w-6" />}
-          title="Chưa có thỏa thuận nào"
+          title={t('mentoring.noDealsTitle')}
           description={
             filter !== 'ALL'
-              ? 'Không có thỏa thuận nào ở trạng thái này.'
-              : 'Thỏa thuận được tạo trong phần trao đổi sau khi Mentor đồng ý yêu cầu.'
+              ? t('mentoring.noDealsInStatus')
+              : t('mentoring.noDealsGeneralDesc')
           }
           action={
             <ButtonLink to="/app/mentoring/requests" size="sm" variant="outline" leftIcon={<BookOpen className="h-4 w-4" />}>
-              Yêu cầu của tôi
+              {t('mentoring.myRequestsNav')}
             </ButtonLink>
           }
         />
@@ -144,3 +146,4 @@ export function MentoringDealsPage() {
     </Container>
   )
 }
+

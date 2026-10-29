@@ -9,6 +9,7 @@
  */
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AlertTriangle, ArrowLeft, Lock, SearchX, Users2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Skeleton } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
@@ -29,6 +30,7 @@ function StateCard({ icon, title, description, actions }: { icon: React.ReactNod
 }
 
 export function GroupPostDetailPage() {
+  const { t } = useTranslation()
   const { groupId: groupIdParam, postId: postIdParam } = useParams<{ groupId: string; postId: string }>()
   const groupId = Number(groupIdParam)
   const postId = Number(postIdParam)
@@ -41,7 +43,7 @@ export function GroupPostDetailPage() {
   const backToGroup = `/app/groups/${groupIdParam}`
   const backLink = (
     <Link to={backToGroup} className="inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-primary-solid">
-      <ArrowLeft size={16} /> {group ? `Quay lại ${group.name}` : 'Quay lại hội nhóm'}
+      <ArrowLeft size={16} /> {group ? t('groups.backToGroup', { name: group.name }) : t('groups.backToGroupGeneric')}
     </Link>
   )
 
@@ -50,11 +52,11 @@ export function GroupPostDetailPage() {
       <div className="mx-auto max-w-2xl py-10">
         <StateCard
           icon={<SearchX size={28} />}
-          title="Không tìm thấy bài viết"
-          description="Đường dẫn bài viết không hợp lệ."
+          title={t('groups.postNotFound')}
+          description={t('groups.invalidPostUrl')}
           actions={
             <Link to="/app/groups">
-              <Button variant="primary" size="sm" leftIcon={<ArrowLeft size={14} />}>Về danh sách hội nhóm</Button>
+              <Button variant="primary" size="sm" leftIcon={<ArrowLeft size={14} />}>{t('groups.backToGroupList')}</Button>
             </Link>
           }
         />
@@ -80,11 +82,11 @@ export function GroupPostDetailPage() {
           {backLink}
           <StateCard
             icon={<Lock size={28} />}
-            title="Hội nhóm riêng tư"
-            description="Chỉ thành viên của hội nhóm mới xem được bài viết này. Hãy tham gia hội nhóm để xem nội dung và thảo luận cùng mọi người."
+            title={t('groups.privateGroupTitle')}
+            description={t('groups.privateGroupDesc')}
             actions={
               <Link to={backToGroup}>
-                <Button variant="primary" size="sm" leftIcon={<Users2 size={14} />}>Xem hội nhóm</Button>
+                <Button variant="primary" size="sm" leftIcon={<Users2 size={14} />}>{t('groups.viewGroup')}</Button>
               </Link>
             }
           />
@@ -97,11 +99,11 @@ export function GroupPostDetailPage() {
           {backLink}
           <StateCard
             icon={<SearchX size={28} />}
-            title="Không tìm thấy bài viết"
-            description="Bài viết này không tồn tại, đã bị xóa hoặc hội nhóm không còn khả dụng."
+            title={t('groups.postNotFound')}
+            description={t('groups.postNotFoundDesc')}
             actions={
               <Link to={backToGroup}>
-                <Button variant="primary" size="sm" leftIcon={<ArrowLeft size={14} />}>Về hội nhóm</Button>
+                <Button variant="primary" size="sm" leftIcon={<ArrowLeft size={14} />}>{t('groups.backToGroupGeneric')}</Button>
               </Link>
             }
           />
@@ -113,10 +115,10 @@ export function GroupPostDetailPage() {
         {backLink}
         <StateCard
           icon={<AlertTriangle size={28} />}
-          title="Không tải được bài viết"
-          description={(error as Error | null)?.message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}
+          title={t('groups.postLoadError')}
+          description={(error as Error | null)?.message ?? t('common.error')}
           actions={
-            <Button variant="secondary" size="sm" onClick={() => refetch()}>Thử lại</Button>
+            <Button variant="secondary" size="sm" onClick={() => refetch()}>{t('common.tryAgain')}</Button>
           }
         />
       </div>

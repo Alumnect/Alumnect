@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { ChevronRight, MessageCircle, Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Avatar, EmptyState } from '@/components/ui'
 import { useConversations } from '@/features/message'
 import { MentorPageHeader, MentoringTermsGate } from '@/features/mentorship'
 
 function MentoringMessagesContent() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const { data: conversations = [], isLoading } = useConversations('primary', 'MENTORING')
@@ -23,19 +25,19 @@ function MentoringMessagesContent() {
     <div className="space-y-5">
       <MentorPageHeader
         icon={<MessageCircle className="h-4 w-4" />}
-        eyebrow="Trao đổi riêng trong Mentoring"
-        title="Tin nhắn Mentoring"
-        description="Theo dõi trao đổi với Mentor hoặc học viên theo từng yêu cầu và Task."
+        eyebrow={t('mentoring.messagesEyebrow')}
+        title={t('mentoring.messagesTitle')}
+        description={t('mentoring.messagesSubtitle')}
       />
 
       <div className="rounded-3xl border border-border bg-surface p-4 shadow-xs sm:p-5">
         <label className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-cream-100/50 px-3.5 dark:bg-bg">
           <Search className="h-4 w-4 shrink-0 text-text-subtle" />
           <input
-            aria-label="Tìm Mentor hoặc học viên..."
+            aria-label={t('mentoring.searchMessagesPlaceholder')}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Tìm Mentor hoặc học viên..."
+            placeholder={t('mentoring.searchMessagesPlaceholder')}
             className="min-w-0 flex-1 border-0 bg-transparent text-sm text-text outline-none placeholder:text-text-subtle"
           />
         </label>
@@ -47,8 +49,8 @@ function MentoringMessagesContent() {
             ))
           ) : filteredConversations.length === 0 ? (
             <EmptyState
-              title={search ? 'Không tìm thấy cuộc trò chuyện' : 'Chưa có tin nhắn Mentoring'}
-              description={search ? 'Thử tìm bằng tên khác.' : 'Cuộc trò chuyện sẽ xuất hiện khi một yêu cầu Mentoring được kết nối.'}
+              title={search ? t('mentoring.noConversationsFound') : t('mentoring.emptyMessagesTitle')}
+              description={search ? t('mentoring.searchOtherName') : t('mentoring.emptyMessagesDesc')}
             />
           ) : (
             filteredConversations.map((conversation) => (
@@ -75,7 +77,7 @@ function MentoringMessagesContent() {
                     )}
                   </div>
                   <p className="mt-0.5 truncate text-xs text-text-subtle">
-                    {conversation.lastMessage || 'Bắt đầu trao đổi Mentoring'}
+                    {conversation.lastMessage || t('mentoring.startMentoringChat')}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 text-text-subtle">

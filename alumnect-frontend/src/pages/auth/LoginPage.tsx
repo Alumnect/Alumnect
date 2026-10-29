@@ -6,8 +6,10 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import { AuthScaffold, Field, GoogleButton, useLogin, loginSchema } from '@/features/auth'
 import type { LoginInput } from '@/features/auth'
 import { Button } from '@/components/ui/Button'
+import { useTranslation } from 'react-i18next'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const [show, setShow] = useState(false)
   const loginM = useLogin()
   const location = useLocation()
@@ -24,8 +26,8 @@ export function LoginPage() {
 
   return (
     <AuthScaffold>
-      <h1 className="text-3xl font-extrabold text-text">Chào mừng trở lại</h1>
-      <p className="mt-2 text-sm text-text-subtle">Đăng nhập để kết nối cùng mạng lưới cựu sinh viên FPTU.</p>
+      <h1 className="text-3xl font-extrabold text-text">{t('auth.welcomeBack')}</h1>
+      <p className="mt-2 text-sm text-text-subtle">{t('auth.loginSubtitle')}</p>
 
       {successMessage && (
         <div className="mt-4 rounded-xl bg-teal-50 border border-teal-200/50 p-3 text-xs text-teal-700 flex items-start gap-2 animate-pop">
@@ -38,7 +40,7 @@ export function LoginPage() {
 
       <form className="mt-8 space-y-4" onSubmit={handleSubmit((v) => loginM.mutate(v))} noValidate>
         <Field
-          label="Email"
+          label={t('auth.email')}
           type="email"
           placeholder="ten@fpt.edu.vn"
           icon={<Mail size={16} />}
@@ -46,7 +48,7 @@ export function LoginPage() {
           {...register('email')}
         />
         <Field
-          label="Mật khẩu"
+          label={t('auth.password')}
           type={show ? 'text' : 'password'}
           placeholder="••••••••"
           icon={<Lock size={16} />}
@@ -67,10 +69,10 @@ export function LoginPage() {
         <div className="flex items-center justify-between text-sm">
           <label className="flex min-h-7 cursor-pointer items-center gap-2 text-text-muted">
             <input type="checkbox" className="h-4 w-4 rounded border-border-strong accent-brand-500" {...register('remember')} />
-            Ghi nhớ đăng nhập
+            {t('auth.rememberMe')}
           </label>
           <Link to="/forgot-password" className="inline-flex min-h-7 items-center font-semibold text-primary-solid hover:underline">
-            Quên mật khẩu?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
 
@@ -92,22 +94,22 @@ export function LoginPage() {
           disabled={loginM.isPending}
           rightIcon={<ArrowRight size={18} />}
         >
-          {loginM.isPending ? 'Đang đăng nhập…' : 'Đăng nhập'}
+          {loginM.isPending ? t('auth.loggingIn') : t('common.login')}
         </Button>
       </form>
 
       <div className="my-6 flex items-center gap-4">
         <span className="h-px flex-1 bg-surface-3" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">hoặc</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">{t('common.or')}</span>
         <span className="h-px flex-1 bg-surface-3" />
       </div>
 
-      <GoogleButton label="Tiếp tục với Google FPT" />
+      <GoogleButton label={t('auth.continueWithGoogle')} />
 
       <p className="mt-8 text-center text-sm text-text-subtle">
-        Chưa có tài khoản AlumNect?{' '}
+        {t('auth.dontHaveAccount')}{' '}
         <Link to="/register" className="font-bold text-primary-solid hover:text-primary-solid">
-          Đăng ký ngay
+          {t('auth.registerNow')}
         </Link>
       </p>
     </AuthScaffold>

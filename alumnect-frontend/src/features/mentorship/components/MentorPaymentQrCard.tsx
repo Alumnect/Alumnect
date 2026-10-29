@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Copy, Check, Clock, ShieldCheck, QrCode } from 'lucide-react'
 import { Card, Badge } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
@@ -56,12 +57,12 @@ function parseEmvcoVietQr(qr: string): { bin?: string; accountNumber?: string; d
   }
 }
 
-const getBankName = (bin?: string) => {
-  if (bin === '970416') return 'ACB (Ngân hàng Á Châu)'
-  if (bin === '970422') return 'MBBank (Ngân hàng Quân Đội)'
-  if (bin === '970436') return 'Vietcombank'
-  if (bin === '970407') return 'Techcombank'
-  return bin ? `Ngân hàng (BIN ${bin})` : 'Cổng PayOS Napas 247'
+const getBankName = (bin: string | undefined, t: (k: string, opt?: any) => string) => {
+  if (bin === '970416') return t('mentoring.bankAcb')
+  if (bin === '970422') return t('mentoring.bankMb')
+  if (bin === '970436') return t('mentoring.bankVcb')
+  if (bin === '970407') return t('mentoring.bankTcb')
+  return bin ? t('mentoring.bankBinLabel', { bin }) : t('mentoring.bankPayOsNapas')
 }
 
 /**
@@ -69,6 +70,7 @@ const getBankName = (bin?: string) => {
  * Hỗ trợ sao chép nhanh STK, số tiền, nội dung CK và đồng hồ đếm ngược phiên thanh toán.
  */
 export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymentQrCardProps) {
+  const { t } = useTranslation()
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState<number>(0)
 
@@ -101,7 +103,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text)
     setCopiedField(fieldName)
-    toast.success(`Đã sao chép ${fieldName} vào bộ nhớ tạm!`)
+    toast.success(t('mentoring.copiedToClipboard', { field: fieldName }))
     setTimeout(() => setCopiedField(null), 2500)
   }
 
@@ -128,15 +130,15 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
           </div>
           <div>
             <h3 className="font-display text-base font-bold text-text">
-              Quét Mã VietQR PayOS
+              {t('mentoring.scanVietQrPayOs')}
             </h3>
-            <p className="text-xs text-text-subtle">Mở App Ngân hàng hoặc Ví để quét</p>
+            <p className="text-xs text-text-subtle">{t('mentoring.openBankingOrWallet')}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge tone={timeLeft > 180 ? 'brand' : 'danger'} icon={<Clock className="h-3 w-3" />}>
-            {timeLeft > 0 ? formatCountdown(timeLeft) : 'Hết hạn'}
+            {timeLeft > 0 ? formatCountdown(timeLeft) : t('mentoring.expired')}
           </Badge>
         </div>
       </div>
@@ -147,13 +149,13 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
           <div className="relative group p-3 bg-surface rounded-2xl shadow-sm border border-border">
             <img
               src={qrImageSrc}
-              alt="Mã VietQR thanh toán PayOS"
+              alt={t('mentoring.vietQrAlt')}
               className="h-56 w-56 sm:h-64 sm:w-64 object-contain rounded-xl"
             />
           </div>
         ) : (
           <div className="flex h-56 w-56 items-center justify-center text-text-subtle text-xs">
-            Đang tải mã VietQR...
+            {t('mentoring.loadingVietQr')}
           </div>
         )}
 
@@ -163,7 +165,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-solid"></span>
             </span>
-            <span>Đang chờ bạn quét mã và chuyển tiền...</span>
+            <span>{t('mentoring.waitingForPaymentScan')}</span>
           </div>
         )}
       </div>
@@ -172,43 +174,43 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
       <div className="space-y-3 rounded-2xl bg-surface-2 p-4 text-xs">
         {/* Số tiền thanh toán */}
         <div className="flex items-center justify-between py-1.5 border-b border-border">
-          <span className="text-text-subtle">Số tiền cần thanh toán</span>
+          <span className="text-text-subtle">{t('mentoring.paymentAmountToPay')}</span>
           <div className="flex items-center gap-2">
             <span className="font-bold text-sm text-primary-solid">
               {vnd(checkout.amount)}
             </span>
             <button
-              onClick={() => copyToClipboard(checkout.amount.toString(), 'Số tiền')}
+              onClick={() => copyToClipboard(checkout.amount.toString(), t('mentoring.fieldAmount'))}
               className="text-text-subtle hover:text-primary-solid transition-colors"
-              title="Sao chép số tiền"
+              title={t('mentoring.copyAmountTitle')}
             >
-              {copiedField === 'Số tiền' ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+              {copiedField === t('mentoring.fieldAmount') ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
           </div>
         </div>
 
         {/* Ngân hàng thụ hưởng */}
         <div className="flex items-center justify-between py-1.5 border-b border-border">
-          <span className="text-text-subtle">Ngân hàng thụ hưởng</span>
+          <span className="text-text-subtle">{t('mentoring.beneficiaryBank')}</span>
           <span className="font-semibold text-text">
-            {getBankName(effectiveBin)}
+            {getBankName(effectiveBin, t)}
           </span>
         </div>
 
         {/* Số tài khoản */}
         {effectiveAccountNumber && (
           <div className="flex items-center justify-between py-1.5 border-b border-border">
-            <span className="text-text-subtle">Số tài khoản</span>
+            <span className="text-text-subtle">{t('mentoring.accountNumberLabel')}</span>
             <div className="flex items-center gap-2">
               <span className="font-mono font-semibold text-text">
                 {effectiveAccountNumber}
               </span>
               <button
-                onClick={() => copyToClipboard(effectiveAccountNumber, 'Số tài khoản')}
+                onClick={() => copyToClipboard(effectiveAccountNumber, t('mentoring.fieldAccountNumber'))}
                 className="text-text-subtle hover:text-primary-solid transition-colors"
-                title="Sao chép số tài khoản"
+                title={t('mentoring.copyAccountTitle')}
               >
-                {copiedField === 'Số tài khoản' ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedField === t('mentoring.fieldAccountNumber') ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
             </div>
           </div>
@@ -216,7 +218,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
 
         {/* Tên chủ tài khoản */}
         <div className="flex items-center justify-between py-1.5 border-b border-border">
-          <span className="text-text-subtle">Chủ tài khoản</span>
+          <span className="text-text-subtle">{t('mentoring.accountHolderLabel')}</span>
           <span className="font-semibold text-text">
             {checkout.accountName || 'PAYOS / NGUOI THU HUONG'}
           </span>
@@ -224,17 +226,17 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
 
         {/* Nội dung chuyển khoản */}
         <div className="flex items-center justify-between py-1.5">
-          <span className="text-text-subtle">Nội dung chuyển khoản</span>
+          <span className="text-text-subtle">{t('mentoring.transferDescriptionLabel')}</span>
           <div className="flex items-center gap-2">
             <span className="font-mono font-bold text-primary-solid bg-primary-soft px-2 py-0.5 rounded-md text-xs sm:text-sm">
               {effectiveDescription}
             </span>
             <button
-              onClick={() => copyToClipboard(effectiveDescription, 'Nội dung chuyển khoản')}
+              onClick={() => copyToClipboard(effectiveDescription, t('mentoring.fieldDescription'))}
               className="text-text-subtle hover:text-primary-solid transition-colors"
-              title="Sao chép nội dung chuyển khoản"
+              title={t('mentoring.copyDescriptionTitle')}
             >
-              {copiedField === 'Nội dung chuyển khoản' ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+              {copiedField === t('mentoring.fieldDescription') ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
           </div>
         </div>
@@ -245,7 +247,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
       {/* Cam kết bảo mật */}
       <div className="flex items-center justify-center gap-1.5 text-center text-xs text-text-subtle">
         <ShieldCheck className="h-3.5 w-3.5 text-success" />
-        <span>Thanh toán bảo mật trực tiếp qua Napas 247 & PayOS</span>
+        <span>{t('mentoring.securePaymentNotice')}</span>
       </div>
     </Card>
   )

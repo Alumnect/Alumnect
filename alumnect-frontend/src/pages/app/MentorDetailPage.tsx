@@ -1,5 +1,6 @@
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { Container } from '@/components/ui/primitives'
 import { toast } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
@@ -21,6 +22,7 @@ import {
  * Thiết kế gọn gàng, loại bỏ hoàn toàn các thành phần lặp lại gây nhiễu giao diện.
  */
 function MentorDetailContent() {
+  const { t } = useTranslation()
   const params = useParams<{ id?: string; mentorId?: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -37,16 +39,16 @@ function MentorDetailContent() {
   const handleGoToDirectRequest = () => {
     if (!mentor) return
     if (!isAuthenticated) {
-      toast.info('Vui lòng đăng nhập để gửi yêu cầu cố vấn')
+      toast.info(t('mentoring.loginToRequestMentoring'))
       navigate('/auth/login')
       return
     }
     if (currentUser && mentor.userId && String(currentUser.id) === String(mentor.userId)) {
-      toast.warning('Bạn không thể gửi yêu cầu cố vấn cho chính tài khoản của mình')
+      toast.warning(t('mentoring.cannotRequestSelf'))
       return
     }
     if (!mentor.canReceiveRequest) {
-      toast.warning(mentor.availabilityReason || 'Mentor hiện đang tạm ngưng tiếp nhận yêu cầu mới')
+      toast.warning(mentor.availabilityReason || t('mentoring.mentorUnavailableDefault'))
       return
     }
     navigate(`/app/mentoring/mentors/${mentor.mentorId}/request`)

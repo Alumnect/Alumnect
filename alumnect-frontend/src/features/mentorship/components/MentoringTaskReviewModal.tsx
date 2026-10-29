@@ -11,6 +11,7 @@ import {
   User,
   Clock,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, DialogFrame } from '@/components/ui'
 import { format, parseISO } from 'date-fns'
 import { useRespondTaskCompletion } from '../hooks/useMentoringTaskCompletion'
@@ -31,6 +32,7 @@ export function MentoringTaskReviewModal({
   completion,
   onSuccess,
 }: MentoringTaskReviewModalProps) {
+  const { t } = useTranslation()
   const [feedbackNote, setFeedbackNote] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [actionType, setActionType] = useState<'ACCEPT' | 'REJECT' | null>(null)
@@ -52,7 +54,7 @@ export function MentoringTaskReviewModal({
     setActionType(accept ? 'ACCEPT' : 'REJECT')
 
     if (!accept && (!feedbackNote || !feedbackNote.trim())) {
-      setErrorMsg('Vui lòng nhập lý do hoặc yêu cầu chỉnh sửa/bổ sung để Mentor có thể cập nhật lại.')
+      setErrorMsg(t('mentoring.revisionReasonRequired'))
       return
     }
 
@@ -70,7 +72,7 @@ export function MentoringTaskReviewModal({
       setErrorMsg(
         err?.response?.data?.message ||
           err?.message ||
-          'Không thể xử lý phản hồi nghiệm thu. Vui lòng thử lại.'
+          t('mentoring.reviewResponseError')
       )
     } finally {
       setActionType(null)
@@ -93,14 +95,14 @@ export function MentoringTaskReviewModal({
             </div>
             <div>
               <h3 className="text-base font-bold text-text">
-                Nghiệm thu kết quả hoàn thành Task
+                {t('mentoring.reviewTaskCompletionTitle')}
               </h3>
               <p className="text-xs text-text-subtle mt-0.5">
-                Kiểm tra sản phẩm bàn giao từ Cố vấn
+                {t('mentoring.reviewTaskCompletionSubtitle')}
               </p>
             </div>
           </div>
-          <button aria-label="Đóng"
+          <button aria-label={t('common.close')}
             type="button"
             onClick={onClose}
             className="p-1.5 text-text-subtle hover:text-text-muted rounded-lg hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -130,7 +132,7 @@ export function MentoringTaskReviewModal({
               </div>
               <div>
                 <span className="font-semibold text-text">{completion.submittedBy?.fullName || 'Mentor'}</span>
-                <span className="text-xs text-text-subtle ml-1.5">(Cố vấn)</span>
+                <span className="text-xs text-text-subtle ml-1.5">{t('mentoring.mentorAdvisorRole')}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-text-subtle">
@@ -143,7 +145,7 @@ export function MentoringTaskReviewModal({
           <div className="p-4 bg-surface-2 border border-border rounded-xl shadow-xs space-y-1.5">
             <h4 className="text-xs font-semibold text-text flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-info" />
-              Mô tả kết quả hoàn thành từ Mentor:
+              {t('mentoring.mentorResultSummaryTitle')}
             </h4>
             <p className="text-xs text-text-muted whitespace-pre-wrap leading-relaxed">
               {completion.finalSummary}
@@ -154,7 +156,7 @@ export function MentoringTaskReviewModal({
           {completion.deliverables && (
             <div className="p-4 bg-surface-2 border border-border rounded-xl shadow-xs space-y-1.5">
               <h4 className="text-xs font-semibold text-text">
-                Sản phẩm bàn giao / Deliverables:
+                {t('mentoring.deliverablesCardTitle')}
               </h4>
               <p className="text-xs text-text-muted whitespace-pre-wrap leading-relaxed">
                 {completion.deliverables}
@@ -166,7 +168,7 @@ export function MentoringTaskReviewModal({
           {completion.attachmentUrls && completion.attachmentUrls.length > 0 && (
             <div className="p-4 bg-surface-2 border border-border rounded-xl shadow-xs space-y-2">
               <h4 className="text-xs font-semibold text-text">
-                Tệp & đường dẫn đính kèm:
+                {t('mentoring.attachmentsCardTitle')}
               </h4>
               <div className="space-y-1.5">
                 {completion.attachmentUrls.map((url, idx) => (
@@ -188,13 +190,13 @@ export function MentoringTaskReviewModal({
           {/* Feedback note input */}
           <div>
             <label className="block text-xs font-semibold text-text mb-1.5">
-              Ý kiến nhận xét / Đánh giá của Học viên:
+              {t('mentoring.studentReviewInputLabel')}
             </label>
             <textarea
               rows={3}
               value={feedbackNote}
               onChange={(e) => setFeedbackNote(e.target.value)}
-              placeholder="Nhập cảm nhận hoặc yêu cầu chỉnh sửa bổ sung (bắt buộc nếu yêu cầu chỉnh sửa)..."
+              placeholder={t('mentoring.studentReviewInputPlaceholder')}
               className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none shadow-sm"
             />
           </div>
@@ -213,7 +215,7 @@ export function MentoringTaskReviewModal({
               ) : (
                 <RotateCcw className="w-4 h-4" />
               )}
-              Yêu cầu chỉnh sửa / Bổ sung
+              {t('mentoring.requestRevisionBtn')}
             </Button>
 
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -223,7 +225,7 @@ export function MentoringTaskReviewModal({
                 onClick={onClose}
                 disabled={respondMutation.isPending}
               >
-                Đóng
+                {t('common.close')}
               </Button>
               <Button
                 type="button"
@@ -234,12 +236,12 @@ export function MentoringTaskReviewModal({
                 {actionType === 'ACCEPT' && respondMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Đang xử lý...
+                    {t('mentoring.processing')}
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    Xác nhận Task hoàn thành
+                    {t('mentoring.confirmTaskCompleteBtn')}
                   </>
                 )}
               </Button>

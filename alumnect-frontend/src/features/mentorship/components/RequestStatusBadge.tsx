@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle2, Clock, Send, XCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { MentoringRequestStatus, MentoringRequestType, MentoringResponseStatus } from '../model/mentoringRequestTypes'
 import { MentoringBadge, type MentoringTone } from './MentoringUi'
 
@@ -9,10 +10,11 @@ interface RequestTypeBadgeProps {
 
 /** Loại yêu cầu: gửi trực tiếp một Mentor (UC101) hoặc yêu cầu chung (UC100). */
 export function RequestTypeBadge({ type = 'GENERAL', className }: RequestTypeBadgeProps) {
+  const { t } = useTranslation()
   if (type === 'DIRECT') {
-    return <MentoringBadge tone="navy" icon={<Send />} className={className}>Gửi trực tiếp</MentoringBadge>
+    return <MentoringBadge tone="navy" icon={<Send />} className={className}>{t('mentoring.reqTypeDirect')}</MentoringBadge>
   }
-  return <MentoringBadge tone="neutral" className={className}>Yêu cầu chung</MentoringBadge>
+  return <MentoringBadge tone="neutral" className={className}>{t('mentoring.reqTypeGeneral')}</MentoringBadge>
 }
 
 interface RequestStatusBadgeProps {
@@ -20,20 +22,21 @@ interface RequestStatusBadgeProps {
   className?: string
 }
 
-const REQUEST_STATUS: Record<MentoringRequestStatus, { label: string; tone: MentoringTone }> = {
-  OPEN: { label: 'Đang mở', tone: 'brand' },
-  MATCHED: { label: 'Đã chốt Mentor · chờ thanh toán', tone: 'mint' },
-  CLOSED: { label: 'Đã chuyển thành Task', tone: 'neutral' },
-  EXPIRED: { label: 'Đã hết hạn', tone: 'neutral' },
-  CANCELLED: { label: 'Đã hủy', tone: 'coral' },
+const REQUEST_STATUS_CONFIG: Record<MentoringRequestStatus, { labelKey: string; tone: MentoringTone }> = {
+  OPEN: { labelKey: 'mentoring.reqStatusOpen', tone: 'brand' },
+  MATCHED: { labelKey: 'mentoring.reqStatusMatched', tone: 'mint' },
+  CLOSED: { labelKey: 'mentoring.reqStatusClosed', tone: 'neutral' },
+  EXPIRED: { labelKey: 'mentoring.reqStatusExpired', tone: 'neutral' },
+  CANCELLED: { labelKey: 'mentoring.reqStatusCancelled', tone: 'coral' },
 }
 
 /** Trạng thái tổng thể của yêu cầu: OPEN, MATCHED, CLOSED, EXPIRED, CANCELLED. */
 export function RequestStatusBadge({ status = 'OPEN', className }: RequestStatusBadgeProps) {
-  const config = REQUEST_STATUS[status] ?? REQUEST_STATUS.OPEN
+  const { t } = useTranslation()
+  const config = REQUEST_STATUS_CONFIG[status] ?? REQUEST_STATUS_CONFIG.OPEN
   return (
     <MentoringBadge tone={config.tone} className={className}>
-      {config.label}
+      {t(config.labelKey)}
     </MentoringBadge>
   )
 }
@@ -46,14 +49,16 @@ interface MentorResponseStatusBadgeProps {
 
 /** Phản hồi của từng Mentor với một yêu cầu: chờ, đồng ý trao đổi, từ chối, quá hạn (UC102 & UC103). */
 export function MentorResponseStatusBadge({ status = 'WAITING', className, showIcon = true }: MentorResponseStatusBadgeProps) {
+  const { t } = useTranslation()
   if (status === 'ACCEPTED') {
-    return <MentoringBadge tone="mint" icon={showIcon && <CheckCircle2 />} className={className}>Đã đồng ý trao đổi</MentoringBadge>
+    return <MentoringBadge tone="mint" icon={showIcon && <CheckCircle2 />} className={className}>{t('mentoring.mentorRespAccepted')}</MentoringBadge>
   }
   if (status === 'DECLINED' || status === 'REJECTED') {
-    return <MentoringBadge tone="coral" icon={showIcon && <XCircle />} className={className}>Đã từ chối</MentoringBadge>
+    return <MentoringBadge tone="coral" icon={showIcon && <XCircle />} className={className}>{t('mentoring.mentorRespDeclined')}</MentoringBadge>
   }
   if (status === 'EXPIRED') {
-    return <MentoringBadge tone="neutral" icon={showIcon && <AlertCircle />} className={className}>Đã quá hạn</MentoringBadge>
+    return <MentoringBadge tone="neutral" icon={showIcon && <AlertCircle />} className={className}>{t('mentoring.mentorRespExpired')}</MentoringBadge>
   }
-  return <MentoringBadge tone="gold" icon={showIcon && <Clock />} className={className}>Chờ phản hồi</MentoringBadge>
+  return <MentoringBadge tone="gold" icon={showIcon && <Clock />} className={className}>{t('mentoring.mentorRespWaiting')}</MentoringBadge>
 }
+

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   MapPin,
@@ -50,13 +51,13 @@ import { formatPeriodDate } from '@/utils/date'
 import { getSocialPlatform } from '@/utils/social'
 import { groupSkills } from '@/utils/profile'
 
-const formatLocationCityOnly = (location?: string | null, locationCity?: string | null): string => {
-
+const formatLocationCityOnly = (location?: string | null, locationCity?: string | null, t?: (key: string, opts?: any) => string): string => {
   if (locationCity && locationCity.trim()) {
     const city = locationCity.trim()
-    return city.toLowerCase().includes('thành phố') || city.toLowerCase().includes('làm việc')
-      ? city
-      : `Làm việc tại ${city}`
+    if (city.toLowerCase().includes('thành phố') || city.toLowerCase().includes('làm việc') || city.toLowerCase().includes('works at')) {
+      return city
+    }
+    return t ? t('profile.worksAtLocation', { location: city, defaultValue: `Làm việc tại ${city}` }) : `Làm việc tại ${city}`
   }
   if (!location || !location.trim()) return ''
   const parts = location.split(',').map((p) => p.trim()).filter(Boolean)
@@ -67,12 +68,14 @@ const formatLocationCityOnly = (location?: string | null, locationCity?: string 
     target = parts[parts.length - 2]
   }
 
-  return target.toLowerCase().includes('thành phố') || target.toLowerCase().includes('làm việc')
-    ? target
-    : `Làm việc tại ${target}`
+  if (target.toLowerCase().includes('thành phố') || target.toLowerCase().includes('làm việc') || target.toLowerCase().includes('works at')) {
+    return target
+  }
+  return t ? t('profile.worksAtLocation', { location: target, defaultValue: `Làm việc tại ${target}` }) : `Làm việc tại ${target}`
 }
 
 export function ProfilePage() {
+  const { t, i18n } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const userId = (() => {
@@ -157,11 +160,11 @@ export function ProfilePage() {
     if (!file || !profile) return
 
     if (!file.type.startsWith('image/')) {
-      toast.warning('Vui lòng chọn file hình ảnh (JPG, PNG...)')
+      toast.warning(t('profile.selectImageFile', 'Vui lòng chọn file hình ảnh (JPG, PNG...)'))
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.warning('Kích thước ảnh không được vượt quá 5MB')
+      toast.warning(t('profile.imageMaxSize', 'Kích thước ảnh không được vượt quá 5MB'))
       return
     }
 
@@ -193,10 +196,10 @@ export function ProfilePage() {
           sortOrder: s.sortOrder
         }))
       })
-      toast.success('Cập nhật ảnh đại diện thành công!')
+      toast.success(t('profile.updateAvatarSuccess', 'Cập nhật ảnh đại diện thành công!'))
     } catch (err) {
       console.error('Lỗi đổi ảnh đại diện:', err)
-      toast.error('Không thể tải ảnh đại diện lên. Vui lòng thử lại.')
+      toast.error(t('profile.updateAvatarError', 'Không thể tải ảnh đại diện lên. Vui lòng thử lại.'))
     } finally {
       setIsUploadingMedia(false)
     }
@@ -208,11 +211,11 @@ export function ProfilePage() {
     if (!file || !profile) return
 
     if (!file.type.startsWith('image/')) {
-      toast.warning('Vui lòng chọn file hình ảnh (JPG, PNG...)')
+      toast.warning(t('profile.selectImageFile', 'Vui lòng chọn file hình ảnh (JPG, PNG...)'))
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.warning('Kích thước ảnh không được vượt quá 5MB')
+      toast.warning(t('profile.imageMaxSize', 'Kích thước ảnh không được vượt quá 5MB'))
       return
     }
 
@@ -244,10 +247,10 @@ export function ProfilePage() {
           sortOrder: s.sortOrder
         }))
       })
-      toast.success('Cập nhật ảnh bìa thành công!')
+      toast.success(t('profile.updateCoverSuccess', 'Cập nhật ảnh bìa thành công!'))
     } catch (err) {
       console.error('Lỗi đổi ảnh bìa:', err)
-      toast.error('Không thể tải ảnh bìa lên. Vui lòng thử lại.')
+      toast.error(t('profile.updateCoverError', 'Không thể tải ảnh bìa lên. Vui lòng thử lại.'))
     } finally {
       setIsUploadingMedia(false)
     }
@@ -255,7 +258,7 @@ export function ProfilePage() {
 
   const handleFollowToggle = async () => {
     if (!isAuthenticated) {
-      triggerLoginPrompt('Đăng nhập để theo dõi thành viên này.')
+      triggerLoginPrompt(t('profile.promptLoginFollow', 'Đăng nhập để theo dõi thành viên này.'))
       return
     }
     if (!profile) return
@@ -268,7 +271,7 @@ export function ProfilePage() {
         await followMutation.mutateAsync(profile.userId)
       }
     } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.'
+      const msg = err?.response?.data?.message || t('common.errorOccurred', 'Có lỗi xảy ra. Vui lòng thử lại.')
       setFollowError(msg)
     }
   }
@@ -302,12 +305,12 @@ export function ProfilePage() {
           onClick={() => navigate(-1)}
           className="mb-4"
         >
-          Quay lại
+          {t('common.back', 'Quay lại')}
         </Button>
         <EmptyState
           icon={<MapPin size={24} />}
-          title="Không thể truy cập hồ sơ"
-          description={error instanceof Error ? error.message : 'Không tìm thấy hồ sơ người dùng.'}
+          title={t('common.error', 'Không thể truy cập hồ sơ')}
+          description={error instanceof Error ? error.message : t('common.notFoundDesc', 'Không tìm thấy hồ sơ người dùng.')}
         />
       </div>
     )
@@ -366,7 +369,7 @@ export function ProfilePage() {
           {/* 1. Ảnh Bìa với Nút camera đổi ảnh bìa kiểu Facebook */}
           <div className="relative h-44 w-full bg-surface-2 sm:h-60">
             {profile.coverUrl ? (
-              <SmartImage src={profile.coverUrl} alt="Ảnh bìa" className="h-full w-full" imgClassName="object-cover" />
+              <SmartImage src={profile.coverUrl} alt={t('profile.coverPhoto', 'Ảnh bìa')} className="h-full w-full" imgClassName="object-cover" />
             ) : (
               // Chưa có ảnh bìa: nền nhạt theo màu thương hiệu (không dùng ảnh ngoài nhiều màu)
               <div className="h-full w-full bg-gradient-to-br from-primary-soft via-surface-2 to-info-soft" aria-hidden />
@@ -374,7 +377,7 @@ export function ProfilePage() {
             {isOwnProfile && (
               <label className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-text bg-surface hover:bg-surface backdrop-blur-md rounded-2xl shadow-md cursor-pointer transition hover:scale-105 active:scale-95">
                 {isUploadingMedia ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
-                <span>Chỉnh sửa ảnh bìa</span>
+                <span>{t('profile.editCover')}</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -422,7 +425,7 @@ export function ProfilePage() {
                     onClick={() => setActiveTab(activeTab === 'about' ? 'profile' : 'about')}
                     className="rounded-2xl font-bold px-5 border border-border shadow-sm"
                   >
-                    {activeTab === 'about' ? 'Xem trang cá nhân' : 'Chỉnh sửa hồ sơ'}
+                    {activeTab === 'about' ? t('profile.viewProfile') : t('profile.editProfile')}
                   </Button>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -433,7 +436,7 @@ export function ProfilePage() {
                       onClick={() => navigate(`/app/messages?userId=${profile.userId}`)}
                       className="rounded-2xl font-bold px-5 border border-border shadow-sm text-sm hover:bg-primary-soft hover:text-primary-solid transition-colors"
                     >
-                      Nhắn tin
+                      {t('profile.message')}
                     </Button>
                     <div className="flex flex-col items-end gap-1">
                       <Button
@@ -452,7 +455,7 @@ export function ProfilePage() {
                           )
                         }
                       >
-                        {profile.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
+                        {profile.isFollowing ? t('profile.unfollow') : t('profile.follow')}
                       </Button>
                       {followError && (
                         <p className="text-xs text-danger font-medium max-w-[200px] text-right">
@@ -474,12 +477,12 @@ export function ProfilePage() {
                 {isAlumni ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft border border-orange-200/80 px-2.5 py-0.5 text-xs font-bold text-primary-solid dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-300">
                     <GraduationCap size={13} className="shrink-0" />
-                    Cựu sinh viên
+                    {t('common.alumni')}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full bg-info-soft border border-info-border px-2.5 py-0.5 text-xs font-bold text-info">
                     <GraduationCap size={13} className="shrink-0" />
-                    Sinh viên
+                    {t('common.student')}
                   </span>
                 )}
                 {profile.studentCode && (
@@ -492,13 +495,13 @@ export function ProfilePage() {
               <p className="text-sm sm:text-base font-medium text-text-muted">
                 {profile.primaryExperience?.title ? (
                   <span>
-                    {profile.primaryExperience.title} tại{' '}
+                    {profile.primaryExperience.title} {t('common.at', 'tại')}{' '}
                     <strong className="font-semibold text-text">
                       {profile.primaryExperience.company}
                     </strong>
                   </span>
                 ) : (
-                  profile.headline || (isAlumni ? 'Cựu sinh viên FPTU' : 'Sinh viên FPTU')
+                  profile.headline || (isAlumni ? t('profile.fptuAlumni', 'Cựu sinh viên FPTU') : t('profile.fptuStudent', 'Sinh viên FPTU'))
                 )}
               </p>
 
@@ -507,14 +510,14 @@ export function ProfilePage() {
                   onClick={() => handleOpenFollowModal('followers')}
                   className="hover:text-primary-solid transition-colors"
                 >
-                  <strong className="font-bold text-text">{profile.followersCount || 0}</strong> người theo dõi
+                  <strong className="font-bold text-text">{profile.followersCount || 0}</strong> {t('profile.followers')}
                 </button>
                 <span className="text-plum-300">•</span>
                 <button
                   onClick={() => handleOpenFollowModal('following')}
                   className="hover:text-primary-solid transition-colors"
                 >
-                  Đang theo dõi <strong className="font-bold text-text">{profile.followingCount || 0}</strong> người
+                  {t('profile.following')} <strong className="font-bold text-text">{profile.followingCount || 0}</strong>
                 </button>
               </div>
 
@@ -522,8 +525,8 @@ export function ProfilePage() {
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <MapPin size={15} className="text-text-subtle" />{' '}
                   {profile.city ||
-                    formatLocationCityOnly(profile.primaryExperience?.location, profile.primaryExperience?.locationCity) ||
-                    'Đại học FPT'}
+                    formatLocationCityOnly(profile.primaryExperience?.location, profile.primaryExperience?.locationCity, t) ||
+                    t('profile.fptUniversity', 'Đại học FPT')}
                 </span>
 
 
@@ -541,7 +544,7 @@ export function ProfilePage() {
                 )}
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <Calendar size={15} className="text-text-subtle" />
-                  Tham gia {new Date(profile.createdAt).toLocaleDateString('vi-VN')}
+                  {t('profile.joined', 'Tham gia')} {new Date(profile.createdAt).toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')}
                 </span>
               </div>
             </div>
@@ -556,7 +559,7 @@ export function ProfilePage() {
                   : 'border-transparent text-text-subtle hover:text-text'
                   }`}
               >
-                Tất cả hồ sơ
+                {t('profile.profileTab')}
               </button>
               <button
                 type="button"
@@ -566,7 +569,7 @@ export function ProfilePage() {
                   : 'border-transparent text-text-subtle hover:text-text'
                   }`}
               >
-                Bài viết
+                {t('profile.postsTab')}
               </button>
               {isOwnProfile && (
                 <button
@@ -577,7 +580,7 @@ export function ProfilePage() {
                     : 'border-transparent text-text-subtle hover:text-text'
                     }`}
                 >
-                  Giới thiệu
+                  {t('profile.about')}
                 </button>
               )}
               {isOwnProfile && (
@@ -590,7 +593,7 @@ export function ProfilePage() {
                     }`}
                 >
                   <Bookmark size={14} className={activeTab === 'saved' ? 'fill-current' : ''} />
-                  Bài viết đã lưu
+                  {t('profile.savedPosts')}
                 </button>
               )}
             </div>
@@ -619,7 +622,7 @@ export function ProfilePage() {
           {/* Thông tin liên hệ */}
           <Reveal>
             <Card hover={false} className="p-6 text-left">
-              <h2 className="text-lg font-bold text-text">Thông tin liên hệ</h2>
+              <h2 className="text-lg font-bold text-text">{t('profile.contactInfo', 'Thông tin liên hệ')}</h2>
               <div className="mt-4 space-y-4">
                 <div className="flex items-center gap-3 text-sm text-text-muted">
                   <Mail size={16} className="text-text-subtle" />
@@ -627,12 +630,12 @@ export function ProfilePage() {
                 </div>
                 <div className="flex items-center gap-3 text-sm text-text-muted">
                   <Phone size={16} className="text-text-subtle" />
-                  <span>{profile.phone || 'Chưa cập nhật số điện thoại'}</span>
+                  <span>{profile.phone || t('profile.noPhone', 'Chưa cập nhật số điện thoại')}</span>
                 </div>
 
                 <div className="pt-2">
                   <p className="text-xs font-bold uppercase tracking-wider text-text-subtle mb-2.5">
-                    Liên kết mạng xã hội & Website
+                    {t('profile.socialAndWeb', 'Liên kết mạng xã hội & Website')}
                   </p>
                   {profile.socialLinks && profile.socialLinks.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
@@ -654,7 +657,7 @@ export function ProfilePage() {
                     </div>
                   ) : (
                     <p className="text-xs text-text-subtle italic">
-                      Thành viên này chưa cập nhật liên kết mạng xã hội nào.
+                      {t('profile.noSocialLinks', 'Thành viên này chưa cập nhật liên kết mạng xã hội nào.')}
                     </p>
                   )}
                 </div>
@@ -665,9 +668,9 @@ export function ProfilePage() {
           {/* Giới thiệu */}
           <Reveal delay={0.1}>
             <Card hover={false} className="p-6 text-left">
-              <h2 className="text-lg font-bold text-text">Giới thiệu</h2>
+              <h2 className="text-lg font-bold text-text">{t('profile.about', 'Giới thiệu')}</h2>
               <p className="mt-3 text-sm leading-relaxed text-text-muted whitespace-pre-line">
-                {profile.biography || 'Thành viên này chưa cập nhật phần tự giới thiệu bản thân.'}
+                {profile.biography || t('profile.noBio', 'Thành viên này chưa cập nhật phần tự giới thiệu bản thân.')}
               </p>
             </Card>
           </Reveal>
@@ -678,7 +681,7 @@ export function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Briefcase size={20} className="text-primary-solid" />
-                  <h2 className="text-lg font-bold text-text">Hành trình & Sự nghiệp</h2>
+                  <h2 className="text-lg font-bold text-text">{t('profile.careerJourney', 'Hành trình & Sự nghiệp')}</h2>
                 </div>
                 {isOwnProfile && (
                   <Button
@@ -688,7 +691,7 @@ export function ProfilePage() {
                     onClick={handleOpenCreateExp}
                     className="rounded-xl border border-border font-semibold"
                   >
-                    Thêm vị trí
+                    {t('profile.addPosition', 'Thêm vị trí')}
                   </Button>
                 )}
               </div>
@@ -714,12 +717,12 @@ export function ProfilePage() {
                               <h3 className="text-base font-extrabold text-text">{exp.title}</h3>
                               {exp.isPrimary && (
                                 <span className="inline-flex items-center gap-1 rounded-lg bg-warning-soft px-2 py-0.5 text-xs font-bold text-warning border border-warning-border">
-                                  <Star size={11} className="fill-warning text-warning" /> Vai trò chính
+                                  <Star size={11} className="fill-warning text-warning" /> {t('profile.primaryRole', 'Vai trò chính')}
                                 </span>
                               )}
                               {exp.isCurrent && !exp.isPrimary && (
                                 <span className="inline-flex items-center rounded-lg bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid border border-brand-200/50">
-                                  Hiện tại
+                                  {t('profile.present', 'Hiện tại')}
                                 </span>
                               )}
                             </div>
@@ -738,7 +741,7 @@ export function ProfilePage() {
                                 <button
                                   type="button"
                                   onClick={() => handleOpenPromoteExp(exp)}
-                                  title="Thăng chức / Đổi vai trò mới tại công ty"
+                                  title={t('profile.promoteRoleTooltip', 'Thăng chức / Đổi vai trò mới tại công ty')}
                                   className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition"
                                 >
                                   <TrendingUp size={15} />
@@ -748,7 +751,7 @@ export function ProfilePage() {
                                 <button
                                   type="button"
                                   onClick={() => handleOpenRejoinExp(exp)}
-                                  title="Thêm kinh nghiệm khác tại công ty này (Hiện tại hoặc Quá khứ)"
+                                  title={t('profile.addOtherExpTooltip', 'Thêm kinh nghiệm khác tại công ty này (Hiện tại hoặc Quá khứ)')}
                                   className="p-1.5 rounded-xl text-text-subtle hover:text-primary-solid hover:bg-primary-soft transition"
                                 >
                                   <PlusSquare size={15} />
@@ -757,7 +760,7 @@ export function ProfilePage() {
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditExp(exp)}
-                                title="Chỉnh sửa vị trí"
+                                title={t('profile.editPositionTooltip', 'Chỉnh sửa vị trí')}
                                 className="p-1.5 rounded-xl text-text-subtle hover:text-text hover:bg-plum-100/50 transition"
                               >
                                 <Edit3 size={15} />
@@ -765,7 +768,7 @@ export function ProfilePage() {
                               <button
                                 type="button"
                                 onClick={() => setDeleteExpId(exp.id)}
-                                title="Xóa vị trí"
+                                title={t('profile.deletePositionTooltip', 'Xóa vị trí')}
                                 className="p-1.5 rounded-xl text-text-subtle hover:text-danger hover:bg-danger-soft transition"
                               >
                                 <Trash2 size={15} />
@@ -777,13 +780,13 @@ export function ProfilePage() {
                         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-subtle">
                           <span className="inline-flex items-center gap-1">
                             <Calendar size={13} className="text-text-subtle" />
-                            {exp.startDate ? formatPeriodDate(exp.startDate) : ''} - {exp.isCurrent ? 'Hiện tại' : (exp.endDate ? formatPeriodDate(exp.endDate) : '')}
+                            {exp.startDate ? formatPeriodDate(exp.startDate) : ''} - {exp.isCurrent ? t('profile.present', 'Hiện tại') : (exp.endDate ? formatPeriodDate(exp.endDate) : '')}
 
                           </span>
                           {(exp.locationCity || exp.location) && (
                             <span className="inline-flex items-center gap-1">
                               <MapPin size={13} className="text-text-subtle" />
-                              {formatLocationCityOnly(exp.location, exp.locationCity)}
+                              {formatLocationCityOnly(exp.location, exp.locationCity, t)}
                             </span>
                           )}
 
@@ -800,7 +803,7 @@ export function ProfilePage() {
                 </div>
               ) : (
                 <p className="mt-4 text-xs text-text-subtle italic">
-                  Thành viên này chưa thêm lịch sử làm việc nào.
+                  {t('profile.noExperienceYet', 'Thành viên này chưa thêm lịch sử làm việc nào.')}
                 </p>
               )}
             </Card>
@@ -812,7 +815,7 @@ export function ProfilePage() {
               <Card hover={false} className="p-6 text-left">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles size={20} className="text-primary-solid" />
-                  <h2 className="text-lg font-bold text-text">Kỹ năng chuyên môn</h2>
+                  <h2 className="text-lg font-bold text-text">{t('profile.skills', 'Kỹ năng chuyên môn')}</h2>
                 </div>
                 <div className="space-y-4">
                   {Object.entries(skillGroups).map(([groupName, skills]) => (
@@ -862,10 +865,10 @@ export function ProfilePage() {
               <span className="p-2 rounded-2xl bg-danger-soft border border-danger-border">
                 <AlertTriangle size={20} />
               </span>
-              <h3 className="text-lg font-bold text-text">Xóa kinh nghiệm</h3>
+              <h3 className="text-lg font-bold text-text">{t('profile.deleteExpTitle', 'Xóa kinh nghiệm')}</h3>
             </div>
             <p className="text-sm text-text-muted">
-              Bạn có chắc muốn xóa kinh nghiệm làm việc này không?
+              {t('profile.deleteExpConfirm', 'Bạn có chắc muốn xóa kinh nghiệm làm việc này không?')}
             </p>
             <div className="flex items-center justify-end gap-3 pt-2">
               <Button
@@ -875,7 +878,7 @@ export function ProfilePage() {
                 disabled={deleteExpMutation.isPending}
                 className="rounded-xl"
               >
-                Hủy
+                {t('common.cancel', 'Hủy')}
               </Button>
               <Button
                 variant="primary"
@@ -885,7 +888,7 @@ export function ProfilePage() {
                 className="rounded-xl bg-danger hover:opacity-90 text-text-inverse"
               >
                 {deleteExpMutation.isPending && <Loader2 size={14} className="animate-spin mr-1" />}
-                Xóa
+                {t('common.delete', 'Xóa')}
               </Button>
             </div>
           </DialogFrame>

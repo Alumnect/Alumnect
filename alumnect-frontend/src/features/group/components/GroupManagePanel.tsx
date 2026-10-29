@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Inbox, PauseCircle, PencilLine, PlayCircle, Settings2, Trash2 } from 'lucide-react'
+import { useTranslation, Trans } from 'react-i18next'
 import { Card, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -19,6 +20,7 @@ import { JoinRequestsList } from './JoinRequestsList'
 type Tab = 'requests' | 'settings'
 
 export function GroupManagePanel({ group }: { group: GroupDetail }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const isOwner = group.viewerRole === 'OWNER'
   const [tab, setTab] = useState<Tab>('requests')
@@ -34,27 +36,27 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
   const changeStatus = (next: 'ACTIVE' | 'INACTIVE') => {
     statusMut.mutate(next, {
       onSuccess: (res) => {
-        toast.success(res.message || 'Đã cập nhật trạng thái hội nhóm.')
+        toast.success(res.message || t('groups.statusUpdateSuccess'))
         setCloseOpen(false)
       },
-      onError: (err) => toast.error((err as Error).message || 'Không thể cập nhật trạng thái hội nhóm.'),
+      onError: (err) => toast.error((err as Error).message || t('groups.statusUpdateError')),
     })
   }
 
   const confirmDelete = () => {
     deleteMut.mutate(undefined, {
       onSuccess: () => {
-        toast.success('Đã xóa hội nhóm.')
+        toast.success(t('groups.deleteGroupSuccess'))
         setDeleteOpen(false)
         navigate('/app/groups')
       },
-      onError: (err) => toast.error((err as Error).message || 'Không thể xóa hội nhóm.'),
+      onError: (err) => toast.error((err as Error).message || t('groups.deleteGroupError')),
     })
   }
 
   const tabs: { key: Tab; label: string; icon: typeof Inbox; badge?: number }[] = [
-    { key: 'requests', label: 'Yêu cầu tham gia', icon: Inbox, badge: pending },
-    { key: 'settings', label: 'Cài đặt & Trạng thái', icon: Settings2 },
+    { key: 'requests', label: t('groups.pendingRequestsTitle'), icon: Inbox, badge: pending },
+    { key: 'settings', label: t('groups.settingsAndStatus'), icon: Settings2 },
   ]
 
   return (
@@ -86,8 +88,8 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
       ) : (
         <div className="space-y-3.5">
           <SettingRow
-            title="Chỉnh sửa thông tin hội nhóm"
-            description="Cập nhật thông tin và quy định nhóm."
+            title={t('groups.editGroupInfoTitle')}
+            description={t('groups.editGroupInfoDesc')}
           >
             <Button
               variant="secondary"
@@ -97,18 +99,18 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
               disabled={isInactive}
               className="w-[136px] rounded-xl font-bold"
             >
-              Chỉnh sửa
+              {t('common.edit')}
             </Button>
           </SettingRow>
 
           {isOwner && (
             <>
               <SettingRow
-                title={isInactive ? 'Mở lại hội nhóm' : 'Tạm ngừng hội nhóm'}
+                title={isInactive ? t('groups.reopenGroupTitle') : t('groups.pauseGroupTitle')}
                 description={
                   isInactive
-                    ? 'Kích hoạt lại để nhóm hoạt động bình thường.'
-                    : 'Tạm ẩn nhóm và ngừng nhận thành viên mới.'
+                    ? t('groups.reopenGroupDesc')
+                    : t('groups.pauseGroupDesc')
                 }
               >
                 <Button
@@ -119,13 +121,13 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
                   onClick={() => (isInactive ? changeStatus('ACTIVE') : setCloseOpen(true))}
                   className="w-[136px] rounded-xl font-bold"
                 >
-                  {isInactive ? 'Mở lại nhóm' : 'Tạm ngừng'}
+                  {isInactive ? t('groups.reopenGroupAction') : t('groups.pauseGroupAction')}
                 </Button>
               </SettingRow>
 
               <SettingRow
-                title="Xóa vĩnh viễn hội nhóm"
-                description="Xóa hoàn toàn hội nhóm. Không thể khôi phục."
+                title={t('groups.deleteGroupTitle')}
+                description={t('groups.deleteGroupDesc')}
                 danger
               >
                 <Button
@@ -135,7 +137,7 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
                   className="w-[136px] rounded-xl from-rose-600 to-rose-500 font-bold shadow-none hover:from-rose-700 hover:to-rose-600"
                   onClick={() => setDeleteOpen(true)}
                 >
-                  Xóa nhóm
+                  {t('groups.deleteGroupConfirm')}
                 </Button>
               </SettingRow>
             </>
@@ -147,22 +149,18 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
 
       <ConfirmDialog
         open={closeOpen}
-        title="Tạm ngừng hội nhóm"
-        message="Tạm ẩn nhóm và ngừng nhận thành viên mới. Bạn có thể mở lại bất kỳ lúc nào."
-        confirmLabel="Tạm ngừng"
+        title={t('groups.pauseGroupTitle')}
+        message={t('groups.pauseGroupConfirm')}
+        confirmLabel={t('groups.pauseGroupAction')}
         loading={statusMut.isPending}
         onConfirm={() => changeStatus('INACTIVE')}
         onClose={() => setCloseOpen(false)}
       />
       <ConfirmDialog
         open={deleteOpen}
-        title="Xóa vĩnh viễn hội nhóm"
-        message={
-          <>
-            Bạn có chắc chắn muốn xóa nhóm <b>{group.name}</b>? Thao tác này không thể hoàn tác.
-          </>
-        }
-        confirmLabel="Xóa nhóm"
+        title={t('groups.deleteGroupTitle')}
+        message={<Trans i18nKey="groups.deleteGroupConfirmMsg" values={{ name: group.name }} components={{ b: <b /> }} />}
+        confirmLabel={t('groups.deleteGroupConfirm')}
         danger
         loading={deleteMut.isPending}
         onConfirm={confirmDelete}

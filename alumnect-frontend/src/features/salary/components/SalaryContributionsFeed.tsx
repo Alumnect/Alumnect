@@ -16,7 +16,8 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { vi } from 'date-fns/locale'
+import { vi, enUS } from 'date-fns/locale'
+import { useTranslation } from 'react-i18next'
 import { Modal, EmptyState, Pagination, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useSalaryFeed, useIndustries } from '../hooks/useSalary'
@@ -31,6 +32,7 @@ export function SalaryContributionsFeed({
   isOpen: externalIsOpen,
   onClose: externalOnClose,
 }: SalaryContributionsFeedProps = {}) {
+  const { t, i18n } = useTranslation()
   const [internalIsOpen, setInternalIsOpen] = useState(false)
 
   // Điều khiển đóng mở (hỗ trợ cả tự quản lý hoặc qua props từ header trang)
@@ -128,10 +130,10 @@ export function SalaryContributionsFeed({
             type="button"
             onClick={handleOpen}
             className="group flex items-center gap-2 rounded-full border border-primary-soft-border bg-surface px-3.5 py-2 text-xs font-semibold text-primary-solid shadow-md transition duration-200 hover:scale-105 hover:border-primary hover:bg-primary-soft cursor-pointer"
-            title="Xem các lượt đóng góp lương gần đây"
+            title={t('salary.viewRecentContributionsTooltip')}
           >
             <History size={15} className="text-primary-solid transition-transform group-hover:-rotate-45" />
-            <span>Đóng góp gần đây</span>
+            <span>{t('salary.recentContributionsTitle')}</span>
             {totalElements > 0 && (
               <span className="rounded-full bg-primary-soft px-1.5 py-0.2 text-xs font-bold text-brand-800">
                 {totalElements}
@@ -146,7 +148,7 @@ export function SalaryContributionsFeed({
         <Modal
           isOpen
           onClose={handleClose}
-          title="Đóng góp gần đây"
+          title={t('salary.recentContributionsTitle')}
           icon={<History size={18} className="text-primary-solid" />}
           maxWidthClassName="max-w-2xl"
         >
@@ -158,14 +160,14 @@ export function SalaryContributionsFeed({
               <div className="relative">
                 <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
                 <input
-                  aria-label="Tìm chức danh, công ty…"
+                  aria-label={t('salary.searchJobOrCompany')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm chức danh, công ty…"
+                  placeholder={t('salary.searchJobOrCompany')}
                   className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-7 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition"
                 />
                 {searchQuery && (
-                  <button aria-label="Đóng"
+                  <button aria-label={t('common.close')}
                     type="button"
                     onClick={() => setSearchQuery('')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"
@@ -179,8 +181,8 @@ export function SalaryContributionsFeed({
               <SelectDropdown
                 value={selectedIndustry}
                 onChange={(val) => setSelectedIndustry(String(val))}
-                options={[{ value: '', label: 'Tất cả ngành nghề' }, ...industryList.map((ind) => ({ value: ind.name, label: ind.name }))]}
-                placeholder="Tất cả ngành nghề"
+                options={[{ value: '', label: t('salary.allIndustries') }, ...industryList.map((ind) => ({ value: ind.name, label: ind.name }))]}
+                placeholder={t('salary.allIndustries')}
                 buttonClassName="h-9 rounded-lg"
               />
 
@@ -188,8 +190,8 @@ export function SalaryContributionsFeed({
               <SelectDropdown
                 value={selectedRegion}
                 onChange={(val) => setSelectedRegion(String(val))}
-                options={[{ value: '', label: 'Tất cả khu vực' }, ...regionList.map((city) => ({ value: city, label: city }))]}
-                placeholder="Tất cả khu vực"
+                options={[{ value: '', label: t('salary.allRegions') }, ...regionList.map((city) => ({ value: city, label: city }))]}
+                placeholder={t('salary.allRegions')}
                 buttonClassName="h-9 rounded-lg"
               />
             </div>
@@ -198,16 +200,16 @@ export function SalaryContributionsFeed({
             <div className="flex items-center justify-between text-xs pt-0.5">
               <div className="flex items-center gap-1.5 text-text-subtle">
                 <ArrowUpDown size={12} className="text-text-subtle" />
-                <span className="text-xs text-text-subtle">Sắp xếp:</span>
+                <span className="text-xs text-text-subtle">{t('salary.sortBy')}</span>
                 <SelectDropdown
                   value={sortBy}
                   onChange={(val) => setSortBy(val as typeof sortBy)}
                   options={[
-                    { value: 'latest', label: 'Mới nhất' },
-                    { value: 'salaryDesc', label: 'Lương: Cao → Thấp' },
-                    { value: 'salaryAsc', label: 'Lương: Thấp → Cao' },
+                    { value: 'latest', label: t('salary.sortLatest') },
+                    { value: 'salaryDesc', label: t('salary.sortSalaryDesc') },
+                    { value: 'salaryAsc', label: t('salary.sortSalaryAsc') },
                   ]}
-                  placeholder="Sắp xếp"
+                  placeholder={t('salary.sortBy')}
                   className="w-44"
                   buttonClassName="h-8 rounded-lg"
                 />
@@ -219,7 +221,7 @@ export function SalaryContributionsFeed({
                   onClick={clearFilters}
                   className="flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger transition-colors cursor-pointer"
                 >
-                  <X size={12} /> Xóa bộ lọc
+                  <X size={12} /> {t('common.clearFilter')}
                 </button>
               )}
             </div>
@@ -239,22 +241,22 @@ export function SalaryContributionsFeed({
                   <AlertTriangle size={18} />
                 </span>
                 <p className="text-xs text-text-subtle">
-                  {(error as Error)?.message ?? 'Không tải được danh sách đóng góp.'}
+                  {(error as Error)?.message ?? t('salary.loadContributionsError')}
                 </p>
                 <Button size="sm" variant="secondary" leftIcon={<RefreshCw size={12} />} onClick={() => refetch()}>
-                  Thử lại
+                  {t('common.tryAgain')}
                 </Button>
               </div>
             ) : feedItems.length === 0 ? (
               <EmptyState
                 icon={<Briefcase size={22} />}
-                title={isFiltering ? 'Không có dữ liệu khớp bộ lọc' : 'Chưa có lượt đóng góp nào'}
+                title={isFiltering ? t('salary.noFilteredData') : t('salary.noContributionsYet')}
                 description={
                   isFiltering
-                    ? 'Hãy thử thay đổi hoặc xóa bớt điều kiện tìm kiếm.'
-                    : 'Hãy là người đầu tiên đóng góp dữ liệu lương.'
+                    ? t('salary.noFilteredDataDesc')
+                    : t('salary.beFirstToContribute')
                 }
-                action={isFiltering ? <Button size="sm" variant="secondary" onClick={clearFilters}>Xóa bộ lọc</Button> : undefined}
+                action={isFiltering ? <Button size="sm" variant="secondary" onClick={clearFilters}>{t('common.clearFilter')}</Button> : undefined}
               />
             ) : (
               <>
@@ -263,7 +265,7 @@ export function SalaryContributionsFeed({
                     const timeAgo = c.createdAt
                       ? (() => {
                           try {
-                            return formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: vi })
+                            return formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: i18n.language === 'vi' ? vi : enUS })
                           } catch {
                             return ''
                           }
@@ -317,12 +319,12 @@ export function SalaryContributionsFeed({
                         {/* Mức lương + Kinh nghiệm */}
                         <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2">
                           <span className="text-xs font-extrabold text-primary-solid">
-                            {c.grossAmount.toLocaleString('vi-VN')} {c.currency}
-                            <span className="text-xs font-normal text-text-subtle"> / tháng</span>
+                            {c.grossAmount.toLocaleString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')} {c.currency}
+                            <span className="text-xs font-normal text-text-subtle"> {t('salary.perMonth')}</span>
                           </span>
                           {c.yearsExperience != null && (
                             <span className="rounded bg-brand-100/60 px-1.5 py-0.5 text-xs font-semibold text-primary-solid">
-                              {c.yearsExperience} năm KN
+                              {t('salary.yearsExpShort', { count: c.yearsExperience })}
                             </span>
                           )}
                         </div>

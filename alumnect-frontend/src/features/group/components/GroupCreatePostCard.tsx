@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, ChevronDown, ImagePlus, Loader2, Send, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from '@/components/ui'
 import { Avatar, Card } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
@@ -17,6 +18,7 @@ interface GroupCreatePostCardProps {
 }
 
 export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreatePostCardProps) {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const [content, setContent] = useState('')
   const [images, setImages] = useState<string[]>([])
@@ -88,9 +90,9 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
       const uploadedUrls = await Promise.all(uploadPromises)
       setImages((prev) => [...prev, ...uploadedUrls.filter((_, index) => files[index].type.startsWith('image/'))])
       setVideos((prev) => [...prev, ...uploadedUrls.filter((_, index) => files[index].type.startsWith('video/'))])
-      toast.success(`Đã tải lên ${uploadedUrls.length} tệp`)
+      toast.success(t('groups.uploadedFilesCount', { count: uploadedUrls.length }))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Không thể tải ảnh lên. Vui lòng thử lại.')
+      toast.error(err instanceof Error ? err.message : t('groups.uploadError'))
     } finally {
       setUploading(false)
       if (fileInputRef.current) {
@@ -107,7 +109,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
     e.preventDefault()
     const trimmed = content.trim()
     if (!trimmed) {
-      toast.error('Vui lòng nhập nội dung bài viết')
+      toast.error(t('groups.contentRequiredToast'))
       return
     }
 
@@ -134,7 +136,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
       <div className="flex items-start gap-3.5">
         <Avatar
           src={user?.avatarUrl ?? ''}
-          name={user?.name ?? 'Thành viên'}
+          name={user?.name ?? t('groups.memberAvatar')}
           size={42}
           className="shrink-0 ring-2 ring-primary/20"
         />
@@ -147,8 +149,8 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onFocus={() => setIsFocused(true)}
-                aria-label="Nội dung bài thảo luận"
-                placeholder={`Bạn muốn chia sẻ điều gì với cộng đồng ${groupName} hôm nay?`}
+                aria-label={t('groups.postContent')}
+                placeholder={t('groups.postPlaceholder', { groupName })}
                 rows={isFocused || images.length > 0 ? 3 : 2}
                 className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-3 text-sm text-text transition placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
               />
@@ -165,7 +167,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                   onClick={toggleTopicMenu}
                   className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-text-muted transition-colors hover:text-primary-solid focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                 >
-                  <span>Chủ đề bài viết</span>
+                  <span>{t('groups.postTopicLabel')}</span>
                   {currentTopic && (
                     <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
                       #{currentTopic}
@@ -189,8 +191,8 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                         className="fixed z-[100] w-56 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-brand-500/15 bg-surface p-1.5 shadow-[0_12px_36px_rgba(31,24,48,0.14)] backdrop-blur-xl dark:border-white/10"
                       >
                       <div className="mb-1 flex items-center justify-between px-2 py-1">
-                        <span className="text-xs font-black uppercase tracking-[0.14em] text-text-subtle">Chọn chủ đề</span>
-                        <span className="text-xs font-medium text-text-subtle">{topics.length} lựa chọn</span>
+                        <span className="text-xs font-black uppercase tracking-[0.14em] text-text-subtle">{t('groups.selectTopic')}</span>
+                        <span className="text-xs font-medium text-text-subtle">{t('groups.topicOptionsCount', { count: topics.length })}</span>
                       </div>
                       {[null, ...topics].map((topic, index) => {
                         const selected = currentTopic === topic
@@ -213,7 +215,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                                 : 'font-medium text-text-muted hover:bg-surface-2 hover:text-primary-solid'
                             }`}
                           >
-                            <span>{topic ? `#${topic}` : 'Không chọn chủ đề'}</span>
+                            <span>{topic ? `#${topic}` : t('groups.noTopicSelected')}</span>
                             <span className={`grid h-4.5 w-4.5 place-items-center rounded-full transition ${selected ? 'scale-100 bg-brand-500 text-white' : 'scale-75 bg-transparent text-transparent group-hover/topic:scale-100 group-hover/topic:bg-brand-500/10'}`}>
                               <Check size={11} strokeWidth={3} />
                             </span>
@@ -233,8 +235,8 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
               <div className="mt-3 flex flex-wrap gap-2.5">
                 {images.map((img, idx) => (
                   <div key={idx} className="group relative h-20 w-20 overflow-hidden rounded-xl border border-border">
-                    <img src={img} alt="Đính kèm" className="h-full w-full object-cover" />
-                    <button aria-label="Đóng"
+                    <img src={img} alt={t('groups.attachedMedia')} className="h-full w-full object-cover" />
+                    <button aria-label={t('common.close')}
                       type="button"
                       onClick={() => handleRemoveImage(idx)}
                       className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/80 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-90"
@@ -252,7 +254,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                   <div key={url} className="group relative h-20 w-28 overflow-hidden rounded-xl bg-black">
                     <video src={url} className="h-full w-full object-cover" muted preload="metadata" />
                     <button type="button" onClick={() => setVideos((prev) => prev.filter((_, i) => i !== idx))}
-                      aria-label={`Gỡ video ${idx + 1}`}
+                      aria-label={t('groups.removeVideoAria', { index: idx + 1 })}
                       className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/80 text-white">
                       <X size={12} />
                     </button>
@@ -282,7 +284,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                   ) : (
                     <ImagePlus size={16} className="text-success" />
                   )}
-                  <span>Ảnh/video {images.length + videos.length > 0 ? `(${images.length + videos.length}/10)` : ''}</span>
+                  <span>{t('groups.mediaButtonLabel')} {images.length + videos.length > 0 ? `(${images.length + videos.length}/10)` : ''}</span>
                 </label>
               </div>
 
@@ -295,12 +297,12 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                 {createPostMutation.isPending ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>Đang đăng...</span>
+                    <span>{t('groups.publishingPost')}</span>
                   </>
                 ) : (
                   <>
                     <Send size={14} />
-                    <span>Đăng thảo luận</span>
+                    <span>{t('groups.publishPost')}</span>
                   </>
                 )}
               </Button>

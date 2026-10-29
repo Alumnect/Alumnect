@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
@@ -21,22 +22,22 @@ interface MentoringTermsProps {
   onSuccess?: () => void
 }
 
-const PRINCIPLES = [
+const PRINCIPLE_CONFIGS = [
   {
-    title: 'Trung thực & bảo mật',
-    description: 'Thông tin chính xác, dữ liệu cá nhân được bảo vệ.',
+    titleKey: 'mentoring.principleHonestyTitle',
+    descKey: 'mentoring.principleHonestyDesc',
     icon: ShieldCheck,
     iconClassName: 'bg-primary-soft text-primary-solid',
   },
   {
-    title: 'Tôn trọng lẫn nhau',
-    description: 'Giao tiếp văn minh, chuyên nghiệp và đúng mực.',
+    titleKey: 'mentoring.principleRespectTitle',
+    descKey: 'mentoring.principleRespectDesc',
     icon: HeartHandshake,
     iconClassName: 'bg-success-soft text-success',
   },
   {
-    title: 'Minh bạch cam kết',
-    description: 'Thực hiện đúng thỏa thuận trong quá trình Mentoring.',
+    titleKey: 'mentoring.principleTransparencyTitle',
+    descKey: 'mentoring.principleTransparencyDesc',
     icon: FileCheck2,
     iconClassName: 'bg-info-soft text-info',
   },
@@ -47,6 +48,7 @@ export function MentoringTerms({
   source = 'MENTORING_HOME',
   onSuccess,
 }: MentoringTermsProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [isChecked, setIsChecked] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -81,7 +83,7 @@ export function MentoringTerms({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'Không thể ghi nhận xác nhận. Vui lòng thử lại.',
+          : t('mentoring.termsConfirmError'),
       )
     }
   }
@@ -99,13 +101,13 @@ export function MentoringTerms({
             </span>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-primary-solid">
-                Không gian Mentoring
+                {t('mentoring.mentoringSpace')}
               </p>
               <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-text">
-                Điều khoản sử dụng
+                {t('mentoring.termsOfUse')}
               </h1>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-muted dark:text-text-muted">
-                Đọc quy định và xác nhận trước khi sử dụng các chức năng Mentor của AlumNect.
+                {t('mentoring.termsReadAndConfirmPrompt')}
               </p>
             </div>
           </div>
@@ -127,10 +129,10 @@ export function MentoringTerms({
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-text">
-                      {principle.title}
+                      {t(principle.titleKey)}
                     </p>
                     <p className="mt-0.5 text-xs leading-5 text-text-muted">
-                      {principle.description}
+                      {t(principle.descKey)}
                     </p>
                   </div>
                 </div>
@@ -143,11 +145,11 @@ export function MentoringTerms({
             <div className="flex items-start gap-3 rounded-xl border border-success-border bg-success-soft p-4 text-success">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
               <div>
-                <p className="text-sm font-semibold">Bạn đã đồng ý điều khoản</p>
+                <p className="text-sm font-semibold">{t('mentoring.termsAlreadyAccepted')}</p>
                 <p className="mt-0.5 text-xs leading-5 text-success">
                   {statusData?.acceptedAt
-                    ? `Xác nhận ngày ${new Date(statusData.acceptedAt).toLocaleDateString('vi-VN')}`
-                    : 'Bạn có thể tiếp tục sử dụng các chức năng Mentor.'}
+                    ? t('mentoring.confirmedOnDate', { date: new Date(statusData.acceptedAt).toLocaleDateString() })
+                    : t('mentoring.canContinueUsingMentoring')}
                 </p>
               </div>
             </div>
@@ -183,7 +185,7 @@ export function MentoringTerms({
                     className="mt-0.5 h-4 w-4 shrink-0 rounded border-border-strong text-primary-solid focus:ring-primary"
                   />
                   <span className="text-sm font-medium leading-5 text-text">
-                    Tôi đã đọc, hiểu và đồng ý với Điều khoản Mentoring.
+                    {t('mentoring.termsConsentCheckbox')}
                   </span>
                 </label>
 
@@ -198,7 +200,7 @@ export function MentoringTerms({
                     : <CheckCircle2 className="h-4 w-4" />}
                   className="w-full"
                 >
-                  {acceptMutation.isPending ? 'Đang ghi nhận...' : 'Đồng ý và tiếp tục'}
+                  {acceptMutation.isPending ? t('mentoring.recordingConsent') : t('mentoring.agreeAndContinue')}
                 </Button>
               </div>
             </div>

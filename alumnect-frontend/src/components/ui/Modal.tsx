@@ -1,6 +1,7 @@
 import { useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { TRANSITION } from '@/lib/motion'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -37,6 +38,7 @@ export function Modal({
   bodyClassName,
 }: ModalProps) {
   // Bẫy tiêu điểm, Esc, inert nền, khóa cuộn, trả tiêu điểm: xem hooks/useDialog
+  const { t } = useTranslation()
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
   useDialog(panelRef, { open: isOpen, onClose })
@@ -86,7 +88,7 @@ export function Modal({
                 onClick={onClose}
                 type="button"
                 data-dialog-close
-                aria-label="Đóng"
+                aria-label={t('common.close')}
                 className="-mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-text-subtle transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-focus"
               >
                 <X size={18} />

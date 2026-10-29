@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   UploadCloud,
   CheckCircle2,
@@ -20,6 +21,7 @@ export const MentorCvSection: React.FC<Props> = ({
   cvDownloadUrl,
   onCvUploaded,
 }) => {
+  const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [selectedFileName, setSelectedFileName] = useState<string>('')
@@ -38,7 +40,7 @@ export const MentorCvSection: React.FC<Props> = ({
         file.type || 'application/pdf'
       )
       if (!presigned || !presigned.uploadUrl) {
-        throw new Error('Không lấy được link tải lên.')
+        throw new Error(t('mentoring.uploadCvError'))
       }
 
       // 2. Upload file trực tiếp lên R2
@@ -46,9 +48,9 @@ export const MentorCvSection: React.FC<Props> = ({
 
       // 3. Lưu trực tiếp publicUrl như các chức năng khác trong hệ thống
       onCvUploaded(presigned.publicUrl)
-      toast.success('Đã tải CV lên')
+      toast.success(t('mentoring.uploadCvSuccess'))
     } catch (err: any) {
-      toast.error(err.message || 'Tải CV thất bại, vui lòng thử lại.')
+      toast.error(err.message || t('mentoring.uploadCvError'))
     } finally {
       setIsUploading(false)
     }
@@ -63,7 +65,7 @@ export const MentorCvSection: React.FC<Props> = ({
           </div>
           <div>
             <h3 className="font-semibold text-text text-lg">
-              CV của bạn <span className="text-danger">*</span>
+              {t('mentoring.cvSectionStepTitle')} <span className="text-danger">*</span>
             </h3>
           </div>
         </div>
@@ -90,8 +92,8 @@ export const MentorCvSection: React.FC<Props> = ({
             <div className="py-4 flex flex-col items-center gap-3">
               <Loader2 className="w-10 h-10 text-primary-solid animate-spin" />
               <div>
-                <span className="text-sm font-semibold text-text-muted block">Đang tải lên...</span>
-                <span className="text-xs text-text-subtle dark:text-text-subtle block mt-0.5">Vui lòng đợi trong giây lát</span>
+                <span className="text-sm font-semibold text-text-muted block">{t('mentoring.uploadingCv')}</span>
+                <span className="text-xs text-text-subtle dark:text-text-subtle block mt-0.5">{t('mentoring.pleaseWait')}</span>
               </div>
             </div>
           ) : cvFileKey ? (
@@ -101,10 +103,10 @@ export const MentorCvSection: React.FC<Props> = ({
               </div>
               <div>
                 <span className="text-sm font-bold text-success block">
-                  {selectedFileName || 'Đã đính kèm CV'}
+                  {selectedFileName || t('mentoring.cvAttached')}
                 </span>
                 <span className="text-xs text-success block mt-1">
-                  Nhấp để thay tệp khác
+                  {t('mentoring.clickToReplaceCv')}
                 </span>
               </div>
             </div>
@@ -114,8 +116,8 @@ export const MentorCvSection: React.FC<Props> = ({
                 <UploadCloud className="w-8 h-8" />
               </div>
               <div>
-                <span className="text-base font-semibold text-text-muted block">Chọn tệp CV</span>
-                <span className="text-xs text-text-subtle dark:text-text-subtle block mt-1">PDF, DOC, DOCX (tối đa 15MB)</span>
+                <span className="text-base font-semibold text-text-muted block">{t('mentoring.selectCvFile')}</span>
+                <span className="text-xs text-text-subtle dark:text-text-subtle block mt-1">{t('mentoring.cvFileLimits')}</span>
               </div>
             </div>
           )}
@@ -125,7 +127,7 @@ export const MentorCvSection: React.FC<Props> = ({
           <div className="mt-4 flex items-center justify-between p-3 bg-surface-2 rounded-xl border border-cream-300/80 dark:border-border text-xs">
             <span className="text-text-muted font-medium truncate flex items-center gap-2">
               <FileCheck className="w-4 h-4 text-success shrink-0" />
-              <span>CV hiện tại</span>
+              <span>{t('mentoring.currentCv')}</span>
             </span>
             <a
               href={cvDownloadUrl || cvFileKey}
@@ -133,7 +135,7 @@ export const MentorCvSection: React.FC<Props> = ({
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-primary-solid hover:text-primary-solid font-semibold bg-primary-soft hover:bg-primary-soft px-3 py-1 rounded-lg transition-colors"
             >
-              <span>Xem</span>
+              <span>{t('mentoring.viewCv')}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

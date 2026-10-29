@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Inbox, RefreshCw, Clock, CheckCircle2, XCircle, Info } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, Container, EmptyState, Pagination, Skeleton } from '@/components/ui'
 import {
   MentoringTermsGate,
@@ -16,19 +17,6 @@ import { useAuthStore } from '@/store/authStore'
 
 type ResponseFilter = 'ALL' | MentoringResponseStatus
 
-const STATUS_TABS: MentoringFilterOption<ResponseFilter>[] = [
-  { value: 'WAITING', label: 'Chờ phản hồi', icon: <Clock /> },
-  { value: 'ACCEPTED', label: 'Đã đồng ý', icon: <CheckCircle2 /> },
-  { value: 'DECLINED', label: 'Đã từ chối', icon: <XCircle /> },
-  { value: 'ALL', label: 'Tất cả' },
-]
-
-const SCOPE_TABS: MentoringFilterOption<IncomingRequestScope>[] = [
-  { value: 'ALL', label: 'Mọi yêu cầu' },
-  { value: 'SAME_INDUSTRY', label: 'Cùng ngành' },
-  { value: 'SAME_FORMAT', label: 'Cùng hình thức' },
-]
-
 // Trạng thái hiển thị (WAITING, ACCEPTED, DECLINED) → trạng thái backend (PENDING, ACCEPTED, REJECTED)
 const BACKEND_STATUS: Record<ResponseFilter, string | undefined> = {
   ALL: undefined,
@@ -43,10 +31,30 @@ const BACKEND_STATUS: Record<ResponseFilter, string | undefined> = {
  * Mặc định mở tab "Chờ phản hồi" để Mentor thấy ngay việc cần làm.
  */
 function IncomingMentoringRequestsContent() {
+  const { t } = useTranslation()
   const [responseFilter, setResponseFilter] = useState<ResponseFilter>('WAITING')
   const [scopeFilter, setScopeFilter] = useState<IncomingRequestScope>('ALL')
   const [page, setPage] = useState(0)
   const pageSize = 10
+
+  const statusTabs: MentoringFilterOption<ResponseFilter>[] = useMemo(
+    () => [
+      { value: 'WAITING', label: t('mentoring.tabWaiting'), icon: <Clock /> },
+      { value: 'ACCEPTED', label: t('mentoring.tabAccepted'), icon: <CheckCircle2 /> },
+      { value: 'DECLINED', label: t('mentoring.tabDeclined'), icon: <XCircle /> },
+      { value: 'ALL', label: t('mentoring.tabAll') },
+    ],
+    [t],
+  )
+
+  const scopeTabs: MentoringFilterOption<IncomingRequestScope>[] = useMemo(
+    () => [
+      { value: 'ALL', label: t('mentoring.tabScopeAll') },
+      { value: 'SAME_INDUSTRY', label: t('mentoring.tabScopeSameIndustry') },
+      { value: 'SAME_FORMAT', label: t('mentoring.tabScopeSameFormat') },
+    ],
+    [t],
+  )
 
   const { data, isLoading, isError, error, refetch, isFetching } = useIncomingMentoringRequests({
     status: BACKEND_STATUS[responseFilter],
@@ -64,9 +72,9 @@ function IncomingMentoringRequestsContent() {
     <div className="space-y-5">
       <MentorPageHeader
         icon={<Inbox className="h-4 w-4" />}
-        eyebrow="Dành cho Mentor"
-        title="Yêu cầu gửi đến"
-        description="Xem và phản hồi các yêu cầu được gửi trực tiếp hoặc phân phối cho bạn."
+        eyebrow={t('mentoring.mentorEyebrow')}
+        title={t('mentoring.incomingRequestsTitle')}
+        description={t('mentoring.incomingRequestsDesc')}
         actions={
           <Button
             variant="outline"
@@ -75,15 +83,15 @@ function IncomingMentoringRequestsContent() {
             disabled={isFetching}
             leftIcon={<RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />}
           >
-            Làm mới
+            {t('mentoring.refresh')}
           </Button>
         }
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <MentoringFilterTabs
-          ariaLabel="Lọc theo phản hồi"
-          options={STATUS_TABS}
+          ariaLabel={t('mentoring.incomingRequestsTitle')}
+          options={statusTabs}
           value={responseFilter}
           onChange={(v) => {
             setResponseFilter(v)
@@ -91,8 +99,8 @@ function IncomingMentoringRequestsContent() {
           }}
         />
         <MentoringFilterTabs
-          ariaLabel="Lọc theo mức độ phù hợp"
-          options={SCOPE_TABS}
+          ariaLabel={t('mentoring.filterCriteria')}
+          options={scopeTabs}
           value={scopeFilter}
           onChange={(v) => {
             setScopeFilter(v)
@@ -104,8 +112,7 @@ function IncomingMentoringRequestsContent() {
       <p className="flex items-start gap-2 text-xs leading-relaxed text-text-subtle">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-info" />
         <span>
-          "Đồng ý trao đổi" chỉ mở kênh trò chuyện với người học. Thỏa thuận và thanh toán được tạo sau khi hai bên thống
-          nhất phạm vi công việc.
+          {t('mentoring.incomingNote')}
         </span>
       </p>
 
@@ -125,27 +132,27 @@ function IncomingMentoringRequestsContent() {
       ) : isError ? (
         <EmptyState
           icon={<Inbox className="h-6 w-6" />}
-          title="Không thể tải danh sách yêu cầu"
-          description={error instanceof Error ? error.message : 'Đã có lỗi xảy ra, vui lòng thử lại.'}
+          title={t('common.error')}
+          description={error instanceof Error ? error.message : t('common.tryAgain')}
           action={
             <Button variant="outline" size="sm" onClick={() => refetch()} leftIcon={<RefreshCw className="h-4 w-4" />}>
-              Thử lại
+              {t('common.tryAgain')}
             </Button>
           }
         />
       ) : requests.length === 0 ? (
         <EmptyState
           icon={<Inbox className="h-6 w-6" />}
-          title={responseFilter === 'WAITING' ? 'Không có yêu cầu nào đang chờ bạn' : 'Chưa có yêu cầu phù hợp'}
+          title={responseFilter === 'WAITING' ? t('mentoring.emptyIncomingWaiting') : t('mentoring.emptyIncomingFiltered')}
           description={
             filtered
-              ? 'Thử chuyển sang tab khác hoặc bỏ bộ lọc để xem thêm yêu cầu.'
-              : 'Yêu cầu mới sẽ xuất hiện ở đây. Hãy đảm bảo hồ sơ Mentor đang hoạt động và gói thành viên còn hiệu lực.'
+              ? t('mentoring.emptyIncomingFilteredDesc')
+              : t('mentoring.emptyIncomingWaitingDesc')
           }
         />
       ) : (
         <div className="space-y-3">
-          <p className="text-xs text-text-subtle">{totalElements} yêu cầu</p>
+          <p className="text-xs text-text-subtle">{t('mentoring.requestsCount', { count: totalElements })}</p>
           {requests.map((item) => (
             <IncomingRequestCard key={item.distributionId ?? `request-${item.id}`} request={item} />
           ))}

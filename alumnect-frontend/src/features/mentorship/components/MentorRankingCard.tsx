@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Flame, CheckCircle2, Star, ExternalLink, Trophy, Medal, Award } from 'lucide-react'
 import { Card, Avatar, Badge } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -12,6 +13,7 @@ interface MentorRankingCardProps {
  * Thẻ hiển thị một mục Mentor trong danh sách bảng xếp hạng (UC97).
  */
 export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
+  const { t } = useTranslation()
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
@@ -84,7 +86,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
             <p className="mt-0.5 text-xs text-text-muted truncate">
               {mentor.currentPosition
                 ? `${mentor.currentPosition}${mentor.currentCompany ? ` • ${mentor.currentCompany}` : ''}`
-                : mentor.headline || 'Cố vấn chuyên môn'}
+                : mentor.headline || t('mentoring.expertAdvisor')}
             </p>
           </div>
         </div>
@@ -95,7 +97,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-warning-soft px-3 py-1.5">
             <Flame className="h-4 w-4 text-warning shrink-0" />
             <div className="text-left">
-              <p className="text-xs uppercase font-bold text-warning">Uy tín</p>
+              <p className="text-xs uppercase font-bold text-warning">{t('mentoring.reputationScore')}</p>
               <p className="text-xs font-bold text-warning">{mentor.reputationScore}</p>
             </div>
           </div>
@@ -104,7 +106,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-primary-soft px-3 py-1.5">
             <CheckCircle2 className="h-4 w-4 text-primary-solid shrink-0" />
             <div className="text-left">
-              <p className="text-xs uppercase font-bold text-primary-solid">Nhiệm vụ</p>
+              <p className="text-xs uppercase font-bold text-primary-solid">{t('mentoring.completedTasks')}</p>
               <p className="text-xs font-bold text-primary-solid">{mentor.completedTasks}</p>
             </div>
           </div>
@@ -125,7 +127,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
             to={`/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`}
             className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-solid hover:text-on-primary sm:col-auto sm:py-1.5"
           >
-            <span>Chi tiết</span>
+            <span>{t('mentoring.mentorDetails')}</span>
             <ExternalLink className="h-3 w-3" />
           </Link>
         </div>

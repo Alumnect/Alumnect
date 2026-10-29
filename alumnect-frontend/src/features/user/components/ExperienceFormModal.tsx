@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { toast, DialogFrame } from '@/components/ui'
@@ -33,6 +34,7 @@ export function ExperienceFormModal({
   defaultPrimary = false,
   onSuccess,
 }: ExperienceFormModalProps) {
+  const { t } = useTranslation()
   // Input fields state
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
@@ -214,38 +216,38 @@ export function ExperienceFormModal({
 
     // Validations
     if (!title.trim()) {
-      setValidationError('Vui lòng nhập chức danh / vai trò')
+      setValidationError(t('profile.enterRoleError', 'Vui lòng nhập chức danh / vai trò'))
       return
     }
     if (!company.trim()) {
-      setValidationError('Vui lòng nhập tên công ty / tổ chức')
+      setValidationError(t('profile.enterCompanyError', 'Vui lòng nhập tên công ty / tổ chức'))
       return
     }
     if (!startMonth || !startYear) {
-      setValidationError('Vui lòng chọn cả Tháng và Năm bắt đầu')
+      setValidationError(t('profile.enterStartMonthYear', 'Vui lòng chọn cả Tháng và Năm bắt đầu'))
       return
     }
     if (formattedStartDate > currentISOStr) {
-      setValidationError(`Tháng/năm bắt đầu không được vượt quá thời gian hiện tại (sau tháng ${currentMonthStr}/${currentYear})`)
+      setValidationError(`${t('profile.startMonthFutureError', 'Tháng/năm bắt đầu không được vượt quá thời gian hiện tại')}${t('profile.afterMonthPrefix', { month: `${currentMonthStr}/${currentYear}` })}`)
       return
     }
     if (!isCurrent && (!endMonth || !endYear)) {
-      setValidationError('Vui lòng chọn cả Tháng và Năm kết thúc khi đã kết thúc công việc')
+      setValidationError(t('profile.enterEndMonthYear', 'Vui lòng chọn cả Tháng và Năm kết thúc khi đã kết thúc công việc'))
       return
     }
     if (!isCurrent && formattedEndDate && formattedEndDate > currentISOStr) {
-      setValidationError(`Tháng/năm kết thúc không được vượt quá thời gian hiện tại (sau tháng ${currentMonthStr}/${currentYear})`)
+      setValidationError(`${t('profile.endMonthFutureError', 'Tháng/năm kết thúc không được vượt quá thời gian hiện tại')}${t('profile.afterMonthPrefix', { month: `${currentMonthStr}/${currentYear}` })}`)
       return
     }
     if (!isCurrent && formattedEndDate && formattedStartDate && formattedEndDate < formattedStartDate) {
-      setValidationError('Tháng/Năm kết thúc không được trước tháng/năm bắt đầu')
+      setValidationError(t('profile.endMonthBeforeStartError', 'Tháng/Năm kết thúc không được trước tháng/năm bắt đầu'))
       return
     }
 
     if (mode === 'promote' && experience) {
       const oldStartDate = experience.startDate
       if (formattedStartDate <= oldStartDate) {
-        setValidationError(`Tháng bắt đầu vai trò mới phải sau tháng bắt đầu vai trò cũ (${oldStartDate.slice(0, 7)})`)
+        setValidationError(`${t('profile.promoteAfterOldRoleError', 'Tháng bắt đầu vai trò mới phải sau tháng bắt đầu vai trò cũ')} (${oldStartDate.slice(0, 7)})`)
         return
       }
     }
@@ -283,13 +285,13 @@ export function ExperienceFormModal({
           },
         })
       }
-      toast.success(mode === 'create' || mode === 'rejoin' ? 'Đã thêm kinh nghiệm làm việc thành công!' : 'Đã cập nhật kinh nghiệm làm việc!')
+      toast.success(mode === 'create' || mode === 'rejoin' ? t('profile.addExpSuccess', 'Đã thêm kinh nghiệm làm việc thành công!') : t('profile.updateExpSuccess', 'Đã cập nhật kinh nghiệm làm việc!'))
       onSuccess?.()
       onClose()
     } catch (err: any) {
       console.error('Lỗi khi lưu kinh nghiệm:', err)
       setValidationError(
-        err.response?.data?.message || err.message || 'Có lỗi xảy ra khi lưu thông tin kinh nghiệm'
+        err.response?.data?.message || err.message || t('profile.saveExpError', 'Có lỗi xảy ra khi lưu thông tin kinh nghiệm')
       )
     }
   }
@@ -306,11 +308,11 @@ export function ExperienceFormModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface-2 shrink-0">
           <h2 className="text-base font-extrabold text-text flex items-center gap-2">
             <Briefcase size={18} className="text-primary-solid" />
-            {mode === 'create' && 'Thêm kinh nghiệm làm việc'}
-            {mode === 'edit' && 'Chỉnh sửa kinh nghiệm'}
-            {mode === 'promote' && 'Thăng chức / Vai trò mới'}
+            {mode === 'create' && t('profile.addExpTitle', 'Thêm kinh nghiệm làm việc')}
+            {mode === 'edit' && t('profile.editExpTitle', 'Chỉnh sửa kinh nghiệm')}
+            {mode === 'promote' && t('profile.promoteExpTitle', 'Thăng chức / Vai trò mới')}
           </h2>
-          <button aria-label="Đóng"
+          <button aria-label={t('common.close', 'Đóng')}
             onClick={onClose}
             disabled={loading}
             className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"
@@ -334,8 +336,10 @@ export function ExperienceFormModal({
               <div className="flex items-start gap-2.5 rounded-2xl bg-primary-soft border border-brand-200/20 p-3.5 text-xs text-primary-solid">
                 <Info size={16} className="shrink-0 mt-0.5 text-primary-solid" />
                 <span>
-                  Thăng chức tại <strong>{experience.company}</strong>. Vai trò cũ{' '}
-                  <strong>{experience.title}</strong> sẽ được kết thúc vào ngày trước tháng bắt đầu vai trò mới.
+                  {t('profile.promoteCompanyNotice', {
+                    company: experience.company,
+                    title: experience.title,
+                  })}
                 </span>
               </div>
             )}
@@ -344,10 +348,12 @@ export function ExperienceFormModal({
               <div className="flex items-start gap-2.5 rounded-2xl bg-primary-soft border border-brand-200/20 p-3.5 text-xs text-primary-solid">
                 <Info size={16} className="shrink-0 mt-0.5 text-primary-solid" />
                 <div className="space-y-1">
-                  <p>Đang thêm một vị trí khác tại <strong>{experience.company}</strong>.</p>
+                  <p>{t('profile.addingPositionNotice', {
+                    company: experience.company,
+                  })}</p>
                   <ul className="list-disc pl-4 space-y-0.5 text-brand-700/90">
-                    <li><strong>Để quay lại làm việc tại đây:</strong> Cứ giữ nguyên dấu tích ở ô <em>Công việc hiện tại</em>.</li>
-                    <li><strong>Để bổ sung công việc cũ:</strong> Hãy bỏ tích ô <em>Công việc hiện tại</em> để nhập ngày kết thúc nhé.</li>
+                    <li>{t('profile.returnWorkNotice', 'Để quay lại làm việc tại đây: Cứ giữ nguyên dấu tích ở ô Công việc hiện tại.')}</li>
+                    <li>{t('profile.addPastWorkNotice', 'Để bổ sung công việc cũ: Hãy bỏ tích ô Công việc hiện tại để nhập ngày kết thúc nhé.')}</li>
                   </ul>
                 </div>
               </div>
@@ -358,7 +364,7 @@ export function ExperienceFormModal({
               {/* Title */}
               <div>
                 <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                  Chức danh / Vai trò <span className="text-danger">*</span>
+                  {t('profile.expRole', 'Chức danh / Vai trò')} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -374,7 +380,7 @@ export function ExperienceFormModal({
               {/* Company */}
               <div>
                 <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                  Công ty / Tổ chức / CLB <span className="text-danger">*</span>
+                  {t('profile.expCompany', 'Công ty / Tổ chức / CLB')} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -391,7 +397,7 @@ export function ExperienceFormModal({
             {/* Row 2: Location Autocomplete */}
             <div>
               <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
-                Vị trí / Địa điểm
+                {t('profile.expLocation', 'Vị trí / Địa điểm')}
               </label>
               {mode === 'promote' || mode === 'rejoin' ? (
                 <input
@@ -405,7 +411,7 @@ export function ExperienceFormModal({
                   value={location}
                   onChange={setLocation}
                   onSelect={handlePlaceSelect}
-                  placeholder="Tìm thành phố, quốc gia..."
+                  placeholder={t('profile.searchLocationPlaceholder', 'Tìm thành phố, quốc gia...')}
                 />
               )}
             </div>
@@ -414,7 +420,7 @@ export function ExperienceFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Start Date */}
               <MonthYearPicker
-                label="Tháng / Năm bắt đầu"
+                label={t('profile.startMonthYear', 'Tháng / Năm bắt đầu')}
                 required
                 disabled={loading}
                 monthValue={startMonth}
@@ -428,7 +434,7 @@ export function ExperienceFormModal({
               {/* End Date */}
               {!isCurrent && (
                 <MonthYearPicker
-                  label="Tháng / Năm kết thúc"
+                  label={t('profile.endMonthYear', 'Tháng / Năm kết thúc')}
                   required
                   disabled={loading}
                   monthValue={endMonth}
@@ -457,7 +463,7 @@ export function ExperienceFormModal({
                     disabled={loading}
                     className="h-4.5 w-4.5 rounded border-border text-primary-solid focus:ring-primary"
                   />
-                  <span className="text-sm font-semibold text-text-muted">Công việc hiện tại</span>
+                  <span className="text-sm font-semibold text-text-muted">{t('profile.currentJob', 'Công việc hiện tại')}</span>
                 </label>
               )}
 
@@ -470,7 +476,7 @@ export function ExperienceFormModal({
                     disabled={loading}
                     className="h-4.5 w-4.5 rounded border-border text-primary-solid focus:ring-primary"
                   />
-                  <span className="text-sm font-semibold text-text-muted">Công việc chính</span>
+                  <span className="text-sm font-semibold text-text-muted">{t('profile.primaryJob', 'Công việc chính')}</span>
                 </label>
               )}
             </div>
@@ -478,12 +484,12 @@ export function ExperienceFormModal({
             {/* Row 5: Description */}
             <div>
               <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
-                Mô tả chi tiết
+                {t('profile.jobDesc', 'Mô tả chi tiết')}
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Mô tả công việc, dự án đã tham gia..."
+                placeholder={t('profile.jobDescPlaceholder', 'Mô tả công việc, dự án đã tham gia...')}
                 rows={5}
                 disabled={loading}
                 className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
@@ -502,7 +508,7 @@ export function ExperienceFormModal({
               disabled={loading}
               className="rounded-xl border border-border text-text-muted font-semibold"
             >
-              Hủy
+              {t('common.cancel', 'Hủy')}
             </Button>
             <Button
               type="submit"
@@ -512,7 +518,7 @@ export function ExperienceFormModal({
               className="rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary shadow-sm font-semibold px-6 flex items-center gap-1.5"
             >
               {loading && <Loader2 size={14} className="animate-spin" />}
-              <span>Lưu lại</span>
+              <span>{t('common.save', 'Lưu lại')}</span>
             </Button>
           </div>
         </form>

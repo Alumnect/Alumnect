@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Clock, Check, AlertCircle } from 'lucide-react'
 import { Card, Button, Skeleton } from '@/components/ui'
@@ -24,6 +25,7 @@ interface MentorPaymentCheckoutProps {
  * Tích hợp tự động khởi tạo đơn, hiển thị VietQR, polling thời gian thực và chuyển đổi màn hình kết quả.
  */
 export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymentCheckoutProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const packageIdParam = searchParams.get('packageId')
@@ -139,17 +141,17 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
           <AlertCircle className="h-7 w-7" />
         </div>
         <h3 className="font-display text-lg font-bold text-danger">
-          Không thể tạo phiên thanh toán PayOS
+          {t('mentoring.cannotCreatePayOsSession')}
         </h3>
         <p className="text-xs text-danger">
-          {checkoutError?.message || 'Đã xảy ra lỗi khi kết nối với cổng thanh toán PayOS.'}
+          {checkoutError?.message || t('mentoring.payOsConnectErrorDefault')}
         </p>
         <div className="pt-2 flex justify-center gap-3">
           <Button variant="secondary" size="sm" onClick={() => (onBack ? onBack() : navigate('/app/mentoring/subscription'))}>
-            Quay lại chọn gói
+            {t('mentoring.backToSelectPackage')}
           </Button>
           <Button variant="primary" size="sm" onClick={handleRetryPayment}>
-            Thử lại
+            {t('mentoring.retry')}
           </Button>
         </div>
       </Card>
@@ -178,10 +180,10 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
       <div className="lg:col-span-5 space-y-5">
         <div>
           <h2 className="font-display text-xl font-bold text-text">
-            Chi Tiết Thanh Toán
+            {t('mentoring.paymentDetailsTitle')}
           </h2>
           <p className="text-xs text-text-subtle mt-1">
-            Xác nhận thông tin gói Mentor trước khi quét mã chuyển khoản.
+            {t('mentoring.paymentDetailsSubtitle')}
           </p>
         </div>
 
@@ -190,7 +192,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-wider text-primary-solid">
-                Gói đã chọn
+                {t('mentoring.selectedPackageLabel')}
               </span>
               <h3 className="font-display text-lg font-bold text-text mt-0.5">
                 {checkoutData?.packageName}
@@ -198,12 +200,12 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-solid border border-primary-soft-border shadow-2xs">
               <Clock className="h-3.5 w-3.5 text-primary-solid" />
-              {checkoutData?.durationMonths || mySubscription?.durationMonths || 1} Tháng
+              {t('mentoring.monthUnit', { months: checkoutData?.durationMonths || mySubscription?.durationMonths || 1 })}
             </span>
           </div>
 
           <div className="pt-2 border-t border-border">
-            <span className="text-xs text-text-subtle">Tổng thanh toán:</span>
+            <span className="text-xs text-text-subtle">{t('mentoring.totalPaymentLabel')}</span>
             <div className="text-2xl font-bold text-text">
               {vnd(checkoutData?.amount || 0)}
             </div>
@@ -213,15 +215,15 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
           <div className="space-y-2 pt-2 border-t border-border text-xs text-text-muted">
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-success shrink-0" />
-              <span>Kích hoạt ngay lập tức sau khi chuyển khoản thành công</span>
+              <span>{t('mentoring.benefitImmediateActivation')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-success shrink-0" />
-              <span>Bảo toàn 100% thời gian còn lại nếu bạn đang mua gia hạn</span>
+              <span>{t('mentoring.benefitPreserveRemainingTime')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-success shrink-0" />
-              <span>Xuất hiện trên bản đồ và danh sách Mentor kết nối sinh viên</span>
+              <span>{t('mentoring.benefitAppearOnMap')}</span>
             </div>
           </div>
 
@@ -234,7 +236,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
               onClick={handleCancelPayment}
               disabled={cancelMutation.isPending}
             >
-              {cancelMutation.isPending ? 'Đang hủy...' : 'Hủy đơn & Chọn gói khác'}
+              {cancelMutation.isPending ? t('mentoring.cancelling') : t('mentoring.cancelAndSelectOther')}
             </Button>
           </div>
         </Card>

@@ -1,4 +1,5 @@
 import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Badge, Button } from '@/components/ui'
 import type { PaymentStatus } from '../model/mentorPaymentTypes'
 
@@ -16,15 +17,16 @@ export function MentorPaymentFailedCard({
   onRetry,
   onBackToPackages,
 }: MentorPaymentFailedCardProps) {
+  const { t } = useTranslation()
   const getStatusText = () => {
     switch (status) {
       case 'EXPIRED':
-        return 'Phiên thanh toán đã hết hạn (quá 15 phút).'
+        return t('mentoring.paymentExpired15m')
       case 'CANCELLED':
-        return 'Bạn đã hủy đơn thanh toán này.'
+        return t('mentoring.paymentCancelledByUser')
       case 'FAILED':
       default:
-        return 'Giao dịch thanh toán không thành công.'
+        return t('mentoring.paymentFailedDefault')
     }
   }
 
@@ -40,14 +42,14 @@ export function MentorPaymentFailedCard({
       <div className="space-y-2">
         <div className="inline-flex">
           <Badge tone="danger">
-            {status === 'EXPIRED' ? 'Đã Hết Hạn' : status === 'CANCELLED' ? 'Đã Hủy' : 'Thanh Toán Thất Bại'}
+            {status === 'EXPIRED' ? t('mentoring.badgeExpired') : status === 'CANCELLED' ? t('mentoring.badgeCancelled') : t('mentoring.badgeFailed')}
           </Badge>
         </div>
         <h2 className="font-display text-xl font-bold text-text">
-          Không Thể Hoàn Tất Thanh Toán
+          {t('mentoring.cannotCompletePaymentTitle')}
         </h2>
         <p className="text-sm text-text-muted max-w-md mx-auto">
-          {getStatusText()} Đừng lo lắng, gói dịch vụ Mentor của bạn chưa bị trừ tiền và bạn có thể tạo lại phiên thanh toán mới bất cứ lúc nào.
+          {t('mentoring.paymentFailedDesc', { status: getStatusText() })}
         </p>
       </div>
 
@@ -59,7 +61,7 @@ export function MentorPaymentFailedCard({
           onClick={onBackToPackages}
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Chọn Gói Khác</span>
+          <span>{t('mentoring.selectAnotherPackage')}</span>
         </Button>
         <Button
           variant="primary"
@@ -68,7 +70,7 @@ export function MentorPaymentFailedCard({
           onClick={onRetry}
         >
           <RefreshCw className="h-4 w-4" />
-          <span>Thử Thanh Toán Lại</span>
+          <span>{t('mentoring.retryPayment')}</span>
         </Button>
       </div>
     </Card>

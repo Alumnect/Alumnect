@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { TRANSITION } from '@/lib/motion'
 import { useDialog } from '@/hooks/useDialog'
 import { 
@@ -34,7 +35,7 @@ export function ImageViewerModal({
   isOpen,
   onClose,
   src,
-  alt = 'Hình ảnh',
+  alt,
   fileName,
   senderName,
   senderAvatar,
@@ -43,6 +44,8 @@ export function ImageViewerModal({
   onNext,
   counter,
 }: ImageViewerModalProps) {
+  const { t } = useTranslation()
+  const resolvedAlt = alt || t('common.image')
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -194,7 +197,7 @@ export function ImageViewerModal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={alt}
+        aria-label={resolvedAlt}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, transition: TRANSITION.exit }}
@@ -243,8 +246,8 @@ export function ImageViewerModal({
           <button
             type="button"
             onClick={onClose}
-            title="Đóng (Esc)"
-            aria-label="Đóng"
+            title={`${t('common.close')} (Esc)`}
+            aria-label={t('common.close')}
             data-dialog-close
             className="flex h-10 w-10 items-center justify-center rounded-full bg-[#242526] text-white/90 shadow-md border border-white/10 transition hover:bg-[#3a3b3c] hover:text-white hover:scale-105 active:scale-95"
           >
@@ -274,7 +277,7 @@ export function ImageViewerModal({
           >
             <img
               src={src}
-              alt={alt}
+              alt={resolvedAlt}
               draggable={false}
               className="max-h-[84vh] max-w-[88vw] rounded-xl object-contain shadow-2xl ring-1 ring-white/10"
             />
@@ -286,8 +289,8 @@ export function ImageViewerModal({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onPrev() }}
-            title="Ảnh trước (←)"
-            aria-label="Ảnh trước"
+            title={`${t('common.prevImage')} (←)`}
+            aria-label={t('common.prevImage')}
             className="absolute left-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
           >
             <ChevronLeft size={26} />
@@ -297,8 +300,8 @@ export function ImageViewerModal({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onNext() }}
-            title="Ảnh sau (→)"
-            aria-label="Ảnh sau"
+            title={`${t('common.nextImage')} (→)`}
+            aria-label={t('common.nextImage')}
             className="absolute right-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
           >
             <ChevronRight size={26} />
@@ -315,7 +318,7 @@ export function ImageViewerModal({
             type="button"
             onClick={handleZoomOut}
             disabled={zoom <= 0.6}
-            title="Thu nhỏ (-)"
+            title={`${t('common.zoomOut')} (-)`}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <ZoomOut size={17} />
@@ -325,7 +328,7 @@ export function ImageViewerModal({
           <button
             type="button"
             onClick={handleReset}
-            title="Khôi phục kích thước chuẩn"
+            title={t('common.resetZoom')}
             className="min-w-[50px] px-1.5 py-1 text-center text-xs font-semibold text-white/90 hover:bg-white/10 rounded-lg transition-colors"
           >
             {Math.round(zoom * 100)}%
@@ -336,7 +339,7 @@ export function ImageViewerModal({
             type="button"
             onClick={handleZoomIn}
             disabled={zoom >= 3.5}
-            title="Phóng to (+)"
+            title={`${t('common.zoomIn')} (+)`}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <ZoomIn size={17} />
@@ -348,7 +351,7 @@ export function ImageViewerModal({
           <button
             type="button"
             onClick={handleRotate}
-            title="Xoay ảnh 90° (R)"
+            title={`${t('common.rotateImage')} (R)`}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
           >
             <RotateCw size={17} />
@@ -358,7 +361,7 @@ export function ImageViewerModal({
           <button
             type="button"
             onClick={handleDownload}
-            title="Tải ảnh về máy"
+            title={t('common.downloadImage')}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
           >
             <Download size={17} />
@@ -369,7 +372,7 @@ export function ImageViewerModal({
             href={src}
             target="_blank"
             rel="noreferrer"
-            title="Mở ảnh gốc trong tab mới"
+            title={t('common.openInNewTab')}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
           >
             <ExternalLink size={17} />

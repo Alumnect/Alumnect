@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MessageSquare, Loader2, AlertTriangle, Inbox, Send, Pencil, Trash2, X, ChevronUp, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Avatar } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -26,31 +27,30 @@ import { DeleteAnswerModal } from './DeleteAnswerModal'
 const MAX_BODY = 10000
 
 /**
- * Thời gian tương đối tiếng Việt tính từ mốc tạo THẬT (ISO-8601): "Vừa xong", "5 phút",
- * "3 giờ", "2 ngày", "2 tuần"; quá ~1 tháng thì hiện ngày cụ thể (dd/MM/yyyy).
+ * Thời gian tương đối tính từ mốc tạo THẬT (ISO-8601).
  */
-function relativeTime(iso: string): string {
+function relativeTime(iso: string, t: (key: string, opt?: any) => string, lang: string): string {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
   const sec = Math.floor((Date.now() - d.getTime()) / 1000)
-  if (sec < 60) return 'Vừa xong'
+  if (sec < 60) return t('forum.justNow')
   const min = Math.floor(sec / 60)
-  if (min < 60) return `${min} phút`
+  if (min < 60) return t('forum.minutesShort', { count: min })
   const hour = Math.floor(min / 60)
-  if (hour < 24) return `${hour} giờ`
+  if (hour < 24) return t('forum.hoursShort', { count: hour })
   const day = Math.floor(hour / 24)
-  if (day < 7) return `${day} ngày`
-  if (day < 30) return `${Math.floor(day / 7)} tuần`
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  if (day < 7) return t('forum.daysShort', { count: day })
+  if (day < 30) return t('forum.weeksShort', { count: Math.floor(day / 7) })
+  return d.toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-/** Ngày giờ tuyệt đối (tooltip khi hover) từ mốc tạo THẬT — VD "19/08/2026 16:49". */
-function absoluteTime(iso: string): string {
+/** Ngày giờ tuyệt đối (tooltip khi hover) từ mốc tạo THẬT. */
+function absoluteTime(iso: string, lang: string): string {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 /**
@@ -109,6 +109,7 @@ function InlineAnswerForm({
     resolver: zodResolver(createAnswerSchema),
     defaultValues: { body: initialBody },
   })
+  const { t } = useTranslation()
   const isPending = mode === 'edit' ? update.isPending : create.isPending
   const error = mode === 'edit' ? update.error : create.error
   const bodyLength = watch('body')?.length ?? 0
@@ -120,10 +121,10 @@ function InlineAnswerForm({
 
   const placeholder =
     mode === 'edit'
-      ? 'Chỉnh sửa câu trả lời…'
+      ? t('forum.editAnswerPlaceholder')
       : replyingToName
-      ? `Trả lời ${replyingToName}…`
-      : 'Viết phản hồi của bạn…'
+      ? t('forum.replyToPlaceholder', { name: replyingToName })
+      : t('forum.writeReplyPlaceholder')
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-2">
@@ -148,7 +149,7 @@ function InlineAnswerForm({
           disabled={isPending}
           className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
         >
-          Hủy
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
@@ -160,7 +161,7 @@ function InlineAnswerForm({
           ) : mode === 'edit' ? null : (
             <Send size={13} />
           )}
-          <span>{mode === 'edit' ? (isPending ? 'Đang lưu…' : 'Lưu thay đổi') : isPending ? 'Đang gửi…' : 'Gửi trả lời'}</span>
+          <span>{mode === 'edit' ? (isPending ? t('forum.saving') : t('forum.saveChanges')) : isPending ? t('forum.sendingAnswer') : t('forum.sendAnswer')}</span>
         </button>
       </div>
     </form>
@@ -182,6 +183,7 @@ function AnswerBubble({
   parentAuthor?: string
   isReply?: boolean
 }) {
+  const { t, i18n } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const canEdit = !!user && !!a.authorId && String(user.id) === a.authorId
   const canReply = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
@@ -207,7 +209,7 @@ function AnswerBubble({
 
   const handleVote = () => {
     if (!canVote) {
-      promptLogin('Đăng nhập để bình chọn câu trả lời.')
+      promptLogin(t('forum.promptLoginVote'))
       return
     }
     const next = !voted
@@ -252,12 +254,12 @@ function AnswerBubble({
                 </span>
               )}
               {(a.createdAt || a.time) && (
-                <span className="shrink-0 text-xs text-text-subtle dark:text-text-subtle" title={absoluteTime(a.createdAt)}>
-                  • {relativeTime(a.createdAt) || a.time}
+                <span className="shrink-0 text-xs text-text-subtle dark:text-text-subtle" title={absoluteTime(a.createdAt, i18n.language)}>
+                  • {relativeTime(a.createdAt, t, i18n.language) || a.time}
                 </span>
               )}
               {a.edited && (
-                <span className="text-xs text-text-subtle dark:text-text-subtle">• Đã chỉnh sửa</span>
+                <span className="text-xs text-text-subtle dark:text-text-subtle">• {t('forum.editedBadge')}</span>
               )}
             </div>
 
@@ -267,7 +269,7 @@ function AnswerBubble({
                   type="button"
                   onClick={() => setEditing(true)}
                   className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
-                  aria-label="Chỉnh sửa câu trả lời"
+                  aria-label={t('forum.editAnswerAria')}
                 >
                   <Pencil size={13} />
                 </button>
@@ -277,7 +279,7 @@ function AnswerBubble({
                   type="button"
                   onClick={() => setDeleting(true)}
                   className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
-                  aria-label="Xóa câu trả lời"
+                  aria-label={t('forum.deleteAnswerAria')}
                 >
                   <Trash2 size={13} />
                 </button>
@@ -318,7 +320,7 @@ function AnswerBubble({
                 type="button"
                 onClick={handleVote}
                 aria-pressed={voted}
-                aria-label={voted ? 'Bỏ bình chọn' : 'Bình chọn'}
+                aria-label={voted ? t('forum.unvoteAnswerAria') : t('forum.voteAnswerAria')}
                 className={cn(
                   'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold transition cursor-pointer',
                   voted
@@ -336,7 +338,7 @@ function AnswerBubble({
                   onClick={() => setReplying((v) => !v)}
                   className="text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
                 >
-                  Trả lời
+                  {t('forum.reply')}
                 </button>
               )}
             </div>
@@ -349,9 +351,9 @@ function AnswerBubble({
             <div className="rounded-2xl bg-surface-2 p-3">
               <div className="flex items-center justify-between text-xs text-text-subtle mb-1">
                 <span>
-                  Trả lời <strong className="text-primary-solid">@{a.author}</strong>
+                  {t('forum.replyingTo')} <strong className="text-primary-solid">@{a.author}</strong>
                 </span>
-                <button aria-label="Đóng" type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
+                <button aria-label={t('common.close')} type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
                   <X size={13} />
                 </button>
               </div>
@@ -380,7 +382,7 @@ function AnswerBubble({
                 className="ml-1 flex items-center gap-1.5 text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
               >
                 <span className="h-3 w-3.5 shrink-0 rounded-bl-lg border-b-2 border-l-2 border-primary-soft-border" />
-                Xem {replyCount} phản hồi
+                {t('forum.viewReplies', { count: replyCount })}
               </button>
             ) : (
               <div className="space-y-2.5">
@@ -399,7 +401,7 @@ function AnswerBubble({
                     onClick={() => setShowReplies(false)}
                     className="ml-8 text-xs font-semibold text-text-subtle hover:text-text-muted dark:text-text-subtle cursor-pointer"
                   >
-                    Ẩn phản hồi
+                    {t('forum.hideReplies')}
                   </button>
                 )}
               </div>
@@ -422,6 +424,7 @@ function AnswerBubble({
 
 /** Form gửi câu trả lời GỐC mới — dạng pill thanh lịch phong cách hội nhóm. */
 function AnswerForm({ questionId }: { questionId: string }) {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const { mutate, isPending, error } = useCreateAnswer(questionId)
   const [body, setBody] = useState('')
@@ -448,21 +451,21 @@ function AnswerForm({ questionId }: { questionId: string }) {
         </div>
       )}
       <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
-        <Avatar src={user?.avatarUrl} name={user?.name ?? 'Bạn'} size={32} verified={user?.verified} className="shrink-0" />
+        <Avatar src={user?.avatarUrl} name={user?.name ?? t('forum.you')} size={32} verified={user?.verified} className="shrink-0" />
         <div className="relative flex-1">
           <input
-            aria-label="Chia sẻ câu trả lời hoặc thảo luận..."
+            aria-label={t('forum.shareAnswerPlaceholder')}
             type="text"
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={MAX_BODY}
-            placeholder="Chia sẻ câu trả lời hoặc thảo luận..."
+            placeholder={t('forum.shareAnswerPlaceholder')}
             className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
           />
           <button
             type="submit"
             disabled={!body.trim() || isPending}
-            aria-label="Gửi câu trả lời"
+            aria-label={t('messages.send')}
             className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
           >
             {isPending ? (
@@ -483,6 +486,7 @@ function AnswerForm({ questionId }: { questionId: string }) {
  * @param count Số câu trả lời (lấy từ chi tiết câu hỏi) để hiển thị huy hiệu đếm
  */
 export function AnswersSection({ questionId, count }: { questionId: string; count: number }) {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const promptLogin = useLoginPrompt((s) => s.open)
   const canAnswer = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
@@ -496,7 +500,7 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
       {/* Tiêu đề khu vực + huy hiệu số câu trả lời */}
       <div className="mb-4 flex items-center gap-2.5">
         <MessageSquare size={18} className="text-primary-solid" />
-        <h2 className="text-lg font-extrabold text-text">Câu trả lời</h2>
+        <h2 className="text-lg font-extrabold text-text">{t('forum.answers')}</h2>
         <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-primary-soft px-2 text-xs font-bold text-primary-solid">{total}</span>
       </div>
 
@@ -505,13 +509,13 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
         <AnswerForm questionId={questionId} />
       ) : !user ? (
         <div className="mb-4 flex items-center justify-between rounded-xl bg-surface p-3 border border-border shadow-2xs">
-          <p className="text-xs text-text-subtle">Đăng nhập để tham gia trả lời câu hỏi này.</p>
+          <p className="text-xs text-text-subtle">{t('auth.loginToAnswer')}</p>
           <button
             type="button"
-            onClick={() => promptLogin('Đăng nhập để tham gia trả lời câu hỏi này.')}
+            onClick={() => promptLogin()}
             className="text-xs font-bold text-primary-solid hover:underline flex items-center gap-1 cursor-pointer"
           >
-            Đăng nhập <ArrowRight size={12} />
+            {t('common.login')} <ArrowRight size={12} />
           </button>
         </div>
       ) : null}
@@ -537,9 +541,9 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-danger-soft text-danger">
             <AlertTriangle size={22} />
           </span>
-          <p className="text-sm text-text-subtle">{(error as Error)?.message ?? 'Không tải được câu trả lời.'}</p>
+          <p className="text-sm text-text-subtle">{(error as Error)?.message ?? t('forum.loadAnswersError')}</p>
           <Button variant="secondary" size="sm" onClick={() => refetch()}>
-            Thử lại
+            {t('common.retry')}
           </Button>
         </Card>
       ) : answers.length === 0 ? (
@@ -547,7 +551,7 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
             <Inbox size={22} />
           </span>
-          <p className="text-sm text-text-subtle">Chưa có câu trả lời nào. Hãy là người đầu tiên trả lời!</p>
+          <p className="text-sm text-text-subtle">{t('forum.noAnswersYet')}</p>
         </Card>
       ) : (
         <>
@@ -565,7 +569,7 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
                 disabled={isFetchingNextPage}
                 leftIcon={isFetchingNextPage ? <Loader2 size={15} className="animate-spin" /> : undefined}
               >
-                {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm câu trả lời'}
+                {isFetchingNextPage ? t('common.loading') : t('forum.loadMoreAnswers')}
               </Button>
             </div>
           )}

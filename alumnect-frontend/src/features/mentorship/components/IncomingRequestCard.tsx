@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Briefcase, CalendarClock, Coins, Laptop, Paperclip, Users } from 'lucide-react'
@@ -25,7 +26,7 @@ function formatBudget(min?: number | null, max?: number | null) {
   if (min == null && max == null) return null
   if (min != null && max != null && min !== max) return `${formatVnd(min)} – ${formatVnd(max)}`
   const value = max ?? min ?? 0
-  return value === 0 ? 'Miễn phí' : formatVnd(value)
+  return value === 0 ? t('mentoring.freeRate') : formatVnd(value)
 }
 
 /**
@@ -43,8 +44,8 @@ export function IncomingRequestCard({ request }: IncomingRequestCardProps) {
     budget && { icon: <Coins />, text: budget },
     request.workingMode && { icon: <Laptop />, text: WORKING_MODE_LABELS[request.workingMode] },
     request.participationType && { icon: <Users />, text: PARTICIPATION_TYPE_LABELS[request.participationType] },
-    request.expectedDeadline && { icon: <CalendarClock />, text: `Hạn ${formatDate(request.expectedDeadline)}` },
-    request.attachmentCount > 0 && { icon: <Paperclip />, text: `${request.attachmentCount} tệp` },
+    request.expectedDeadline && { icon: <CalendarClock />, text: t('mentoring.deadlineWithDate', { date: formatDate(request.expectedDeadline) }) },
+    request.attachmentCount > 0 && { icon: <Paperclip />, text: t('mentoring.attachmentCount', { count: request.attachmentCount }) },
   ].filter(Boolean) as { icon: ReactNode; text: string }[]
 
   return (
@@ -55,7 +56,7 @@ export function IncomingRequestCard({ request }: IncomingRequestCardProps) {
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-text">{request.studentName}</p>
             <p className="truncate text-xs text-text-subtle">
-              {request.studentHeadline || request.industryName} · nhận {formatDate(request.distributedAt)}
+              {request.studentHeadline || request.industryName} · {t('mentoring.receivedDate', { date: formatDate(request.distributedAt) })}
             </p>
           </div>
         </div>
@@ -81,7 +82,7 @@ export function IncomingRequestCard({ request }: IncomingRequestCardProps) {
 
       {request.responseNote && (
         <p className="mt-3 line-clamp-2 rounded-xl bg-surface-2 px-3 py-2 text-xs text-text-muted dark:bg-white/[0.04]">
-          <span className="font-semibold">Lời nhắn của bạn: </span>
+          <span className="font-semibold">{t('mentoring.yourMessageLabel')}</span>
           {request.responseNote}
         </p>
       )}
@@ -90,8 +91,8 @@ export function IncomingRequestCard({ request }: IncomingRequestCardProps) {
         <div className="flex flex-wrap items-center gap-1.5">
           <RequestTypeBadge type={request.requestType} />
           {request.requestStatus !== 'OPEN' && <RequestStatusBadge status={request.requestStatus} />}
-          {request.sameIndustry && <MentoringBadge tone="navy">Cùng ngành</MentoringBadge>}
-          {request.sameFormat && <MentoringBadge tone="mint">Cùng hình thức</MentoringBadge>}
+          {request.sameIndustry && <MentoringBadge tone="navy">{t('mentoring.sameIndustryBadge')}</MentoringBadge>}
+          {request.sameFormat && <MentoringBadge tone="mint">{t('mentoring.sameFormatBadge')}</MentoringBadge>}
         </div>
         <ButtonLink
           to={detailPath}
@@ -100,7 +101,7 @@ export function IncomingRequestCard({ request }: IncomingRequestCardProps) {
           rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
           className="h-8 rounded-lg px-3 text-xs"
         >
-          {isWaiting ? 'Xem & phản hồi' : 'Xem chi tiết'}
+          {isWaiting ? t('mentoring.viewAndRespond') : t('common.viewDetails')}
         </ButtonLink>
       </div>
     </article>
