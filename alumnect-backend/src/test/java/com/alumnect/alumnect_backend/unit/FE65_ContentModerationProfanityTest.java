@@ -360,4 +360,55 @@ class FE65_ContentModerationProfanityTest {
         // Không tạo report rác
         verify(reportRepository, never()).save(any(Report.class));
     }
+
+    // ==========================================
+    // 5. KIỂM THỬ CÁC TỪ LÓNG & TỪ VIẾT TẮT MỚI THÊM (SLANG & ABBREVIATIONS)
+    // ==========================================
+
+    @Test
+    @DisplayName("Quét các từ lóng mới thêm: cl, cc, cai lon, con cac -> Phát hiện chính xác")
+    void containsProfanity_NewSlangTerms_DetectedSuccessfully() {
+        String slangText1 = "Mày nói cái cl gì thế?";
+        String slangText2 = "Im mẹ mồm đi đồ con cac";
+        String slangText3 = "Nói chuyện như cc";
+        String slangText4 = "Mày nói cl gì thế?";
+        String slangText5 = "Ăn cc đi";
+
+        assertThat(profanityFilterService.containsProfanity(slangText1)).isTrue();
+        assertThat(profanityFilterService.findProfanities(slangText1)).contains("cai cl");
+
+        assertThat(profanityFilterService.containsProfanity(slangText2)).isTrue();
+        assertThat(profanityFilterService.findProfanities(slangText2)).contains("con cac");
+
+        assertThat(profanityFilterService.containsProfanity(slangText3)).isTrue();
+        assertThat(profanityFilterService.findProfanities(slangText3)).contains("nhu cc");
+
+        assertThat(profanityFilterService.containsProfanity(slangText4)).isTrue();
+        assertThat(profanityFilterService.findProfanities(slangText4)).contains("cl");
+
+        assertThat(profanityFilterService.containsProfanity(slangText5)).isTrue();
+        assertThat(profanityFilterService.findProfanities(slangText5)).contains("cc");
+    }
+
+    @Test
+    @DisplayName("Bảo vệ biên từ vựng: CLB Tin học, CCCD không bị bắt nhầm thành cl hay cc")
+    void containsProfanity_AcronymsWithBoundary_NotFalsePositive() {
+        String safeText1 = "Mời các bạn tham gia CLB Tin học Đại học FPT tuần này nhé";
+        String safeText2 = "Sinh viên chuẩn bị nộp CCCD để làm thủ tục tốt nghiệp";
+
+        assertThat(profanityFilterService.containsProfanity(safeText1)).isFalse();
+        assertThat(profanityFilterService.findProfanities(safeText1)).doesNotContain("cl");
+
+        assertThat(profanityFilterService.containsProfanity(safeText2)).isFalse();
+        assertThat(profanityFilterService.findProfanities(safeText2)).doesNotContain("cc");
+    }
+
+    @Test
+    @DisplayName("Bảo vệ Whitelist: 'các bạn' không bị bắt nhầm bởi từ đơn 'cac'")
+    void containsProfanity_CacBanWithWhitelist_NotFlaggedAsCac() {
+        String safePost = "Xin chào các bạn cựu sinh viên FPT";
+
+        assertThat(profanityFilterService.containsProfanity(safePost)).isFalse();
+        assertThat(profanityFilterService.findProfanities(safePost)).doesNotContain("cac");
+    }
 }
