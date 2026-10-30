@@ -78,6 +78,7 @@ public class AdminReportServiceImpl implements AdminReportService {
                 throw new BadRequestException("Không thể cập nhật báo cáo quay lại trạng thái PENDING.");
             }
             report.setStatus(newStatus);
+            report.setReviewedAt(java.time.Instant.now());
             reportRepository.save(report);
             log.info("Admin đã cập nhật trạng thái báo cáo ID={} sang {}", id, newStatus);
         } catch (IllegalArgumentException e) {

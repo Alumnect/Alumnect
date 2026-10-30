@@ -27,5 +27,10 @@ public interface AdminReportMapper {
     @Mapping(target = "description", source = "report.description")
     @Mapping(target = "status", source = "report.status")
     @Mapping(target = "createdAt", source = "report.createdAt")
+    @Mapping(target = "aiScore", source = "report.aiScore")
+    @Mapping(target = "aiFlaggedReason", source = "report.aiFlaggedReason")
+    @Mapping(target = "autoModerated", source = "report.autoModerated")
+    @Mapping(target = "detectedKeywords", source = "report.detectedKeywords")
+    @Mapping(target = "riskLevel", expression = "java(report.getAiScore() == null ? \"LOW\" : report.getAiScore() >= 0.85 ? \"HIGH\" : report.getAiScore() >= 0.40 ? \"MEDIUM\" : \"LOW\")")
     AdminReportResponse toDto(Report report);
 }

@@ -104,6 +104,9 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired(required = false)
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @Override
     @Transactional
     public PostResponse createPost(String email, CreatePostRequest request) {
@@ -198,6 +201,12 @@ public class PostServiceImpl implements PostService {
             throw new RuntimeException("Lỗi hệ thống: Không thể tạo bài viết");
         }
         log.info("Tạo bài viết mới: id={}, tác giả={}, loại={}", saved.getId(), email, saved.getCategory());
+
+        // Bắn sự kiện kiểm duyệt ngầm theo chuẩn Facebook (Post-First, Moderate-Later)
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new com.alumnect.alumnect_backend.service.moderation.PostCreatedModerationEvent(
+                    saved.getId(), saved.getContent(), author.getId()));
+        }
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         JobPosting savedJob = jobId != null ? jobPostingRepository.findById(jobId).orElse(null) : null;

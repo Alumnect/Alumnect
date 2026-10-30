@@ -107,8 +107,8 @@ public class ReportSpecification {
                 ));
             }
 
-            // Mặc định sắp xếp theo ngày tạo báo cáo mới nhất (giảm dần)
-            criteriaQuery.orderBy(cb.desc(root.get("createdAt")));
+            // Mặc định sắp xếp ưu tiên theo điểm rủi ro AI cao nhất (aiScore giảm dần), sau đó đến ngày tạo (createdAt giảm dần)
+            criteriaQuery.orderBy(cb.desc(root.get("aiScore")), cb.desc(root.get("createdAt")));
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

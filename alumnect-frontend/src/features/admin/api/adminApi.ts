@@ -112,6 +112,11 @@ export interface AdminReportDto {
   description?: string
   status: 'PENDING' | 'RESOLVED' | 'DISMISSED'
   createdAt: string
+  aiScore?: number
+  aiFlaggedReason?: string
+  autoModerated?: boolean
+  detectedKeywords?: string
+  riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW'
 }
 
 export interface PageResponse<T> {

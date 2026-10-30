@@ -1,0 +1,573 @@
+# Danh sách các từ ngữ ngoại lệ an toàn (Whitelist)
+# Giúp hệ thống không bắt nhầm các từ ngữ học thuật, địa danh, tên riêng
+fpt
+fptu
+fpt university
+dai hoc fpt
+alumnect
+alumni
+fpt software
+fsoft
+cặc tút
+cacti
+cactus
+các bạn
+cac ban
+các sinh viên
+cac sinh vien
+các em
+cac em
+các anh
+cac anh
+các chị
+cac chi
+các thầy
+cac thay
+các cô
+cac co
+các trường
+cac truong
+các khoa
+cac khoa
+các lớp
+cac lop
+các môn
+cac mon
+các dự án
+cac du an
+các chương trình
+cac chuong trinh
+các thành viên
+cac thanh vien
+assassin
+assassination
+pass
+passport
+password
+class
+classic
+classical
+classify
+classification
+glass
+glasses
+mass
+massive
+bass
+asset
+assets
+assist
+assistance
+assistant
+associated
+association
+assume
+assumption
+assure
+assurance
+cockpit
+cocktail
+peacock
+hitchcock
+bitchat
+title
+titled
+entitled
+document
+documentation
+analysis
+analyst
+analytic
+analytics
+canal
+banal
+arsenal
+damn
+scrap
+scrape
+scraper
+scrappy
+cum laude
+magna cum laude
+summa cum laude
+circus
+cucumber
+dictation
+dictionary
+predict
+verdict
+jurisdiction
+hello
+shitake
+matsutake
+butcher
+shuttle
+shot
+shut
+bitchy
+spoon
+spool
+spoke
+spin
+spit
+split
+splash
+speed
+spell
+spend
+spite
+spot
+sprawl
+spread
+spring
+sprint
+sprite
+spruce
+spur
+spurt
+spy
+cút lộn
+trứng cút
+con cút
+chim cút
+lộn xộn
+lộn mèo
+lộn nhào
+đậu phụ
+đậu nành
+đậu xanh
+đậu đen
+hạt đậu
+bắt đầu
+đầu tiên
+óc heo hầm
+óc bò
+súc miệng
+súc họng
+vật nuôi
+súc tích
+đồ gia dụng
+đồ điện tử
+đồ dùng
+ngu dốt cần học hỏi
+nghiện học
+nghiện code
+nghiện sách
+nghiện game lành mạnh
+chết mê
+chết mệt
+chết cười
+buồn cười chết đi được
+vui chết đi được
+thần tượng
+thần kỳ
+bài học
+học tập
+học hành
+lớp học
+khóa học
+chích ngừa
+tiêm ngừa
+bóng đá
+bóng bàn
+bóng chuyền
+bóng rổ
+bóng bay
+cỏ nhân tạo
+cỏ ba lá
+cỏ cây
+cỏ xanh
+hoa cỏ
+kẹo ngọt
+kẹo dừa
+kẹo mút
+đá bóng
+đá cầu
+đá banh
+uống nước nhớ nguồn
+ăn quả nhớ kẻ trồng cây
+mèo bắt chuột
+trà xanh túi lọc
+trà xanh không độ
+chè xanh
+trà sữa
+nước trà
+bảo bối
+bố mẹ
+cha mẹ
+ba mẹ
+mẹ hiền
+mẹ yêu
+chó con
+cún con
+mèo con
+thú cưng
+pet
+dog
+cat
+puppy
+kitten
+chó cỏ
+chó phốc
+chó becgie
+chó alaska
+chó husky
+con lợn nhựa
+heo đất
+thịt lợn
+thịt heo
+mặt mộc
+hạt mè
+mè đen
+mè trắng
+vú sữa
+trái vú sữa
+cây vú sữa
+bưởi năm roi
+trái bưởi
+quả mận
+quả chanh
+quả đào
+thịt gà
+thịt bò
+thịt vịt
+đâm chồi nảy lộc
+chồi non
+hoa nở
+cắt cỏ
+nhổ cỏ
+trồng cây
+làm vườn
+bắn súng sơn
+paintball
+laser tag
+chơi cờ
+cờ vua
+cờ tướng
+xúc xắc
+chơi bài tây
+board game
+giết thời gian
+cười ỉa
+hài hước
+troll vui
+meme
+joke
+funny
+parody
+satire
+sarcasm
+irony
+châm biếm nghệ thuật
+giáo dục giới tính
+sinh học
+y học
+sức khỏe sinh sản
+phụ khoa
+nam khoa
+bác sĩ
+bệnh viện
+thuốc men
+dược phẩm
+trị liệu
+tâm lý
+tâm thần học
+triết học
+xã hội học
+lịch sử
+chính trị học
+luật học
+kinh tế học
+quản trị kinh doanh
+công nghệ thông tin
+khoa học máy tính
+kỹ thuật phần mềm
+hệ thống thông tin
+an toàn thông tin
+mạng máy tính
+trí tuệ nhân tạo
+học máy
+dữ liệu lớn
+điện toán đám mây
+blockchain
+iot
+robotics
+tự động hóa
+điện tử viễn thông
+thiết kế đồ họa
+truyền thông đa phương tiện
+ngôn ngữ anh
+ngôn ngữ nhật
+ngôn ngữ hàn
+ngôn ngữ trung
+kinh doanh quốc tế
+tài chính ngân hàng
+kế toán
+kiểm toán
+marketing
+quản trị khách sạn
+quản trị dịch vụ du lịch và lữ hành
+việt nam
+hà nội
+hồ chí minh
+đà nẵng
+cần thơ
+hải phòng
+quy nhơn
+nha trang
+huế
+bình dương
+đồng nai
+vũng tàu
+thủ đức
+hòa lạc
+nam kỳ khởi nghĩa
+bắc cạn
+bắc kạn
+bắc ninh
+bắc giang
+nam định
+quảng nam
+quảng ninh
+trung bộ
+bắc bộ
+nam bộ
+miền bắc
+miền trung
+miền nam
+việt kiều
+cộng đồng người việt
+hội đồng hương
+hội cựu sinh viên
+alumni club
+alumni association
+đoàn thanh niên
+hội sinh viên
+câu lạc bộ
+f-code
+js club
+fu-guitar
+f-beat
+fu-dance
+vovinam
+fpt edu
+fe
+fpt university da nang
+fpt university hcm
+fpt university can tho
+fpt university quy nhon
+swinburne
+greenwich
+btec
+polytechnic
+fpt school
+fpt software academy
+f-complex
+f-town
+hola park
+fpt telecom
+fpt is
+fpt retail
+fpt shop
+long châu
+fpt smart cloud
+fpt semiconductor
+fpt capital
+fpt securities
+sen đỏ
+sendo
+vnexpress
+ngôi sao
+fpt play
+truyền hình fpt
+foxpay
+ví điện tử
+thanh toán học phí
+học bổng
+tín chỉ
+điểm danh
+fap
+flm
+cms
+lms
+edunext
+coursera
+udemy
+linkedin learning
+github
+gitlab
+bitbucket
+jira
+confluence
+trello
+slack
+microsoft teams
+zoom
+google meet
+discord
+stackoverflow
+reddit
+medium
+dev.to
+freecodecamp
+w3schools
+geeksforgeeks
+baeldung
+spring boot
+react
+angular
+vue
+next.js
+nestjs
+express
+fastapi
+django
+flask
+laravel
+asp.net
+flutter
+react native
+swift
+kotlin
+java
+python
+javascript
+typescript
+c#
+c++
+golang
+rust
+php
+ruby
+sql
+postgresql
+mysql
+mongodb
+redis
+kafka
+rabbitmq
+docker
+kubernetes
+aws
+azure
+gcp
+jenkins
+ci/cd
+agile
+scrum
+kanban
+waterfall
+unit test
+integration test
+e2e test
+api test
+load test
+stress test
+security test
+penetration testing
+bug bounty
+ethical hacking
+white hat
+cybersecurity
+firewall
+antivirus
+encryption
+hashing
+ssl
+tls
+https
+jwt
+oauth2
+sso
+session
+cookie
+cache
+proxy
+reverse proxy
+load balancer
+microservices
+monolith
+rest api
+graphql
+grpc
+websocket
+socket.io
+webhook
+event driven
+domain driven design
+clean architecture
+solid principles
+design patterns
+oop
+functional programming
+reactive programming
+multi threading
+concurrency
+asynchronous
+database migration
+flyway
+liquibase
+orm
+hibernate
+jpa
+mybatis
+dapper
+entity framework
+prisma
+typeorm
+mongoose
+index
+query optimization
+normalization
+denormalization
+transaction
+acid
+nosql
+relational database
+data warehouse
+data lake
+etl
+bi
+power bi
+tableau
+data mining
+machine learning
+deep learning
+nlp
+computer vision
+reinforcement learning
+neural network
+cnn
+rnn
+lstm
+transformer
+bert
+gpt
+llm
+genai
+langchain
+prompt engineering
+fine tuning
+rag
+vector database
+pinecone
+weaviate
+milvus
+chroma
+faiss
+huggingface
+openai
+anthropic
+google gemini
+meta llama
+mistral
+claude
+chatgpt
+copilot
+midjourney
+stable diffusion
+dall-e
+whisper
+sora
+runway
+elevenlabs

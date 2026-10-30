@@ -33,6 +33,17 @@ public class ReportServiceImpl implements ReportService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final ReportMapper reportMapper;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+    /** Constructor phụ phục vụ backward compatibility cho các Unit Test cũ */
+    public ReportServiceImpl(
+            ReportRepository reportRepository,
+            PostRepository postRepository,
+            UserRepository userRepository,
+            ReportMapper reportMapper
+    ) {
+        this(reportRepository, postRepository, userRepository, reportMapper, null);
+    }
 
     @Override
     @Transactional
@@ -64,6 +75,13 @@ public class ReportServiceImpl implements ReportService {
 
         log.info("Đã tạo báo cáo UC24: reportId={}, postId={}, reporterId={}, reason={}",
                 report.getId(), postId, reporter.getId(), report.getReason());
+
+        // Bắn sự kiện bất đồng bộ kích hoạt kiểm duyệt tự động (nếu có publisher)
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new com.alumnect.alumnect_backend.service.moderation.ReportCreatedEvent(
+                    report.getId(), post.getId(), post.getContent(), reason.name(), reporter.getId()));
+        }
+
         return reportMapper.toResponse(report);
     }
 

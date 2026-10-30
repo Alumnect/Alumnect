@@ -11751,6 +11751,117 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "UC123 - Automated Content Moderation & Multilingual Profanity Pipeline",
+      "description": "Các API phục vụ báo cáo bài viết vi phạm, kích hoạt engine kiểm duyệt tự động ngầm, chấm điểm rủi ro AI và giao diện kiểm duyệt của Quản trị viên.",
+      "item": [
+        {
+          "name": "123.1 Gửi báo cáo bài viết vi phạm (Kích hoạt Moderation Event)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"INAPPROPRIATE\",\n  \"description\": \"Bài viết chứa ngôn từ xúc phạm, chửi bậy nghiêm trọng\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/posts/1/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "1",
+                "reports"
+              ]
+            },
+            "description": "Thành viên gửi báo cáo vi phạm bài viết. API lưu bản ghi và bắn sự kiện bất đồng bộ kích hoạt quét từ cấm & chấm điểm rủi ro AI."
+          },
+          "response": []
+        },
+        {
+          "name": "123.2 Admin xem danh sách báo cáo vi phạm (Sắp xếp ưu tiên Risk Score)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reports?status=PENDING&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Admin lấy danh sách báo cáo với đầy đủ điểm số rủi ro AI (aiScore), từ khóa vi phạm (detectedKeywords) và mức độ rủi ro (riskLevel)."
+          },
+          "response": []
+        },
+        {
+          "name": "123.3 Admin cập nhật trạng thái xử lý báo cáo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RESOLVED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/reports/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reports",
+                "1",
+                "status"
+              ]
+            },
+            "description": "Admin cập nhật trạng thái báo cáo sang RESOLVED hoặc DISMISSED sau khi kiểm duyệt thủ công."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,1341 @@
+# English Profanity List
+# Common abusive, hate speech, vulgar, and obscene terms
+fuck
+fucker
+fucking
+fucked
+fck
+f*ck
+motherfucker
+motherfucking
+shit
+bullshit
+shitting
+shitty
+sh*t
+bitch
+bitches
+bitching
+b*tch
+asshole
+ass
+bastard
+cunt
+dick
+dickhead
+pussy
+cock
+cocksucker
+whore
+slut
+nigger
+nigga
+faggot
+fag
+retard
+retarded
+dumbass
+dipshit
+jackass
+douchebag
+scumbag
+prick
+twat
+wanker
+blowjob
+handjob
+dildo
+orgasm
+porn
+pornography
+porno
+hentai
+nude
+nudes
+naked
+masturbate
+masturbation
+sex
+sexy
+anal
+penetration
+suicide
+kill yourself
+kys
+die
+hang yourself
+terrorist
+terrorism
+bomb
+bombing
+nazi
+hitler
+racist
+scam
+scammer
+fraud
+cheat
+cheater
+phishing
+ponzi
+hack
+hacker
+cracked
+malware
+virus
+trojan
+ransomware
+ddos
+exploit
+bypass
+casino
+gambling
+betting
+lottery
+drugs
+cocaine
+heroin
+weed
+cannabis
+meth
+ecstasy
+overdose
+prostitute
+prostitution
+escort
+rape
+rapist
+molest
+molester
+pedophile
+pedophilia
+childporn
+gore
+bloody
+behead
+beheading
+murder
+murderer
+assassinate
+genocide
+slaughter
+torture
+torturing
+abuse
+abusive
+harass
+harassment
+threat
+threatening
+extort
+extortion
+blackmail
+blackmailing
+hate speech
+white power
+neo-nazi
+fascist
+extremist
+jihadi
+isis
+al-qaeda
+taliban
+weapon
+firearm
+explosive
+gun
+rifle
+ammo
+ammunition
+poison
+cyanide
+anthrax
+toxic
+violence
+violent
+bloodshed
+massacre
+hostage
+kidnap
+kidnapping
+human trafficking
+smuggle
+smuggling
+contraband
+counterfeit
+fake money
+money laundering
+bribe
+bribery
+corruption
+extravagant scam
+crypto scam
+rug pull
+drainer
+stealer
+credential harvester
+botnet
+spammer
+spamming
+doxx
+doxxing
+leak
+leaked
+revenge porn
+deepfake
+voyeur
+voyeurism
+exhibitionist
+incest
+necrophilia
+bestiality
+zoophilia
+sadism
+masochism
+sadomasochism
+bdsm slave
+sex slave
+traffic victim
+illegal immigration
+organ trade
+body parts
+black market
+dark web
+silk road
+tor hidden
+stolen card
+carding
+dump card
+cvv
+fullz
+bank fraud
+wire fraud
+identity theft
+impersonate
+impersonation
+fake identity
+forgery
+fake degree
+diploma mill
+academic fraud
+exam leak
+exam leak cheat
+ghost writing
+cheat service
+ddos booter
+stresser
+ip booter
+swatting
+swat
+call swat
+bomb threat
+fake bomb
+fake threat
+arson
+arsonist
+vandalism
+riot
+rioting
+looting
+anarchist
+guerrilla
+insurgent
+cartel
+narco
+drug cartel
+mafia
+gang
+gangster
+triad
+yakuza
+syndicate
+underworld
+hitman
+contract killer
+bounty hunter
+illegal arms
+illegal weapons
+ghost gun
+untraceable gun
+silencer
+suppressor
+bump stock
+machine gun
+pipe bomb
+molotov
+ied
+car bomb
+suicide vest
+chemical weapon
+biological weapon
+dirty bomb
+radiation
+radioactive material
+anthrax letter
+ricin
+fentanyl
+carfentanil
+flakka
+krokodil
+bath salts
+spice drug
+ghb
+rohypnol
+date rape drug
+roofie
+chloroform
+knockout drop
+poisoning
+laced
+laced drug
+cut drug
+needle sharing
+drug overdose
+narcan
+naloxone
+rehab escape
+mental asylum
+insane asylum
+crazy asylum
+psycho killer
+serial killer
+mass shooter
+school shooter
+active shooter
+rampage
+spree killer
+sniper attack
+drive-by shooting
+gang war
+turf war
+mob hit
+execution
+lynching
+public execution
+stoning
+crucifixion
+decapitation
+mutilation
+dismemberment
+corpse
+dead body
+human remains
+cannibal
+cannibalism
+flesh eater
+vampirism
+grave robbing
+desecration
+sacrilege
+blasphemy
+curse
+witchcraft
+satanic ritual
+blood sacrifice
+human sacrifice
+cult
+doomsday cult
+suicide cult
+extremist group
+paramilitary
+militia
+separatist
+rebel group
+warlord
+mercenary
+private army
+coup
+coup detat
+regime change
+treason
+sedition
+insurrection
+mutiny
+sabotage
+espionage
+spy
+spying
+wiretapping
+eavesdropping
+bugging
+surveillance state
+police brutality
+extrajudicial killing
+death squad
+torture chamber
+concentration camp
+gulag
+forced labor
+slave labor
+child labor
+sweatshop
+human exploitation
+debt bondage
+indentured servitude
+forced marriage
+child marriage
+honor killing
+female genital mutilation
+fgm
+acid attack
+honor violence
+domestic violence
+wife beating
+child abuse
+elder abuse
+animal cruelty
+dog fighting
+cock fighting
+poaching
+illegal hunting
+ivory trade
+endangered species
+shark finning
+deforestation
+illegal logging
+illegal mining
+toxic dumping
+pollution crime
+eco-terrorism
+bio-piracy
+patent theft
+trade secret theft
+insider trading
+market manipulation
+pump and dump
+ponzi scheme
+pyramid scheme
+advance fee fraud
+419 scam
+nigerian prince
+romance scam
+catfishing
+pig butchering
+crypto drainer
+fake exchange
+fake airdrop
+phishing link
+malicious link
+trojan horse
+keylogger
+spyware
+adware
+rootkit
+zero-day exploit
+backdoor
+logic bomb
+time bomb virus
+worm virus
+boot sector virus
+ransom demand
+bitcoin ransom
+monero extortion
+darknet market
+hidden service
+onion link
+deep web forum
+leaked database
+data breach
+doxxed info
+ssn leak
+credit card leak
+passport leak
+compromised account
+hacked account
+stolen credentials
+brute force attack
+sql injection
+xss attack
+csrf attack
+rce exploit
+privilege escalation
+sandbox escape
+jailbreak exploit
+reverse shell
+c2 server
+command and control
+botnet master
+ddos attack
+udp flood
+syn flood
+http flood
+dns amplification
+ntp amplification
+slowloris
+traffic exhaustion
+server takedown
+defacement
+website defacement
+dns poisoning
+arp spoofing
+man in the middle
+mitm attack
+session hijacking
+cookie theft
+credential stuffing
+password spraying
+dictionary attack
+rainbow table
+hash cracking
+gpu cracking
+crypto mining malware
+cryptojacking
+drive-by download
+watering hole attack
+spear phishing
+whaling attack
+business email compromise
+bec fraud
+ceo fraud
+invoice fraud
+fake invoice
+fake receipt
+refund scam
+tech support scam
+fake virus alert
+remote access scam
+anydesk scam
+teamviewer scam
+call center scam
+indian call center scam
+robocall
+caller id spoofing
+sim swap
+sim swapping
+otp bypass
+2fa bypass
+sms interception
+ss7 exploit
+fake base station
+imsi catcher
+stingray device
+wiretap
+phone clone
+eavesdrop
+stalkerware
+spy app
+unauthorized access
+unauthorized intrusion
+data exfiltration
+data theft
+confidential leak
+classified leak
+whistleblower retaliation
+witness tampering
+jury tampering
+obstruction of justice
+perjury
+false testimony
+frame up
+planted evidence
+fabricated evidence
+tampered evidence
+evidence destruction
+cover up
+hush money
+non disclosure breach
+gag order breach
+contempt of court
+bail jumping
+fugitive
+escaped convict
+prison break
+jailbreak
+wanted poster
+interpol red notice
+extradition
+interpol fugitive
+most wanted
+bounty on head
+dead or alive
+assassin for hire
+hitman service
+dark web hitman
+contract murder
+murder for hire
+poison assassination
+sniper assassination
+car bomb hit
+gangland execution
+mob hitman
+mafia boss
+cartel boss
+drug lord
+kingpin
+smuggler kingpin
+human trafficker
+pimp
+pimping
+madam
+brothel
+illegal massage
+red light district
+street walker
+call girl
+sex worker abuse
+unpaid wages
+labor trafficking
+forced prostitution
+sex tourism
+child sex tourism
+pedophile ring
+predator
+online predator
+grooming
+child grooming
+solicitation of minor
+underage solicitation
+statutory rape
+non consensual
+without consent
+drugged drink
+spiked drink
+date rape
+sexual assault
+sexual battery
+indecent exposure
+public masturbation
+groping
+inappropriate touching
+unwanted advances
+quid pro quo harassment
+hostile environment
+sex discrimination
+gender violence
+hate crime
+hate motivated
+cross burning
+swastika graffiti
+vandalized church
+vandalized mosque
+vandalized synagogue
+cemetery desecration
+hate group
+supremacist
+supremacy
+separatism
+ethnic cleansing
+holocaust denial
+pogrom
+sectarian violence
+religious violence
+communal riot
+mob violence
+vigilante
+vigilantism
+lynch mob
+kangaroo court
+street justice
+extrajudicial punishment
+summary execution
+firing squad
+hanging
+electric chair
+gas chamber
+lethal injection
+death penalty evasion
+fugitive from justice
+manhunt
+high speed chase
+police pursuit
+resisting arrest
+assaulting officer
+cop killer
+police ambush
+sniper on roof
+active shooter alert
+lockdown
+shelter in place
+evacuation order
+curfew violation
+martial law
+civil unrest
+anarchy
+lawlessness
+looter
+looting spree
+smash and grab
+armed robbery
+heist
+bank heist
+vault breach
+safe cracking
+armored car robbery
+jewelry heist
+art theft
+museum robbery
+stolen art
+blood diamonds
+conflict minerals
+illegal timber
+wildlife smuggling
+exotic animal trade
+tiger bone
+rhino horn
+pangolin scale
+bear bile
+shark fin
+whale meat
+poached elephant
+poached rhino
+wildlife crime
+environmental crime
+toxic waste dumping
+oil spill coverup
+illegal hazardous waste
+nuclear waste dumping
+contaminated water
+water poisoning
+food tampering
+cyanide in food
+laced medicine
+fake pharmaceuticals
+counterfeit drugs
+tainted medicine
+black market organs
+kidney trade
+blood farm
+human harvesting
+organ harvesting
+unethical human experimentation
+medical torture
+unethical trials
+biological hazard
+pathogen leak
+bioterrorism
+smallpox weapon
+ebola weapon
+anthrax spore
+plague weapon
+botulinum toxin
+sarin gas
+vx nerve agent
+tabun
+soman
+novichok
+mustard gas
+chlorine gas
+chemical weapon attack
+wmd
+weapons of mass destruction
+nuclear proliferation
+dirty bomb plot
+suitcase nuke
+stolen warhead
+uranium enrichment
+plutonium theft
+reactor sabotage
+critical infrastructure attack
+power grid cyberattack
+water plant hack
+air traffic control hack
+pipeline cyberattack
+dam sabotage
+railway sabotage
+bridge bombing
+tunnel bombing
+airport attack
+train bombing
+subway bombing
+stadium bombing
+mass casualty event
+disaster zone
+famine creation
+scorched earth
+war crime
+crimes against humanity
+atrocity
+atrocities
+civilian slaughter
+mass grave
+unmarked grave
+ethnic genocide
+forced relocation
+internment camp
+labor camp
+death camp
+gas van
+mass hanging
+beheading video
+execution video
+snuff film
+torture video
+dark web live stream
+red room
+torture room
+snuff stream
+illegal live stream
+underground fight
+bare knuckle death match
+dog fight death match
+illegal street race
+street racing fatality
+reckless driving death
+hit and run
+vehicular manslaughter
+drunk driving crash
+dui fatality
+street violence
+knife crime
+stabbing
+stabbed to death
+blade attack
+machete attack
+slash throat
+throat slit
+gutted
+disemboweled
+impaled
+beaten to death
+bludgeoned
+crowbar attack
+baseball bat assault
+brass knuckles
+switchblade
+butterfly knife
+combat knife
+trench knife
+dagger
+machete
+cleaver
+meat hook
+chainsaw attack
+axe murder
+hammer attack
+acid splash
+caustic burn
+third degree burn
+firebombing
+petrol bomb
+arson attack
+building inferno
+trapped in fire
+suffocation
+strangulation
+asphyxiation
+choking death
+drowning
+thrown overboard
+waterboarding
+sleep deprivation
+sensory deprivation
+white room torture
+solitary confinement abuse
+electric shock torture
+fingernail pulling
+tooth extraction torture
+bone breaking
+branding iron
+mutilated body
+burned beyond recognition
+autopsy report
+coroner inquest
+homicide investigation
+murder scene
+crime scene
+forensic evidence
+dna blood match
+fingerprint match
+ballistics match
+bullet casing
+spent cartridge
+silenced pistol
+scoped rifle
+sawed off shotgun
+automatic weapon
+assault rifle
+high capacity magazine
+ghost gun kit
+3d printed gun
+polymer80
+unregistered firearm
+defaced serial number
+illegal firearm modification
+auto sear
+glock switch
+lightning link
+drop in auto sear
+bump stock device
+high caliber rifle
+armor piercing round
+hollow point bullet
+incendiary round
+tracer round
+grenade launcher
+rocket propelled grenade
+rpg
+stinger missile
+anti tank missile
+mortars
+artillery shell
+cluster munition
+landmine
+antipersonnel mine
+unexploded ordnance
+uxo
+improvised explosive
+c4 explosive
+semtex
+tnt
+dynamite
+anfo
+fertilizer bomb
+pressure cooker bomb
+nail bomb
+shrapnel bomb
+pipe bomb timer
+detonator
+blasting cap
+remote detonator
+cell phone detonator
+tripwire
+booby trap
+punji stick
+bear trap
+hidden spike
+mantrap
+deadfall
+ambush kill zone
+crossfire
+kill zone
+friendly fire coverup
+military coverup
+black ops
+black budget
+clandestine operation
+false flag operation
+staged attack
+disinformation campaign
+propaganda warfare
+psychological warfare
+psyops
+troll farm
+sock puppet network
+state sponsored bot
+foreign election interference
+voter suppression
+ballot stuffing
+tampered voting machine
+election fraud
+coup attempt
+storming parliament
+capitol insurrection
+government overthrow
+subversion
+agent provocateur
+saboteur
+fifth column
+deep state conspiracy
+conspiracy plot
+assassination plot
+poison plot
+kidnap plot
+ransom plot
+extortion racket
+protection racket
+mob shakedown
+loan sharking
+usury
+predatory lending
+payday loan shark
+debt collection violence
+kneecapping
+broken legs
+broken fingers
+threatened family
+hostage negotiation
+ransom demand note
+proof of life
+kidnap victim
+safe house
+stash house
+chop shop
+drug den
+opium den
+crack house
+meth lab
+pill mill
+fentanyl pressing
+pill press machine
+counterfeit pill
+fake oxycodone
+fake xanax
+fentanyl laced
+overdose death
+needle park
+open air drug market
+street dealer
+corner boy
+lookout
+runner
+mule
+drug mule
+body packer
+swallowed balloon
+internal smuggling
+border smuggling
+coyote smuggler
+human cargo
+locked container
+shipping container death
+suffocated migrants
+desert crossing fatality
+drowned crossing
+capsized migrant boat
+human trafficking syndicate
+slave auction
+bought and sold
+chattel slavery
+bonded labor
+brick kiln slaves
+sweatshop slaves
+factory fire victims
+padlocked doors
+escape prevention
+forced confinement
+false imprisonment
+kidnapped in basement
+chained to wall
+padlocked room
+dungeon captive
+captive abuse
+starvation diet
+dehydration torture
+forced feeding
+unconscious victim
+drugged captive
+memory loss drug
+scopolamine
+burundanga
+devils breath
+zombie drug
+mind control
+cult brainwashing
+deprogramming
+psychological abuse
+gaslighting
+coercive control
+narcissistic abuse
+emotional torment
+mental breakdown
+nervous breakdown
+psychiatric hold
+involuntary commitment
+suicide pact
+suicide note
+suicidal thoughts
+self harm
+cutting wrists
+razor cuts
+scarring
+burning self
+overdosing on purpose
+cry for help
+fatal leap
+train jump
+bridge jump
+toxic ingestion
+exhaust inhalation
+carbon monoxide poisoning
+asphyxiation bag
+exit bag
+assisted dying abuse
+forced euthanasia
+death panel
+mercy killing coverup
+organ harvesting clinic
+body broker
+illegal cadaver sales
+stolen corpse
+morgue theft
+grave robbery
+dissected illegally
+medical malpractice coverup
+surgical death
+botched surgery
+unlicensed doctor
+back alley clinic
+illegal abortion clinic
+unsafe surgery
+fake medical credentials
+impostor surgeon
+bogus cancer cure
+snake oil
+toxic elixir
+poisonous supplement
+lead tainted
+heavy metal poisoning
+mercury poisoning
+arsenic in well
+cyanide in drink
+polonium poisoning
+nerve agent assassination
+novichok door handle
+umbrella poison tip
+radioactive tea
+window fall
+defenestration
+mysterious disappearance
+erased from history
+purged official
+secret prison
+black site
+extraordinary rendition
+torture flight
+guantanamo abuse
+waterboarded prisoner
+orange jumpsuit
+hooded prisoner
+leash abuse
+sleep deprived prisoner
+hypothermia torture
+sound torture
+loud music torture
+dog intimidation
+mock execution
+threat of execution
+phantom execution
+staged firing squad
+empty chamber click
+russian roulette
+forced gambling
+death game
+gladiator fight
+fight club death
+underground blood sport
+illegal pit fight
+street brawl fatality
+bar fight manslaughter
+sucker punch death
+one punch homicide
+brain hemorrhage assault
+skull fracture
+broken neck
+spinal cord severance
+paralyzed from beating
+coma from assault
+vegetative state
+brain dead victim
+life support pulled
+murder inquiry
+detective investigation
+cold case homicide
+unsolved murder
+serial predator
+unidentified remains
+jane doe
+john doe
+unmarked grave site
+body dump site
+shallow grave
+woodland burial
+weighted body in river
+concrete shoes
+barrel burial
+acid bath disposal
+lime pit
+burned remains
+cremated evidence
+ash scattering
+evidence burned
+hard drive shredded
+phone submerged
+wiped server
+encrypted logs
+tampered security camera
+disabled alarm
+cut phone lines
+signal jammer
+lockout
+break in
+home invasion
+armed burglary
+masked intruder
+crowbar entry
+window smash
+bedroom intruder
+assault in bed
+night stalker
+prowler
+peeping tom
+window peeper
+hidden camera bedroom
+hidden camera bathroom
+spy cam shower
+voyeur footage
+airdrop harassment
+bluetooth stalking
+airtag tracked
+gps tracker on car
+car bugged
+tapped telephone
+stalker outside
+prowler in yard
+creeping in darkness
+following home
+cornered in alley
+dragged into van
+screaming for help
+mouth covered
+zip tied hands
+duct tape mouth
+thrown in trunk
+trunk ride
+abandoned warehouse
+remote cabin
+derelict building
+secluded woods
+off the grid hideout
+no cell service
+nowhere to run
+trapped victim
+crying for mercy
+begging for life
+no remorse
+cold blooded
+remorseless killer
+psychopath
+sociopath
+deranged individual
+maniac
+crazed gunman
+unhinged attacker
+lone wolf terrorist
+radicalized youth
+extremist manifesto
+manifesto upload
+hate manifesto
+mass casualty plan
+blueprint attack
+schematics bomb
+reconnaissance target
+soft target attack
+shopping mall shooting
+nightclub massacre
+concert attack
+festival bombing
+parade vehicle attack
+truck ramming
+pedestrian mowing
+crowd vehicular attack
+suicide vehicle bomb
+vbied
+checkpoint breach
+perimeter breach
+security bypass
+counter terror operation
+swat breach
+flashbang entry
+sniper neutralizes
+hostage rescue
+tactical assault
+hostage taker killed
+standoff ends
+cordon search
+bomb disposal robot
+controlled detonation
+blast radius
+secondary device
+timed explosion
+first responder trap
+booby trapped body
+ambulance ambush
+hospital attack
+medical personnel targeted
+red cross violation
+geneva convention violation
+war atrocity
+summary execution prisoner
+pow torture
+starved pow
+pow slave labor
+illegal weapon used
+chemical warhead fired
+white phosphorus civilian
+cluster bomb urban
+barrel bomb neighborhood
+carpet bombing city
+air strike on school
+air strike on hospital
+civilian target hit
+collateral damage coverup
+denied strike
+unconfirmed casualties
+civilian body count
+mass casualty count
+triage overwhelmed
+morgue overflowing
+refrigerated trucks bodies
+mass burial trenches
+unidentified victims
+bereaved families
+grieving mother
+orphaned children
+war orphans
+child soldiers
+forced conscription
+gun to head recruit
+brainwashed child army
+guerrilla training camp
+jungle insurgent camp
+mountain hideout
+rebel stronghold
+bunker buster
+underground tunnel system
+smuggling tunnels
+cross border contraband
+weapon pipeline
+black market arms deal
+cargo plane weapons
+cargo ship seizure
+customs intercept
+coast guard interception
+high seas boarding
+pirate attack
+somali pirates
+vessel hijacking
+crew held hostage
+ransom negotiation
+pirate mother ship
+armed boarding party
+maritime terrorism
+port security breach
+container bomb
+dirty bomb cargo
+customs corruption
+bribed port official
+smuggled nuclear trigger
+proliferation network
+rogue scientist
+sold state secrets
+treasonous diplomat
+turncoat agent
+double agent exposed
+mole in agency
+counter intelligence sweep
+polygraph failure
+traitor caught
+espionage trial
+closed court trial
+treason conviction
+life in supermax
+solitary confinement for life
+adx florence
+maximum security facility
+death row inmate
+final appeal denied
+death warrant signed
+execution chamber ready
+last meal requested
+final statement
+curtain drawn
+lethal cocktail injected
+flatline
+pronounced dead
+prison hearse
+unclaimed body
+potters field burial
+nameless grave
+forgotten convict
+history erased
+damnatio memoriae
