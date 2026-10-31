@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { KeyboardAvoidingView, Platform, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { FlashList } from '@shopify/flash-list'
 import { useLocalSearchParams } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -23,6 +24,7 @@ function thread(items: Comment[]) {
 
 export default function PostDetailScreen() {
   const t = useTheme()
+  const insets = useSafeAreaInsets()
   const qc = useQueryClient()
   const { id } = useLocalSearchParams<{ id: string }>()
   const me = useAuthStore((s) => s.user)
@@ -79,7 +81,11 @@ export default function PostDetailScreen() {
   return (
     <Screen bg={t.card}>
       <Header title={`Bài viết của ${post.data.author}`} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'android' ? insets.top : 0}
+      >
         <FlashList
           data={items}
           keyExtractor={(c) => c.id}
