@@ -351,7 +351,7 @@ function AnswerBubble({
             <div className="rounded-2xl bg-surface-2 p-3">
               <div className="flex items-center justify-between text-xs text-text-subtle mb-1">
                 <span>
-                  {t('forum.replyingTo')} <strong className="text-primary-solid">@{a.author}</strong>
+                  <strong className="text-primary-solid">{t('forum.replyingTo', { name: a.author })}</strong>
                 </span>
                 <button aria-label={t('common.close')} type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
                   <X size={13} />

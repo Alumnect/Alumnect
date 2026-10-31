@@ -16,8 +16,8 @@ interface MentoringDealCardProps {
   isActive?: boolean
 }
 
-function formatDateTime(value?: string | null) {
-  if (!value) return t('mentoring.notAvailableShort')
+function formatDateTime(value: string | null | undefined, emptyLabel: string) {
+  if (!value) return emptyLabel
   const d = new Date(value)
   return Number.isNaN(d.getTime())
     ? value
@@ -26,6 +26,7 @@ function formatDateTime(value?: string | null) {
 
 /** Tóm tắt một thỏa thuận (UC104): trạng thái, người cùng thỏa thuận, giá, hạn chót và thao tác tiếp theo. */
 export function MentoringDealCard({ deal, onViewDetail, onOpenChat, isActive = false }: MentoringDealCardProps) {
+  const { t } = useTranslation()
   const currentUserId = Number(useAuthStore((s) => s.user?.id)) || 0
   const iAmMentor = currentUserId === deal.mentorId
   const counterpart = iAmMentor
@@ -66,23 +67,23 @@ export function MentoringDealCard({ deal, onViewDetail, onOpenChat, isActive = f
         <div className="rounded-xl bg-surface-2 px-3 py-2 dark:bg-white/[0.04]">
           <dt className="flex items-center gap-1 text-text-subtle">
             <Wallet className="h-3.5 w-3.5" />
-            Giá
+            {t('mentoring.dealCardPrice')}
           </dt>
           <dd className="mt-0.5 font-semibold text-text">{formatVnd(deal.agreedPrice)}</dd>
         </div>
         <div className="rounded-xl bg-surface-2 px-3 py-2 dark:bg-white/[0.04]">
           <dt className="flex items-center gap-1 text-text-subtle">
             <CalendarClock className="h-3.5 w-3.5" />
-            Hạn chót
+            {t('mentoring.dealCardDeadline')}
           </dt>
-          <dd className="mt-0.5 font-semibold text-text">{formatDateTime(deal.deadline)}</dd>
+          <dd className="mt-0.5 font-semibold text-text">{formatDateTime(deal.deadline, t('mentoring.notAvailableShort'))}</dd>
         </div>
       </dl>
 
       <div className="mt-auto flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
         {openChat && !deal.canPay && (
           <MentoringActionButton icon={<MessagesSquare className="h-3.5 w-3.5" />} onClick={openChat}>
-            Trao đổi
+            {t('mentoring.dealCardDiscuss')}
           </MentoringActionButton>
         )}
         {deal.taskId ? (
@@ -92,7 +93,7 @@ export function MentoringDealCard({ deal, onViewDetail, onOpenChat, isActive = f
             leftIcon={<Briefcase className="h-3.5 w-3.5" />}
             className="h-8 rounded-lg px-3 text-xs"
           >
-            Mở Task
+            {t('mentoring.dealCardOpenTask')}
           </ButtonLink>
         ) : deal.canPay ? (
           <>
@@ -108,7 +109,7 @@ export function MentoringDealCard({ deal, onViewDetail, onOpenChat, isActive = f
           </>
         ) : (
           <MentoringActionButton icon={<ArrowRight className="h-3.5 w-3.5" />} onClick={() => onViewDetail(deal)}>
-            Chi tiết
+            {t('mentoring.dealCardDetail')}
           </MentoringActionButton>
         )}
       </div>

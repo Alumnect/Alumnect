@@ -1,6 +1,6 @@
 import i18n from '@/i18n'
 
-function createLocalizedMap(vi: Record<string, string>, en: Record<string, string>): Record<string, string> {
+export function createLocalizedMap(vi: Record<string, string>, en: Record<string, string>): Record<string, string> {
   return new Proxy(vi, {
     get(target, prop: string | symbol) {
       if (typeof prop !== 'string') return Reflect.get(target, prop)

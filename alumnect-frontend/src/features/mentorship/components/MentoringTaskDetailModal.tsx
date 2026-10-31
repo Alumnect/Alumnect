@@ -23,6 +23,7 @@ interface MentoringTaskDetailModalProps {
  * kèm liên kết truy ngược Request → Deal → Chat for Task và điều hướng sang trang quản lý toàn diện UC106 & UC107.
  */
 export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringTaskDetailModalProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: detail, isLoading, error } = useTaskDetail(taskId ?? undefined)
 

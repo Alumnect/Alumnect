@@ -73,6 +73,7 @@ export function MentoringTicketDiscussionModal({
         <div className="p-4 flex-1 overflow-hidden">
           <MentoringTicketDiscussionThread
             ticketId={ticket.id}
+            ticketCode={ticket.ticketCode}
             ticketStatus={ticket.status}
             currentRole={currentRole}
             studentName={studentName}

@@ -75,7 +75,20 @@
     "emptyList": "Empty list",
     "at": "at",
     "you": "you",
-    "free": "Free"
+    "free": "Free",
+    "add": "Add",
+    "clearFilters": "Clear filters",
+    "errorOccurred": "An error occurred",
+    "loadMore": "Load more",
+    "loadingMore": "Loading more...",
+    "other": "Other",
+    "reloadPage": "Reload page",
+    "sending": "Sending...",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "goHome": "Back to Home",
+    "errorBoundaryTitle": "Something went wrong while loading this page",
+    "errorBoundaryDesc": "The system ran into an unexpected error while displaying this content. You can try reloading the page or going back to the home page."
   },
   "nav": {
     "feed": "Feed",
@@ -319,7 +332,11 @@
     "viewMoreComments": "View more comments",
     "newPosition": "New Position",
     "companyFallback": "company",
-    "locationPlaceholder": "Hanoi, Remote..."
+    "locationPlaceholder": "Hanoi, Remote...",
+    "imageIndex": "Image {{index}}",
+    "noComments": "No comments yet.",
+    "sendComment": "Send comment",
+    "viewAllComments": "View all {{count}} comments"
   },
   "event": {
     "pageTitle": "Events & Meetups",
@@ -543,7 +560,9 @@
     "changeFile": "Change file",
     "clickToUpload": "Click to upload image (JPG, PNG)",
     "proofHint": "Photo of diploma or transcript",
-    "uploadProofError": "Error occurred while uploading image"
+    "uploadProofError": "Error occurred while uploading image",
+    "namePlaceholder": "Enter your full name...",
+    "connectingGoogle": "Connecting to Google..."
   },
   "notification": {
     "title": "Notifications",
@@ -3053,7 +3072,28 @@
     "acceptInviteSuccess": "Accepted group invitation successfully!",
     "acceptInviteError": "Unable to accept invitation",
     "rejectInviteSuccess": "Declined group invitation",
-    "rejectInviteError": "Unable to decline invitation"
+    "rejectInviteError": "Unable to decline invitation",
+    "mentor": "Mentor",
+    "roleMentor": "Mentor",
+    "roleStudent": "Student",
+    "student": "Student",
+    "taskDetail": "Task details",
+    "taskLabel": "Task",
+    "dealCardPrice": "Price",
+    "dealCardDeadline": "Deadline",
+    "dealCardDiscuss": "Discuss",
+    "dealCardOpenTask": "Open Task",
+    "dealCardDetail": "Details",
+    "alumniOnlyTitle": "Feature for alumni",
+    "viewTaskBtn": "View Task",
+    "taskHistoryTitle": "Progress log & task history (Audit Trail)",
+    "taskHistoryEmpty": "No events have been recorded for this task yet.",
+    "disputeLockedNotice": "The Task is locked while the Administrators review the dispute. You can discuss and add evidence.",
+    "settlementStoppedNotice": "The Task has stopped. The Administrators are paying out and refunding according to the agreement.",
+    "evidenceModalTitle": "Dispute evidence",
+    "evidenceModalSubtitle": "Add documents & proof for the Administrators' review",
+    "evidenceFileNamePlaceholder": "e.g. handover-agreement.pdf",
+    "invalidFileUrl": "The file link must be a valid URL (e.g. https://...)."
   },
   "profile": {
     "title": "Profile",
@@ -3216,5 +3256,9 @@
     "groupChatMembers": "Group chat • {{count}} members",
     "recentChat": "Recent chat",
     "alumnectMember": "Alumnect Member"
+  },
+  "group": {
+    "private": "Private",
+    "public": "Public"
   }
 }

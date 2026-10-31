@@ -26,6 +26,7 @@ function formatTimestamp(value?: string | null) {
  * Mentor đồng ý trao đổi chưa phải là thỏa thuận: Học viên nhắn tin để thống nhất, Task chỉ tạo sau khi chốt Deal và thanh toán.
  */
 export function MentorResponseCard({ response }: MentorResponseCardProps) {
+  const { t } = useTranslation()
   const profilePath = `/app/mentoring/mentors/${response.mentorProfileId}`
   const isAccepted = response.responseStatus === 'ACCEPTED'
   const fields = response.supportedFields ?? []

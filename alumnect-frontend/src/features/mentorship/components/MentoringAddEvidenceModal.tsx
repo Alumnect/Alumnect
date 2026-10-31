@@ -15,6 +15,21 @@ import {
 import { Button, DialogFrame } from '@/components/ui'
 import { useTicketEvidences, useAddTicketEvidence } from '../hooks/useMentoringTickets'
 import type { MentoringDisputeTicket } from '../model/mentoringTaskTypes'
+import { MENTORING_TICKET_STATUS_LABELS } from '../model/mentoringFlowLabels'
+
+/** Mã lý do khiếu nại (do form tạo ticket lưu) → khóa dịch. Lý do tự nhập (OTHER) giữ nguyên nội dung. */
+const DISPUTE_REASON_KEYS: Record<string, string> = {
+  SUBSTANDARD_DELIVERABLE: 'mentoring.reasonSubstandard',
+  MISSED_DEADLINE: 'mentoring.reasonMissedDeadline',
+  UNRESPONSIVE: 'mentoring.reasonUnresponsive',
+  UNREASONABLE_DEMAND: 'mentoring.reasonUnreasonableDemand',
+  DISAGREE_SETTLEMENT: 'mentoring.reasonDisagreeSettlement',
+  STUDENT_UNRESPONSIVE: 'mentoring.reasonStudentUnresponsive',
+  OUT_OF_SCOPE_DEMAND: 'mentoring.reasonOutOfScopeDemand',
+  UNPAID_ADDITIONAL_FEE: 'mentoring.reasonUnpaidAdditionalFee',
+  STUDENT_MISCONDUCT: 'mentoring.reasonStudentMisconduct',
+  OTHER: 'mentoring.reasonOther',
+}
 
 interface MentoringAddEvidenceModalProps {
   isOpen: boolean
@@ -34,6 +49,7 @@ export function MentoringAddEvidenceModal({
   onSuccess,
 }: MentoringAddEvidenceModalProps) {
   const { t } = useTranslation()
+  const disputeReasonLabel = (code: string) => (DISPUTE_REASON_KEYS[code] ? t(DISPUTE_REASON_KEYS[code]) : code)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [fileUrl, setFileUrl] = useState('')
@@ -71,7 +87,7 @@ export function MentoringAddEvidenceModal({
     try {
       new URL(fileUrl.trim())
     } catch {
-      setErrorMsg('Đường dẫn tệp phải là một URL hợp lệ (ví dụ: https://...).')
+      setErrorMsg(t('mentoring.invalidFileUrl'))
       return
     }
 
@@ -131,14 +147,14 @@ export function MentoringAddEvidenceModal({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-bold text-text">
-                  Bằng chứng tranh chấp
+                  {t('mentoring.evidenceModalTitle')}
                 </h3>
                 <span className="text-xs px-2 py-0.5 font-mono font-medium rounded bg-warning-soft text-warning">
                   {ticket.ticketCode}
                 </span>
               </div>
               <p className="text-xs text-text-subtle">
-                Bổ sung tài liệu & chứng từ phục vụ Ban Quản Trị phân xử
+                {t('mentoring.evidenceModalSubtitle')}
               </p>
             </div>
           </div>
@@ -157,10 +173,10 @@ export function MentoringAddEvidenceModal({
           <div className="p-4 bg-surface-2 rounded-xl border border-border space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">
-                Tiêu đề khiếu nại
+                {t('mentoring.disputeTitleLabel')}
               </span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-warning-soft text-warning">
-                {ticket.status}
+                {MENTORING_TICKET_STATUS_LABELS[ticket.status] ?? ticket.status}
               </span>
             </div>
             <p className="text-sm font-semibold text-text">
@@ -169,7 +185,7 @@ export function MentoringAddEvidenceModal({
             {ticket.disputeReason && (
               <p className="text-xs text-text-muted">
                 <span className="font-medium text-text-muted">{t('mentoring.reasonLabel')} </span>
-                {ticket.disputeReason}
+                {disputeReasonLabel(ticket.disputeReason)}
               </p>
             )}
           </div>
@@ -321,7 +337,7 @@ export function MentoringAddEvidenceModal({
                       type="text"
                       value={fileName}
                       onChange={(e) => setFileName(e.target.value)}
-                      placeholder="VD: hop-dong-ban-giao.pdf"
+                      placeholder={t('mentoring.evidenceFileNamePlaceholder')}
                       className="w-full text-xs px-3 py-2 bg-surface border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
@@ -336,12 +352,12 @@ export function MentoringAddEvidenceModal({
                     {addEvidenceMutation.isPending ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Đang nộp...
+                        {t('mentoring.submittingEvidence')}
                       </>
                     ) : (
                       <>
                         <Send className="w-3.5 h-3.5" />
-                        Nộp bằng chứng
+                        {t('mentoring.submitEvidenceBtn')}
                       </>
                     )}
                   </Button>
@@ -362,7 +378,7 @@ export function MentoringAddEvidenceModal({
             onClick={onClose}
             className="text-xs px-4 py-1.5"
           >
-            Đóng
+            {t('common.close')}
           </Button>
         </div>
       </DialogFrame>

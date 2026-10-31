@@ -75,7 +75,20 @@
     "emptyList": "Danh sách trống",
     "at": "tại",
     "you": "bạn",
-    "free": "Miễn phí"
+    "free": "Miễn phí",
+    "add": "Thêm",
+    "clearFilters": "Xóa bộ lọc",
+    "errorOccurred": "Có lỗi xảy ra",
+    "loadMore": "Tải thêm",
+    "loadingMore": "Đang tải thêm...",
+    "other": "Khác",
+    "reloadPage": "Tải lại trang",
+    "sending": "Đang gửi...",
+    "previousPage": "Trang trước",
+    "nextPage": "Trang sau",
+    "goHome": "Về Trang chủ",
+    "errorBoundaryTitle": "Đã có sự cố xảy ra khi tải trang",
+    "errorBoundaryDesc": "Hệ thống gặp lỗi không mong muốn trong khi hiển thị nội dung. Bạn có thể thử tải lại trang hoặc quay về trang chủ."
   },
   "nav": {
     "feed": "Bảng tin",
@@ -319,7 +332,11 @@
     "viewMoreComments": "Xem thêm bình luận",
     "newPosition": "Vị trí mới",
     "companyFallback": "công ty",
-    "locationPlaceholder": "Hà Nội, Remote..."
+    "locationPlaceholder": "Hà Nội, Remote...",
+    "imageIndex": "Ảnh {{index}}",
+    "noComments": "Chưa có bình luận nào.",
+    "sendComment": "Gửi bình luận",
+    "viewAllComments": "Xem tất cả {{count}} bình luận"
   },
   "event": {
     "pageTitle": "Sự kiện & Họp mặt",
@@ -543,7 +560,9 @@
     "changeFile": "Thay đổi tệp",
     "clickToUpload": "Nhấp để tải ảnh lên (JPG, PNG)",
     "proofHint": "Ảnh chụp bằng tốt nghiệp hoặc bảng điểm",
-    "uploadProofError": "Lỗi xảy ra khi tải ảnh lên R2"
+    "uploadProofError": "Lỗi xảy ra khi tải ảnh lên R2",
+    "namePlaceholder": "Nhập họ và tên...",
+    "connectingGoogle": "Đang kết nối với Google..."
   },
   "notification": {
     "title": "Thông báo",
@@ -3053,7 +3072,28 @@
     "acceptInviteSuccess": "Chấp nhận lời mời tham gia nhóm thành công!",
     "acceptInviteError": "Không thể chấp nhận lời mời",
     "rejectInviteSuccess": "Đã từ chối lời mời tham gia nhóm",
-    "rejectInviteError": "Không thể từ chối lời mời"
+    "rejectInviteError": "Không thể từ chối lời mời",
+    "mentor": "Mentor",
+    "roleMentor": "Mentor",
+    "roleStudent": "Sinh viên",
+    "student": "Sinh viên",
+    "taskDetail": "Chi tiết Task",
+    "taskLabel": "Task",
+    "dealCardPrice": "Giá",
+    "dealCardDeadline": "Hạn chót",
+    "dealCardDiscuss": "Trao đổi",
+    "dealCardOpenTask": "Mở Task",
+    "dealCardDetail": "Chi tiết",
+    "alumniOnlyTitle": "Tính năng dành cho cựu sinh viên",
+    "viewTaskBtn": "Xem Task",
+    "taskHistoryTitle": "Nhật ký tiến trình & Lịch sử nhiệm vụ (Audit Trail)",
+    "taskHistoryEmpty": "Chưa có sự kiện nào được ghi nhận cho nhiệm vụ này.",
+    "disputeLockedNotice": "Task tạm khóa trong lúc Ban Quản Trị phân xử. Bạn có thể trao đổi và bổ sung bằng chứng.",
+    "settlementStoppedNotice": "Task đã dừng. Ban Quản Trị đang chi trả và hoàn tiền theo thỏa thuận.",
+    "evidenceModalTitle": "Bằng chứng tranh chấp",
+    "evidenceModalSubtitle": "Bổ sung tài liệu & chứng từ phục vụ Ban Quản Trị phân xử",
+    "evidenceFileNamePlaceholder": "VD: hop-dong-ban-giao.pdf",
+    "invalidFileUrl": "Đường dẫn tệp phải là một URL hợp lệ (ví dụ: https://...)."
   },
   "profile": {
     "title": "Hồ sơ cá nhân",
@@ -3216,5 +3256,9 @@
     "groupChatMembers": "Nhóm trò chuyện • {{count}} thành viên",
     "recentChat": "Đoạn chat gần đây",
     "alumnectMember": "Thành viên Alumnect"
+  },
+  "group": {
+    "private": "Riêng tư",
+    "public": "Công khai"
   }
 }

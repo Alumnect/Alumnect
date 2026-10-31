@@ -77,6 +77,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
   isDirectRequest = false,
   initialGroupId,
 }) => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const queryGroupId = searchParams.get('groupId') ? Number(searchParams.get('groupId')) : undefined

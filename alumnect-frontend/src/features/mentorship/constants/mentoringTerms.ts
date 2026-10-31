@@ -102,3 +102,102 @@ export const MENTORING_TERMS_SECTIONS: TermsSection[] = [
     ]
   }
 ]
+
+/** Bản tiếng Anh của điều khoản Mentoring (dùng khi giao diện ở English). */
+export const MENTORING_TERMS_SECTIONS_EN: TermsSection[] = [
+  {
+    id: 1,
+    title: '1. Participant responsibilities',
+    content: [
+      'Both parties (Mentor and Student) commit to providing truthful and accurate information and are responsible for the content of their profile, qualifications and skills on the system.',
+      'Participants are responsible for protecting their login credentials and all activity arising from their accounts.',
+      'Students and Mentors proactively keep in touch and fulfil the support commitments agreed within the program.',
+    ],
+  },
+  {
+    id: 2,
+    title: '2. Code of conduct',
+    content: [
+      'Students and Mentors always communicate in a civil, respectful and professional manner, in line with academic standards and the culture of FPT University.',
+      'Inflammatory, insulting, discriminatory or harassing language of any kind is not allowed during exchanges.',
+      'All comments and feedback should be constructive and support the learner\'s professional and skill development.',
+    ],
+  },
+  {
+    id: 3,
+    title: '3. Communication & collaboration',
+    content: [
+      'Both parties strictly follow the scope of work, learning goals and mentoring plan agreed at the start.',
+      'Neither party may unilaterally change a Deal that both parties have confirmed on the system.',
+      'In-person or online sessions must have their time and format agreed clearly in advance.',
+    ],
+  },
+  {
+    id: 4,
+    title: '4. Tasks & deadlines',
+    content: [
+      'The Mentor assigns, guides and evaluates Tasks according to the plan of the Deal activated by both parties.',
+      'The Student is responsible for completing assigned exercises and tasks on time (Deadline).',
+      'Any request to extend a Deadline must be discussed and agreed by both parties before the deadline ends.',
+    ],
+  },
+  {
+    id: 5,
+    title: '5. Work Log',
+    content: [
+      'The Mentor is responsible for recording a detailed and transparent Work Log whenever a mentoring session or specific task is completed.',
+      'The Student has full rights to view, track progress and respond to / confirm the accuracy of the Work Logs created.',
+      'Work Log data is an important basis for resolving rights and any disputes that may arise.',
+    ],
+  },
+  {
+    id: 6,
+    title: '6. Payment & settlement',
+    content: [
+      'All payment transactions in the Mentoring module must be processed through AlumNect\'s official payment system.',
+      'Private money transfers outside the system to avoid the platform\'s protection are strictly prohibited.',
+      'If a Task or Deal is not fully completed, the system moves to a Settlement process based on the actual share of work confirmed through Work Logs.',
+    ],
+  },
+  {
+    id: 7,
+    title: '7. Disputes & complaint handling',
+    content: [
+      'When a disagreement cannot be settled by negotiation, the Student or Mentor may submit a Dispute Ticket.',
+      'System administrators (Admin) are authorized to receive, review and lead the handling of dispute Tickets.',
+      'Students, Mentors and Admins can discuss directly and provide supporting documents within the Ticket.',
+      'The Admin\'s decision, based on the Deal, Work Log data and the evidence presented, is final.',
+    ],
+  },
+  {
+    id: 8,
+    title: '8. Information security',
+    content: [
+      'All parties must keep personal information, study materials, project source code and business data shared during Mentoring strictly confidential.',
+      'Do not distribute, copy or commercialize any material outside the system without the written consent of the party who provided it.',
+      'All data exchanged on the platform is protected under AlumNect\'s Privacy Policy.',
+    ],
+  },
+  {
+    id: 9,
+    title: '9. Prohibited conduct',
+    content: [
+      'Cheating on exams, doing assignments or exams for others, or violating academic integrity in any form is strictly prohibited.',
+      'Sharing harmful or fraudulent content, spreading malware, or using the module for unauthorized commercial purposes is strictly prohibited.',
+      'Violating accounts will be permanently locked and all of their benefits on the AlumNect network revoked.',
+    ],
+  },
+  {
+    id: 10,
+    title: '10. Platform rights and responsibilities',
+    content: [
+      'AlumNect provides the technology to connect, monitor and keep Mentoring activities safe.',
+      'The system may temporarily lock or suspend a Deal when it detects abnormal signs or violations of the Terms.',
+      'The Mentoring Terms may be updated periodically. Users will be asked to confirm again before continuing to use the module.',
+    ],
+  },
+]
+
+/** Lấy điều khoản theo ngôn ngữ giao diện hiện tại. */
+export const getMentoringTermsSections = (language: string): TermsSection[] =>
+  language === 'en' ? MENTORING_TERMS_SECTIONS_EN : MENTORING_TERMS_SECTIONS

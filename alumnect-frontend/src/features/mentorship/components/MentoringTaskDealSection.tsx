@@ -12,6 +12,7 @@ export function MentoringTaskDealSection({
   deal,
   conversationId,
 }: MentoringTaskDealSectionProps) {
+  const { t } = useTranslation()
   if (!deal) return null
 
   const formatPrice = (val: number) => {
@@ -40,7 +41,7 @@ export function MentoringTaskDealSection({
               {t('mentoring.originalDealTitle')}
             </h4>
             <span className="text-xs font-mono font-bold text-text-subtle">
-              #DEAL-{deal.id} (Phiên bản v{deal.version})
+              #DEAL-{deal.id} ({t('mentoring.version')} v{deal.version})
             </span>
           </div>
         </div>

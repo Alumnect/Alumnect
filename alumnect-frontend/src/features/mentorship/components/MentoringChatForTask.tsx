@@ -745,7 +745,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
           icon={<ClipboardCheck />}
           action={
             <button type="button" onClick={() => setIsTaskOpen(true)} className="font-semibold text-primary-solid hover:underline">
-              Xem Task
+              {t('mentoring.viewTaskBtn')}
             </button>
           }
         >

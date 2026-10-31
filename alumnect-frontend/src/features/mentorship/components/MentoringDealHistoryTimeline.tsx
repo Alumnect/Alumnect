@@ -17,6 +17,7 @@ export function MentoringDealHistoryTimeline({
   snapshots,
   currentVersion,
 }: MentoringDealHistoryTimelineProps) {
+  const { t } = useTranslation()
   if (!snapshots || snapshots.length === 0) {
     return (
       <div className="p-8 text-center text-xs text-text-subtle dark:text-text-subtle">

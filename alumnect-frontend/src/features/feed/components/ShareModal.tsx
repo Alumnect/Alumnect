@@ -312,7 +312,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
               />
             ) : (
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-text-muted">
-                {shareItem?.type === 'group' || (resolvedTypeLabel.toLowerCase().includes('group') || resolvedTypeLabel.toLowerCase().includes('nhóm')) ? (
+                {(resolvedTypeLabel.toLowerCase().includes('group') || resolvedTypeLabel.toLowerCase().includes('nhóm')) ? (
                   <Users size={18} />
                 ) : (
                   <FileText size={18} />
@@ -406,7 +406,7 @@ export function ShareModal({ isOpen, onClose, post, shareItem }: ShareModalProps
               />
             ) : (
               <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-surface-2 text-text-muted">
-                {shareItem?.type === 'group' || (resolvedTypeLabel.toLowerCase().includes('group') || resolvedTypeLabel.toLowerCase().includes('nhóm')) ? (
+                {(resolvedTypeLabel.toLowerCase().includes('group') || resolvedTypeLabel.toLowerCase().includes('nhóm')) ? (
                   <Users size={18} />
                 ) : (
                   <FileText size={18} />

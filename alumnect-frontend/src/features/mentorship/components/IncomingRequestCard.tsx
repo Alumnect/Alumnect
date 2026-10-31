@@ -22,11 +22,11 @@ function formatDate(value?: string | null) {
     : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function formatBudget(min?: number | null, max?: number | null) {
+function formatBudget(min: number | null | undefined, max: number | null | undefined, freeLabel: string) {
   if (min == null && max == null) return null
   if (min != null && max != null && min !== max) return `${formatVnd(min)} – ${formatVnd(max)}`
   const value = max ?? min ?? 0
-  return value === 0 ? t('mentoring.freeRate') : formatVnd(value)
+  return value === 0 ? freeLabel : formatVnd(value)
 }
 
 /**
@@ -34,10 +34,11 @@ function formatBudget(min?: number | null, max?: number | null) {
  * và một nút thao tác — "Phản hồi" khi đang chờ, "Xem chi tiết" khi đã phản hồi.
  */
 export function IncomingRequestCard({ request }: IncomingRequestCardProps) {
+  const { t } = useTranslation()
   const detailPath = `/app/mentoring/incoming-requests/${request.id}`
   const isWaiting = request.responseStatus === 'WAITING'
   const taskLabel = TASK_TYPE_OPTIONS.find((t) => t.value === request.taskType)?.label ?? request.taskType
-  const budget = formatBudget(request.budgetMin, request.budgetMax)
+  const budget = formatBudget(request.budgetMin, request.budgetMax, t('mentoring.freeRate'))
 
   const facts = [
     { icon: <Briefcase />, text: taskLabel },

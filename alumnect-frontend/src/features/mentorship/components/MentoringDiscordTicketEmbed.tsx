@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   FileText,
   Clock,
@@ -52,6 +53,7 @@ export function MentoringDiscordTicketEmbed({
   isRejecting = false,
   accompanyingText,
 }: MentoringDiscordTicketEmbedProps) {
+  const { t } = useTranslation()
   // Format tiền tệ VND
   const formatVND = (amount?: number) => {
     if (typeof amount !== 'number') return '0đ'

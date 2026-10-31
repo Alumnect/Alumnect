@@ -226,7 +226,7 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
               <p className="truncate text-xs font-semibold text-text">
                 {mentorStatus.active
                   ? t('mentoring.mentorActiveStatus')
-                  : mentorStatus.mentorStatus === 'PAYMENT_PENDING' || mentorStatus.mentorStatus === 'PENDING_PAYMENT'
+                  : mentorStatus.mentorStatus === 'PAYMENT_PENDING'
                   ? t('mentoring.statusPaymentPending')
                   : mentorStatus.mentorStatus === 'EXPIRED'
                   ? t('mentoring.statusExpired')

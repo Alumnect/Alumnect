@@ -98,7 +98,7 @@ export function GroupDetailHeader({
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-text-subtle">
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <Users size={16} className="text-primary-solid" />
-                  <strong className="text-text">{group.memberCount}</strong> {t('groups.members')}
+                  <strong className="text-text">{t('groups.membersCount', { count: group.memberCount })}</strong>
                 </span>
 
                 {createdDate && (
@@ -185,7 +185,7 @@ export function GroupDetailHeader({
           onClose={() => setShareModalOpen(false)}
           shareItem={{
             title: group.name,
-            subtitle: `${group.memberCount} ${t('groups.members')} • ${group.description || 'AlumNect'}`,
+            subtitle: `${t('groups.membersCount', { count: group.memberCount })} • ${group.description || 'AlumNect'}`,
             thumbnail: group.coverImageUrl,
             url: `${window.location.origin}/app/groups/${group.id}`,
             typeLabel: t('groups.groupNoun'),

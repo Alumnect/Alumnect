@@ -116,12 +116,12 @@ export function MentoringTerms({
 
         <div className="flex flex-col">
           <div className="order-2 mt-5 grid gap-2.5 border-t border-border pt-5 xl:order-1 xl:border-0 xl:pt-0">
-            {PRINCIPLES.map((principle) => {
+            {PRINCIPLE_CONFIGS.map((principle) => {
               const Icon = principle.icon
 
               return (
                 <div
-                  key={principle.title}
+                  key={principle.titleKey}
                   className="flex items-start gap-2.5 rounded-xl border border-border bg-cream-50/60 p-3 dark:bg-white/[0.04]"
                 >
                   <span className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-lg', principle.iconClassName)}>

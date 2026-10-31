@@ -22,6 +22,7 @@ interface MentorProfileHeaderProps {
  * Thiết kế tối giản, thanh lịch, tập trung vào định danh và CTA chính.
  */
 export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHeaderProps) {
+  const { t } = useTranslation()
   const isMentorActive = mentor.mentorStatus === 'ACTIVE'
   const primaryField = mentor.supportedFields && mentor.supportedFields.length > 0 ? mentor.supportedFields[0].name : null
   const showCity = mentor.city && mentor.city.trim().toLowerCase() !== mentor.academicInfo?.campus?.trim().toLowerCase()

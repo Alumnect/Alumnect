@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal'
 import { useState, useRef, useEffect } from 'react'
 import {
@@ -25,19 +26,30 @@ interface MentoringTicketDiscussionThreadProps {
   ticketStatus: string
   currentRole: 'ADMIN' | 'STUDENT' | 'MENTOR'
   studentName?: string
+  ticketCode?: string
   mentorName?: string
   totalAmount?: number | null
+}
+
+/** Chữ cái đầu của tên người gửi (tối đa 2 ký tự) để hiển thị ảnh đại diện. */
+function senderInitials(name?: string | null) {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
 
 export function MentoringTicketDiscussionThread({
   ticketId,
   ticketStatus,
   currentRole,
-  studentName = t('common.student'),
+  studentName,
+  ticketCode,
   mentorName = 'Mentor',
   totalAmount = 0,
 }: MentoringTicketDiscussionThreadProps) {
   const { t } = useTranslation()
+  const studentLabel = studentName ?? t('common.student')
   const [content, setContent] = useState('')
   const [messageType, setMessageType] = useState<'TEXT' | 'MEDIATION_OFFER' | 'DEADLINE_REQUEST'>('TEXT')
   const [proposedMentorAmount, setProposedMentorAmount] = useState<number | ''>('')
@@ -155,7 +167,7 @@ export function MentoringTicketDiscussionThread({
           </div>
           <div>
             <h4 className="text-sm font-bold text-text flex items-center gap-2">
-              {t('mentoring.discussionChannelTitle')}
+              {t('mentoring.discussionChannelTitle', { code: ticketCode ?? ticketId })}
               <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-info-soft text-info border border-info">
                 Audit Trail
               </span>
@@ -168,7 +180,7 @@ export function MentoringTicketDiscussionThread({
 
         <div className="flex items-center gap-1.5 text-xs">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-info-soft text-info text-xs font-medium border border-info">
-            <User size={11} /> {studentName}
+            <User size={11} /> {studentLabel}
           </span>
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success-soft text-success text-xs font-medium border border-success-border">
             <GraduationCap size={11} /> {mentorName}
@@ -222,7 +234,7 @@ export function MentoringTicketDiscussionThread({
                         isAdminMsg ? 'bg-info' : isStudentMsg ? 'bg-info' : 'bg-success'
                       }`}
                     >
-                      {isAdminMsg ? 'AD' : isStudentMsg ? 'HV' : 'CV'}
+                      {isAdminMsg ? 'AD' : senderInitials(msg.senderName)}
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-xs font-bold text-text">
@@ -363,7 +375,7 @@ export function MentoringTicketDiscussionThread({
                     : 'text-text-muted hover:text-text'
                 }`}
               >
-                Trao đổi
+                {t('mentoring.discussTab')}
               </button>
               <button
                 type="button"
@@ -510,10 +522,10 @@ export function MentoringTicketDiscussionThread({
               onChange={(e) => setContent(e.target.value)}
               placeholder={
                 messageType === 'MEDIATION_OFFER'
-                  ? 'Nêu căn cứ và giải thích cho đề xuất hòa giải phân bổ tiền này...'
+                  ? t('mentoring.mediationProposalPlaceholder')
                   : messageType === 'DEADLINE_REQUEST'
-                  ? 'Nêu rõ thông tin hoặc bằng chứng cần các bên bổ sung trước thời hạn...'
-                  : 'Nhập nội dung trao đổi, làm rõ hoặc giải trình...'
+                  ? t('mentoring.placeholderDeadlineReason')
+                  : t('mentoring.placeholderGeneralDiscussion')
               }
               className="flex-1 px-3 py-2 text-xs rounded-xl border border-border-strong bg-surface focus:outline-none focus:ring-2 focus:ring-info resize-none"
             />

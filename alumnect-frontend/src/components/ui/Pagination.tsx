@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from './Button'
 import { cn } from '@/lib/utils'
@@ -43,9 +44,12 @@ export function Pagination({
   onPageChange,
   scrollToTop = true,
   className,
-  prevLabel = 'Trang trước',
-  nextLabel = 'Trang sau',
+  prevLabel,
+  nextLabel,
 }: PaginationProps) {
+  const { t } = useTranslation()
+  const prevText = prevLabel ?? t('common.previousPage')
+  const nextText = nextLabel ?? t('common.nextPage')
   if (totalPages <= 1) return null
 
   const handlePageSelect = (targetPage: number) => {
@@ -75,7 +79,7 @@ export function Pagination({
         onClick={() => handlePageSelect(page - 1)}
         className="rounded-full shadow-2xs font-semibold px-3"
       >
-        {prevLabel}
+        {prevText}
       </Button>
 
       <div className="flex items-center gap-1.5 px-1">
@@ -117,7 +121,7 @@ export function Pagination({
         onClick={() => handlePageSelect(page + 1)}
         className="rounded-full shadow-2xs font-semibold px-3"
       >
-        {nextLabel}
+        {nextText}
       </Button>
     </div>
   )

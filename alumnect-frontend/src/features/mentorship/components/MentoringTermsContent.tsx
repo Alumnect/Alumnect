@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { MENTORING_TERMS_SECTIONS } from '../constants/mentoringTerms'
+import { getMentoringTermsSections } from '../constants/mentoringTerms'
 import { FileText } from 'lucide-react'
 
 /**
@@ -7,7 +7,8 @@ import { FileText } from 'lucide-react'
  * Được thiết kế dưới dạng khung cuộn tùy chỉnh với kiểu dáng Pastel Premium mềm mại.
  */
 export function MentoringTermsContent() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const sections = getMentoringTermsSections(i18n.language)
   return (
     <div className="relative rounded-2xl border border-border bg-cream-50/70 p-3.5 sm:p-5 shadow-inner dark:bg-bg">
       <div className="mb-3 flex items-center border-b border-border pb-3">
@@ -27,7 +28,7 @@ export function MentoringTermsContent() {
           {t('mentoring.termsWelcomeIntro')}
         </p>
 
-        {MENTORING_TERMS_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <section key={section.id} className="space-y-2">
             <h3 className="font-display text-base font-bold text-text">
               {section.title}
