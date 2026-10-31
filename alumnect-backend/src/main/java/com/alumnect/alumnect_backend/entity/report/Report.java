@@ -35,8 +35,9 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Người gửi báo cáo; null nghĩa là báo cáo do hệ thống kiểm duyệt tự động tạo. */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reporter_id", nullable = false)
+    @JoinColumn(name = "reporter_id")
     private User reporter;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -57,12 +58,12 @@ public class Report {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    /** Điểm số rủi ro do AI/Profanity engine đánh giá (từ 0.00 đến 1.00). */
+    /** Điểm số rủi ro do bộ lọc từ cấm đánh giá (từ 0.00 đến 1.00). */
     @Column(name = "ai_score", nullable = false)
     @Builder.Default
     private Double aiScore = 0.0;
 
-    /** Lý do hệ thống đánh dấu vi phạm hoặc nhãn phân loại của AI. */
+    /** Mã lý do hệ thống đánh dấu vi phạm. */
     @Column(name = "ai_flagged_reason", length = 255)
     private String aiFlaggedReason;
 

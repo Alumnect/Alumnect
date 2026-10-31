@@ -277,11 +277,11 @@ export function AdminOverviewPage() {
         items.push({
           id: `report-${r.id}-${r.createdAt}`,
           type: 'REPORT',
-          title: r.reporterName || 'Thành viên ẩn danh',
+          title: r.reporterName || (r.systemGenerated ? 'Hệ thống kiểm duyệt' : 'Thành viên ẩn danh'),
           description: `Báo cáo vi phạm bài viết (${r.reason === 'SPAM' ? 'Spam' : r.reason === 'INAPPROPRIATE' ? 'Không phù hợp' : 'Nội dung vi phạm'})`,
           timestamp: r.createdAt,
           timeAgo: formatTimeAgo(r.createdAt),
-          actorName: r.reporterName,
+          actorName: r.reporterName || 'Hệ thống kiểm duyệt',
           actorAvatar: r.reporterAvatarUrl,
           icon: <Flag className="h-3.5 w-3.5 text-danger" />,
           iconTone: 'bg-danger-soft',

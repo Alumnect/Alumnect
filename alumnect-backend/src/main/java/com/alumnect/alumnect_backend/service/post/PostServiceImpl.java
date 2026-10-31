@@ -35,10 +35,13 @@ import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.post.CommentMapper;
 import com.alumnect.alumnect_backend.mapper.post.PostMapper;
+import com.alumnect.alumnect_backend.service.moderation.ContentModerationService;
+import com.alumnect.alumnect_backend.service.moderation.PostCreatedModerationEvent;
 import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -104,8 +107,11 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private NotificationService notificationService;
 
-    @Autowired(required = false)
-    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private ContentModerationService contentModerationService;
 
     @Override
     @Transactional
@@ -202,11 +208,8 @@ public class PostServiceImpl implements PostService {
         }
         log.info("Tạo bài viết mới: id={}, tác giả={}, loại={}", saved.getId(), email, saved.getCategory());
 
-        // Bắn sự kiện kiểm duyệt ngầm theo chuẩn Facebook (Post-First, Moderate-Later)
-        if (eventPublisher != null) {
-            eventPublisher.publishEvent(new com.alumnect.alumnect_backend.service.moderation.PostCreatedModerationEvent(
-                    saved.getId(), saved.getContent(), author.getId()));
-        }
+        // Đăng trước, kiểm duyệt sau: listener chỉ quét sau khi transaction commit
+        eventPublisher.publishEvent(new PostCreatedModerationEvent(saved.getId(), saved.getContent(), author.getId()));
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         JobPosting savedJob = jobId != null ? jobPostingRepository.findById(jobId).orElse(null) : null;
@@ -584,7 +587,7 @@ public class PostServiceImpl implements PostService {
                 .post(post)
                 .user(author)
                 .parentComment(parent)
-                .content(request.getContent().trim())
+                .content(contentModerationService.sanitizeContent(request.getContent().trim()))
                 .status(CommentStatus.ACTIVE)
                 .build());
 
@@ -619,7 +622,7 @@ public class PostServiceImpl implements PostService {
             throw new ForbiddenException("Bạn chỉ được chỉnh sửa bình luận của chính mình");
         }
 
-        comment.setContent(request.getContent().trim());
+        comment.setContent(contentModerationService.sanitizeContent(request.getContent().trim()));
         Comment saved = commentRepository.save(comment);
         log.info("Cập nhật bình luận: id={}, postId={}, tác giả={}", saved.getId(), postId, email);
 
@@ -873,6 +876,9 @@ public class PostServiceImpl implements PostService {
         } catch (Exception ex) {
             throw new RuntimeException("Lỗi hệ thống: Không thể cập nhật bài viết");
         }
+
+        // Quét lại nội dung vừa sửa, tránh trường hợp đăng bài sạch rồi sửa thành nội dung vi phạm
+        eventPublisher.publishEvent(new PostCreatedModerationEvent(saved.getId(), saved.getContent(), author.getId()));
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         boolean liked = !computeLikedPostIds(email, List.of(saved.getId())).isEmpty();

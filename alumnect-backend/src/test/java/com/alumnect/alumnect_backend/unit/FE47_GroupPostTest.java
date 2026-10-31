@@ -66,6 +66,9 @@ class FE47_GroupPostTest {
 
     // ===== Mocks (dependencies) =====
     @Mock
+    private com.alumnect.alumnect_backend.service.moderation.ContentModerationService contentModerationService;
+
+    @Mock
     private GroupPostRepository groupPostRepository;
 
     @Mock
@@ -120,6 +123,9 @@ class FE47_GroupPostTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+                .when(contentModerationService.sanitizeContent(org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         Role studentRole = Role.builder().id(1L).name("STUDENT").build();
         Role alumniRole = Role.builder().id(2L).name("ALUMNI").build();
 

@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.config;
 
+import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.security.jwt.JwtService;
@@ -14,8 +15,11 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+import java.security.Principal;
 
 /**
  * Bộ đánh chặn (Channel Interceptor) kiểm tra và xác thực JWT token trong frame CONNECT của STOMP WebSocket.
@@ -29,6 +33,9 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
     private final JwtService jwtService;
     private final UserDetailServiceImpl userDetailsService;
     private final UserRepository userRepository;
+
+    /** Quyền của tài khoản Quản trị viên trong Spring Security. */
+    private static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -79,6 +86,33 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
                 throw new MessageDeliveryException("Mã xác thực WebSocket không hợp lệ hoặc đã hết hạn: " + e.getMessage());
             }
         }
+
+        if (accessor != null) {
+            assertAdminChannelAccess(accessor);
+        }
         return message;
+    }
+
+    /**
+     * Chặn tài khoản không phải ADMIN đăng ký nghe hoặc gửi tin vào kênh quản trị.
+     * Broker đơn giản không tự phân quyền nên mọi tài khoản đăng nhập đều có thể nghe, thậm chí giả mạo cảnh báo.
+     *
+     * @param accessor Header của frame STOMP đang xử lý
+     */
+    private void assertAdminChannelAccess(StompHeaderAccessor accessor) {
+        StompCommand command = accessor.getCommand();
+        String destination = accessor.getDestination();
+        boolean touchesChannel = StompCommand.SUBSCRIBE.equals(command) || StompCommand.SEND.equals(command);
+        if (touchesChannel && destination != null && destination.startsWith(WebSocketDestinations.TOPIC_ADMIN_PREFIX)
+                && !isAdmin(accessor.getUser())) {
+            log.warn("Từ chối truy cập kênh quản trị {}: lệnh {}", destination, command);
+            throw new MessageDeliveryException("Bạn không có quyền truy cập kênh quản trị");
+        }
+    }
+
+    private boolean isAdmin(Principal principal) {
+        return principal instanceof Authentication authentication
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> ADMIN_AUTHORITY.equals(authority.getAuthority()));
     }
 }

@@ -15,6 +15,7 @@ import com.alumnect.alumnect_backend.service.moderation.ReportModerationListener
 import com.alumnect.alumnect_backend.service.moderation.ModerationResult;
 import com.alumnect.alumnect_backend.service.moderation.ReportCreatedEvent;
 import com.alumnect.alumnect_backend.service.moderation.PostCreatedModerationEvent;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,9 @@ class FE65_ContentModerationProfanityTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
+    @Mock
+    private NotificationService notificationService;
+
     private ReportModerationListener moderationListener;
 
     @BeforeEach
@@ -70,7 +74,8 @@ class FE65_ContentModerationProfanityTest {
                 contentModerationService,
                 reportRepository,
                 postRepository,
-                messagingTemplate
+                messagingTemplate,
+                notificationService
         );
     }
 
@@ -266,6 +271,7 @@ class FE65_ContentModerationProfanityTest {
                 .build();
 
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
         ReportCreatedEvent event = ReportCreatedEvent.builder()
                 .reportId(reportId)
@@ -375,19 +381,19 @@ class FE65_ContentModerationProfanityTest {
         String slangText5 = "Ăn cc đi";
 
         assertThat(profanityFilterService.containsProfanity(slangText1)).isTrue();
-        assertThat(profanityFilterService.findProfanities(slangText1)).contains("cai cl");
+        assertThat(profanityFilterService.findProfanities(slangText1)).contains("cái cl");
 
         assertThat(profanityFilterService.containsProfanity(slangText2)).isTrue();
-        assertThat(profanityFilterService.findProfanities(slangText2)).contains("con cac");
+        assertThat(profanityFilterService.findProfanities(slangText2)).contains("con cặc");
 
         assertThat(profanityFilterService.containsProfanity(slangText3)).isTrue();
-        assertThat(profanityFilterService.findProfanities(slangText3)).contains("nhu cc");
+        assertThat(profanityFilterService.findProfanities(slangText3)).contains("như cc");
 
         assertThat(profanityFilterService.containsProfanity(slangText4)).isTrue();
-        assertThat(profanityFilterService.findProfanities(slangText4)).contains("cl");
+        assertThat(profanityFilterService.findProfanities(slangText4)).contains("nói cl");
 
         assertThat(profanityFilterService.containsProfanity(slangText5)).isTrue();
-        assertThat(profanityFilterService.findProfanities(slangText5)).contains("cc");
+        assertThat(profanityFilterService.findProfanities(slangText5)).contains("ăn cc");
     }
 
     @Test

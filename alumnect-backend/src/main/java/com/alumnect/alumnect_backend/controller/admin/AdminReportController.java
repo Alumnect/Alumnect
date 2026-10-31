@@ -6,6 +6,7 @@ import com.alumnect.alumnect_backend.dto.response.admin.AdminReportResponse;
 import com.alumnect.alumnect_backend.service.admin.AdminReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -28,6 +29,7 @@ public class AdminReportController {
      * @param status Trạng thái xử lý báo cáo: PENDING, RESOLVED, DISMISSED (tùy chọn)
      * @param type Loại bài viết: GENERAL, ACHIEVEMENT, RECRUITMENT, EVENT (tùy chọn)
      * @param postId ID bài viết bị báo cáo (tùy chọn)
+     * @param riskLevel Mức rủi ro kiểm duyệt: HIGH, MEDIUM, LOW (tùy chọn)
      * @param page Số trang hiển thị, mặc định 0
      * @param size Số lượng phần tử mỗi trang, mặc định 10
      * @return Trang danh sách báo cáo bọc trong ApiResponse
@@ -40,10 +42,11 @@ public class AdminReportController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) Long postId,
+            @RequestParam(required = false) String riskLevel,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        PageResponse<AdminReportResponse> reports = adminReportService.getReports(query, author, reason, status, type, postId, page, size);
+        PageResponse<AdminReportResponse> reports = adminReportService.getReports(query, author, reason, status, type, postId, riskLevel, page, size);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách báo cáo vi phạm thành công", reports));
     }
 
@@ -52,15 +55,17 @@ public class AdminReportController {
      *
      * @param id ID của báo cáo cần cập nhật
      * @param payload Map chứa trạng thái mới mong muốn {"status": "RESOLVED" / "DISMISSED"}
+     * @param authentication Thông tin Admin đang đăng nhập, dùng để ghi nhận người xử lý
      * @return Kết quả thành công bọc trong ApiResponse
      */
     @PutMapping("/{id}/status")
     public ResponseEntity<ApiResponse<Void>> updateReportStatus(
             @PathVariable Long id,
-            @RequestBody Map<String, String> payload) {
+            @RequestBody Map<String, String> payload,
+            Authentication authentication) {
 
         String status = payload.get("status");
-        adminReportService.updateReportStatus(id, status);
+        adminReportService.updateReportStatus(id, status, authentication.getName());
         String msg = "DISMISSED".equalsIgnoreCase(status) ? "Đã bỏ qua báo cáo vi phạm" : "Đã giải quyết báo cáo vi phạm";
         return ResponseEntity.ok(ApiResponse.success(msg, null));
     }

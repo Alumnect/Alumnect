@@ -15,15 +15,17 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.report.ReportMapper;
+import com.alumnect.alumnect_backend.service.moderation.ReportCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
 
-/** Cài đặt UC24: lưu report, không tự động ẩn bài và chặn lạm dụng cơ bản. */
+/** Cài đặt UC24: lưu report, chặn lạm dụng cơ bản và phát sự kiện để UC123 kiểm duyệt ngầm sau khi commit. */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -33,17 +35,7 @@ public class ReportServiceImpl implements ReportService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final ReportMapper reportMapper;
-    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
-
-    /** Constructor phụ phục vụ backward compatibility cho các Unit Test cũ */
-    public ReportServiceImpl(
-            ReportRepository reportRepository,
-            PostRepository postRepository,
-            UserRepository userRepository,
-            ReportMapper reportMapper
-    ) {
-        this(reportRepository, postRepository, userRepository, reportMapper, null);
-    }
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -76,11 +68,9 @@ public class ReportServiceImpl implements ReportService {
         log.info("Đã tạo báo cáo UC24: reportId={}, postId={}, reporterId={}, reason={}",
                 report.getId(), postId, reporter.getId(), report.getReason());
 
-        // Bắn sự kiện bất đồng bộ kích hoạt kiểm duyệt tự động (nếu có publisher)
-        if (eventPublisher != null) {
-            eventPublisher.publishEvent(new com.alumnect.alumnect_backend.service.moderation.ReportCreatedEvent(
-                    report.getId(), post.getId(), post.getContent(), reason.name(), reporter.getId()));
-        }
+        // Sự kiện chỉ được xử lý sau khi transaction commit để listener đọc được báo cáo vừa lưu
+        eventPublisher.publishEvent(new ReportCreatedEvent(
+                report.getId(), post.getId(), post.getContent(), reason.name(), reporter.getId()));
 
         return reportMapper.toResponse(report);
     }

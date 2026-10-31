@@ -11754,10 +11754,10 @@
     },
     {
       "name": "UC123 - Automated Content Moderation & Multilingual Profanity Pipeline",
-      "description": "Các API phục vụ báo cáo bài viết vi phạm, kích hoạt engine kiểm duyệt tự động ngầm, chấm điểm rủi ro AI và giao diện kiểm duyệt của Quản trị viên.",
+      "description": "Các API phục vụ báo cáo bài viết vi phạm, kích hoạt bộ lọc từ cấm chạy ngầm sau khi transaction commit, chấm điểm rủi ro theo từ điển và luật, và giao diện kiểm duyệt của Quản trị viên.",
       "item": [
         {
-          "name": "123.1 Gửi báo cáo bài viết vi phạm (Kích hoạt Moderation Event)",
+          "name": "123.1 Gửi báo cáo bài viết vi phạm - Thành công",
           "request": {
             "method": "POST",
             "header": [
@@ -11785,12 +11785,12 @@
                 "reports"
               ]
             },
-            "description": "Thành viên gửi báo cáo vi phạm bài viết. API lưu bản ghi và bắn sự kiện bất đồng bộ kích hoạt quét từ cấm & chấm điểm rủi ro AI."
+            "description": "Thành viên gửi báo cáo vi phạm bài viết. Phân quyền: Token (STUDENT, ALUMNI). API lưu bản ghi, trả 201 và phát sự kiện; listener quét từ cấm và chấm điểm sau khi transaction commit."
           },
           "response": []
         },
         {
-          "name": "123.2 Admin xem danh sách báo cáo vi phạm (Sắp xếp ưu tiên Risk Score)",
+          "name": "123.2 Admin xem danh sách báo cáo vi phạm theo điểm rủi ro - Thành công",
           "request": {
             "method": "GET",
             "header": [
@@ -11823,12 +11823,12 @@
                 }
               ]
             },
-            "description": "Admin lấy danh sách báo cáo với đầy đủ điểm số rủi ro AI (aiScore), từ khóa vi phạm (detectedKeywords) và mức độ rủi ro (riskLevel)."
+            "description": "Phân quyền: Admin. Trả danh sách sắp xếp theo aiScore giảm dần, gồm từ khóa vi phạm (detectedKeywords), mức rủi ro (riskLevel) và cờ báo cáo hệ thống (systemGenerated). Mã phản hồi 200."
           },
           "response": []
         },
         {
-          "name": "123.3 Admin cập nhật trạng thái xử lý báo cáo",
+          "name": "123.3 Admin cập nhật trạng thái xử lý báo cáo - Thành công",
           "request": {
             "method": "PUT",
             "header": [
@@ -11857,7 +11857,83 @@
                 "status"
               ]
             },
-            "description": "Admin cập nhật trạng thái báo cáo sang RESOLVED hoặc DISMISSED sau khi kiểm duyệt thủ công."
+            "description": "Phân quyền: Admin. Cập nhật trạng thái sang RESOLVED hoặc DISMISSED, ghi nhận reviewed_by và reviewed_at. Nếu DISMISSED báo cáo đã làm bài bị tự ẩn thì bài được khôi phục và tác giả nhận thông báo. Mã phản hồi 200."
+          },
+          "response": []
+        },
+        {
+          "name": "123.4 Admin lọc báo cáo theo mức rủi ro HIGH - Thành công",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reports?status=PENDING&riskLevel=HIGH&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                },
+                {
+                  "key": "riskLevel",
+                  "value": "HIGH"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Phân quyền: Admin. Lọc theo mức rủi ro ngay trong truy vấn nên phân trang và totalElements luôn đúng. riskLevel nhận HIGH (điểm từ 0.85), MEDIUM (0.40 đến dưới 0.85), LOW (dưới 0.40). Mã phản hồi 200."
+          },
+          "response": []
+        },
+        {
+          "name": "123.5 Sinh viên gọi API quản trị báo cáo - Thất bại không đủ quyền",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reports?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Phân quyền: Token tài khoản không phải Admin. Mã phản hồi mong đợi 403."
           },
           "response": []
         }

@@ -14,6 +14,7 @@ export type NotificationType =
   | 'MENTORING_WORK_LOG'
   | 'MENTORING_GROUP'
   | 'MENTORING_ACCOUNT'
+  | 'CONTENT_MODERATED'
 
 /**
  * Interface cấu trúc dữ liệu của một thông báo trả về từ máy chủ.

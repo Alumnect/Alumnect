@@ -28,6 +28,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,6 +78,9 @@ class FE23_LikeReportPostTest {
     @Mock
     private ReportMapper reportMapper;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     // ===== System under test =====
     @InjectMocks
     private PostServiceImpl postService;
@@ -104,7 +108,8 @@ class FE23_LikeReportPostTest {
                 reportRepository,
                 postRepository,
                 userRepository,
-                reportMapper
+                reportMapper,
+                eventPublisher
         );
 
         Role studentRole = Role.builder().id(1L).name("STUDENT").build();

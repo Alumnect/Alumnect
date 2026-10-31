@@ -29,6 +29,7 @@ import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.forum.QuestionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.alumnect.alumnect_backend.service.moderation.ContentModerationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -76,6 +77,9 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Autowired
     private VoteRepository voteRepository;
+
+    @Autowired
+    private ContentModerationService contentModerationService;
 
     /** Độ dài tối đa cho phép của từ khóa tìm kiếm (UC44 - Search questions), khớp độ dài tối đa của title. */
     private static final int KEYWORD_MAX_LENGTH = 250;
@@ -225,8 +229,8 @@ public class QuestionServiceImpl implements QuestionService {
                 .author(author)
                 .topic(topic)
                 .major(major)
-                .title(request.getTitle().trim())
-                .body(request.getBody().trim())
+                .title(contentModerationService.sanitizeContent(request.getTitle().trim()))
+                .body(contentModerationService.sanitizeContent(request.getBody().trim()))
                 .status(QuestionStatus.ACTIVE)
                 .voteCount(0)
                 .answerCount(0)
@@ -286,8 +290,8 @@ public class QuestionServiceImpl implements QuestionService {
                     .orElseThrow(() -> new BadRequestException("Ngành không tồn tại"));
         }
 
-        question.setTitle(request.getTitle().trim());
-        question.setBody(request.getBody().trim());
+        question.setTitle(contentModerationService.sanitizeContent(request.getTitle().trim()));
+        question.setBody(contentModerationService.sanitizeContent(request.getBody().trim()));
         question.setTopic(topic);
         question.setMajor(major);
         Question saved = questionRepository.save(question);

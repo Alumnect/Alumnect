@@ -17,17 +17,20 @@ public interface AdminReportService {
      * @param status Trạng thái của báo cáo (PENDING, RESOLVED, DISMISSED)
      * @param type Loại bài viết (GENERAL, ACHIEVEMENT, RECRUITMENT, EVENT)
      * @param postId ID bài viết bị báo cáo (tùy chọn)
+     * @param riskLevel Mức rủi ro kiểm duyệt HIGH, MEDIUM, LOW (tùy chọn)
      * @param page Số trang hiển thị (0-based)
      * @param size Số lượng phần tử mỗi trang
      * @return Trang danh sách báo cáo vi phạm dạng DTO bọc trong PageResponse
      */
-    PageResponse<AdminReportResponse> getReports(String query, String author, String reason, String status, String type, Long postId, int page, int size);
+    PageResponse<AdminReportResponse> getReports(String query, String author, String reason, String status, String type, Long postId, String riskLevel, int page, int size);
 
     /**
-     * Cập nhật trạng thái của báo cáo vi phạm (RESOLVED hoặc DISMISSED).
+     * Cập nhật trạng thái của báo cáo vi phạm (RESOLVED hoặc DISMISSED) và ghi nhận người xử lý.
+     * Khi bỏ qua báo cáo đã khiến bài bị tự động ẩn, bài được khôi phục và tác giả nhận thông báo.
      *
      * @param id ID của báo cáo cần cập nhật
      * @param status Trạng thái mới của báo cáo
+     * @param adminEmail Email của Admin đang thực hiện thao tác
      */
-    void updateReportStatus(Long id, String status);
+    void updateReportStatus(Long id, String status, String adminEmail);
 }

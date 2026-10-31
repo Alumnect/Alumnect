@@ -31,6 +31,7 @@ public interface AdminReportMapper {
     @Mapping(target = "aiFlaggedReason", source = "report.aiFlaggedReason")
     @Mapping(target = "autoModerated", source = "report.autoModerated")
     @Mapping(target = "detectedKeywords", source = "report.detectedKeywords")
-    @Mapping(target = "riskLevel", expression = "java(report.getAiScore() == null ? \"LOW\" : report.getAiScore() >= 0.85 ? \"HIGH\" : report.getAiScore() >= 0.40 ? \"MEDIUM\" : \"LOW\")")
+    @Mapping(target = "riskLevel", expression = "java(com.alumnect.alumnect_backend.common.enums.ModerationRiskLevel.fromScore(report.getAiScore()).name())")
+    @Mapping(target = "systemGenerated", expression = "java(report.getReporter() == null)")
     AdminReportResponse toDto(Report report);
 }

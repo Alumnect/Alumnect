@@ -178,12 +178,29 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
   )
 }
 
+/** Các mức lọc rủi ro; việc lọc do backend thực hiện để phân trang và tổng số luôn đúng. */
+const RISK_TABS = [
+  { key: 'ALL', label: 'Tất cả' },
+  { key: 'HIGH', label: 'Nguy cơ cao (>=85%)' },
+  { key: 'MEDIUM', label: 'Nghi vấn (40-85%)' },
+  { key: 'LOW', label: 'An toàn (<40%)' },
+] as const
+
+type RiskFilter = (typeof RISK_TABS)[number]['key']
+
+/** Tên hiển thị của người gửi báo cáo; báo cáo tự động không có người gửi. */
+const reporterLabel = (report: AdminReportDto) => report.reporterName ?? 'Hệ thống kiểm duyệt'
+
+/** Dòng phụ của người gửi báo cáo. */
+const reporterDetail = (report: AdminReportDto) => report.reporterEmail ?? 'Tự động phát hiện'
+
 export function AdminReportsQueue() {
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | 'DISMISSED'>('PENDING')
   const [reasonFilter, setReasonFilter] = useState<string>('ALL')
   const [typeFilter, setTypeFilter] = useState<CategoryKey>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [authorQuery, setAuthorQuery] = useState<string>('')
+  const [riskFilter, setRiskFilter] = useState<RiskFilter>('ALL')
   const [page, setPage] = useState(0)
 
   // Fetch reports from backend
@@ -193,6 +210,7 @@ export function AdminReportsQueue() {
     type: typeFilter === 'ALL' ? undefined : typeFilter,
     query: searchQuery || undefined,
     author: authorQuery || undefined,
+    riskLevel: riskFilter === 'ALL' ? undefined : riskFilter,
     page,
     size: 10,
   })
@@ -276,7 +294,7 @@ export function AdminReportsQueue() {
         setSelectedReport(null)
         toast.success('Đã xử lý báo cáo thành công!')
       } else if (type === 'DISMISS') {
-        // Cập nhật trạng thái báo cáo sang DISMISSED (không thay đổi trạng thái bài viết)
+        // Bỏ qua báo cáo; nếu bài bị hệ thống tự ẩn nhầm, backend sẽ khôi phục và báo cho tác giả
         await updateStatusMutation.mutateAsync({ id, status: 'DISMISSED' })
         
         // Clean up map for this report
@@ -296,7 +314,6 @@ export function AdminReportsQueue() {
     }
   }
 
-  const [riskFilter, setRiskFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL')
   const accessToken = useAuthStore((state) => state.accessToken)
   const queryClient = useQueryClient()
 
@@ -316,7 +333,7 @@ export function AdminReportsQueue() {
           try {
             const data = JSON.parse(msg.body)
             if (data.type === 'CRITICAL_AUTO_HIDDEN') {
-              toast.error(`🚨 CẢNH BÁO AI: Bài viết #${data.postId || ''} vừa bị tự động ẩn do vi phạm nghiêm trọng (${(data.aiScore * 100).toFixed(0)}%)!`)
+              toast.error(`🚨 CẢNH BÁO: Bài viết #${data.postId || ''} vừa bị tự động ẩn do vi phạm nghiêm trọng (${(data.aiScore * 100).toFixed(0)}%)!`)
             } else if (data.type === 'REVIEW_REQUIRED') {
               toast.warning(`⚠️ Báo cáo mới cần duyệt: Báo cáo #${data.reportId} có dấu hiệu nghi vấn (${(data.aiScore * 100).toFixed(0)}%)`)
             }
@@ -335,13 +352,7 @@ export function AdminReportsQueue() {
     }
   }, [accessToken, queryClient])
 
-  const rawReports = reportsData?.content || []
-  const reports = rawReports.filter((r) => {
-    if (riskFilter === 'HIGH') return r.riskLevel === 'HIGH' || (r.aiScore !== undefined && r.aiScore >= 0.85)
-    if (riskFilter === 'MEDIUM') return r.riskLevel === 'MEDIUM' || (r.aiScore !== undefined && r.aiScore >= 0.40 && r.aiScore < 0.85)
-    if (riskFilter === 'LOW') return r.riskLevel === 'LOW' || (r.aiScore !== undefined && r.aiScore < 0.40)
-    return true
-  })
+  const reports = reportsData?.content || []
   const totalPages = reportsData?.totalPages || 0
   const totalElements = reportsData?.totalElements || 0
 
@@ -433,20 +444,18 @@ export function AdminReportsQueue() {
           ))}
         </div>
 
-        {/* Risk Level Filter Tabs (Lọc theo Mức độ Rủi ro AI) */}
+        {/* Risk Level Filter Tabs (Lọc theo mức độ rủi ro) */}
         <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-border bg-surface-2 p-1">
           <span className="flex items-center gap-1 px-2.5 text-[11px] font-bold text-text-subtle">
-            <Sparkles size={12} className="text-gold-500" /> Rủi ro AI:
+            <Sparkles size={12} className="text-gold-500" /> Mức rủi ro:
           </span>
-          {[
-            { key: 'ALL', label: 'Tất cả' },
-            { key: 'HIGH', label: 'Nguy cơ cao (>=85%)' },
-            { key: 'MEDIUM', label: 'Nghi vấn (40-85%)' },
-            { key: 'LOW', label: 'An toàn (<40%)' },
-          ].map((tab) => (
+          {RISK_TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setRiskFilter(tab.key as any)}
+              onClick={() => {
+                setRiskFilter(tab.key)
+                setPage(0)
+              }}
               className={cn(
                 'rounded-full px-3 py-1 text-[11px] font-bold transition cursor-pointer select-none',
                 riskFilter === tab.key
@@ -542,7 +551,7 @@ export function AdminReportsQueue() {
                     <th className="px-5 py-3.5 font-bold">Lý do</th>
                     <th className="px-5 py-3.5 font-bold">Loại bài</th>
                     <th className="px-5 py-3.5 font-bold">Tác giả & Nội dung bài viết</th>
-                    <th className="px-5 py-3.5 font-bold text-center">Đánh giá AI</th>
+                    <th className="px-5 py-3.5 font-bold text-center">Đánh giá rủi ro</th>
                     <th className="px-5 py-3.5 font-bold text-center">Trạng thái bài</th>
                     <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
                   </tr>
@@ -566,13 +575,13 @@ export function AdminReportsQueue() {
                           <div className="flex items-center gap-3">
                             <Avatar
                               src={r.reporterAvatarUrl}
-                              name={r.reporterName}
+                              name={reporterLabel(r)}
                               size={36}
                               className="border border-primary-soft-border shrink-0 animate-breathe"
                             />
                             <div className="min-w-0">
-                              <p className="font-bold text-text truncate">{r.reporterName}</p>
-                              <p className="text-xs text-text-subtle truncate">{r.reporterEmail}</p>
+                              <p className="font-bold text-text truncate">{reporterLabel(r)}</p>
+                              <p className="text-xs text-text-subtle truncate">{reporterDetail(r)}</p>
                             </div>
                           </div>
                         </td>
@@ -617,7 +626,7 @@ export function AdminReportsQueue() {
                           </div>
                         </td>
 
-                        {/* Đánh giá AI */}
+                        {/* Đánh giá rủi ro */}
                         <td className="px-5 py-4 text-center">
                           {r.aiScore !== undefined && r.aiScore !== null ? (
                             <div className="inline-flex flex-col items-center gap-1">
@@ -723,13 +732,13 @@ export function AdminReportsQueue() {
                 <div className="flex items-center gap-3">
                   <Avatar
                     src={selectedReport.reporterAvatarUrl}
-                    name={selectedReport.reporterName}
+                    name={reporterLabel(selectedReport)}
                     size={40}
                     className="border border-primary-soft-border"
                   />
                   <div>
                     <span className="text-xs text-text-subtle block font-medium">Người gửi báo cáo</span>
-                    <span className="font-bold text-text text-sm">{selectedReport.reporterName} ({selectedReport.reporterEmail})</span>
+                    <span className="font-bold text-text text-sm">{reporterLabel(selectedReport)} ({reporterDetail(selectedReport)})</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-xs mt-2 border-t border-brand-100/50 pt-2 font-medium">
@@ -797,14 +806,14 @@ export function AdminReportsQueue() {
                   </p>
                 </div>
 
-                {/* Khối phân tích kiểm duyệt tự động AI */}
+                {/* Khối phân tích kiểm duyệt tự động */}
                 {selectedReport.aiScore !== undefined && selectedReport.aiScore !== null && (
                   <div className="rounded-2xl border border-border bg-surface-2/70 p-4 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <Sparkles size={16} className="text-gold-500" />
                         <h4 className="text-xs font-bold text-text uppercase tracking-wider">
-                          Phân tích Kiểm duyệt Tự động (AI Moderation)
+                          Phân tích Kiểm duyệt Tự động
                         </h4>
                       </div>
                       <span
@@ -979,7 +988,7 @@ export function AdminReportsQueue() {
                       ? 'Bạn có chắc muốn ẩn bài viết vi phạm này không?' 
                       : 'Bạn có chắc muốn giữ công khai bài viết này không?'
                   )}
-                  {confirmAction.type === 'DISMISS' && 'Bạn có chắc muốn bỏ qua báo cáo này không?'}
+                  {confirmAction.type === 'DISMISS' && 'Bạn có chắc muốn bỏ qua báo cáo này không? Nếu bài viết bị hệ thống tự ẩn, bài sẽ được khôi phục.'}
                 </p>
               </div>
               <div className="flex gap-2 w-full pt-2">

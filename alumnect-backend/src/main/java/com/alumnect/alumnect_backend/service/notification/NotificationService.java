@@ -97,6 +97,20 @@ public interface NotificationService {
     void sendReportResolvedNotification(Post post);
 
     /**
+     * Báo cho tác giả biết bài viết vừa bị hệ thống tự động ẩn để chờ Admin xem xét (UC123).
+     *
+     * @param post Bài viết bị ẩn
+     */
+    void sendContentModeratedNotification(Post post);
+
+    /**
+     * Báo cho tác giả biết bài viết đã được khôi phục sau khi Admin xác nhận không vi phạm (UC123).
+     *
+     * @param post Bài viết được khôi phục
+     */
+    void sendContentRestoredNotification(Post post);
+
+    /**
      * Gửi thông báo chào mừng khi tài khoản chuyển sang trạng thái ACTIVE (Kịch bản 6).
      *
      * @param user Tài khoản vừa kích hoạt ACTIVE

@@ -55,5 +55,8 @@ public enum NotificationType {
     /** Lời mời và thay đổi thành viên của nhóm mentoring. */
     MENTORING_GROUP,
     /** Thông báo tài khoản Mentoring: request đóng, gói Mentor, chi trả và hoàn tiền */
-    MENTORING_ACCOUNT
+    MENTORING_ACCOUNT,
+
+    /** Bài viết bị hệ thống tự động ẩn hoặc được khôi phục sau khi Admin xem xét (UC123) */
+    CONTENT_MODERATED
 }

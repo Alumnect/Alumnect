@@ -50,6 +50,7 @@ const ICONS: Record<NotificationType, LucideIcon> = {
   MENTORING_WORK_LOG: FileText,
   MENTORING_GROUP: Users,
   MENTORING_ACCOUNT: Briefcase,
+  CONTENT_MODERATED: ShieldAlert,
 }
 
 const TONES: Record<NotificationType, string> = {
@@ -65,6 +66,7 @@ const TONES: Record<NotificationType, string> = {
   MENTORING_WORK_LOG: 'bg-success text-text-inverse shadow-md shadow-emerald-600/30',
   MENTORING_GROUP: 'bg-info text-text-inverse shadow-md shadow-violet-600/30',
   MENTORING_ACCOUNT: 'bg-info text-text-inverse shadow-md shadow-sky-600/30',
+  CONTENT_MODERATED: 'bg-warning text-text-inverse shadow-md shadow-amber-500/30',
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -217,7 +219,8 @@ export function NotificationsPage() {
     // Điều hướng tương ứng theo loại và đối tượng mục tiêu
     if (item.type === 'WELCOME') {
       navigate('/app')
-    } else if (item.type === 'REPORT_RESOLVED') {
+    } else if (item.type === 'REPORT_RESOLVED' || item.type === 'CONTENT_MODERATED') {
+      // Bài viết đang ẩn không mở được trang chi tiết nên đưa về bảng tin
       navigate('/app')
     } else if (item.targetType === 'MENTOR_PAYOUT') {
       navigate('/app/mentoring/earnings')
