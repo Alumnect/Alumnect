@@ -11,6 +11,7 @@
  */
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { HelpCircle, ChevronUp, MessageSquare, Clock, Flame, CheckCircle2, Loader2, AlertTriangle, Inbox, LayoutGrid, GraduationCap, Search, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, FadeSwitch } from '@/components/ui'
@@ -24,15 +25,9 @@ import type { Question, SortOption } from '@/features/forum'
 import { FilterMultiSelect } from '@/features/forum/components/FilterMultiSelect'
 import { TopicIcon } from '@/features/forum/lib/topicIcons'
 
-/** Các tùy chọn sắp xếp — khớp tham số `sort` của backend. */
-const SORTS: { key: SortOption; label: string; icon: LucideIcon }[] = [
-  { key: 'recent', label: 'Mới nhất', icon: Clock },
-  { key: 'votes', label: 'Nhiều bình chọn', icon: Flame },
-  { key: 'answers', label: 'Nhiều câu trả lời', icon: CheckCircle2 },
-]
-
 /** Thẻ hiển thị một câu hỏi trong danh sách. */
 function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
+  const { t } = useTranslation()
   // Bình chọn (UC42): state cục bộ cập nhật lạc quan, cùng pattern với "Thích bài viết" (UC17 - useToggleLike).
   const [voted, setVoted] = useState(q.voted)
   const [votes, setVotes] = useState(q.votes)
@@ -46,7 +41,7 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
 
   const handleVote = () => {
     if (!canVote) {
-      promptLogin('Đăng nhập để bình chọn câu hỏi.')
+      promptLogin(t('forum.promptLoginVoteQuestion'))
       return
     }
     const next = !voted
@@ -75,7 +70,7 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
             type="button"
             onClick={handleVote}
             aria-pressed={voted}
-            aria-label={voted ? 'Bỏ bình chọn câu hỏi' : 'Bình chọn câu hỏi'}
+            aria-label={voted ? t('forum.unvoteQuestionAria') : t('forum.voteQuestionAria')}
             className={cn(
               'grid h-10 w-10 place-items-center rounded-xl ring-1 ring-inset transition-colors',
               voted ? 'bg-primary-soft text-primary-solid ring-primary/30' : 'bg-surface-2 text-text-subtle ring-border hover:bg-surface-3',
@@ -131,7 +126,7 @@ function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
               <span>{q.time}</span>
             </div>
             <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary-solid">
-              <MessageSquare size={15} /> {q.answers} câu trả lời
+              <MessageSquare size={15} /> {t('forum.answersCount', { count: q.answers })}
             </span>
           </div>
         </div>
@@ -162,17 +157,18 @@ function QuestionSkeleton() {
 
 /** Trạng thái lỗi khi tải danh sách câu hỏi thất bại. */
 function QuestionsError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-text">Không tải được danh sách câu hỏi</p>
-        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">{t('forum.loadError')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('common.error')}</p>
       </div>
       <Button variant="secondary" size="sm" onClick={onRetry}>
-        Thử lại
+        {t('common.tryAgain')}
       </Button>
     </Card>
   )
@@ -180,6 +176,7 @@ function QuestionsError({ message, onRetry }: { message?: string; onRetry: () =>
 
 /** Trạng thái rỗng khi chưa có câu hỏi nào khớp bộ lọc/từ khóa tìm kiếm (UC44). */
 function QuestionsEmpty({ keyword, onClear }: { keyword: string; onClear: () => void }) {
+  const { t } = useTranslation()
   const searching = keyword.trim().length > 0
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
@@ -187,13 +184,13 @@ function QuestionsEmpty({ keyword, onClear }: { keyword: string; onClear: () => 
         <Inbox size={24} />
       </span>
       <div>
-        <p className="font-bold text-text">{searching ? `Không tìm thấy câu hỏi khớp "${keyword.trim()}"` : 'Chưa có câu hỏi nào'}</p>
+        <p className="font-bold text-text">{searching ? t('forum.emptySearch', { keyword: keyword.trim() }) : t('forum.emptyQuestions')}</p>
         <p className="mt-1 text-sm text-text-subtle">
-          {searching ? 'Thử từ khóa khác, hoặc xóa tìm kiếm để xem toàn bộ câu hỏi.' : 'Thử đổi chủ đề khác, hoặc là người đầu tiên đặt câu hỏi.'}
+          {searching ? t('forum.emptySearchDesc') : t('forum.emptyQuestionsDesc')}
         </p>
       </div>
       <Button variant="secondary" size="sm" onClick={onClear}>
-        {searching ? 'Xóa tìm kiếm' : 'Xóa bộ lọc'}
+        {searching ? t('forum.clearSearch') : t('forum.clearFilter')}
       </Button>
     </Card>
   )
@@ -203,12 +200,19 @@ function QuestionsEmpty({ keyword, onClear }: { keyword: string; onClear: () => 
  * Trang danh sách câu hỏi diễn đàn (UC38) + tìm kiếm (UC44) + đặt câu hỏi (UC40).
  */
 export function ForumPage() {
+  const { t } = useTranslation()
   // === State: các chủ đề đang lọc (tick nhiều), danh sách tiêu chí sắp xếp (ưu tiên), mở modal ===
   const [topicIds, setTopicIds] = useState<number[]>([])
   const [majorIds, setMajorIds] = useState<number[]>([])
   // Mảng rỗng = mặc định "recent" (backend tự hiểu). Cái người dùng bấm ĐẦU TIÊN là ưu tiên 1.
   const [sorts, setSorts] = useState<SortOption[]>([])
   const [askOpen, setAskOpen] = useState(false)
+
+  const sortOptions: { key: SortOption; label: string; icon: LucideIcon }[] = [
+    { key: 'recent', label: t('forum.sortRecent'), icon: Clock },
+    { key: 'votes', label: t('forum.sortVotes'), icon: Flame },
+    { key: 'answers', label: t('forum.sortAnswers'), icon: CheckCircle2 },
+  ]
 
   // === Tìm kiếm (UC44): ô nhập cập nhật ngay để gõ mượt, debounce 400ms mới gọi API tránh spam request ===
   const [searchInput, setSearchInput] = useState('')
@@ -246,12 +250,12 @@ export function ForumPage() {
     <div className="mx-auto max-w-5xl">
       <PageHeader
         icon={<HelpCircle size={20} />}
-        title="Diễn đàn Hỏi & Đáp"
-        subtitle="Hỏi đáp và chia sẻ kiến thức cùng cộng đồng FPTU."
+        title={t('forum.title')}
+        subtitle={t('forum.subtitle')}
         actions={
           canAsk ? (
             <Button variant="primary" size="sm" onClick={() => setAskOpen(true)}>
-              Đặt câu hỏi
+              {t('forum.askQuestion')}
             </Button>
           ) : undefined
         }
@@ -263,17 +267,17 @@ export function ForumPage() {
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
           <input
-            aria-label="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
+            aria-label={t('forum.searchPlaceholder')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Tìm kiếm câu hỏi theo tiêu đề hoặc nội dung…"
+            placeholder={t('forum.searchPlaceholder')}
             maxLength={SEARCH_KEYWORD_MAX_LENGTH}
             className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
           />
           {searchInput && (
             <button
               onClick={() => setSearchInput('')}
-              aria-label="Xóa tìm kiếm"
+              aria-label={t('common.clearSearch')}
               className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
             >
               <X size={14} />
@@ -286,8 +290,8 @@ export function ForumPage() {
           <div className="flex flex-wrap items-center gap-2">
             <FilterMultiSelect
               buttonIcon={<LayoutGrid size={15} className="text-primary-solid" />}
-              allLabel="Tất cả thể loại"
-              noun="thể loại"
+              allLabel={t('forum.allTopics')}
+              noun={t('forum.topicNoun')}
               items={topics}
               selected={topicIds}
               onChange={setTopicIds}
@@ -295,8 +299,8 @@ export function ForumPage() {
             />
             <FilterMultiSelect
               buttonIcon={<GraduationCap size={15} className="text-primary-solid" />}
-              allLabel="Tất cả ngành"
-              noun="ngành"
+              allLabel={t('forum.allMajors')}
+              noun={t('forum.majorNoun')}
               items={majors}
               selected={majorIds}
               onChange={setMajorIds}
@@ -305,14 +309,14 @@ export function ForumPage() {
             />
             {(topicIds.length > 0 || majorIds.length > 0 || sorts.length > 0 || searchInput.trim().length > 0) && (
               <button onClick={resetFilter} className="text-xs font-semibold text-text-subtle underline-offset-2 transition-colors hover:text-text-muted hover:underline">
-                Xóa lọc
+                {t('common.clearFilter')}
               </button>
             )}
           </div>
 
           <div className="flex flex-col items-start gap-1 sm:items-end">
             <div className="no-scrollbar flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surface-2 p-1 border border-border">
-              {SORTS.map((s) => {
+              {sortOptions.map((s) => {
                 const inSorts = sorts.includes(s.key)
                 // Khi chưa chọn gì (rỗng), "Newest" là mặc định nên vẫn hiển thị active.
                 const active = inSorts || (sorts.length === 0 && s.key === 'recent')
@@ -333,7 +337,6 @@ export function ForumPage() {
                 )
               })}
             </div>
-            {sorts.length > 1 && <span className="text-xs text-text-subtle">Sắp theo thứ tự ưu tiên 1 → {sorts.length}</span>}
           </div>
         </div>
       </Card>
@@ -368,7 +371,7 @@ export function ForumPage() {
                 disabled={isFetchingNextPage}
                 leftIcon={isFetchingNextPage ? <Loader2 size={16} className="animate-spin" /> : undefined}
               >
-                {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm câu hỏi'}
+                {isFetchingNextPage ? t('common.loading') : t('forum.loadMoreQuestions')}
               </Button>
             </div>
           )}

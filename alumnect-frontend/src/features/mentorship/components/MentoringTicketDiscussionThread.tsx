@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ImageViewerModal } from '@/components/ui/ImageViewerModal'
 import { useState, useRef, useEffect } from 'react'
 import {
@@ -25,18 +26,30 @@ interface MentoringTicketDiscussionThreadProps {
   ticketStatus: string
   currentRole: 'ADMIN' | 'STUDENT' | 'MENTOR'
   studentName?: string
+  ticketCode?: string
   mentorName?: string
   totalAmount?: number | null
+}
+
+/** Chữ cái đầu của tên người gửi (tối đa 2 ký tự) để hiển thị ảnh đại diện. */
+function senderInitials(name?: string | null) {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
 
 export function MentoringTicketDiscussionThread({
   ticketId,
   ticketStatus,
   currentRole,
-  studentName = 'Học viên',
-  mentorName = 'Cố vấn',
+  studentName,
+  ticketCode,
+  mentorName = 'Mentor',
   totalAmount = 0,
 }: MentoringTicketDiscussionThreadProps) {
+  const { t } = useTranslation()
+  const studentLabel = studentName ?? t('common.student')
   const [content, setContent] = useState('')
   const [messageType, setMessageType] = useState<'TEXT' | 'MEDIATION_OFFER' | 'DEADLINE_REQUEST'>('TEXT')
   const [proposedMentorAmount, setProposedMentorAmount] = useState<number | ''>('')
@@ -90,13 +103,13 @@ export function MentoringTicketDiscussionThread({
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!content.trim()) {
-      toast.error('Vui lòng nhập nội dung tin nhắn')
+      toast.error(t('mentoring.enterMessageContent'))
       return
     }
 
     if (messageType === 'MEDIATION_OFFER') {
       if (proposedMentorAmount === '' || proposedStudentRefund === '') {
-        toast.error('Vui lòng nhập đầy đủ số tiền thù lao Mentor và hoàn trả Student')
+        toast.error(t('mentoring.enterRemunerationAndRefundAmounts'))
         return
       }
     }
@@ -104,7 +117,7 @@ export function MentoringTicketDiscussionThread({
     const attachments: TicketEvidencePayload[] = []
     if (attachmentUrl.trim()) {
       attachments.push({
-        title: attachmentTitle.trim() || 'Tài liệu trao đổi đính kèm',
+        title: attachmentTitle.trim() || t('mentoring.defaultAttachmentTitle'),
         fileUrl: attachmentUrl.trim(),
         fileType: /\.(png|jpe?g|webp|gif)$/i.test(attachmentUrl.trim()) ? 'image/jpeg' : 'application/pdf',
       })
@@ -138,9 +151,9 @@ export function MentoringTicketDiscussionThread({
         setProposedStudentRefund('')
       }
       setMessageType('TEXT')
-      toast.success('Đã gửi tin nhắn trao đổi thành công!')
+      toast.success(t('mentoring.messageSentSuccess'))
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err?.message || 'Gửi tin nhắn thất bại')
+      toast.error(err?.response?.data?.message || err?.message || t('mentoring.messageSendError'))
     }
   }
 
@@ -154,20 +167,20 @@ export function MentoringTicketDiscussionThread({
           </div>
           <div>
             <h4 className="text-sm font-bold text-text flex items-center gap-2">
-              Kênh Trao Đổi & Hòa Giải 3 Bên
+              {t('mentoring.discussionChannelTitle', { code: ticketCode ?? ticketId })}
               <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-info-soft text-info border border-info">
                 Audit Trail
               </span>
             </h4>
             <p className="text-xs text-text-subtle">
-              Trao đổi minh bạch giữa Học viên, Cố vấn và Ban Quản Trị để tìm tiếng nói chung
+              {t('mentoring.discussionChannelSubtitle')}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 text-xs">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-info-soft text-info text-xs font-medium border border-info">
-            <User size={11} /> {studentName}
+            <User size={11} /> {studentLabel}
           </span>
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success-soft text-success text-xs font-medium border border-success-border">
             <GraduationCap size={11} /> {mentorName}
@@ -183,16 +196,16 @@ export function MentoringTicketDiscussionThread({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full text-text-subtle gap-2">
             <Loader2 className="h-6 w-6 animate-spin text-info" />
-            <p className="text-xs">Đang tải lịch sử trao đổi...</p>
+            <p className="text-xs">{t('mentoring.loadingDiscussionHistory')}</p>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-surface rounded-xl border border-dashed border-border-strong">
             <div className="h-12 w-12 rounded-full bg-info-soft text-info flex items-center justify-center mb-2">
               <MessageSquare size={22} />
             </div>
-            <p className="text-sm font-bold text-text">Chưa có tin nhắn nào</p>
+            <p className="text-sm font-bold text-text">{t('mentoring.noMessagesYetTitle')}</p>
             <p className="text-xs text-text-subtle mt-1 max-w-sm">
-              Đây là kênh trao đổi chính thức có lưu vết. Hãy gửi tin nhắn làm rõ vấn đề hoặc đưa ra đề xuất phân bổ tiền hòa giải.
+              {t('mentoring.officialChannelNotice')}
             </p>
           </div>
         ) : (
@@ -221,7 +234,7 @@ export function MentoringTicketDiscussionThread({
                         isAdminMsg ? 'bg-info' : isStudentMsg ? 'bg-info' : 'bg-success'
                       }`}
                     >
-                      {isAdminMsg ? 'AD' : isStudentMsg ? 'HV' : 'CV'}
+                      {isAdminMsg ? 'AD' : senderInitials(msg.senderName)}
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-xs font-bold text-text">
@@ -236,7 +249,7 @@ export function MentoringTicketDiscussionThread({
                             : 'bg-success-soft text-success'
                         }`}
                       >
-                        {isAdminMsg ? 'Ban Quản Trị' : isStudentMsg ? 'Bên tạo yêu cầu' : 'Bên thực hiện (Mentor)'}
+                        {isAdminMsg ? t('mentoring.roleAdmin') : isStudentMsg ? t('mentoring.roleRequester') : t('mentoring.roleExecutorMentor')}
                       </span>
                     </div>
                   </div>
@@ -252,18 +265,18 @@ export function MentoringTicketDiscussionThread({
                     <div className="flex items-center gap-2 mb-1.5">
                       <Scale className="h-4 w-4 text-info" />
                       <span className="text-xs font-bold text-info uppercase tracking-wide">
-                        Phương án hòa giải phân bổ tiền đề xuất
+                        {t('mentoring.mediationProposalHeading')}
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-surface/80 p-2 rounded border border-info">
-                        <span className="text-xs text-text-subtle block">Mentor nhận thù lao:</span>
+                        <span className="text-xs text-text-subtle block">{t('mentoring.mentorReceivesRemuneration')}</span>
                         <strong className="text-sm text-success font-bold">
                           {formatVnd(msg.proposedMentorAmount)}
                         </strong>
                       </div>
                       <div className="bg-surface/80 p-2 rounded border border-info">
-                        <span className="text-xs text-text-subtle block">Bên tạo yêu cầu được hoàn:</span>
+                        <span className="text-xs text-text-subtle block">{t('mentoring.requesterReceivesRefund')}</span>
                         <strong className="text-sm text-info font-bold">
                           {formatVnd(msg.proposedStudentRefund)}
                         </strong>
@@ -271,7 +284,7 @@ export function MentoringTicketDiscussionThread({
                     </div>
                     {msg.deadline && (
                       <p className="text-xs text-info mt-2 flex items-center gap-1 font-medium">
-                        <Clock size={12} /> Hạn chót phản hồi: <strong>{formatDateTime(msg.deadline)}</strong>
+                        <Clock size={12} /> {t('mentoring.responseDeadlineLabel')}<strong>{formatDateTime(msg.deadline)}</strong>
                       </p>
                     )}
                   </div>
@@ -282,7 +295,7 @@ export function MentoringTicketDiscussionThread({
                   <div className="mb-2.5 p-2.5 rounded-lg bg-warning-soft border border-warning-border flex items-center gap-2 text-xs text-warning">
                     <Clock className="h-4 w-4 text-warning shrink-0" />
                     <span>
-                      Yêu cầu phản hồi / bổ sung hồ sơ trước: <strong>{formatDateTime(msg.deadline)}</strong>
+                      {t('mentoring.supplementDossierBefore')}<strong>{formatDateTime(msg.deadline)}</strong>
                     </span>
                   </div>
                 )}
@@ -308,7 +321,7 @@ export function MentoringTicketDiscussionThread({
                             <FileText size={12} className="text-info" />
                           )}
                           <span className="font-medium text-xs text-text-muted max-w-[140px] truncate">
-                            {att.title || att.fileName || 'Tệp đính kèm'}
+                            {att.title || att.fileName || t('mentoring.attachmentDefault')}
                           </span>
                           {isImg ? (
                             <button
@@ -345,7 +358,7 @@ export function MentoringTicketDiscussionThread({
         <div className="p-3 bg-surface-3 dark:bg-surface border-t border-border text-center shrink-0">
           <p className="text-xs text-text-subtle font-medium flex items-center justify-center gap-1.5">
             <CheckCircle2 size={14} className="text-success" />
-            Vé đã được giải quyết hoặc kết thúc ({ticketStatus}). Kênh trao đổi được lưu trữ dưới dạng Chỉ đọc (Read-only).
+            {t('mentoring.ticketClosedReadOnlyNotice', { status: ticketStatus })}
           </p>
         </div>
       ) : (
@@ -362,7 +375,7 @@ export function MentoringTicketDiscussionThread({
                     : 'text-text-muted hover:text-text'
                 }`}
               >
-                Trao đổi
+                {t('mentoring.discussTab')}
               </button>
               <button
                 type="button"
@@ -373,7 +386,7 @@ export function MentoringTicketDiscussionThread({
                     : 'text-info hover:text-info'
                 }`}
               >
-                <Scale size={12} /> Đề xuất hòa giải
+                <Scale size={12} /> {t('mentoring.mediationProposalTab')}
               </button>
               {currentRole === 'ADMIN' && (
                 <button
@@ -385,7 +398,7 @@ export function MentoringTicketDiscussionThread({
                       : 'text-warning hover:text-warning'
                   }`}
                 >
-                  <Clock size={12} /> Hạn chót phản hồi
+                  <Clock size={12} /> {t('mentoring.responseDeadlineTab')}
                 </button>
               )}
             </div>
@@ -396,7 +409,7 @@ export function MentoringTicketDiscussionThread({
               className="text-xs text-text-muted hover:text-info flex items-center gap-1 font-medium transition-colors"
             >
               <Paperclip size={13} />
-              {showAttachInput ? 'Đóng đính kèm' : 'Đính kèm tệp / link'}
+              {showAttachInput ? t('mentoring.closeAttachment') : t('mentoring.attachFileOrLink')}
             </button>
           </div>
 
@@ -404,17 +417,17 @@ export function MentoringTicketDiscussionThread({
           {messageType === 'MEDIATION_OFFER' && (
             <div className="p-3 rounded-lg bg-info-soft border border-info space-y-2 text-xs">
               <div className="flex items-center justify-between text-xs text-info font-bold">
-                <span>Phân bổ số tiền thỏa thuận:</span>
+                <span>{t('mentoring.allocationSplitLabel')}</span>
                 {totalAmount && totalAmount > 0 && (
                   <span className="font-normal text-text-subtle">
-                    Tổng quỹ bảo đảm: <strong>{formatVnd(totalAmount)}</strong>
+                    {t('mentoring.totalEscrowFund')}<strong>{formatVnd(totalAmount)}</strong>
                   </span>
                 )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs font-semibold text-text-muted block mb-0.5">
-                    Thù lao đề xuất cho Mentor (VND):
+                    {t('mentoring.proposedMentorPayoutVnd')}
                   </label>
                   <input
                     type="number"
@@ -428,13 +441,13 @@ export function MentoringTicketDiscussionThread({
                         setProposedStudentRefund(totalAmount - val)
                       }
                     }}
-                    placeholder="ví dụ: 500000"
+                    placeholder={t('mentoring.mentorRemunerationPlaceholder')}
                     className="w-full px-2.5 py-1.5 rounded-md border border-border-strong bg-surface text-xs font-semibold"
                   />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-text-muted block mb-0.5">
-                    Hoàn tiền cho Bên tạo yêu cầu (VND):
+                    {t('mentoring.proposedMenteeRefundVnd')}
                   </label>
                   <input
                     type="number"
@@ -448,7 +461,7 @@ export function MentoringTicketDiscussionThread({
                         setProposedMentorAmount(totalAmount - val)
                       }
                     }}
-                    placeholder="ví dụ: 1000000"
+                    placeholder={t('mentoring.studentRefundPlaceholder')}
                     className="w-full px-2.5 py-1.5 rounded-md border border-border-strong bg-surface text-xs font-semibold"
                   />
                 </div>
@@ -460,7 +473,7 @@ export function MentoringTicketDiscussionThread({
           {messageType === 'DEADLINE_REQUEST' && (
             <div className="p-2.5 rounded-lg bg-warning-soft border border-warning-border flex items-center justify-between gap-2 text-xs">
               <span className="font-semibold text-warning">
-                Thời hạn yêu cầu phản hồi:
+                {t('mentoring.requiredResponseDeadline')}
               </span>
               <div className="flex items-center gap-1.5">
                 {[1, 2, 3, 5].map((days) => (
@@ -474,7 +487,7 @@ export function MentoringTicketDiscussionThread({
                         : 'bg-surface text-text-muted border-border-strong'
                     }`}
                   >
-                    {days} ngày
+                    {t('mentoring.daysFormat', { days })}
                   </button>
                 ))}
               </div>
@@ -488,7 +501,7 @@ export function MentoringTicketDiscussionThread({
                 type="text"
                 value={attachmentTitle}
                 onChange={(e) => setAttachmentTitle(e.target.value)}
-                placeholder="Tiêu đề tài liệu/ảnh chứng từ..."
+                placeholder={t('mentoring.attachmentTitlePlaceholder')}
                 className="px-2.5 py-1.5 rounded-md border border-border-strong bg-surface text-xs"
               />
               <input
@@ -509,10 +522,10 @@ export function MentoringTicketDiscussionThread({
               onChange={(e) => setContent(e.target.value)}
               placeholder={
                 messageType === 'MEDIATION_OFFER'
-                  ? 'Nêu căn cứ và giải thích cho đề xuất hòa giải phân bổ tiền này...'
+                  ? t('mentoring.mediationProposalPlaceholder')
                   : messageType === 'DEADLINE_REQUEST'
-                  ? 'Nêu rõ thông tin hoặc bằng chứng cần các bên bổ sung trước thời hạn...'
-                  : 'Nhập nội dung trao đổi, làm rõ hoặc giải trình...'
+                  ? t('mentoring.placeholderDeadlineReason')
+                  : t('mentoring.placeholderGeneralDiscussion')
               }
               className="flex-1 px-3 py-2 text-xs rounded-xl border border-border-strong bg-surface focus:outline-none focus:ring-2 focus:ring-info resize-none"
             />
@@ -526,7 +539,7 @@ export function MentoringTicketDiscussionThread({
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              <span>Gửi</span>
+              <span>{t('mentoring.sendBtn')}</span>
             </Button>
           </div>
         </form>
@@ -537,7 +550,7 @@ export function MentoringTicketDiscussionThread({
         isOpen={previewImage !== null}
         onClose={() => setPreviewImage(null)}
         src={previewImage ?? ''}
-        alt="Ảnh bằng chứng phóng to"
+        alt={t('mentoring.evidenceImageEnlarged')}
       />
     </div>
   )

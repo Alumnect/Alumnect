@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Users, UserPlus, LogOut, ShieldCheck, UserX, Edit2, Check, Loader2, Camera, Crown, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, Button, toast, DialogFrame } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -29,6 +30,7 @@ interface ConfirmAction {
 }
 
 export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onConversationUpdated }: GroupInfoModalProps) {
+  const { t } = useTranslation()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const conversationId = conversation.id
 
@@ -110,7 +112,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
       }
     } catch (err) {
       console.error('Lỗi tải ảnh đại diện nhóm:', err)
-      toast.error('Không thể tải ảnh đại diện nhóm lên. Vui lòng thử lại.')
+      toast.error(t('messages.groupAvatarError', 'Không thể tải ảnh đại diện nhóm lên. Vui lòng thử lại.'))
     } finally {
       setIsUploadingAvatar(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -131,7 +133,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
       onConversationUpdated(res.data)
     }
     setIsEditingTitle(false)
-    toast.success('Đã cập nhật tên nhóm')
+    toast.success(t('messages.groupUpdatedSuccess', 'Đã cập nhật tên nhóm'))
   }
 
   // Cập nhật từ khóa tìm kiếm thành viên
@@ -150,23 +152,23 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
         onConversationUpdated(res.data)
       }
       setAddCandidates((prev) => prev.filter((u) => u.userId !== targetUserId))
-      toast.success('Đã thêm thành viên vào nhóm')
+      toast.success(t('messages.memberAddedSuccess', 'Đã thêm thành viên vào nhóm'))
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err?.message || 'Không thể thêm thành viên')
+      toast.error(err?.response?.data?.message || err?.message || t('messages.cannotAddMemberError', 'Không thể thêm thành viên'))
     }
   }
 
   // Bấm nút rời nhóm: Nếu là admin và còn thành viên khác thì mở giao diện chọn admin mới (trừ nhóm chat hội nhóm)
   const handleLeaveClick = () => {
     if (isCommunityOwner) {
-      toast.error('Bạn là Chủ sở hữu hội nhóm nên không thể rời nhóm trò chuyện này.')
+      toast.error(t('messages.ownerCannotLeave', 'Bạn là Chủ sở hữu hội nhóm nên không thể rời nhóm trò chuyện này.'))
       return
     }
     if (isCommunityGroup) {
       setConfirmAction({
         type: 'leave',
         userId: Number(currentUserId) || 0,
-        userName: 'Bạn',
+        userName: t('messages.you', 'Bạn'),
       })
       return
     }
@@ -175,13 +177,13 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
       setConfirmAction({
         type: 'transfer_and_leave',
         userId: Number(currentUserId) || 0,
-        userName: 'Bạn',
+        userName: t('messages.you', 'Bạn'),
       })
     } else {
       setConfirmAction({
         type: 'leave',
         userId: Number(currentUserId) || 0,
-        userName: 'Bạn',
+        userName: t('messages.you', 'Bạn'),
       })
     }
   }
@@ -191,7 +193,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
     setConfirmAction({
       type: 'disband',
       userId: Number(currentUserId) || 0,
-      userName: conversation.title || 'Nhóm trò chuyện',
+      userName: conversation.title || t('messages.chatGroup', 'Nhóm trò chuyện'),
     })
   }
 
@@ -203,12 +205,12 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
     if (type === 'disband') {
       try {
         await deleteConversationMutation.mutateAsync(conversationId!)
-        toast.success('Đã giải tán nhóm trò chuyện thành công')
+        toast.success(t('messages.groupDisbandedSuccess', 'Đã giải tán nhóm trò chuyện thành công'))
         setConfirmAction(null)
         onLeftGroup()
         onClose()
       } catch (err: any) {
-        toast.error(err?.response?.data?.message || err?.message || 'Có lỗi xảy ra khi giải tán nhóm')
+        toast.error(err?.response?.data?.message || err?.message || t('messages.groupDisbandError', 'Có lỗi xảy ra khi giải tán nhóm'))
       }
       return
     }
@@ -217,12 +219,12 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
       const newAdminId = type === 'transfer_and_leave' ? (selectedNewAdminId ?? undefined) : undefined
       await removeMemberMutation.mutateAsync({ conversationId: conversationId!, userId, newAdminId })
       if (type === 'leave' || type === 'transfer_and_leave') {
-        toast.success('Đã rời khỏi nhóm')
+        toast.success(t('messages.leftGroupSuccess', 'Đã rời khỏi nhóm'))
         setConfirmAction(null)
         onLeftGroup()
         onClose()
       } else {
-        toast.success('Đã xóa thành viên khỏi nhóm')
+        toast.success(t('messages.memberRemovedSuccess', 'Đã xóa thành viên khỏi nhóm'))
         setConfirmAction(null)
         if (onConversationUpdated) {
           onConversationUpdated({
@@ -232,7 +234,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
         }
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err?.message || 'Có lỗi xảy ra, vui lòng thử lại')
+      toast.error(err?.response?.data?.message || err?.message || t('common.error', 'Có lỗi xảy ra, vui lòng thử lại'))
     }
   }
 
@@ -250,9 +252,9 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-primary-soft text-primary-solid">
               <Users size={16} />
             </div>
-            <h3 className="text-sm font-bold text-text">Thông tin nhóm</h3>
+            <h3 className="text-sm font-bold text-text">{t('messages.groupInfoTitle', 'Thông tin nhóm')}</h3>
           </div>
-          <button aria-label="Đóng"
+          <button aria-label={t('common.close', 'Đóng')}
             onClick={onClose}
             className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
           >
@@ -278,7 +280,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 type="button"
                 disabled={isUploadingAvatar}
                 onClick={() => fileInputRef.current?.click()}
-                title="Đổi ảnh đại diện nhóm"
+                title={t('messages.changeGroupPhotoTitle', 'Đổi ảnh đại diện nhóm')}
                 className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-black/55 text-white opacity-0 transition-opacity hover:opacity-100 group-hover:opacity-100 cursor-pointer disabled:pointer-events-none"
               >
                 {isUploadingAvatar ? (
@@ -286,7 +288,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 ) : (
                   <>
                     <Camera size={16} className="mb-0.5" />
-                    <span className="text-xs font-bold">Đổi ảnh</span>
+                    <span className="text-xs font-bold">{t('messages.changeGroupPhoto', 'Đổi ảnh')}</span>
                   </>
                 )}
               </button>
@@ -321,21 +323,23 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                     setIsEditingTitle(true)
                   }}
                   className="text-text-subtle hover:text-primary-solid"
-                  title="Đổi tên nhóm"
+                  title={t('messages.renameGroupTitle', 'Đổi tên nhóm')}
                 >
                   <Edit2 size={13} />
                 </button>
               </div>
             )}
 
-            <p className="mt-0.5 text-xs text-text-subtle">{members.length} thành viên</p>
+            <p className="mt-0.5 text-xs text-text-subtle">
+              {t('messages.membersCount', { count: members.length })}
+            </p>
           </div>
 
           {/* Members section */}
           <div>
             <div className="mb-2 flex items-center justify-between">
               <h5 className="text-xs font-bold uppercase tracking-wider text-text-muted">
-                Thành viên ({members.length})
+                {t('messages.membersHeader', { count: members.length })}
               </h5>
             <button
               onClick={() => {
@@ -350,7 +354,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
               className="inline-flex items-center gap-1 text-xs font-bold text-primary-solid hover:underline"
             >
               <UserPlus size={13} />
-              {isAddingMember ? 'Đóng tìm kiếm' : 'Thêm thành viên'}
+              {isAddingMember ? t('messages.closeSearch', 'Đóng tìm kiếm') : t('messages.addMember', 'Thêm thành viên')}
             </button>
           </div>
 
@@ -361,7 +365,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 type="text"
                 value={searchAdd}
                 onChange={(e) => handleSearchAdd(e.target.value)}
-                placeholder="Nhập tên thành viên cần thêm..."
+                placeholder={t('messages.searchMemberToAdd', 'Nhập tên thành viên cần thêm...')}
                 className="h-8 w-full rounded-xl border border-border bg-surface px-3 text-xs text-text focus:outline-none"
               />
               {isSearchingAdd ? (
@@ -379,7 +383,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                         <Avatar src={u.avatarUrl || undefined} name={u.fullName} size={28} />
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-text">{u.fullName}</p>
-                          <p className="truncate text-xs text-text-subtle">{u.headline || u.major || 'Thành viên'}</p>
+                          <p className="truncate text-xs text-text-subtle">{u.headline || u.major || t('messages.memberRole', 'Thành viên')}</p>
                         </div>
                       </div>
                       <Button
@@ -387,15 +391,15 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                         onClick={() => handleAddUser(u.userId)}
                         className="h-6 shrink-0 rounded-lg bg-primary-solid px-2 text-xs text-on-primary hover:bg-primary-hover"
                       >
-                        Thêm
+                        {t('common.add', 'Thêm')}
                       </Button>
                     </div>
                   ))}
                 </div>
               ) : searchAdd.trim() ? (
-                <p className="mt-2 text-center text-xs text-text-subtle">Không tìm thấy thành viên phù hợp</p>
+                <p className="mt-2 text-center text-xs text-text-subtle">{t('messages.noMatchingMembers', 'Không tìm thấy thành viên phù hợp')}</p>
               ) : (
-                <p className="mt-2 text-center text-xs text-text-subtle">Không có thành viên mới để thêm</p>
+                <p className="mt-2 text-center text-xs text-text-subtle">{t('messages.noNewMembersToAdd', 'Không có thành viên mới để thêm')}</p>
               )}
             </div>
           )}
@@ -422,12 +426,12 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                       <div>
                         <div className="flex items-center gap-1.5">
                           <p className="text-xs font-bold text-text">
-                            {m.fullName} {isMe && '(Bạn)'}
+                            {m.fullName} {isMe && t('messages.youSuffix', '(Bạn)')}
                           </p>
                           {isUserAdmin && (
                             <span className="inline-flex items-center gap-0.5 rounded-full bg-warning-soft px-1.5 py-0.2 text-xs font-bold text-warning">
                               <ShieldCheck size={10} />
-                              Trưởng nhóm
+                              {t('messages.groupLeader', 'Trưởng nhóm')}
                             </span>
                           )}
                         </div>
@@ -447,10 +451,10 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                           })
                         }
                         className="inline-flex items-center gap-1 rounded-lg border border-danger-border bg-danger-soft px-2 py-1 text-xs font-semibold text-danger transition-colors hover:bg-danger-border/60 hover:text-danger"
-                        title="Xóa thành viên khỏi nhóm"
+                        title={t('messages.removeMemberAria', 'Xóa thành viên khỏi nhóm')}
                       >
                         <UserX size={13} />
-                        <span>Xóa</span>
+                        <span>{t('common.delete', 'Xóa')}</span>
                       </button>
                     )}
                   </div>
@@ -470,7 +474,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-danger-border bg-danger-soft py-2.5 text-xs font-bold text-danger shadow-sm transition hover:bg-danger-border/60 hover:text-danger active:scale-98"
             >
               <Trash2 size={14} />
-              Giải tán nhóm
+              {t('messages.disbandGroup', 'Giải tán nhóm')}
             </button>
           ) : isAdmin && !isCommunityGroup ? (
             <div className="grid grid-cols-2 gap-2.5">
@@ -480,7 +484,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 className="flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface-2 py-2.5 px-3 text-xs font-bold text-text-muted transition hover:bg-border hover:text-text active:scale-98"
               >
                 <LogOut size={14} className="text-text-subtle" />
-                Rời khỏi nhóm
+                {t('messages.leaveGroup', 'Rời khỏi nhóm')}
               </button>
               <button
                 type="button"
@@ -488,7 +492,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 className="flex items-center justify-center gap-1.5 rounded-2xl border border-danger-border bg-danger-soft py-2.5 px-3 text-xs font-bold text-danger transition hover:bg-danger-border/60 hover:text-danger active:scale-98"
               >
                 <Trash2 size={14} className="text-danger" />
-                Giải tán nhóm
+                {t('messages.disbandGroup', 'Giải tán nhóm')}
               </button>
             </div>
           ) : (
@@ -498,7 +502,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-danger-border bg-danger-soft py-2.5 text-xs font-bold text-danger transition hover:bg-danger-border/60 hover:text-danger active:scale-98"
             >
               <LogOut size={14} />
-              Rời khỏi nhóm
+              {t('messages.leaveGroup', 'Rời khỏi nhóm')}
             </button>
           )}
         </div>
@@ -516,11 +520,11 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 </div>
 
                 <h4 className="text-base font-bold text-text">
-                  Chỉ định Trưởng nhóm mới
+                  {t('messages.assignLeaderTitle', 'Chỉ định Trưởng nhóm mới')}
                 </h4>
 
                 <p className="mt-1 max-w-xs text-xs text-text-subtle">
-                  Bạn là trưởng nhóm. Hãy chọn người kế nhiệm trước khi rời nhóm:
+                  {t('messages.assignLeaderDesc', 'Bạn là trưởng nhóm. Hãy chọn người kế nhiệm trước khi rời nhóm:')}
                 </p>
 
                 {/* Danh sách thành viên để chọn */}
@@ -569,7 +573,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                     disabled={removeMemberMutation.isPending}
                     className="flex-1 rounded-xl bg-surface-2 py-2.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface-3 disabled:opacity-50"
                   >
-                    Hủy
+                    {t('common.cancel', 'Hủy')}
                   </button>
                   <button
                     type="button"
@@ -582,7 +586,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                     ) : (
                       <LogOut size={14} />
                     )}
-                    Chuyển & Rời nhóm
+                    {t('messages.transferAndLeaveChat', 'Chuyển & Rời nhóm')}
                   </button>
                 </div>
               </>
@@ -617,24 +621,20 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                 {/* Title */}
                 <h4 className="text-base font-bold text-text">
                   {confirmAction.type === 'remove'
-                    ? 'Xóa thành viên?'
+                    ? t('messages.removeMemberPrompt', 'Xóa thành viên?')
                     : confirmAction.type === 'disband'
-                    ? 'Giải tán nhóm trò chuyện?'
-                    : 'Rời nhóm?'}
+                    ? t('messages.disbandGroupPrompt', 'Giải tán nhóm trò chuyện?')
+                    : t('messages.leaveGroupPrompt', 'Rời nhóm?')}
                 </h4>
 
                 {/* Message */}
                 <p className="mt-1.5 max-w-xs text-xs text-text-subtle">
                   {confirmAction.type === 'remove' ? (
-                    <>
-                      Xóa <strong className="font-semibold text-text">{confirmAction.userName}</strong> khỏi nhóm này?
-                    </>
+                    t('messages.removeMemberConfirmFull', { name: confirmAction.userName })
                   ) : confirmAction.type === 'disband' ? (
-                    <>
-                      Bạn có chắc muốn giải tán nhóm <strong className="font-semibold text-text">{confirmAction.userName}</strong>? Toàn bộ tin nhắn và lịch sử trò chuyện sẽ bị xóa vĩnh viễn.
-                    </>
+                    t('messages.disbandGroupConfirmFull', { name: confirmAction.userName })
                   ) : (
-                    'Bạn có chắc muốn rời nhóm này?'
+                    t('messages.leaveGroupConfirmFull', 'Bạn có chắc muốn rời nhóm này?')
                   )}
                 </p>
 
@@ -646,7 +646,7 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                     disabled={removeMemberMutation.isPending || deleteConversationMutation.isPending}
                     className="flex-1 rounded-xl bg-surface-2 py-2.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface-3 disabled:opacity-50"
                   >
-                    Hủy
+                    {t('common.cancel', 'Hủy')}
                   </button>
                   <button
                     type="button"
@@ -664,10 +664,10 @@ export function GroupInfoModal({ isOpen, onClose, conversation, onLeftGroup, onC
                       <LogOut size={14} />
                     )}
                     {confirmAction.type === 'remove'
-                      ? 'Xóa'
+                      ? t('common.delete', 'Xóa')
                       : confirmAction.type === 'disband'
-                      ? 'Giải tán nhóm'
-                      : 'Rời nhóm'}
+                      ? t('messages.disbandGroup', 'Giải tán nhóm')
+                      : t('messages.leaveGroup', 'Rời khỏi nhóm')}
                   </button>
                 </div>
               </>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { MentoringActionButton, MentoringField, MentoringFormError } from './MentoringUi'
@@ -30,6 +31,7 @@ export function IncomingRequestResponseModal({
   onSubmit,
   isLoading,
 }: IncomingRequestResponseModalProps) {
+  const { t } = useTranslation()
   const [responseNote, setResponseNote] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const isAccept = type === 'ACCEPT'
@@ -48,7 +50,7 @@ export function IncomingRequestResponseModal({
       setResponseNote('')
     } catch (err) {
       // Giữ modal mở và báo lỗi (vd: gói Mentor hết hạn, đã đủ số Task đang chạy)
-      setErrorMsg(apiErrorMessage(err, isAccept ? 'Không thể đồng ý yêu cầu.' : 'Không thể từ chối yêu cầu.'))
+      setErrorMsg(apiErrorMessage(err, isAccept ? t('mentoring.acceptFailed') : t('mentoring.declineFailed')))
     }
   }
 
@@ -56,17 +58,17 @@ export function IncomingRequestResponseModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={isAccept ? 'Đồng ý trao đổi?' : 'Từ chối yêu cầu?'}
+      title={isAccept ? t('mentoring.acceptModalTitle') : t('mentoring.declineModalTitle')}
       icon={isAccept ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
       maxWidthClassName="max-w-lg"
       footer={
         <div className="flex justify-end gap-2">
           <MentoringActionButton intent="ghost" onClick={handleClose} disabled={isLoading}>
-            Quay lại
+            {t('mentoring.backBtn')}
           </MentoringActionButton>
           {isAccept ? (
             <MentoringActionButton intent="primary" loading={isLoading} icon={<CheckCircle2 className="h-3.5 w-3.5" />} onClick={handleSubmit}>
-              Đồng ý trao đổi
+              {t('mentoring.acceptModalBtn')}
             </MentoringActionButton>
           ) : (
             <Button
@@ -77,7 +79,7 @@ export function IncomingRequestResponseModal({
               leftIcon={<XCircle className="h-3.5 w-3.5" />}
               className="h-8 rounded-lg bg-danger px-3 text-xs text-text-inverse hover:opacity-90 hover:text-white"
             >
-              {isLoading ? 'Đang gửi...' : 'Từ chối yêu cầu'}
+              {isLoading ? t('mentoring.sending') : t('mentoring.declineModalBtn')}
             </Button>
           )}
         </div>
@@ -87,18 +89,20 @@ export function IncomingRequestResponseModal({
         <MentoringFormError message={errorMsg} />
         <div className="rounded-xl bg-surface-2 px-3.5 py-2.5 text-sm dark:bg-white/[0.04]">
           <p className="font-semibold text-text">{requestTitle}</p>
-          <p className="mt-0.5 text-xs text-text-subtle">Người gửi: {studentName}</p>
+          <p className="mt-0.5 text-xs text-text-subtle">{t('mentoring.senderLabel', { name: studentName })}</p>
         </div>
 
         <p className="text-sm leading-relaxed text-text-muted">
           {isAccept
-            ? 'Hai bên sẽ được mở phần trao đổi. Việc này chưa tạo thỏa thuận và không thu tiền của người học.'
-            : 'Người học sẽ thấy bạn đã từ chối. Quyết định này không thể hoàn tác.'}
+            ? t('mentoring.acceptExplanation')
+            : t('mentoring.declineExplanation')}
         </p>
 
         <MentoringField
-          label={isAccept ? 'Lời nhắn cho người học' : 'Lý do từ chối'}
-          hint={`${isAccept ? "Sẽ hiển thị như tin nhắn đầu tiên trong khung chat · " : ""}Không bắt buộc · ${responseNote.length}/${MAX_NOTE} ký tự`}
+          label={isAccept ? t('mentoring.acceptNoteLabel') : t('mentoring.declineReasonLabel')}
+          hint={isAccept
+            ? t('mentoring.acceptNoteHint', { count: responseNote.length, max: MAX_NOTE })
+            : t('mentoring.declineNoteHint', { count: responseNote.length, max: MAX_NOTE })}
         >
           <textarea
             value={responseNote}
@@ -108,8 +112,8 @@ export function IncomingRequestResponseModal({
             disabled={isLoading}
             placeholder={
               isAccept
-                ? 'Ví dụ: Chào bạn, mình sẵn lòng trao đổi về chủ đề này...'
-                : 'Ví dụ: Hiện mình đang kín lịch, hẹn bạn dịp khác nhé...'
+                ? t('mentoring.acceptNotePlaceholder')
+                : t('mentoring.declineNotePlaceholder')
             }
             className={`${MENTORING_INPUT} resize-none`}
           />

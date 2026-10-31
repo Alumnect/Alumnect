@@ -1,4 +1,5 @@
 import { AlertCircle, RefreshCw, SearchX } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { EmptyState, Skeleton, Pagination } from '@/components/ui'
 import { MentorCard } from './MentorCard'
 import type { MentorSearchPageResponse } from '../model/mentorSearchTypes'
@@ -28,6 +29,7 @@ export function MentorDirectoryList({
   page: _page,
   onPageChange,
 }: MentorDirectoryListProps) {
+  const { t } = useTranslation()
   // 1. Loading State: Khung xương Skeleton dạng Grid
   if (isLoading && !data) {
     return (
@@ -67,10 +69,10 @@ export function MentorDirectoryList({
           <AlertCircle className="h-6 w-6" />
         </div>
         <h3 className="mt-3 font-display text-base font-bold text-text">
-          Không thể tải danh sách Mentor
+          {t('mentoring.loadMentorsError')}
         </h3>
         <p className="mt-1 text-xs text-text-muted">
-          {error?.message || 'Đã có lỗi xảy ra trong quá trình truy vấn hệ thống.'}
+          {error?.message || t('mentoring.loadMentorsErrorDesc')}
         </p>
         <button
           type="button"
@@ -78,7 +80,7 @@ export function MentorDirectoryList({
           className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-danger px-4 py-2 text-xs font-bold text-text-inverse shadow-xs transition-colors hover:opacity-90 active:scale-95"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          <span>Thử lại</span>
+          <span>{t('common.retry')}</span>
         </button>
       </div>
     )
@@ -91,8 +93,8 @@ export function MentorDirectoryList({
         <EmptyState
           className="border-0 bg-transparent py-6"
           icon={<SearchX className="h-9 w-9 text-primary-solid" />}
-          title="Không tìm thấy Mentor"
-          description="Thử đổi từ khóa hoặc xóa bộ lọc."
+          title={t('mentoring.noMentorsFound')}
+          description={t('mentoring.noMentorsFoundDesc')}
           action={
             <button
               type="button"
@@ -100,7 +102,7 @@ export function MentorDirectoryList({
               className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-semibold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95 cursor-pointer"
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              <span>Xóa bộ lọc</span>
+              <span>{t('common.clearFilters')}</span>
             </button>
           }
         />

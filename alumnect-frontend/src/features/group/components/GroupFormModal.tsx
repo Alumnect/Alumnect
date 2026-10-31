@@ -12,6 +12,7 @@ import type { ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Globe, ImagePlus, Loader2, Lock, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { DialogFrame, SelectDropdown, toast } from '@/components/ui'
@@ -35,6 +36,7 @@ const FIELD_CLASS =
   'w-full rounded-2xl border border-border bg-surface-2 px-4 text-sm text-text placeholder:text-text-subtle focus:border-brand-500/50 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle'
 
 export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; editGroup?: GroupDetail }) {
+  const { t } = useTranslation()
   const isEdit = !!editGroup
   const navigate = useNavigate()
   const createMut = useCreateGroup()
@@ -122,19 +124,19 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
     if (isEdit) {
       updateMut.mutate(input, {
         onSuccess: () => {
-          toast.success('Đã cập nhật hội nhóm thành công!')
+          toast.success(t('groups.updateGroupSuccess'))
           onClose()
         },
-        onError: (err) => toast.error((err as Error).message || 'Không thể cập nhật hội nhóm.'),
+        onError: (err) => toast.error((err as Error).message || t('groups.updateGroupError')),
       })
     } else {
       createMut.mutate(input, {
         onSuccess: (created) => {
-          toast.success('Đã tạo hội nhóm thành công!')
+          toast.success(t('groups.createGroupSuccess'))
           onClose()
           navigate(`/app/groups/${created.id}`)
         },
-        onError: (err) => toast.error((err as Error).message || 'Không thể tạo hội nhóm, vui lòng thử lại.'),
+        onError: (err) => toast.error((err as Error).message || t('groups.createGroupError')),
       })
     }
   }
@@ -146,7 +148,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
     if (!file) return
     setUploadError(null)
     if (!file.type.startsWith('image/')) {
-      setUploadError('Chỉ được chọn tệp ảnh')
+      setUploadError(t('groups.onlyImagesAllowed'))
       return
     }
     setUploading(true)
@@ -154,7 +156,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
       const url = await groupApi.uploadCover(file)
       setValue('coverImageUrl', url, { shouldDirty: true })
     } catch {
-      setUploadError('Tải ảnh lên thất bại. Vui lòng thử lại.')
+      setUploadError(t('groups.uploadError'))
     } finally {
       setUploading(false)
     }
@@ -164,8 +166,8 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
   return (
     <DialogFrame onClose={onClose} zIndexClassName="z-50" maxWidthClassName="max-w-2xl" className="overflow-y-auto p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-text">{isEdit ? 'Chỉnh sửa hội nhóm' : 'Tạo hội nhóm mới'}</h2>
-          <button type="button" onClick={onClose} data-dialog-close aria-label="Đóng" className="grid h-10 w-10 place-items-center rounded-lg text-text-muted transition-colors hover:bg-surface-3 hover:text-text">
+          <h2 className="text-lg font-semibold text-text">{isEdit ? t('groups.editGroupTitle') : t('groups.createGroupTitle')}</h2>
+          <button type="button" onClick={onClose} data-dialog-close aria-label={t('common.close')} className="grid h-10 w-10 place-items-center rounded-lg text-text-muted transition-colors hover:bg-surface-3 hover:text-text">
             <X size={18} />
           </button>
         </div>
@@ -173,9 +175,9 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Ảnh nhóm */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-text">Ảnh nhóm</label>
+            <label className="mb-1 block text-sm font-semibold text-text">{t('groups.groupCoverLabel')}</label>
             <div className="relative overflow-hidden rounded-xl ring-1 ring-inset ring-border">
-              <GroupCover url={coverImageUrl} name={nameValue || 'Hội nhóm'} className="aspect-[21/9]" />
+              <GroupCover url={coverImageUrl} name={nameValue || t('groups.defaultGroupName')} className="aspect-[21/9]" />
               <div className="absolute bottom-2 right-2 flex gap-2">
                 {coverImageUrl && (
                   <button
@@ -183,7 +185,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                     onClick={() => setValue('coverImageUrl', null, { shouldDirty: true })}
                     className="rounded-lg bg-black/60 px-2.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:opacity-90"
                   >
-                    Gỡ ảnh
+                    {t('groups.removeCoverBtn')}
                   </button>
                 )}
                 <button
@@ -193,7 +195,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                   className="inline-flex items-center gap-1.5 rounded-lg bg-surface px-2.5 py-1.5 text-xs font-semibold text-text shadow-sm transition-colors hover:bg-surface disabled:opacity-60"
                 >
                   {uploading ? <Loader2 size={13} className="animate-spin" /> : <ImagePlus size={13} />}
-                  {coverImageUrl ? 'Đổi ảnh' : 'Chọn ảnh'}
+                  {coverImageUrl ? t('groups.editCover') : t('groups.chooseCoverBtn')}
                 </button>
               </div>
             </div>
@@ -208,9 +210,9 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
           {/* Tên */}
           <div>
             <label className="mb-1 block text-sm font-semibold text-text">
-              Tên hội nhóm <span className="text-danger">*</span>
+              {t('groups.groupNameLabel')} <span className="text-danger">*</span>
             </label>
-            <input {...register('name')} maxLength={GROUP_NAME_MAX} placeholder="VD: Cộng đồng AI FPTU" className={`h-11 ${FIELD_CLASS}`} />
+            <input {...register('name')} maxLength={GROUP_NAME_MAX} placeholder={t('groups.namePlaceholder')} className={`h-11 ${FIELD_CLASS}`} />
             {errors.name && <p className="mt-1 text-xs text-danger">{errors.name.message}</p>}
           </div>
 
@@ -218,25 +220,25 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-semibold text-text">
-                Danh mục hoạt động <span className="text-danger">*</span>
+                {t('groups.categoryLabelReq')} <span className="text-danger">*</span>
               </label>
               <SelectDropdown
-                label="Danh mục hoạt động"
+                label={t('groups.categoryLabelReq')}
                 value={categoryValue ?? ''}
                 onChange={(v) => setValue('category', String(v), { shouldDirty: true, shouldValidate: true })}
-                options={GROUP_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
-                placeholder="Chọn danh mục"
+                options={GROUP_CATEGORIES.map((c) => ({ value: c.value, label: t(`groups.categories.${c.value}`, { defaultValue: c.label }) }))}
+                placeholder={t('groups.selectCategoryPrompt')}
               />
               {errors.category && <p className="mt-1 text-xs text-danger">{errors.category.message}</p>}
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-semibold text-text">Loại hội nhóm</label>
+              <label className="mb-1 block text-sm font-semibold text-text">{t('groups.groupTypeLabel')}</label>
               <div className="grid grid-cols-2 gap-2">
                 {(
                   [
-                    { value: 'PUBLIC', label: 'Công khai', icon: Globe },
-                    { value: 'PRIVATE', label: 'Riêng tư', icon: Lock },
+                    { value: 'PUBLIC', label: t('groups.public'), icon: Globe },
+                    { value: 'PRIVATE', label: t('groups.private'), icon: Lock },
                   ] as const
                 ).map((opt) => {
                   const Icon = opt.icon
@@ -265,7 +267,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
 
           {/* Chủ đề */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-text">Chủ đề / sở thích liên quan</label>
+            <label className="mb-1 block text-sm font-semibold text-text">{t('groups.topicsLabelReq')}</label>
             <input type="hidden" {...register('topicsText')} />
             <div className="flex gap-2">
               <input
@@ -281,12 +283,12 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                   }
                 }}
                 maxLength={GROUP_TOPIC_MAX_LENGTH}
-                aria-label="Chủ đề thảo luận"
-                placeholder="Nhập chủ đề"
+                aria-label={t('groups.topicInputAria')}
+                placeholder={t('groups.topicInputPlaceholder')}
                 className={`h-11 ${FIELD_CLASS}`}
               />
               <Button type="button" variant="primary" size="md" onClick={addTopics} disabled={!topicInput.trim()} leftIcon={<Plus size={16} />}>
-                Thêm
+                {t('groups.addTopicBtn')}
               </Button>
             </div>
             {topics.length > 0 && (
@@ -294,7 +296,7 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
                 {topics.map((topic) => (
                   <span key={topic.toLowerCase()} className="inline-flex items-center gap-1.5 rounded-full border border-primary-soft-border bg-primary-soft px-3 py-1 text-xs font-medium text-primary-solid">
                     {topic}
-                    <button type="button" onClick={() => removeTopic(topic)} aria-label={`Xóa chủ đề ${topic}`} className="rounded-full p-0.5 transition-colors hover:bg-primary-soft">
+                    <button type="button" onClick={() => removeTopic(topic)} aria-label={t('groups.removeTopic', { topic })} className="rounded-full p-0.5 transition-colors hover:bg-primary-soft">
                       <X size={12} />
                     </button>
                   </span>
@@ -307,25 +309,25 @@ export function GroupFormModal({ onClose, editGroup }: { onClose: () => void; ed
           {/* Mô tả */}
           <div>
             <label className="mb-1 block text-sm font-semibold text-text">
-              Mô tả <span className="text-danger">*</span>
+              {t('groups.descriptionLabelReq')} <span className="text-danger">*</span>
             </label>
-            <textarea {...register('description')} rows={5} maxLength={GROUP_DESCRIPTION_MAX} placeholder="Hội nhóm này dành cho ai, hoạt động gì?" className={`py-3 ${FIELD_CLASS}`} />
+            <textarea {...register('description')} rows={5} maxLength={GROUP_DESCRIPTION_MAX} placeholder={t('groups.descPlaceholder')} className={`py-3 ${FIELD_CLASS}`} />
             {errors.description && <p className="mt-1 text-xs text-danger">{errors.description.message}</p>}
           </div>
 
           {/* Quy định tham gia */}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-text">Quy định tham gia</label>
-            <textarea {...register('joinRules')} rows={3} maxLength={GROUP_RULES_MAX} placeholder="VD: Tôn trọng thành viên, không quảng cáo..." className={`py-3 ${FIELD_CLASS}`} />
+            <label className="mb-1 block text-sm font-semibold text-text">{t('groups.joinRulesLabel')}</label>
+            <textarea {...register('joinRules')} rows={3} maxLength={GROUP_RULES_MAX} placeholder={t('groups.rulesPlaceholder')} className={`py-3 ${FIELD_CLASS}`} />
             {errors.joinRules && <p className="mt-1 text-xs text-danger">{errors.joinRules.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" size="md" onClick={onClose}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button type="submit" variant="primary" size="md" disabled={isPending || uploading} leftIcon={isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}>
-              {isEdit ? (isPending ? 'Đang lưu…' : 'Lưu thay đổi') : isPending ? 'Đang tạo…' : 'Tạo hội nhóm'}
+              {isEdit ? (isPending ? t('common.saving') : t('common.saveChanges')) : isPending ? t('groups.creatingGroup') : t('groups.createGroup')}
             </Button>
           </div>
         </form>

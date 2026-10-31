@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, SlidersHorizontal, X, RotateCcw, Check, Compass } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { SelectDropdown, Card } from '@/components/ui'
@@ -45,6 +46,7 @@ const DEFAULT_CITIES = [
 
 
 export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFilterBarProps) {
+  const { t } = useTranslation()
   const [localQuery, setLocalQuery] = useState(filters.query)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { data: majors = [] } = useMajors()
@@ -61,7 +63,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
 
   // Danh mục chuyên ngành gợi ý nhanh được sinh động từ DB
   const quickCategories = [
-    { label: 'Tất cả', fullName: 'Tất cả', value: 'ALL', majorId: null },
+    { label: t('common.all'), fullName: t('common.all'), value: 'ALL', majorId: null },
     ...majors.slice(0, 6).map((m) => ({
       label: m.name.replace(/\s*\([^)]*\)/g, '').trim(),
       fullName: m.name,
@@ -124,15 +126,16 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
         <label className="relative flex flex-1 items-center">
           <Search size={18} className="pointer-events-none absolute left-3.5 text-text-subtle" />
           <input
-            aria-label="Tìm theo tên, chức danh, kỹ năng, công ty hoặc mã SV..."
+            aria-label={t('directory.searchPlaceholder')}
             type="text"
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
-            placeholder="Tìm theo tên, chức danh, kỹ năng, công ty hoặc mã SV..."
+            placeholder={t('directory.searchPlaceholder')}
             className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-10 text-sm text-text placeholder:text-text-subtle transition focus:border-brand-400/60 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {localQuery && (
-            <button aria-label="Đóng"
+            <button
+              aria-label={t('common.close')}
               type="button"
               onClick={() => {
                 setLocalQuery('')
@@ -152,7 +155,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           onClick={() => setIsModalOpen(true)}
           className="relative shrink-0 rounded-xl"
         >
-          <span>Bộ lọc</span>
+          <span>{t('common.filter')}</span>
           {activeAdvancedFilterCount > 0 && (
             <span className="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary-solid shadow-sm">
               {activeAdvancedFilterCount}
@@ -164,7 +167,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
       {/* Quick Category Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-0.5">
         <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-text-subtle mr-1">
-          <Compass size={13} className="text-primary-solid" /> Ngành:
+          <Compass size={13} className="text-primary-solid" /> {t('directory.majorPrefix')}
         </span>
         {quickCategories.map((cat) => {
           const isSelected = filters.category === cat.value
@@ -192,23 +195,23 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Bộ lọc danh bạ chi tiết"
+        title={t('directory.filterModalTitle')}
         maxWidthClassName="max-w-lg"
       >
         <p className="mb-4 text-xs text-text-subtle">
-          Tùy chỉnh các tiêu chí để tìm kiếm cựu sinh viên & sinh viên chính xác nhất.
+          {t('directory.filterModalDesc')}
         </p>
         <div className="space-y-5 py-2">
           {/* Vai trò */}
           <div>
             <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
-              Vai trò thành viên
+              {t('directory.memberRole')}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Tất cả vai trò', value: 'ALL' },
-                { label: 'Cựu sinh viên', value: 'ALUMNI' },
-                { label: 'Sinh viên', value: 'STUDENT' },
+                { label: t('directory.allRoles'), value: 'ALL' },
+                { label: t('common.alumni'), value: 'ALUMNI' },
+                { label: t('common.student'), value: 'STUDENT' },
               ].map((r) => (
                 <button
                   key={r.value}
@@ -231,13 +234,13 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           {/* Chuyên ngành FPTU */}
           <div>
             <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
-              Chuyên ngành học
+              {t('directory.studyMajor')}
             </label>
             <SelectDropdown<string | number>
               value={filters.majorId ?? ''}
               onChange={(val) => onChange({ ...filters, majorId: val === '' ? null : Number(val), category: 'ALL' })}
-              options={[{ value: '', label: 'Tất cả chuyên ngành' }, ...majors.map((m) => ({ value: m.id, label: `[${m.code}] ${m.name}` }))]}
-              placeholder="Tất cả chuyên ngành"
+              options={[{ value: '', label: t('directory.allMajors') }, ...majors.map((m) => ({ value: m.id, label: `[${m.code}] ${m.name}` }))]}
+              placeholder={t('directory.allMajors')}
             />
           </div>
 
@@ -245,25 +248,25 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
-                Khóa nhập học
+                {t('directory.cohort')}
               </label>
               <SelectDropdown<string | number>
                 value={filters.cohort ?? ''}
                 onChange={(val) => onChange({ ...filters, cohort: val === '' ? null : Number(val) })}
-                options={[{ value: '', label: 'Tất cả các khóa' }, ...cohorts.map((c) => ({ value: c, label: `Khóa K${c}` }))]}
-                placeholder="Tất cả các khóa"
+                options={[{ value: '', label: t('directory.allCohorts') }, ...cohorts.map((c) => ({ value: c, label: t('directory.cohortFormat', { cohort: c }) }))]}
+                placeholder={t('directory.allCohorts')}
               />
             </div>
 
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
-                Tỉnh / Thành phố
+                {t('directory.cityProvince')}
               </label>
               <SelectDropdown<string | number>
                 value={filters.city}
                 onChange={(val) => onChange({ ...filters, city: String(val) })}
-                options={[{ value: '', label: 'Tất cả địa điểm' }, ...cities.map((c) => ({ value: c, label: c }))]}
-                placeholder="Tất cả địa điểm"
+                options={[{ value: '', label: t('directory.allCities') }, ...cities.map((c) => ({ value: c, label: c }))]}
+                placeholder={t('directory.allCities')}
               />
             </div>
           </div>
@@ -272,13 +275,13 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
           {/* Sắp xếp kết quả */}
           <div>
             <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-text-subtle">
-              Sắp xếp theo
+              {t('directory.sortBy')}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Mới nhất', sortBy: 'createdAt', sortDirection: 'DESC' },
-                { label: 'Họ tên A-Z', sortBy: 'fullName', sortDirection: 'ASC' },
-                { label: 'Khóa học', sortBy: 'cohort', sortDirection: 'DESC' },
+                { label: t('directory.sortNewest'), sortBy: 'createdAt', sortDirection: 'DESC' },
+                { label: t('directory.sortNameAZ'), sortBy: 'fullName', sortDirection: 'ASC' },
+                { label: t('directory.sortCohort'), sortBy: 'cohort', sortDirection: 'DESC' },
               ].map((s) => {
                 const isSelected = filters.sortBy === s.sortBy && filters.sortDirection === s.sortDirection
                 return (
@@ -309,7 +312,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             leftIcon={<RotateCcw size={14} />}
             onClick={onReset}
           >
-            Đặt lại bộ lọc
+            {t('directory.resetFilter')}
           </Button>
 
           <Button
@@ -317,7 +320,7 @@ export function UserSearchFilterBar({ filters, onChange, onReset }: UserSearchFi
             size="md"
             onClick={() => setIsModalOpen(false)}
           >
-            Áp dụng bộ lọc
+            {t('directory.applyFilter')}
           </Button>
         </div>
       </Modal>

@@ -12,6 +12,7 @@
 import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslation } from 'react-i18next'
 import {
   AlertTriangle,
   Loader2,
@@ -44,17 +45,17 @@ const FIELD_CLASS =
   'w-full rounded-xl border border-border bg-surface text-sm text-text placeholder:text-plum-400/80 transition focus:border-brand-400/70 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-border-strong [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none dark:placeholder-[#b0b3b8]'
 
 /** Hàm hỗ trợ hiển thị mức lương thành chữ dễ đọc (triệu/tỷ). */
-function formatVndText(num: number): string {
+function formatVndText(num: number, t: (key: string, opts?: any) => string): string {
   if (num >= 1_000_000_000) {
     const val = (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '')
-    return `${val} tỷ`
+    return t('salary.billionVnd', { val })
   }
   if (num >= 1_000_000) {
     const val = (num / 1_000_000).toFixed(1).replace(/\.0$/, '')
-    return `${val} triệu`
+    return t('salary.millionVnd', { val })
   }
   if (num >= 1_000) {
-    return `${Math.round(num / 1_000)} nghìn`
+    return t('salary.thousandVnd', { val: Math.round(num / 1_000) })
   }
   return `${num}`
 }
@@ -69,6 +70,7 @@ export function ContributeSalaryModal({
   /** Truyền vào để mở modal ở chế độ SỬA (UC51), điền sẵn dữ liệu; bỏ trống = chế độ TẠO mới (UC50). */
   editContribution?: SalaryContribution
 }) {
+  const { t } = useTranslation()
   const isEdit = !!editContribution
   const { data: rawIndustries } = useIndustries()
   // Ngành nghề chuẩn hệ thống: không có mục "Khác"
@@ -130,17 +132,17 @@ export function ContributeSalaryModal({
 
     return [
       ...list.map((title) => ({ id: title, name: title })),
-      { id: OTHER_JOB_TITLE_ID, name: 'Chức danh khác (tự nhập)...' },
+      { id: OTHER_JOB_TITLE_ID, name: t('salary.otherJobTitle') },
     ]
-  }, [selectedIndustryName])
+  }, [selectedIndustryName, t])
 
   // Danh mục options tỉnh thành (toàn bộ 63 tỉnh thành Việt Nam + Remote — không có tự nhập/khác)
   const cityOptions: SelectOption<string>[] = useMemo(
     () => [
       ...VIETNAM_CITIES.map((city) => ({ id: city, name: city })),
-      { id: 'Remote', name: 'Remote / Làm từ xa' },
+      { id: 'Remote', name: t('salary.remoteWork') },
     ],
-    []
+    [t]
   )
 
   // Xử lý chọn Ngành nghề: Tự động cập nhật và kiểm tra chức danh tương ứng
@@ -207,7 +209,7 @@ export function ContributeSalaryModal({
   const footer = (
     <div className="flex items-center justify-end gap-2.5">
       <Button type="button" variant="secondary" onClick={onClose} disabled={isPending} size="md">
-        Hủy
+        {t('common.cancel')}
       </Button>
       <Button
         type="submit"
@@ -217,7 +219,7 @@ export function ContributeSalaryModal({
         size="md"
         leftIcon={isPending ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
       >
-        {isEdit ? (isPending ? 'Đang lưu…' : 'Lưu thay đổi') : isPending ? 'Đang gửi…' : 'Gửi đóng góp'}
+        {isEdit ? (isPending ? t('common.processing') : t('common.saveChanges')) : isPending ? t('common.processing') : t('salary.contributeData')}
       </Button>
     </div>
   )
@@ -226,7 +228,7 @@ export function ContributeSalaryModal({
     <Modal
       isOpen
       onClose={isPending ? () => {} : onClose}
-      title={isEdit ? 'Chỉnh sửa dữ liệu lương' : 'Đóng góp dữ liệu lương'}
+      title={isEdit ? t('salary.editSalaryData') : t('salary.contributeSalaryData')}
       icon={<Coins size={18} className="text-primary-solid" />}
       maxWidthClassName="max-w-lg"
       footer={footer}
@@ -241,14 +243,14 @@ export function ContributeSalaryModal({
         {/* 1. Ngành nghề */}
         <div>
           <label className="mb-1.5 block text-xs font-semibold text-text-muted">
-            Ngành nghề <span className="text-danger">*</span>
+            {t('salary.industry')} <span className="text-danger">*</span>
           </label>
           <EntitySelectField
             items={industries}
             value={industryId}
             onChange={handleIndustrySelect}
-            placeholder="Chọn ngành nghề…"
-            searchPlaceholder="Tìm kiếm ngành nghề…"
+            placeholder={t('salary.selectIndustryFirst')}
+            searchPlaceholder={t('salary.searchIndustry')}
             searchable
             itemIcon={(name) => {
               const Icon = getIndustryIcon(name)
@@ -261,15 +263,15 @@ export function ContributeSalaryModal({
         {/* 2. Chức danh công việc */}
         <div>
           <label className="mb-1.5 block text-xs font-semibold text-text-muted">
-            Chức danh công việc <span className="text-danger">*</span>
+            {t('salary.jobTitle')} <span className="text-danger">*</span>
           </label>
           <EntitySelectField<string>
             items={industryId ? jobTitleOptions : []}
             value={selectedTitleId}
             onChange={handleJobTitleSelect}
             disabled={!industryId}
-            placeholder={industryId ? 'Chọn chức danh công việc' : 'Vui lòng chọn ngành nghề trước…'}
-            searchPlaceholder="Tìm kiếm chức danh…"
+            placeholder={industryId ? t('salary.selectJobTitle') : t('salary.selectIndustryFirst')}
+            searchPlaceholder={t('salary.searchJobTitle')}
             searchable
             buttonIcon={<Briefcase size={15} className="text-primary-solid" />}
           />
@@ -281,7 +283,7 @@ export function ContributeSalaryModal({
               <input
                 value={customJobTitle}
                 onChange={(e) => handleCustomJobTitleChange(e.target.value)}
-                placeholder="Nhập chức danh công việc của bạn..."
+                placeholder={t('salary.customJobTitlePlaceholder')}
                 className={`${FIELD_CLASS} h-11 pl-10 pr-4`}
                 autoFocus
               />
@@ -295,9 +297,9 @@ export function ContributeSalaryModal({
         <div>
           <label className="mb-1.5 flex items-center justify-between text-xs font-semibold text-text-muted">
             <span>
-              Mức lương / tháng <span className="text-danger">*</span>
+              {t('salary.monthlySalary')} <span className="text-danger">*</span>
             </span>
-            <span className="text-xs font-normal text-text-subtle">VNĐ / tháng</span>
+            <span className="text-xs font-normal text-text-subtle">{t('salary.salaryUnitPerMonth')}</span>
           </label>
           <div className="relative">
             <Coins size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
@@ -311,7 +313,7 @@ export function ContributeSalaryModal({
               className={`${FIELD_CLASS} h-11 pl-10 pr-20`}
             />
             <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-text-subtle">
-              ₫ / tháng
+              {t('salary.vndPerMonth')}
             </span>
           </div>
 
@@ -321,12 +323,12 @@ export function ContributeSalaryModal({
               <div className="flex items-center gap-1.5 text-xs font-semibold text-primary-solid bg-brand-50/90 border border-brand-200/50 rounded-xl px-3 py-1.5 w-fit">
                 <span>≈ {grossAmount.toLocaleString('vi-VN')} ₫</span>
                 <span className="text-brand-300 font-normal">·</span>
-                <span className="text-primary-solid font-medium">~{formatVndText(grossAmount)} / tháng</span>
+                <span className="text-primary-solid font-medium">~{formatVndText(grossAmount, t)} {t('salary.perMonth')}</span>
               </div>
               {grossAmount > 150_000_000 && (
                 <p className="flex items-center gap-1 text-xs text-warning font-medium">
                   <Info size={13} className="shrink-0 text-warning" />
-                  Mẹo: Vui lòng nhập mức thu nhập 1 tháng, không phải tổng cả năm.
+                  {t('salary.monthlySalaryTip')}
                 </p>
               )}
             </div>
@@ -339,21 +341,21 @@ export function ContributeSalaryModal({
         <div className="pt-2 border-t border-border">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
-              Thông tin bổ sung
+              {t('salary.additionalInfo')}
             </span>
-            <span className="text-xs text-text-subtle font-normal">Tùy chọn</span>
+            <span className="text-xs text-text-subtle font-normal">{t('salary.optional')}</span>
           </div>
 
           <div className="space-y-3.5">
             {/* Địa điểm làm việc */}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-text-muted">Địa điểm làm việc</label>
+              <label className="mb-1.5 block text-xs font-semibold text-text-muted">{t('salary.workLocation')}</label>
               <EntitySelectField<string>
                 items={cityOptions}
                 value={selectedCityId}
                 onChange={handleCitySelect}
-                placeholder="Chọn Tỉnh / Thành phố làm việc"
-                searchPlaceholder="Tìm kiếm tỉnh, thành phố…"
+                placeholder={t('salary.selectCityPlaceholder')}
+                searchPlaceholder={t('salary.searchCityPlaceholder')}
                 searchable
                 direction="top"
                 buttonIcon={<MapPin size={15} className="text-primary-solid" />}
@@ -365,7 +367,7 @@ export function ContributeSalaryModal({
             {/* 2 Cột: Công ty & Kinh nghiệm */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-text-muted">Công ty</label>
+                <label className="mb-1.5 block text-xs font-semibold text-text-muted">{t('salary.company')}</label>
                 <div className="relative">
                   <Building2 size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
                   <input
@@ -378,7 +380,7 @@ export function ContributeSalaryModal({
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-text-muted">Kinh nghiệm</label>
+                <label className="mb-1.5 block text-xs font-semibold text-text-muted">{t('salary.experience')}</label>
                 <div className="relative">
                   <Clock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
                   <input
@@ -391,7 +393,7 @@ export function ContributeSalaryModal({
                     className={`${FIELD_CLASS} h-11 pl-10 pr-12`}
                   />
                   <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-text-subtle">
-                    năm
+                    {t('salary.years')}
                   </span>
                 </div>
                 {errors.yearsExperience && <p className="mt-1.5 text-xs text-danger">{errors.yearsExperience.message}</p>}

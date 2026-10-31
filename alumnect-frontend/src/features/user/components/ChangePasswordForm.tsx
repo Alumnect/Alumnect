@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { 
   KeyRound, Eye, EyeOff, Loader2, AlertCircle, LogOut, ArrowRight
 } from 'lucide-react'
@@ -14,6 +15,7 @@ import { Modal, toast } from '@/components/ui'
 import { Field, useLogoutAllDevices } from '@/features/auth'
 
 export function ChangePasswordForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
   const changePasswordMutation = useChangePassword()
@@ -64,7 +66,7 @@ export function ChangePasswordForm() {
       })
 
       // Backend trả về: "Đổi mật khẩu thành công!"
-      const successMsg = res.message || 'Đổi mật khẩu thành công!'
+      const successMsg = res.message || t('user.passwordChangedSuccess', 'Đổi mật khẩu thành công!')
       reset()
 
       if (logoutOthers) {
@@ -79,7 +81,7 @@ export function ChangePasswordForm() {
         logout()
         navigate('/login', {
           state: {
-            successMessage: `${successMsg} Bạn đã được đăng xuất khỏi tất cả các thiết bị.`,
+            successMessage: t('user.passwordChangedLoggedOut', 'Đổi mật khẩu thành công! Bạn đã được đăng xuất khỏi tất cả các thiết bị.'),
           },
           replace: true,
         })
@@ -88,7 +90,7 @@ export function ChangePasswordForm() {
         toast.success(successMsg)
       }
     } catch (err: any) {
-      setErrorMessage(err.response?.data?.message || err.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại thông tin.')
+      setErrorMessage(err.response?.data?.message || err.message || t('user.passwordChangeFailed', 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại thông tin.'))
     } finally {
       setPendingValues(null)
     }
@@ -98,9 +100,9 @@ export function ChangePasswordForm() {
     <div className="w-full max-w-xl rounded-3xl bg-surface p-6 md:p-8 shadow-sm border border-border">
       <div className="flex items-center gap-2">
         <KeyRound className="text-text-muted" size={22} aria-hidden />
-        <h2 className="text-2xl font-extrabold text-text tracking-tight">Đổi mật khẩu</h2>
+        <h2 className="text-2xl font-extrabold text-text tracking-tight">{t('user.changePassword')}</h2>
       </div>
-      <p className="mt-1 text-sm text-text-subtle">Bảo vệ tài khoản của bạn bằng cách cập nhật mật khẩu định kỳ.</p>
+      <p className="mt-1 text-sm text-text-subtle">{t('user.changePasswordDesc')}</p>
 
       {/* Thông báo lỗi */}
       {errorMessage && (
@@ -113,9 +115,9 @@ export function ChangePasswordForm() {
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
         {/* Mật khẩu cũ */}
         <Field
-          label="Mật khẩu hiện tại"
+          label={t('user.currentPassword')}
           type={showOldPassword ? 'text' : 'password'}
-          placeholder="Nhập mật khẩu hiện tại"
+          placeholder={t('user.currentPasswordPlaceholder')}
           error={errors.oldPassword?.message}
           {...register('oldPassword')}
           trailing={
@@ -123,7 +125,7 @@ export function ChangePasswordForm() {
               type="button"
               onClick={() => setShowOldPassword((v) => !v)}
               className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle hover:bg-border hover:text-text transition-colors"
-              aria-label="Ẩn/hiện mật khẩu cũ"
+              aria-label="Toggle password"
             >
               {showOldPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -132,9 +134,9 @@ export function ChangePasswordForm() {
 
         {/* Mật khẩu mới */}
         <Field
-          label="Mật khẩu mới"
+          label={t('user.newPassword')}
           type={showNewPassword ? 'text' : 'password'}
-          placeholder="Nhập mật khẩu mới"
+          placeholder={t('user.newPasswordPlaceholder')}
           error={errors.newPassword?.message}
           {...register('newPassword')}
           trailing={
@@ -142,7 +144,7 @@ export function ChangePasswordForm() {
               type="button"
               onClick={() => setShowNewPassword((v) => !v)}
               className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle hover:bg-border hover:text-text transition-colors"
-              aria-label="Ẩn/hiện mật khẩu mới"
+              aria-label="Toggle password"
             >
               {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -151,9 +153,9 @@ export function ChangePasswordForm() {
 
         {/* Xác nhận mật khẩu mới */}
         <Field
-          label="Xác nhận mật khẩu mới"
+          label={t('user.confirmNewPassword')}
           type={showConfirmPassword ? 'text' : 'password'}
-          placeholder="Xác nhận mật khẩu mới"
+          placeholder={t('user.confirmNewPasswordPlaceholder')}
           error={errors.confirmNewPassword?.message}
           {...register('confirmNewPassword')}
           trailing={
@@ -161,7 +163,7 @@ export function ChangePasswordForm() {
               type="button"
               onClick={() => setShowConfirmPassword((v) => !v)}
               className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle hover:bg-border hover:text-text transition-colors"
-              aria-label="Ẩn/hiện mật khẩu xác nhận"
+              aria-label="Toggle password"
             >
               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -176,7 +178,7 @@ export function ChangePasswordForm() {
           disabled={changePasswordMutation.isPending}
           rightIcon={changePasswordMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
         >
-          {changePasswordMutation.isPending ? 'Đang thực hiện...' : 'Cập nhật mật khẩu'}
+          {changePasswordMutation.isPending ? t('user.updatingPassword') : t('user.updatePassword')}
         </Button>
       </form>
 
@@ -184,12 +186,12 @@ export function ChangePasswordForm() {
       <Modal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        title="Xác nhận đổi mật khẩu"
+        title={t('user.confirmModalTitle')}
         icon={<LogOut size={18} />}
         maxWidthClassName="max-w-md"
       >
         <p className="text-sm leading-relaxed text-text-muted">
-          Bạn có muốn đăng xuất khỏi tài khoản trên tất cả các thiết bị sau khi đổi mật khẩu thành công không?
+          {t('user.confirmModalDesc')}
         </p>
 
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
@@ -200,7 +202,7 @@ export function ChangePasswordForm() {
             disabled={changePasswordMutation.isPending || logoutAllDevicesMutation.isPending}
             className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-on-primary bg-primary-solid hover:bg-primary-solid active:bg-primary-hover transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {changePasswordMutation.isPending || logoutAllDevicesMutation.isPending ? 'Đang xử lý...' : 'Đăng xuất mọi thiết bị'}
+            {changePasswordMutation.isPending || logoutAllDevicesMutation.isPending ? t('common.processing') : t('user.logoutAllDevices')}
           </button>
           
           {/* Nút duy trì đăng nhập */}
@@ -210,7 +212,7 @@ export function ChangePasswordForm() {
             disabled={changePasswordMutation.isPending}
             className="flex-1 inline-flex items-center justify-center h-11 px-4 rounded-xl text-sm font-semibold text-text-muted bg-surface-2 hover:bg-surface-3 active:bg-plum-900/[0.12] transition-colors cursor-pointer disabled:opacity-50"
           >
-            Duy trì đăng nhập
+            {t('user.keepLoggedIn')}
           </button>
         </div>
       </Modal>

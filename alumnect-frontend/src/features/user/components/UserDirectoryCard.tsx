@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MapPin, Briefcase, GraduationCap, MessageCircle, UserPlus, UserCheck, Loader2, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, Card } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { TiltCard } from '@/components/motion'
@@ -15,6 +16,7 @@ interface UserDirectoryCardProps {
 }
 
 export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -98,7 +100,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
               {user.fullName}
             </Link>
             <p className="mt-1 text-xs text-text-subtle line-clamp-2 min-h-[34px] leading-relaxed">
-              {user.headline || (user.role === 'ALUMNI' ? 'Cựu sinh viên FPT University' : 'Sinh viên FPT University')}
+              {user.headline || (user.role === 'ALUMNI' ? t('directory.alumniHeadline') : t('directory.studentHeadline'))}
             </p>
           </div>
 
@@ -115,7 +117,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
             )}
             {user.cohort && (
               <span className="rounded-lg bg-surface-2 px-2.5 py-1 font-semibold text-text-muted whitespace-nowrap border border-border">
-                Khóa K{user.cohort}
+                {t('directory.cohortFormat', { cohort: user.cohort })}
               </span>
             )}
             {user.city && (
@@ -127,7 +129,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
             {user.mutualFollowsCount && user.mutualFollowsCount > 0 ? (
               <span className="inline-flex items-center gap-1 rounded-lg bg-success-soft px-2.5 py-1 font-semibold text-success whitespace-nowrap border border-success-border">
                 <Users size={11} className="shrink-0 text-success" />
-                {user.mutualFollowsCount} bạn chung
+                {t('feed.mutualFriends', { count: user.mutualFollowsCount })}
               </span>
             ) : null}
           </div>
@@ -137,7 +139,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
             <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-text-muted font-medium line-clamp-1 bg-surface-2 py-1 px-2 rounded-lg">
               <Briefcase size={12} className="shrink-0 text-text-subtle" />
               <span>
-                {user.primaryExperience.title} tại <strong className="text-text">{user.primaryExperience.company}</strong>
+                {t('directory.atCompany', { title: user.primaryExperience.title, company: user.primaryExperience.company })}
               </span>
             </div>
           )}
@@ -172,7 +174,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                 className="w-full text-xs font-semibold"
                 onClick={() => navigate('/app/profile')}
               >
-                Hồ sơ của bạn
+                {t('directory.yourProfile')}
               </Button>
             ) : (
               <>
@@ -195,7 +197,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                   }
                   onClick={handleToggleFollow}
                 >
-                  {isFollowingLocal ? 'Đang theo dõi' : 'Theo dõi'}
+                  {isFollowingLocal ? t('profile.following') : t('profile.follow')}
                 </Button>
 
                 <Button
@@ -203,7 +205,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
                   variant="ghost"
                   className="border border-border text-text-muted text-xs px-2.5 hover:bg-primary-soft hover:text-primary-solid hover:border-primary-soft-border transition-colors"
                   onClick={handleMessage}
-                  title="Nhắn tin"
+                  title={t('profile.message')}
                 >
                   <MessageCircle size={15} />
                 </Button>
@@ -212,7 +214,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
           </div>
 
           <p className="mt-2.5 text-xs text-text-subtle font-medium">
-            <strong>{compact(followersCountLocal)}</strong> người theo dõi
+            <strong>{compact(followersCountLocal)}</strong> {t('profile.followers')}
           </p>
         </div>
       </Card>

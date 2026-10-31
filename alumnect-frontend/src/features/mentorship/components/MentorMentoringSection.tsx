@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Compass,
   Globe,
@@ -43,6 +44,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
   onAddTopic,
   onRemoveTopic,
 }) => {
+  const { t } = useTranslation()
   const [topicInput, setTopicInput] = useState('')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -86,8 +88,8 @@ export const MentorMentoringSection: React.FC<Props> = ({
           3
         </div>
         <div>
-          <h3 className="font-semibold text-text text-lg">Hình thức & Lĩnh vực</h3>
-          <p className="text-xs text-text-subtle">Cách thức kết nối và đồng hành</p>
+          <h3 className="font-semibold text-text text-lg">{t('mentoring.mentoringSectionStepTitle')}</h3>
+          <p className="text-xs text-text-subtle">{t('mentoring.mentoringSectionStepDesc')}</p>
         </div>
       </div>
 
@@ -95,26 +97,26 @@ export const MentorMentoringSection: React.FC<Props> = ({
         {/* Hình thức hướng dẫn (Working Mode) */}
         <div>
           <label className="block text-sm font-semibold text-text-muted mb-2">
-            Hình thức hướng dẫn <span className="text-danger">*</span>
+            {t('mentoring.workingModeLabel')} <span className="text-danger">*</span>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               {
                 value: 'ONLINE' as MentoringWorkingMode,
-                label: 'Trực tuyến',
-                desc: 'Meet, Zoom, Teams',
+                label: t('mentoring.workingModeOnlineTitle'),
+                desc: t('mentoring.workingModeOnlineDesc'),
                 icon: Globe,
               },
               {
                 value: 'OFFLINE' as MentoringWorkingMode,
-                label: 'Trực tiếp',
-                desc: 'Gặp mặt',
+                label: t('mentoring.workingModeOfflineTitle'),
+                desc: t('mentoring.workingModeOfflineDesc'),
                 icon: MapPin,
               },
               {
                 value: 'BOTH' as MentoringWorkingMode,
-                label: 'Cả hai',
-                desc: 'Linh hoạt',
+                label: t('mentoring.workingModeBothTitle'),
+                desc: t('mentoring.workingModeBothDesc'),
                 icon: Compass,
               },
             ].map((item) => {
@@ -156,26 +158,26 @@ export const MentorMentoringSection: React.FC<Props> = ({
         {/* Loại hình hướng dẫn (Mentoring Type) */}
         <div>
           <label className="block text-sm font-semibold text-text-muted mb-2">
-            Loại hình hướng dẫn <span className="text-danger">*</span>
+            {t('mentoring.mentoringTypeLabel')} <span className="text-danger">*</span>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               {
                 value: 'INDIVIDUAL' as MentoringType,
-                label: 'Cá nhân 1-1',
-                desc: 'Hướng dẫn 1 người',
+                label: t('mentoring.mentoringTypeIndividualTitle'),
+                desc: t('mentoring.mentoringTypeIndividualDesc'),
                 icon: User,
               },
               {
                 value: 'GROUP' as MentoringType,
-                label: 'Theo nhóm',
-                desc: 'Nhóm từ 2 - 5 người',
+                label: t('mentoring.mentoringTypeGroupTitle'),
+                desc: t('mentoring.mentoringTypeGroupDesc'),
                 icon: Users,
               },
               {
                 value: 'BOTH' as MentoringType,
-                label: 'Cả hai',
-                desc: 'Linh hoạt cả hai hình thức',
+                label: t('mentoring.mentoringTypeBothTitle'),
+                desc: t('mentoring.mentoringTypeBothDesc'),
                 icon: Layers,
               },
             ].map((item) => {
@@ -218,16 +220,16 @@ export const MentorMentoringSection: React.FC<Props> = ({
         <div ref={dropdownRef} className="relative">
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-sm font-semibold text-text-muted">
-              Lĩnh vực hỗ trợ <span className="text-danger">*</span>
+              {t('mentoring.supportedIndustriesLabel')} <span className="text-danger">*</span>
             </label>
             {supportedIndustryIds.length > 0 && (
               <span className="text-xs font-semibold text-primary-solid bg-primary-soft px-2.5 py-0.5 rounded-full border border-primary-soft-border">
-                Đã chọn {supportedIndustryIds.length}
+                {t('mentoring.selectedCount', { count: supportedIndustryIds.length })}
               </span>
             )}
           </div>
           <p className="text-xs text-text-subtle mb-2.5">
-            Nhấp vào ô chọn để mở danh mục và chọn các lĩnh vực ngành nghề bạn có thể hướng dẫn
+            {t('mentoring.supportedIndustriesDesc')}
           </p>
 
           {/* Trigger Dropdown Box */}
@@ -241,7 +243,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
             <div className="flex-1 flex flex-wrap items-center gap-1.5">
               {selectedIndustries.length === 0 ? (
                 <span className="text-sm text-text-subtle dark:text-text-subtle">
-                  Chọn các lĩnh vực ngành nghề hỗ trợ...
+                  {t('mentoring.selectIndustriesPlaceholder')}
                 </span>
               ) : (
                 selectedIndustries.map((ind) => (
@@ -274,9 +276,9 @@ export const MentorMentoringSection: React.FC<Props> = ({
               <div className="p-3 border-b border-border dark:border-border bg-cream-100/60 dark:bg-bg flex items-center gap-2">
                 <Search className="w-4 h-4 text-text-subtle shrink-0" />
                 <input
-                  aria-label="Tìm kiếm..."
+                  aria-label={t('mentoring.searchIndustriesPlaceholder')}
                   type="text"
-                  placeholder="Tìm kiếm..."
+                  placeholder={t('mentoring.searchIndustriesPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-sm text-text focus:outline-none placeholder:text-text-subtle dark:placeholder:text-text-subtle"
@@ -297,7 +299,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
               <div className="max-h-60 overflow-y-auto p-1.5 divide-y divide-cream-100 dark:divide-border">
                 {filteredIndustries.length === 0 ? (
                   <div className="p-4 text-center text-xs text-text-subtle dark:text-text-subtle">
-                    Không tìm thấy ngành nghề phù hợp
+                    {t('mentoring.noIndustriesFound')}
                   </div>
                 ) : (
                   filteredIndustries.map((ind) => {
@@ -329,14 +331,14 @@ export const MentorMentoringSection: React.FC<Props> = ({
               {/* Footer info */}
               <div className="p-2.5 border-t border-border dark:border-border bg-surface-2 flex items-center justify-between text-xs text-text-subtle">
                 <span>
-                  Đã chọn {supportedIndustryIds.length}/{availableIndustries.length}
+                  {t('mentoring.selectedTotalCount', { selected: supportedIndustryIds.length, total: availableIndustries.length })}
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(false)}
                   className="px-3 py-1 bg-primary-solid hover:bg-primary-hover text-on-primary rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                 >
-                  Xong
+                  {t('mentoring.doneBtn')}
                 </button>
               </div>
             </div>
@@ -347,17 +349,17 @@ export const MentorMentoringSection: React.FC<Props> = ({
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-sm font-semibold text-text-muted">
-              Chủ đề hướng dẫn
+              {t('mentoring.mentoringTopicsLabel')}
             </label>
           </div>
           <p className="text-xs text-text-subtle mb-2">
-            Thêm các chủ đề bạn có thể hỗ trợ
+            {t('mentoring.mentoringTopicsDesc')}
           </p>
 
           <div className="flex gap-2 mb-3">
             <input
               type="text"
-              placeholder="VD: Hướng dẫn làm dự án, định hướng nghề nghiệp, phỏng vấn thử..."
+              placeholder={t('mentoring.mentoringTopicPlaceholder')}
               value={topicInput}
               onChange={(e) => setTopicInput(e.target.value)}
               onKeyDown={handleAddTopic}
@@ -369,7 +371,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
               disabled={!topicInput.trim()}
               className="px-4 py-2 rounded-xl bg-plum-800 dark:bg-surface-2 text-white text-xs font-semibold hover:bg-plum-900 dark:hover:bg-surface-3 disabled:opacity-50 transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" /> Thêm
+              <Plus className="w-3.5 h-3.5" /> {t('mentoring.addTopicBtn')}
             </button>
           </div>
 
@@ -385,7 +387,7 @@ export const MentorMentoringSection: React.FC<Props> = ({
                     type="button"
                     onClick={() => onRemoveTopic(index)}
                     className="grid h-7 w-7 place-items-center rounded-full text-primary-solid transition-colors hover:bg-danger-soft hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger cursor-pointer"
-                    aria-label={`Xóa chủ đề ${topic}`}
+                    aria-label={t('mentoring.removeTopicAria', { topic })}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

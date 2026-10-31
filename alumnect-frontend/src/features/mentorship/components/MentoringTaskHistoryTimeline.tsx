@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Clock, CheckCircle2, FileEdit, AlertTriangle, XCircle, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { MentoringTaskHistoryEvent } from '../model/mentoringTaskTypes'
@@ -7,10 +8,11 @@ interface MentoringTaskHistoryTimelineProps {
 }
 
 export function MentoringTaskHistoryTimeline({ history }: MentoringTaskHistoryTimelineProps) {
+  const { t, i18n } = useTranslation()
   const formatDateTime = (dateStr: string) => {
     try {
       const d = new Date(dateStr)
-      return d.toLocaleString('vi-VN', {
+      return d.toLocaleString(i18n.language === 'en' ? 'en-US' : 'vi-VN', {
         hour: '2-digit',
         minute: '2-digit',
         day: '2-digit',
@@ -68,12 +70,12 @@ export function MentoringTaskHistoryTimeline({ history }: MentoringTaskHistoryTi
     <div className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-6">
         <Clock className="h-5 w-5 text-primary-solid" />
-        <h3 className="text-base font-bold text-foreground">Nhật ký tiến trình & Lịch sử nhiệm vụ (Audit Trail)</h3>
+        <h3 className="text-base font-bold text-foreground">{t('mentoring.taskHistoryTitle')}</h3>
       </div>
 
       {(!history || history.length === 0) ? (
         <div className="py-8 text-center text-sm text-muted-foreground">
-          Chưa có sự kiện nào được ghi nhận cho nhiệm vụ này.
+          {t('mentoring.taskHistoryEmpty')}
         </div>
       ) : (
         <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border/80">

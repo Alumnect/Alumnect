@@ -9,6 +9,7 @@
  *  - Tài khoản Admin hệ thống chỉ xem, không có nút thao tác.
  */
 import { CheckCircle2, Clock, Loader2, LogIn, LogOut, Settings2, UserPlus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { toast } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
@@ -29,6 +30,7 @@ type Props = {
 }
 
 export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, className, hideManageButton }: Props) {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const promptLogin = useLoginPrompt((s) => s.open)
   const joinMut = useJoinGroup()
@@ -37,8 +39,8 @@ export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, 
   if (!user) {
     return (
       <div className={className}>
-        <Button variant="primary" size={size} leftIcon={<LogIn size={15} />} onClick={() => promptLogin('Đăng nhập để tham gia hội nhóm.')}>
-          Đăng nhập để tham gia
+        <Button variant="primary" size={size} leftIcon={<LogIn size={15} />} onClick={() => promptLogin(t('groups.promptLoginJoin'))}>
+          {t('groups.loginToJoin')}
         </Button>
       </div>
     )
@@ -49,23 +51,23 @@ export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, 
 
   const handleJoin = () => {
     joinMut.mutate(id, {
-      onSuccess: (res) => toast.success(res.message || 'Thành công!'),
-      onError: (err) => toast.error((err as Error).message || 'Không thể tham gia hội nhóm, vui lòng thử lại.'),
+      onSuccess: (res) => toast.success(res.message || t('common.success')),
+      onError: (err) => toast.error((err as Error).message || t('groups.joinError')),
     })
   }
   const handleCancel = () => {
     leaveMut.mutate(
       { id },
       {
-        onSuccess: (res) => toast.success(res.message || 'Đã hủy yêu cầu.'),
-        onError: (err) => toast.error((err as Error).message || 'Không thể hủy yêu cầu, vui lòng thử lại.'),
+        onSuccess: (res) => toast.success(res.message || t('groups.requestCancelled')),
+        onError: (err) => toast.error((err as Error).message || t('groups.cancelRequestError')),
       },
     )
   }
 
   const leaveButton = onLeave ? (
     <Button variant="secondary" size={size} leftIcon={<LogOut size={15} />} onClick={onLeave}>
-      Rời nhóm
+      {t('groups.leaveGroup')}
     </Button>
   ) : null
 
@@ -76,16 +78,16 @@ export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, 
           isManagerRole(viewerRole) ? (
             onManage ? (
               <Button variant="primary" size={size} leftIcon={<Settings2 size={15} />} onClick={onManage}>
-                Quản lý hội nhóm
+                {t('groups.manage')}
               </Button>
             ) : (
               <ButtonLink to={`/app/groups/${id}?manage=1`} variant="primary" size={size} leftIcon={<Settings2 size={15} />}>
-                Quản lý hội nhóm
+                {t('groups.manage')}
               </ButtonLink>
             )
           ) : (
             <Button variant="outline" size={size} disabled leftIcon={<CheckCircle2 size={15} />}>
-              Đã tham gia
+              {t('groups.joined')}
             </Button>
           )
         )}
@@ -98,10 +100,10 @@ export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, 
     return (
       <div className={`flex flex-wrap items-center gap-2 ${className ?? ''}`}>
         <Button variant="outline" size={size} disabled leftIcon={<Clock size={15} />}>
-          Đang chờ duyệt
+          {t('groups.pending')}
         </Button>
         <Button variant="secondary" size={size} onClick={handleCancel} disabled={leaveMut.isPending} leftIcon={leaveMut.isPending ? <Loader2 size={15} className="animate-spin" /> : undefined}>
-          Hủy yêu cầu
+          {t('groups.cancelRequest')}
         </Button>
       </div>
     )
@@ -111,7 +113,7 @@ export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, 
     return (
       <div className={className}>
         <Button variant="outline" size={size} disabled>
-          Tạm ngừng hoạt động
+          {t('groups.pausedStatus')}
         </Button>
       </div>
     )
@@ -126,7 +128,7 @@ export function GroupMembershipActions({ group, size = 'sm', onManage, onLeave, 
         disabled={joinMut.isPending}
         leftIcon={joinMut.isPending ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
       >
-        {privacy === 'PRIVATE' ? 'Gửi yêu cầu tham gia' : 'Tham gia'}
+        {privacy === 'PRIVATE' ? t('groups.requestToJoin') : t('groups.joinGroup')}
       </Button>
     </div>
   )

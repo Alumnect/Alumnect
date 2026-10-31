@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { format, isToday } from 'date-fns'
 import { Search, MessageCircleMore, MessagesSquare, UserPlus, Users } from 'lucide-react'
@@ -6,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Avatar, FadeSwitch } from '@/components/ui'
 import { TRANSITION } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+import type { TFunction } from 'i18next'
 import { CreateGroupModal } from './CreateGroupModal'
 import { type Conversation, isGroupConversation } from '../model/types'
 
@@ -21,19 +23,22 @@ interface ConversationListProps {
   onGroupCreated?: (group: Conversation) => void
 }
 
-function formatLastMessage(msg?: string): string {
-  if (!msg) return 'Bắt đầu cuộc trò chuyện'
+function formatLastMessage(msg?: string, t?: TFunction): string {
+  if (!msg) return t ? t('messages.startChat', 'Bắt đầu cuộc trò chuyện') : 'Bắt đầu cuộc trò chuyện'
   if (/(?:https?:\/\/[^\s]+)?\/app\/groups\/\d+\?(?:[^\s]*&)?postId=\d+/.test(msg)) {
     const note = msg.replace(/(?:https?:\/\/[^\s]+)?\/app\/groups\/\d+\?(?:[^\s]*&)?postId=\d+/, '').trim()
-    return note ? `${note} • [Đã chia sẻ bài viết nhóm]` : '[Đã chia sẻ một bài viết]'
+    const sharedText = t ? t('messages.sharedGroupPost', '[Đã chia sẻ bài viết nhóm]') : '[Đã chia sẻ bài viết nhóm]'
+    return note ? `${note} • ${sharedText}` : sharedText
   }
   if (/(?:https?:\/\/[^\s]+)?\/app\/groups\/\d+/.test(msg)) {
     const note = msg.replace(/(?:https?:\/\/[^\s]+)?\/app\/groups\/\d+(?:\?[^\s]*)?/, '').trim()
-    return note ? `${note} • [Đã chia sẻ hội nhóm]` : '[Đã chia sẻ một hội nhóm]'
+    const sharedText = t ? t('messages.sharedGroup', '[Đã chia sẻ hội nhóm]') : '[Đã chia sẻ một hội nhóm]'
+    return note ? `${note} • ${sharedText}` : sharedText
   }
   if (/(?:https?:\/\/[^\s]+)?\/app\/posts\/\d+/.test(msg)) {
     const note = msg.replace(/(?:https?:\/\/[^\s]+)?\/app\/posts\/\d+/, '').trim()
-    return note ? `${note} • [Đã chia sẻ bài viết]` : '[Đã chia sẻ một bài viết]'
+    const sharedText = t ? t('messages.sharedPost', '[Đã chia sẻ một bài viết]') : '[Đã chia sẻ một bài viết]'
+    return note ? `${note} • ${sharedText}` : sharedText
   }
   return msg
 }
@@ -49,12 +54,13 @@ export function ConversationList({
   requestsCount = 0,
   onGroupCreated,
 }: ConversationListProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
 
   const filtered = conversations.filter((c) => {
     const isGrp = isGroupConversation(c)
-    const displayName = isGrp ? c.title || 'Nhóm trò chuyện' : c.recipientName
+    const displayName = isGrp ? c.title || t('messages.chatGroup', 'Nhóm trò chuyện') : c.recipientName
     return displayName.toLowerCase().includes(search.trim().toLowerCase())
   })
 
@@ -63,21 +69,21 @@ export function ConversationList({
       {/* Header & Search */}
       <div className="shrink-0 p-4 pb-3">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xl font-extrabold text-text">Tin nhắn</h2>
+          <h2 className="text-xl font-extrabold text-text">{t('messages.title')}</h2>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => setIsCreateGroupOpen(true)}
-              title="Tạo nhóm trò chuyện mới"
-              aria-label="Tạo nhóm trò chuyện mới"
+              title={t('messages.newGroup')}
+              aria-label={t('messages.newGroup')}
               className="grid h-9 w-9 place-items-center rounded-full text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
             >
               <Users size={18} />
             </button>
             <Link
               to="/app/alumni"
-              title="Tìm người để nhắn tin"
-              aria-label="Tìm người để nhắn tin"
+              title={t('directory.connect')}
+              aria-label={t('directory.connect')}
               className="grid h-9 w-9 place-items-center rounded-full text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
             >
               <UserPlus size={18} />
@@ -86,10 +92,10 @@ export function ConversationList({
         </div>
 
         {/* Hộp thư chính & Tin nhắn chờ */}
-        <div role="tablist" aria-label="Loại hộp thư" className="mb-3 flex border-b border-border">
+        <div role="tablist" aria-label={t('messages.mailboxType', 'Loại hộp thư')} className="mb-3 flex border-b border-border">
           {([
-            ['primary', 'Hộp thư'],
-            ['requests', 'Tin nhắn chờ'],
+            ['primary', t('messages.primary')],
+            ['requests', t('messages.requests')],
           ] as const).map(([key, label]) => (
             <button
               key={key}
@@ -114,10 +120,10 @@ export function ConversationList({
         <label className="relative flex items-center">
           <Search size={16} className="pointer-events-none absolute left-3.5 text-text-subtle" />
           <input
-            aria-label="Tìm kiếm người hoặc nhóm..."
+            aria-label={t('messages.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm người hoặc nhóm..."
+            placeholder={t('messages.searchPlaceholder')}
             className="h-10 w-full rounded-full bg-surface-2 pl-10 pr-4 text-sm text-text placeholder:text-text-subtle transition-colors focus:bg-surface-3 focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </label>
@@ -147,10 +153,10 @@ export function ConversationList({
             )}
             <p className="text-sm font-medium">
               {search
-                ? 'Không tìm thấy cuộc trò chuyện phù hợp.'
+                ? t('messages.noMatchFound', 'Không tìm thấy cuộc trò chuyện phù hợp.')
                 : currentTab === 'requests'
-                ? 'Không có tin nhắn chờ nào từ người lạ.'
-                : 'Chưa có cuộc trò chuyện nào.'}
+                ? t('messages.noPendingMessages', 'Không có tin nhắn chờ nào từ người lạ.')
+                : t('messages.noConversations', 'Chưa có cuộc trò chuyện nào.')}
             </p>
           </div>
         ) : (
@@ -159,7 +165,7 @@ export function ConversationList({
               (conv.id != null && activeId === conv.id) ||
               (!conv.id && activeRecipientId != null && conv.recipientId === activeRecipientId)
             const isGroup = isGroupConversation(conv)
-            const displayName = isGroup ? conv.title || 'Nhóm trò chuyện' : conv.recipientName
+            const displayName = isGroup ? conv.title || t('messages.chatGroup', 'Nhóm trò chuyện') : conv.recipientName
             const lastDate = conv.lastMessageAt ? new Date(conv.lastMessageAt) : null
             const lastTime = lastDate && !isNaN(lastDate.getTime()) ? (isToday(lastDate) ? format(lastDate, 'HH:mm') : format(lastDate, 'dd/MM')) : ''
 
@@ -185,7 +191,7 @@ export function ConversationList({
                   </div>
                   <div className="mt-0.5 flex items-center justify-between gap-2">
                     <p className={cn('truncate text-sm', conv.unreadCount > 0 ? 'font-semibold text-text' : 'text-text-subtle')}>
-                      {formatLastMessage(conv.lastMessage)}
+                      {formatLastMessage(conv.lastMessage, t)}
                     </p>
                     {conv.unreadCount > 0 && (
                       <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary-solid px-1.5 text-xs font-bold text-on-primary">{conv.unreadCount}</span>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Container } from '@/components/ui'
 import { Card } from '@/components/ui/primitives'
 import { useAuthStore } from '@/store/authStore'
@@ -9,6 +10,7 @@ import { Activity } from 'lucide-react'
  * Cho phép cựu sinh viên (Alumni) và Mentor theo dõi tiến trình hồ sơ, điều khoản và hạn sử dụng gói.
  */
 export function MentorStatusPage() {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const isAlumni = user?.role === 'ALUMNI'
 
@@ -20,10 +22,10 @@ export function MentorStatusPage() {
             <Activity className="h-7 w-7" />
           </div>
           <h2 className="font-display text-xl font-bold text-text">
-            Tính năng dành cho cựu sinh viên
+            {t('mentoring.alumniOnlyFeature')}
           </h2>
           <p className="mt-2 text-sm text-text-muted leading-relaxed">
-            Bạn cần là cựu sinh viên đã xác thực để đăng ký và quản lý hồ sơ Mentor.
+            {t('mentoring.alumniOnlyDesc')}
           </p>
         </Card>
       </Container>

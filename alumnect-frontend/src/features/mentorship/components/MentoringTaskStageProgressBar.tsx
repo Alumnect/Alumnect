@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Check, Clock, PlayCircle, Flag } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -9,32 +10,34 @@ interface MentoringTaskStageProgressBarProps {
   className?: string
 }
 
-const STAGES = [
-  {
-    key: 'PREPARATION' as MentoringTaskUIStage,
-    title: 'Chuẩn bị',
-    subtitle: 'Kích hoạt & chuẩn bị',
-    icon: Clock,
-  },
-  {
-    key: 'IN_PROGRESS' as MentoringTaskUIStage,
-    title: 'Đang thực hiện',
-    subtitle: 'Ghi nhận Work Logs',
-    icon: PlayCircle,
-  },
-  {
-    key: 'ENDING' as MentoringTaskUIStage,
-    title: 'Kết thúc & Nghiệm thu',
-    subtitle: 'Bàn giao & thanh toán',
-    icon: Flag,
-  },
-]
-
 export function MentoringTaskStageProgressBar({
   currentStage,
   progressPercentage,
   className = '',
 }: MentoringTaskStageProgressBarProps) {
+  const { t } = useTranslation()
+
+  const stages = [
+    {
+      key: 'PREPARATION' as MentoringTaskUIStage,
+      title: t('mentoring.stagePreparation', 'Chuẩn bị'),
+      subtitle: t('mentoring.stagePreparationSubtitle', 'Kích hoạt & chuẩn bị'),
+      icon: Clock,
+    },
+    {
+      key: 'IN_PROGRESS' as MentoringTaskUIStage,
+      title: t('mentoring.stageInProgress', 'Đang thực hiện'),
+      subtitle: t('mentoring.stageInProgressSubtitle', 'Ghi nhận Work Logs'),
+      icon: PlayCircle,
+    },
+    {
+      key: 'ENDING' as MentoringTaskUIStage,
+      title: t('mentoring.stageCompletion', 'Kết thúc & Nghiệm thu'),
+      subtitle: t('mentoring.stageCompletionSubtitle', 'Bàn giao & thanh toán'),
+      icon: Flag,
+    },
+  ]
+
   const getStageIndex = (stage: MentoringTaskUIStage) => {
     switch (stage) {
       case 'PREPARATION':
@@ -55,10 +58,10 @@ export function MentoringTaskStageProgressBar({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
-            Tiến trình Mentoring Task
+            {t('mentoring.mentoringTaskProgressTitle')}
           </span>
           <h4 className="text-base font-bold text-text">
-            {STAGES[currentIndex].title}
+            {stages[currentIndex].title}
           </h4>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -77,7 +80,7 @@ export function MentoringTaskStageProgressBar({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {STAGES.map((stage, idx) => {
+        {stages.map((stage, idx) => {
           const isPassed = idx < currentIndex
           const isCurrent = idx === currentIndex
           const Icon = stage.icon
@@ -110,7 +113,7 @@ export function MentoringTaskStageProgressBar({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
-                    Giai đoạn {idx + 1}
+                    {t('mentoring.stageIndex', { index: idx + 1 })}
                   </span>
                   {isCurrent && (
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary-solid animate-pulse" />

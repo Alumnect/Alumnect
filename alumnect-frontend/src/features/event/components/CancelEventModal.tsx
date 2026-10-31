@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Ban, Loader2 } from 'lucide-react'
 import { Modal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -21,6 +22,8 @@ export function CancelEventModal({
   isPending,
   eventTitle,
 }: CancelEventModalProps) {
+  const { t } = useTranslation()
+
   const handleClose = () => {
     if (!isPending) onClose()
   }
@@ -29,7 +32,7 @@ export function CancelEventModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Hủy tổ chức sự kiện"
+      title={t('event.cancelEventModalTitle')}
       icon={<Ban size={18} className="text-danger" />}
       maxWidthClassName="max-w-md"
       footer={
@@ -41,7 +44,7 @@ export function CancelEventModal({
             onClick={handleClose}
             disabled={isPending}
           >
-            Giữ lại sự kiện
+            {t('event.keepEvent')}
           </Button>
           <Button
             type="button"
@@ -58,7 +61,7 @@ export function CancelEventModal({
             }
             className="border-danger bg-danger text-text-inverse hover:opacity-90"
           >
-            {isPending ? 'Đang hủy…' : 'Xác nhận hủy sự kiện'}
+            {isPending ? t('common.processing') : t('event.confirmCancelEvent')}
           </Button>
         </div>
       }
@@ -67,18 +70,12 @@ export function CancelEventModal({
         <div className="flex items-center gap-2.5 rounded-xl border border-danger-border bg-danger-soft p-3 text-xs text-danger">
           <AlertTriangle size={16} className="shrink-0 text-danger" />
           <p className="text-danger">
-            <strong>Lưu ý:</strong> Sự kiện và danh sách đăng ký sẽ bị hủy vĩnh viễn, không thể mở lại.
+            {t('event.cancelEventWarning')}
           </p>
         </div>
 
         <p className="text-sm leading-relaxed text-text-muted">
-          Bạn có chắc chắn muốn hủy sự kiện{' '}
-          {eventTitle ? (
-            <span className="font-bold text-text">"{eventTitle}"</span>
-          ) : (
-            'này'
-          )}{' '}
-          không?
+          {t('event.cancelEventConfirmText', { title: eventTitle || t('event.thisEvent') })}
         </p>
       </div>
     </Modal>

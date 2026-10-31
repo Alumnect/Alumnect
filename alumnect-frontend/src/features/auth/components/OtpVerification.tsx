@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react'
@@ -13,6 +14,7 @@ interface OtpVerificationProps {
 }
 
 export function OtpVerification({ email, onBack }: OtpVerificationProps) {
+  const { t } = useTranslation()
   const [otpToken, setOtpToken] = useState('')
   const [verifyError, setVerifyError] = useState<string | null>(null)
   const [verifySuccess, setVerifySuccess] = useState<string | null>(null)
@@ -46,7 +48,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!otpToken || otpToken.trim().length !== 6) {
-      setVerifyError('Vui lòng nhập đúng mã OTP 6 chữ số')
+      setVerifyError(t('auth.enterOtp6Digits'))
       return
     }
 
@@ -59,11 +61,11 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
         token: otpToken.trim(),
       })
 
-      setVerifySuccess(res.message || 'Xác thực email thành công!')
+      setVerifySuccess(res.message || t('auth.verifyEmailSuccess'))
       setCountdown(3)
-      toast.success('Xác thực email thành công!')
+      toast.success(t('auth.verifyEmailSuccess'))
     } catch (err: any) {
-      setVerifyError(err.message || 'Mã OTP không chính xác hoặc đã hết hạn')
+      setVerifyError(err.message || t('auth.otpIncorrectOrExpired'))
       // Nếu mã bị khóa do nhập sai quá 5 lần, reset cooldown về 0 để cho phép gửi lại ngay lập tức
       if (err.message && (err.message.includes('bị khóa') || err.message.includes('5 lần'))) {
         setCooldown(0)
@@ -78,10 +80,10 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
 
     try {
       const res = await resendOtpMutation.mutateAsync(email)
-      toast.success(res.message || 'Đã gửi lại mã OTP mới!')
+      toast.success(res.message || t('auth.resendOtpNewSuccess'))
       setCooldown(300) // Reset cooldown 5 phút
     } catch (err: any) {
-      setVerifyError(err.message || 'Không thể gửi lại mã OTP. Vui lòng thử lại sau.')
+      setVerifyError(err.message || t('auth.resendOtpNewError'))
     }
   }
 
@@ -101,7 +103,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
 
         <div>
           <h1 className="text-2xl font-extrabold text-text tracking-tight">
-            Xác thực email thành công!
+            {t('auth.verifyEmailSuccess')}
           </h1>
           <p className="mt-2 text-sm text-text-muted leading-relaxed max-w-sm mx-auto">
             {verifySuccess}
@@ -113,8 +115,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
           <div className="flex items-center justify-center gap-2 text-xs font-semibold text-text-muted">
             <Loader2 size={15} className="animate-spin text-primary-solid" />
             <span>
-              Đang chuyển hướng về trang Đăng nhập trong{' '}
-              <strong className="text-primary-solid font-bold">{countdown}s</strong>...
+              {t('auth.redirectingToLogin', { seconds: countdown })}
             </span>
           </div>
 
@@ -136,7 +137,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
           className="w-full"
           rightIcon={<ArrowRight size={18} />}
         >
-          Đăng nhập ngay
+          {t('auth.loginNow')}
         </Button>
       </div>
     )
@@ -150,12 +151,12 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
         className="inline-flex items-center gap-1 text-xs font-bold text-primary-solid hover:text-primary-solid mb-6 group transition-colors"
       >
         <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" /> 
-        Quay lại sửa thông tin
+        {t('auth.backToEditInfo')}
       </button>
       
-      <h1 className="text-3xl font-extrabold text-text tracking-tight">Xác thực Email</h1>
+      <h1 className="text-3xl font-extrabold text-text tracking-tight">{t('auth.verifyEmailTitle')}</h1>
       <p className="mt-2 text-sm text-text-subtle leading-relaxed">
-        Chúng tôi đã gửi mã xác thực OTP 6 số đến địa chỉ <strong className="text-text">{email}</strong>. Vui lòng kiểm tra email (cả hòm thư Spam) và nhập mã vào bên dưới.
+        {t('auth.otpSentNoticePrefix')} <strong className="text-text">{email}</strong>. {t('auth.otpSentNoticeSuffix')}
       </p>
 
       {verifyError && (
@@ -167,7 +168,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
 
       <form className="mt-6 space-y-4" onSubmit={handleVerifyOtp} noValidate>
         <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold text-text-muted">Mã xác thực OTP (6 chữ số)</span>
+          <span className="mb-1.5 block text-sm font-semibold text-text-muted">{t('auth.otpInputLabel')}</span>
           <input
             type="text"
             placeholder="123456"
@@ -188,14 +189,17 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
           disabled={verifyEmailMutation.isPending || otpToken.trim().length !== 6}
           rightIcon={verifyEmailMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
         >
-          {verifyEmailMutation.isPending ? 'Đang xác thực...' : 'Xác thực tài khoản'}
+          {verifyEmailMutation.isPending ? t('auth.verifyingText') : t('auth.verifyAccountBtn')}
         </Button>
       </form>
 
       <div className="mt-6 flex flex-col items-center justify-center gap-2">
         {cooldown > 0 ? (
           <p className="text-xs text-text-subtle">
-            Gửi lại mã OTP sau: <span className="font-semibold text-primary-solid">{Math.floor(cooldown / 60)} phút {cooldown % 60} giây</span>
+            {t('auth.resendOtpAfter')}{' '}
+            <span className="font-semibold text-primary-solid">
+              {t('auth.minutesAndSeconds', { minutes: Math.floor(cooldown / 60), seconds: cooldown % 60 })}
+            </span>
           </p>
         ) : (
           <button
@@ -204,7 +208,7 @@ export function OtpVerification({ email, onBack }: OtpVerificationProps) {
             disabled={resendOtpMutation.isPending}
             className="text-xs font-bold text-primary-solid hover:text-primary-solid transition-colors disabled:opacity-50"
           >
-            {resendOtpMutation.isPending ? 'Đang gửi...' : 'Gửi lại mã OTP mới'}
+            {resendOtpMutation.isPending ? t('auth.sendingText') : t('auth.resendNewOtpBtn')}
           </button>
         )}
       </div>

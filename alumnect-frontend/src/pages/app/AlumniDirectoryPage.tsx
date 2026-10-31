@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Users,
   Target,
@@ -42,6 +43,7 @@ const INITIAL_FILTERS: FilterState = {
 const PAGE_SIZE = 12
 
 export function AlumniDirectoryPage() {
+  const { t } = useTranslation()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [activeTab, setActiveTab] = useState<'directory' | 'suggestions' | 'network'>('directory')
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS)
@@ -150,8 +152,8 @@ export function AlumniDirectoryPage() {
       {/* Page Header */}
       <PageHeader
         icon={<Users size={22} className="text-primary-solid" />}
-        title="Mạng lưới & Danh bạ AlumNect"
-        subtitle="Khám phá và kết nối cùng cộng đồng hàng ngàn cựu sinh viên & sinh viên FPT University."
+        title={t('directory.title')}
+        subtitle={t('directory.subtitle')}
       />
 
       {/* Main Tabs Navigation - Chỉ hiển thị khi người dùng đã đăng nhập */}
@@ -168,7 +170,7 @@ export function AlumniDirectoryPage() {
             )}
           >
             <Compass size={17} />
-            <span>Danh bạ thành viên</span>
+            <span>{t('directory.membersTab')}</span>
           </button>
 
           <button
@@ -182,7 +184,7 @@ export function AlumniDirectoryPage() {
             )}
           >
             <Target size={17} className={activeTab === 'suggestions' ? 'text-on-primary' : 'text-primary-solid'} />
-            <span>Gợi ý kết nối</span>
+            <span>{t('directory.suggestionsTab')}</span>
           </button>
 
           <button
@@ -196,7 +198,7 @@ export function AlumniDirectoryPage() {
             )}
           >
             <HeartHandshake size={17} />
-            <span>Mạng lưới của tôi</span>
+            <span>{t('directory.myNetworkTab')}</span>
           </button>
         </div>
       )}
@@ -242,11 +244,11 @@ export function AlumniDirectoryPage() {
           {!isLoading && isError && (
             <EmptyState
               icon={<Users size={28} className="text-danger" />}
-              title="Không thể tải danh bạ thành viên"
-              description={error instanceof Error ? error.message : 'Đã có lỗi xảy ra khi kết nối máy chủ.'}
+              title={t('directory.loadError')}
+              description={error instanceof Error ? error.message : t('common.error')}
               action={
                 <Button size="sm" variant="secondary" onClick={() => refetch()}>
-                  Thử lại
+                  {t('common.tryAgain')}
                 </Button>
               }
             />
@@ -256,11 +258,11 @@ export function AlumniDirectoryPage() {
           {!isLoading && !isError && displayedUsers.length === 0 && (
             <EmptyState
               icon={<Users size={28} className="text-primary-solid" />}
-              title="Không tìm thấy thành viên phù hợp"
-              description="Hãy thử thay đổi từ khóa tìm kiếm, chuyên ngành hoặc mở rộng phạm vi bộ lọc."
+              title={t('directory.emptyTitle')}
+              description={t('directory.emptyDesc')}
               action={
                 <Button size="sm" variant="secondary" onClick={handleResetFilters}>
-                  Xóa bộ lọc & Tìm lại
+                  {t('common.clearFilter')}
                 </Button>
               }
             />
@@ -316,11 +318,11 @@ export function AlumniDirectoryPage() {
           {!isSuggestionsLoading && isSuggestionsError && (
             <EmptyState
               icon={<Users size={28} className="text-danger" />}
-              title="Không thể tải danh sách gợi ý"
-              description="Đã xảy ra lỗi khi tính toán dữ liệu đề xuất kết nối."
+              title={t('directory.suggestionsLoadError')}
+              description={t('directory.suggestionsLoadErrorDesc')}
               action={
                 <Button size="sm" variant="secondary" onClick={() => refetchSuggestions()}>
-                  Thử lại
+                  {t('common.tryAgain')}
                 </Button>
               }
             />
@@ -330,12 +332,12 @@ export function AlumniDirectoryPage() {
           {!isSuggestionsLoading && !isSuggestionsError && displayedSuggestions.length === 0 && (
             <EmptyState
               icon={<Compass size={28} className="text-primary-solid" />}
-              title="Chưa có gợi ý phù hợp"
-              description="Hãy hoàn thiện thông tin hồ sơ (chuyên ngành, khóa học, kinh nghiệm làm việc) để nhận được các đề xuất chính xác hơn."
+              title={t('directory.noSuggestionsTitle')}
+              description={t('directory.noSuggestionsDesc')}
               action={
                 <Link to="/app/profile">
                   <Button size="sm" variant="primary">
-                    Cập nhật hồ sơ
+                    {t('directory.updateProfile')}
                   </Button>
                 </Link>
               }
@@ -371,7 +373,7 @@ export function AlumniDirectoryPage() {
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3',
                 )}
               >
-                Đang theo dõi ({followingCount})
+                {t('directory.followingTab', { count: followingCount })}
               </button>
               <button
                 type="button"
@@ -383,7 +385,7 @@ export function AlumniDirectoryPage() {
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3',
                 )}
               >
-                Người theo dõi ({followersCount})
+                {t('directory.followersTab', { count: followersCount })}
               </button>
             </div>
 
@@ -391,11 +393,11 @@ export function AlumniDirectoryPage() {
             <div className="relative w-full sm:w-72">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
-                aria-label="Tìm nhanh trong mạng lưới..."
+                aria-label={t('directory.networkSearchPlaceholder')}
                 type="text"
                 value={networkSearch}
                 onChange={(e) => setNetworkSearch(e.target.value)}
-                placeholder="Tìm nhanh trong mạng lưới..."
+                placeholder={t('directory.networkSearchPlaceholder')}
                 className="h-9 w-full rounded-xl border border-border-strong bg-surface pl-8 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none"
               />
             </div>
@@ -422,20 +424,20 @@ export function AlumniDirectoryPage() {
               icon={<HeartHandshake size={28} className="text-primary-solid" />}
               title={
                 networkSearch
-                  ? 'Không tìm thấy kết quả phù hợp'
+                  ? t('directory.noNetworkResults')
                   : networkSubTab === 'following'
-                  ? 'Bạn chưa theo dõi thành viên nào'
-                  : 'Chưa có người theo dõi bạn'
+                  ? t('directory.emptyFollowing')
+                  : t('directory.emptyFollowers')
               }
               description={
                 networkSearch
-                  ? 'Hãy thử tìm kiếm với từ khóa khác.'
-                  : 'Hãy khám phá danh bạ hoặc mục Gợi ý kết nối để mở rộng mạng lưới quan hệ.'
+                  ? t('directory.emptyDesc')
+                  : t('directory.subtitle')
               }
               action={
                 !networkSearch ? (
                   <Button size="sm" variant="primary" onClick={() => setActiveTab('suggestions')}>
-                    Khám phá gợi ý
+                    {t('directory.suggestionsTab')}
                   </Button>
                 ) : undefined
               }
@@ -466,7 +468,7 @@ export function AlumniDirectoryPage() {
                         {member.fullName}
                       </Link>
                       <p className="truncate text-xs text-text-subtle mt-0.5">
-                        {member.headline || 'Cựu sinh viên FPTU'}
+                        {member.headline || t('common.alumni')}
                       </p>
                     </div>
                   </div>
@@ -481,7 +483,7 @@ export function AlumniDirectoryPage() {
                         onClick={() => unfollowMutation.mutate(member.userId)}
                         leftIcon={<UserX size={13} />}
                       >
-                        Hủy theo dõi
+                        {t('profile.unfollow')}
                       </Button>
                     ) : (
                       <Button
@@ -492,7 +494,7 @@ export function AlumniDirectoryPage() {
                         onClick={() => followMutation.mutate(member.userId)}
                         leftIcon={<UserPlus size={13} />}
                       >
-                        Theo dõi lại
+                        {t('profile.followBack')}
                       </Button>
                     )}
                   </div>

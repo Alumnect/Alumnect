@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, ShieldCheck, CheckCircle2, History, Loader2, MessagesSquare, Info } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, DialogFrame } from '@/components/ui'
 import { MentoringDealSnapshotCard } from './MentoringDealSnapshotCard'
 import { MentoringDealHistoryTimeline } from './MentoringDealHistoryTimeline'
@@ -20,6 +21,7 @@ interface MentoringDealActionModalProps {
  * Chat for Task của Request để backend kiểm tra đúng phiên bản và ngữ cảnh Request.
  */
 export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat = false }: MentoringDealActionModalProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'snapshot' | 'history'>('snapshot')
   const { data: detailData, isLoading } = useDealDetail(dealId)
@@ -40,7 +42,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
         <button
           type="button"
           onClick={onClose}
-          aria-label="Đóng"
+          aria-label={t('common.close')}
           className="absolute right-5 top-5 p-2 text-text-subtle hover:text-text-muted rounded-full hover:bg-surface-2 transition-colors"
         >
           <X className="h-5 w-5" />
@@ -52,11 +54,11 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary-solid" />
               <h3 className="font-display text-lg font-bold text-text">
-                Mentoring Deal #{dealId}
+                {t('mentoring.dealModalTitle', { id: dealId })}
               </h3>
             </div>
             <p className="text-xs text-text-subtle mt-0.5">
-              {deal?.requestTitle ? `Request: ${deal.requestTitle}` : 'Điều khoản và lịch sử các phiên bản Deal Ticket.'}
+              {deal?.requestTitle ? t('mentoring.dealRequestSubtitle', { title: deal.requestTitle }) : t('mentoring.dealDefaultSubtitle')}
             </p>
           </div>
 
@@ -70,7 +72,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               }`}
             >
-              Phiên bản mới nhất
+              {t('mentoring.latestVersionTab')}
             </button>
             <button
               type="button"
@@ -82,7 +84,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
               }`}
             >
               <History className="h-3.5 w-3.5" />
-              <span>Lịch sử phiên bản ({snapshots.length})</span>
+              <span>{t('mentoring.versionHistoryTab', { count: snapshots.length })}</span>
             </button>
           </div>
         </div>
@@ -90,10 +92,10 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-3 text-text-subtle">
             <Loader2 className="h-7 w-7 animate-spin text-primary-solid" />
-            <p className="text-xs font-medium">Đang tải chi tiết Deal...</p>
+            <p className="text-xs font-medium">{t('mentoring.loadingDeal')}</p>
           </div>
         ) : !deal ? (
-          <div className="py-12 text-center text-xs text-text-subtle">Không tìm thấy thông tin thỏa thuận Deal.</div>
+          <div className="py-12 text-center text-xs text-text-subtle">{t('mentoring.dealNotFound')}</div>
         ) : (
           <div className="space-y-6">
             {activeTab === 'snapshot' ? (
@@ -113,11 +115,11 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
               {deal.isPaid ? (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success-soft text-success border border-success-border text-xs font-bold">
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span>Đã thanh toán • Task #{deal.taskId || ''}</span>
+                  <span>{t('mentoring.dealStatusPaid')} • Task #{deal.taskId || ''}</span>
                 </div>
               ) : (
                 <span className="text-xs text-text-subtle">
-                  Xác nhận, điều chỉnh và thanh toán được thực hiện trong phần Nhắn tin.
+                  {t('mentoring.dealChatHint')}
                 </span>
               )}
 
@@ -128,7 +130,7 @@ export function MentoringDealActionModal({ isOpen, onClose, dealId, hideOpenChat
                   leftIcon={<MessagesSquare className="h-4 w-4" />}
                   className="rounded-xl font-bold text-xs"
                 >
-                  Nhắn tin
+                  {t('mentoring.discuss')}
                 </Button>
               )}
             </div>

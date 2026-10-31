@@ -8,6 +8,7 @@
  * - Tương thích hoàn hảo với hệ màu Pastel Premium và hoạt ảnh mượt mà.
  */
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   Trophy,
@@ -38,53 +39,42 @@ import { useToggleLike } from '../hooks/useToggleLike'
 import type { Post, FeedFilter } from '../model/post'
 
 /** Nhãn, icon và phong cách hiển thị badge rõ nét cho từng loại bài viết. */
-const TYPE_META: Record<
-  string,
-  {
-    label: string
-    tone: 'brand' | 'gold' | 'aqua' | 'violet'
-    icon: React.ReactNode
-    badgeClass: string
-    pillClass: string
+function getTypeMeta(type: string, t: (key: string) => string) {
+  switch (type) {
+    case 'achievement':
+      return {
+        label: t('feed.filterAchievement'),
+        tone: 'gold' as const,
+        icon: <Sparkles size={11} className="text-warning" />,
+        badgeClass: 'bg-surface text-warning border border-warning-border shadow-sm font-extrabold',
+        pillClass: 'bg-warning-soft text-warning border border-warning-border',
+      }
+    case 'recruitment':
+      return {
+        label: t('feed.filterRecruitment'),
+        tone: 'aqua' as const,
+        icon: <Briefcase size={11} className="text-info" />,
+        badgeClass: 'bg-surface text-info border border-info-border shadow-sm font-extrabold',
+        pillClass: 'bg-info-soft text-info border border-info-border',
+      }
+    case 'event':
+      return {
+        label: t('feed.filterEvent'),
+        tone: 'violet' as const,
+        icon: <CalendarPlus size={11} className="text-info" />,
+        badgeClass: 'bg-surface text-info border border-info-border shadow-sm font-extrabold',
+        pillClass: 'bg-info-soft text-info border border-info-border',
+      }
+    default:
+      return {
+        label: t('feed.defaultPostAlt'),
+        tone: 'brand' as const,
+        icon: null,
+        badgeClass: 'bg-surface text-text border border-plum-200/80 shadow-sm font-extrabold',
+        pillClass: 'bg-surface-2 text-text border border-border',
+      }
   }
-> = {
-  achievement: {
-    label: 'Thành tựu',
-    tone: 'gold',
-    icon: <Sparkles size={11} className="text-warning" />,
-    badgeClass: 'bg-surface text-warning border border-warning-border shadow-sm font-extrabold',
-    pillClass: 'bg-warning-soft text-warning border border-warning-border',
-  },
-  recruitment: {
-    label: 'Tuyển dụng',
-    tone: 'aqua',
-    icon: <Briefcase size={11} className="text-info" />,
-    badgeClass: 'bg-surface text-info border border-info-border shadow-sm font-extrabold',
-    pillClass: 'bg-info-soft text-info border border-info-border',
-  },
-  event: {
-    label: 'Sự kiện',
-    tone: 'violet',
-    icon: <CalendarPlus size={11} className="text-info" />,
-    badgeClass: 'bg-surface text-info border border-info-border shadow-sm font-extrabold',
-    pillClass: 'bg-info-soft text-info border border-info-border',
-  },
-  normal: {
-    label: 'Bài viết',
-    tone: 'brand',
-    icon: null,
-    badgeClass: 'bg-surface text-text border border-plum-200/80 shadow-sm font-extrabold',
-    pillClass: 'bg-surface-2 text-text border border-border',
-  },
 }
-
-/** Các tab lọc bài viết đã lưu theo loại. */
-const FILTERS: { key: FeedFilter; label: string }[] = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'achievement', label: 'Thành tựu' },
-  { key: 'recruitment', label: 'Tuyển dụng' },
-  { key: 'event', label: 'Sự kiện' },
-]
 
 /** Thẻ hiển thị một bài viết đã lưu ở chế độ Feed (Dòng thời gian chi tiết). */
 function SavedFeedCard({
@@ -94,9 +84,10 @@ function SavedFeedCard({
   post: Post
   onUnsave: (postId: string) => void
 }) {
+  const { t } = useTranslation()
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState<number>(post.likes)
-  const meta = TYPE_META[post.type] ?? TYPE_META.normal
+  const meta = getTypeMeta(post.type, t)
   const toggleLike = useToggleLike()
 
   const handleLike = () => {
@@ -166,13 +157,13 @@ function SavedFeedCard({
           <button
             type="button"
             onClick={() => onUnsave(post.id)}
-            aria-label="Bỏ lưu bài viết"
-            title="Bỏ lưu bài viết này"
+            aria-label={t('feed.unsavePost')}
+            title={t('feed.unsavePostTooltip')}
             className="group flex items-center gap-1.5 rounded-xl border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-text-muted transition hover:bg-danger-soft hover:border-danger-border hover:text-danger active:scale-95 cursor-pointer shrink-0"
           >
             <BookmarkSimple size={14} weight="fill" className="text-primary-solid group-hover:hidden" />
             <Trash size={14} weight="bold" className="hidden text-danger group-hover:block" />
-            <span className="group-hover:text-danger">Đã lưu</span>
+            <span className="group-hover:text-danger">{t('feed.saved')}</span>
           </button>
         </div>
 
@@ -253,7 +244,7 @@ function SavedFeedCard({
       {/* Ảnh đính kèm */}
       {post.type !== 'event' && post.type !== 'recruitment' && images.length > 0 && (
         <div className="px-5 pb-3">
-          <ImageCarousel images={images} height={320} altPrefix="Ảnh bài viết" />
+          <ImageCarousel images={images} height={320} altPrefix={t('feed.defaultPostAlt')} />
         </div>
       )}
 
@@ -278,7 +269,7 @@ function SavedFeedCard({
           className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-text-muted transition duration-200 hover:bg-primary-soft dark:hover:bg-[#F27024]/15 hover:text-primary-solid dark:hover:text-primary"
         >
           <MessageCircle size={15} />
-          <span>{compact(post.comments)} bình luận</span>
+          <span>{t('feed.commentsCount', { count: compact(post.comments) })}</span>
         </Link>
       </div>
     </Card>
@@ -293,7 +284,8 @@ function SavedGridCard({
   post: Post
   onUnsave: (postId: string) => void
 }) {
-  const meta = TYPE_META[post.type] ?? TYPE_META.normal
+  const { t } = useTranslation()
+  const meta = getTypeMeta(post.type, t)
   const coverImage = post.images?.[0] || post.image || (post.type === 'event' ? 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80' : null)
 
   return (
@@ -303,12 +295,12 @@ function SavedGridCard({
         {coverImage ? (
           <img
             src={coverImage}
-            alt={post.text || 'Bài viết'}
+            alt={post.text || t('feed.defaultPostAlt')}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="h-full w-full bg-surface-2 p-4 flex flex-col justify-center">
-            <p className="text-xs text-text-muted line-clamp-3 font-medium">{post.text || 'Bài viết AlumNect'}</p>
+            <p className="text-xs text-text-muted line-clamp-3 font-medium">{post.text || t('feed.defaultPostSnippet')}</p>
           </div>
         )}
         <div className="absolute top-2.5 left-2.5">
@@ -325,7 +317,7 @@ function SavedGridCard({
             e.stopPropagation()
             onUnsave(post.id)
           }}
-          title="Bỏ lưu bài viết"
+          title={t('feed.unsavePost')}
           className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-lg bg-surface text-danger shadow-sm backdrop-blur-xs hover:opacity-90 hover:text-white transition cursor-pointer"
         >
           <Trash size={13} weight="bold" />
@@ -346,7 +338,7 @@ function SavedGridCard({
           ) : null}
 
           <p className="text-xs text-text-muted line-clamp-2 leading-relaxed">
-            {post.text || 'Nhấn để xem chi tiết bài viết...'}
+            {post.text || t('feed.clickToViewDetail')}
           </p>
         </Link>
 
@@ -390,10 +382,18 @@ function SavedPostsSkeleton() {
  * Component hiển thị danh sách bài viết đã lưu bên trong trang Profile cá nhân.
  */
 export function SavedPostsView() {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState<FeedFilter>('all')
   const [viewMode, setViewMode] = useState<'feed' | 'grid'>('grid')
   const { data, isLoading, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useSavedPosts()
   const toggleSave = useToggleSavePost()
+
+  const filters: { key: FeedFilter; label: string }[] = useMemo(() => [
+    { key: 'all', label: t('feed.filterAll') },
+    { key: 'achievement', label: t('feed.filterAchievement') },
+    { key: 'recruitment', label: t('feed.filterRecruitment') },
+    { key: 'event', label: t('feed.filterEvent') },
+  ], [t])
 
   // Bóc danh sách bài viết đã lưu từ các trang
   const allSavedPosts: Post[] = useMemo(() => (data?.pages ?? []).flatMap((p) => p.items), [data])
@@ -413,7 +413,7 @@ export function SavedPostsView() {
         <div className="rounded-2xl bg-surface p-4 sm:p-5 border border-border shadow-xs flex flex-wrap items-center justify-between gap-4">
           {/* Tabs bộ lọc */}
           <div className="flex flex-wrap items-center gap-2">
-            {FILTERS.map((f) => {
+            {filters.map((f) => {
               const active = filter === f.key
               const count = f.key === 'all'
                 ? allSavedPosts.length
@@ -452,7 +452,7 @@ export function SavedPostsView() {
             <button
               type="button"
               onClick={() => setViewMode('grid')}
-              title="Chế độ lưới ảnh (Mặc định)"
+              title={t('feed.gridViewTitle')}
               className={cn(
                 'grid h-8 w-8 place-items-center rounded-lg text-xs transition cursor-pointer',
                 viewMode === 'grid'
@@ -465,7 +465,7 @@ export function SavedPostsView() {
             <button
               type="button"
               onClick={() => setViewMode('feed')}
-              title="Chế độ dòng thời gian"
+              title={t('feed.feedViewTitle')}
               className={cn(
                 'grid h-8 w-8 place-items-center rounded-lg text-xs transition cursor-pointer',
                 viewMode === 'feed'
@@ -487,19 +487,19 @@ export function SavedPostsView() {
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-coral-300/40 text-coral-600">
             <AlertTriangle size={24} />
           </span>
-          <p className="font-bold text-text">Không tải được danh sách bài viết đã lưu</p>
+          <p className="font-bold text-text">{t('feed.loadSavedError')}</p>
           <p className="text-xs text-text-subtle">{(error as Error)?.message || 'Vui lòng kiểm tra lại kết nối mạng.'}</p>
-          <Button size="sm" onClick={() => refetch()}>Thử lại</Button>
+          <Button size="sm" onClick={() => refetch()}>{t('common.tryAgain')}</Button>
         </Card>
       ) : filteredPosts.length === 0 ? (
         <Card hover={false} className="rounded-2xl p-10 text-center bg-surface border border-border">
           <EmptyState
             icon={<BookmarkSimple size={32} weight="fill" className="text-orange-500" />}
-            title={filter === 'all' ? 'Chưa có bài viết nào được lưu' : `Không có bài viết loại "${FILTERS.find(f => f.key === filter)?.label}"`}
-            description={filter === 'all' ? 'Lưu lại những bài viết, tuyển dụng hoặc sự kiện hay trên Bảng tin để xem lại bất cứ khi nào.' : 'Thử chuyển sang tab bộ lọc khác để xem bài viết.'}
+            title={filter === 'all' ? t('feed.noSavedPosts') : t('feed.noSavedFiltered', { type: filters.find(f => f.key === filter)?.label })}
+            description={filter === 'all' ? t('feed.noSavedPostsDesc') : t('feed.noSavedFilteredDesc')}
             action={
               <ButtonLink to="/app" className="bg-primary-solid text-on-primary hover:bg-[#d96010] rounded-xl text-xs font-bold px-5 py-2.5 shadow-sm">
-                Khám phá Bảng tin
+                {t('feed.exploreFeed')}
               </ButtonLink>
             }
           />
@@ -527,10 +527,10 @@ export function SavedPostsView() {
               >
                 {isFetchingNextPage ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" /> Đang tải thêm…
+                    <Loader2 size={14} className="animate-spin" /> {t('feed.loadingMore')}
                   </>
                 ) : (
-                  'Tải thêm bài viết'
+                  t('feed.loadMorePosts')
                 )}
               </Button>
             </div>
@@ -557,10 +557,10 @@ export function SavedPostsView() {
               >
                 {isFetchingNextPage ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" /> Đang tải thêm…
+                    <Loader2 size={14} className="animate-spin" /> {t('feed.loadingMore')}
                   </>
                 ) : (
-                  'Tải thêm bài viết'
+                  t('feed.loadMorePosts')
                 )}
               </Button>
             </div>

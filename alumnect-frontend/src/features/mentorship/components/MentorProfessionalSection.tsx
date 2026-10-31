@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Briefcase, Building, Sparkles, AlertCircle, ExternalLink } from 'lucide-react'
 import type { ProfessionalInfo } from '../model/mentorRegistrationTypes'
 import { useOwnProfile } from '@/features/user'
@@ -20,6 +21,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
   bio,
   onBioChange,
 }) => {
+  const { t } = useTranslation()
   const currentPos = professionalInfo?.reusedFromProfile?.currentPosition
   const currentComp = professionalInfo?.reusedFromProfile?.currentCompany
   const fallbackSkills = professionalInfo?.reusedFromProfile?.skills || []
@@ -68,9 +70,9 @@ export const MentorProfessionalSection: React.FC<Props> = ({
             2
           </div>
           <div>
-            <h3 className="font-semibold text-text text-lg">Chuyên môn</h3>
+            <h3 className="font-semibold text-text text-lg">{t('mentoring.professionalStepTitle')}</h3>
             <p className="text-xs text-text-subtle">
-              Đồng bộ tự động từ hồ sơ cá nhân của bạn
+              {t('mentoring.syncFromProfileDesc')}
             </p>
           </div>
         </div>
@@ -80,7 +82,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
           target="_blank"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-solid hover:text-primary-solid bg-primary-soft hover:bg-primary-soft px-3.5 py-2 rounded-xl border border-primary-soft-border transition-colors"
         >
-          <span>Chỉnh sửa tại hồ sơ</span>
+          <span>{t('mentoring.editInProfileBtn')}</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -92,7 +94,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-2">
               <Briefcase className="w-3.5 h-3.5 text-primary-solid" />
-              <span>Vị trí công việc hiện tại</span>
+              <span>{t('mentoring.currentJobPosition')}</span>
               <span className="text-danger">*</span>
             </span>
 
@@ -117,14 +119,14 @@ export const MentorProfessionalSection: React.FC<Props> = ({
               <div className="p-3 bg-warning-soft border border-warning-border rounded-xl flex items-center justify-between gap-3 text-warning text-xs">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-warning shrink-0" />
-                  <span>Chưa có thông tin công việc hiện tại trong hồ sơ cá nhân.</span>
+                  <span>{t('mentoring.noCurrentJobInProfile')}</span>
                 </div>
                 <Link
                   to="/app/profile"
                   target="_blank"
                   className="font-bold text-primary-solid hover:underline inline-flex items-center gap-1 shrink-0"
                 >
-                  <span>Thêm tại hồ sơ</span>
+                  <span>{t('mentoring.addInProfile')}</span>
                   <ExternalLink className="w-3 h-3" />
                 </Link>
               </div>
@@ -135,7 +137,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
           <div className="pt-3 border-t border-cream-300/60 dark:border-border">
             <span className="text-xs font-bold uppercase tracking-wider text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-2.5">
               <Sparkles className="w-3.5 h-3.5 text-warning" />
-              <span>Kỹ năng chuyên môn</span>
+              <span>{t('mentoring.skillsTitle')}</span>
             </span>
 
             {skillGroups && Object.keys(skillGroups).length > 0 ? (
@@ -171,7 +173,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
               </div>
             ) : (
               <p className="text-xs text-text-subtle dark:text-text-subtle italic">
-                Chưa có kỹ năng trong hồ sơ. Bạn có thể bổ sung tại trang hồ sơ cá nhân.
+                {t('mentoring.noSkillsInProfile')}
               </p>
             )}
           </div>
@@ -181,12 +183,12 @@ export const MentorProfessionalSection: React.FC<Props> = ({
         <div className="pt-1">
           <div className="w-full">
             <label className="block text-sm font-semibold text-text-muted mb-1.5">
-              Giới thiệu về bạn
+              {t('mentoring.bioTitle')}
             </label>
             <textarea
               rows={3}
               maxLength={2000}
-              placeholder="Chia sẻ ngắn gọn định hướng hoặc điều bạn muốn hỗ trợ..."
+              placeholder={t('mentoring.bioPlaceholder')}
               value={bio}
               onChange={(e) => onBioChange(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-border-strong bg-surface text-text placeholder-plum-400 focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary transition text-sm resize-none"

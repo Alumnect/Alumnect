@@ -8,6 +8,7 @@ import { useToggleRsvp, useRsvpStatus } from '../hooks/useEventRsvp'
 import { EventAttendeesModal } from './EventAttendeesModal'
 import { CancelRsvpModal } from './CancelRsvpModal'
 import { compact, cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface EventRsvpButtonProps {
   eventId: number | string | null | undefined
@@ -36,6 +37,7 @@ export function EventRsvpButton({
   showCount = true,
   className = '',
 }: EventRsvpButtonProps) {
+  const { t } = useTranslation()
   const { user, isAuthenticated } = useAuthStore()
   const promptLogin = useLoginPrompt((s) => s.open)
 
@@ -83,7 +85,7 @@ export function EventRsvpButton({
         onSuccess: (res) => {
           setIsRegistered(res.registered)
           setAttendeeCount(res.attendeeCount)
-          const msg = res.message || 'Đã hủy đăng ký tham gia sự kiện thành công!'
+          const msg = res.message || t('event.cancelRsvpSuccess')
           toast.success(msg)
         },
         onError: (err: any) => {
@@ -92,7 +94,7 @@ export function EventRsvpButton({
           const errorMsg =
             err.response?.data?.message ||
             err.message ||
-            'Hủy đăng ký không thành công. Vui lòng thử lại.'
+            t('event.cancelRsvpError')
           toast.error(errorMsg)
         },
       }
@@ -104,32 +106,32 @@ export function EventRsvpButton({
     e.stopPropagation()
 
     if (!isAuthenticated) {
-      promptLogin('Đăng nhập để đăng ký tham gia sự kiện.')
+      promptLogin(t('event.promptLoginRsvp'))
       return
     }
 
     if (user?.role === 'ADMIN') {
-      toast.warning('Chỉ tài khoản sinh viên và cựu sinh viên mới được đăng ký tham gia.')
+      toast.warning(t('event.roleNotEligibleRsvp'))
       return
     }
 
     if (!eventId) {
-      toast.error('Không tìm thấy thông tin sự kiện.')
+      toast.error(t('event.eventNotFound'))
       return
     }
 
     if (status === 'CANCELLED') {
-      toast.warning('Sự kiện này đã bị ban tổ chức hủy.')
+      toast.warning(t('event.eventAlreadyCancelled'))
       return
     }
 
     if (isPast) {
-      toast.warning('Sự kiện đã kết thúc, không thể thay đổi đăng ký.')
+      toast.warning(t('event.eventAlreadyEnded'))
       return
     }
 
     if (hasStarted) {
-      toast.warning('Sự kiện đã bắt đầu, không thể đăng ký hoặc hủy tham gia.')
+      toast.warning(t('event.eventAlreadyStarted'))
       return
     }
 
@@ -140,7 +142,7 @@ export function EventRsvpButton({
     }
 
     if (isFull) {
-      toast.warning('Sự kiện đã đủ số lượng người tham gia.')
+      toast.warning(t('event.eventCapacityFull'))
       return
     }
 
@@ -155,7 +157,7 @@ export function EventRsvpButton({
         onSuccess: (res) => {
           setIsRegistered(res.registered)
           setAttendeeCount(res.attendeeCount)
-          const msg = res.message || 'Đăng ký tham gia sự kiện thành công!'
+          const msg = res.message || t('event.rsvpSuccess')
           toast.success(msg)
         },
         onError: (err: any) => {
@@ -164,7 +166,7 @@ export function EventRsvpButton({
           const errorMsg =
             err.response?.data?.message ||
             err.message ||
-            'Thao tác không thành công. Vui lòng thử lại.'
+            t('event.rsvpFailed')
           toast.error(errorMsg)
         },
       }
@@ -188,12 +190,13 @@ export function EventRsvpButton({
             if (eventId) setIsAttendeesOpen(true)
           }}
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-text-subtle hover:bg-surface-2 hover:text-primary-solid transition-colors"
-          title="Bấm để xem danh sách người tham gia"
+          title={t('event.viewAttendeesTooltip')}
         >
           <Users size={13} className="text-text-subtle" />
           <span>
-            {attendeeCount}
-            {capacity ? ` / ${compact(capacity)}` : ''} người tham gia
+            {capacity
+              ? t('event.attendeesCountWithCapacity', { current: attendeeCount, capacity: compact(capacity) })
+              : t('event.attendeesCountOnly', { current: attendeeCount })}
           </span>
         </button>
       )}
@@ -205,7 +208,7 @@ export function EventRsvpButton({
             sizeClasses
           )}
         >
-          Đã hủy
+          {t('event.cancelled')}
         </span>
       ) : isPast ? (
         <span
@@ -214,7 +217,7 @@ export function EventRsvpButton({
             sizeClasses
           )}
         >
-          Đã kết thúc
+          {t('event.ended')}
         </span>
       ) : hasStarted ? (
         isRegistered ? (
@@ -228,7 +231,7 @@ export function EventRsvpButton({
             )}
           >
             <Check size={iconSize} />
-            <span>Đã đăng ký</span>
+            <span>{t('event.registered')}</span>
           </Button>
         ) : (
           <span
@@ -237,7 +240,7 @@ export function EventRsvpButton({
               sizeClasses
             )}
           >
-            Đã bắt đầu
+            {t('event.started')}
           </span>
         )
       ) : isRegistered ? (
@@ -259,14 +262,14 @@ export function EventRsvpButton({
           {toggleRsvp.isPending ? (
             <>
               <Loader2 size={iconSize} className="animate-spin" />
-              <span>Đang xử lý...</span>
+              <span>{t('common.processing')}</span>
             </>
           ) : isHovered ? (
-            <span>Hủy đăng ký</span>
+            <span>{t('event.cancelRsvp')}</span>
           ) : (
             <>
               <Check size={iconSize} />
-              <span>Đã đăng ký</span>
+              <span>{t('event.registered')}</span>
             </>
           )}
         </Button>
@@ -280,7 +283,7 @@ export function EventRsvpButton({
             sizeClasses
           )}
         >
-          Hết chỗ
+          {t('event.full')}
         </Button>
       ) : (
         <Button
@@ -293,12 +296,12 @@ export function EventRsvpButton({
           {toggleRsvp.isPending ? (
             <>
               <Loader2 size={iconSize} className="animate-spin" />
-              <span>Đang xử lý...</span>
+              <span>{t('common.processing')}</span>
             </>
           ) : (
             <>
               <CalendarCheck size={iconSize} />
-              <span>Tham gia</span>
+              <span>{t('event.join')}</span>
             </>
           )}
         </Button>

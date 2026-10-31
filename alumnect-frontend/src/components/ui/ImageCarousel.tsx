@@ -6,6 +6,7 @@
  *  - Kéo chuột / vuốt tay chuyển ảnh
  */
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -34,9 +35,11 @@ export function ImageCarousel({
   images,
   height = 460,
   className,
-  altPrefix = 'Phương tiện',
+  altPrefix,
   onImageClick,
 }: ImageCarouselProps) {
+  const { t } = useTranslation()
+  const resolvedAltPrefix = altPrefix || t('common.media')
   const [current, setCurrent] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
   const dragStartX = useRef<number | null>(null)
@@ -236,7 +239,7 @@ export function ImageCarousel({
             ) : (
               <img
                 src={url}
-                alt={`${altPrefix} ${idx + 1}`}
+                alt={`${resolvedAltPrefix} ${idx + 1}`}
                 draggable={false}
                 className="h-full w-full object-contain"
                 style={{ userSelect: 'none', pointerEvents: 'none' }}
@@ -255,8 +258,8 @@ export function ImageCarousel({
             e.stopPropagation()
             onImageClick(images[current], current)
           }}
-          aria-label="Phóng to ảnh"
-          title="Xem ảnh toàn màn hình"
+          aria-label={t('common.zoomIn')}
+          title={t('common.viewFullScreen')}
           className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-xl bg-black/40 text-white/90 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition hover:bg-black/65 hover:text-white hover:scale-105 active:scale-95 shadow-sm"
         >
           <Maximize2 size={16} />
@@ -273,7 +276,7 @@ export function ImageCarousel({
                 e.stopPropagation()
                 prev()
               }}
-              aria-label="Ảnh trước"
+              aria-label={t('common.prevImage')}
               className="absolute left-2.5 top-1/2 z-20 -translate-y-1/2
                          grid h-8 w-8 place-items-center rounded-full
                          bg-white/90 text-gray-800 shadow-md
@@ -290,7 +293,7 @@ export function ImageCarousel({
                 e.stopPropagation()
                 next()
               }}
-              aria-label="Ảnh tiếp theo"
+              aria-label={t('common.nextImage')}
               className="absolute right-2.5 top-1/2 z-20 -translate-y-1/2
                          grid h-8 w-8 place-items-center rounded-full
                          bg-white/90 text-gray-800 shadow-md
@@ -310,7 +313,7 @@ export function ImageCarousel({
                   e.stopPropagation()
                   goTo(idx)
                 }}
-                aria-label={`Ảnh ${idx + 1}`}
+                aria-label={t('common.imageIndex', { index: idx + 1 })}
                 className={cn(
                   'h-1.5 rounded-full transition duration-200',
                   idx === current

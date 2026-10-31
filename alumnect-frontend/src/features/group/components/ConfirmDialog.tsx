@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 
@@ -8,7 +9,7 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = 'Xác nhận',
+  confirmLabel,
   danger = false,
   loading = false,
   onConfirm,
@@ -23,6 +24,9 @@ export function ConfirmDialog({
   onConfirm: () => void
   onClose: () => void
 }) {
+  const { t } = useTranslation()
+  const resolvedConfirmLabel = confirmLabel ?? t('common.confirm')
+
   return (
     <Modal
       isOpen={open}
@@ -32,7 +36,7 @@ export function ConfirmDialog({
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="secondary" size="md" onClick={onClose} disabled={loading}>
-            Hủy
+            {t('common.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -42,7 +46,7 @@ export function ConfirmDialog({
             className={danger ? 'from-rose-600 to-rose-500 shadow-none' : undefined}
             leftIcon={loading ? <Loader2 size={16} className="animate-spin" /> : undefined}
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </Button>
         </div>
       }

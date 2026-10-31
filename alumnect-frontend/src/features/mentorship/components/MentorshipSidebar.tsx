@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronDown, Menu, Sparkles, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useMentorStatus } from '../hooks/useMentorStatus'
@@ -15,9 +16,36 @@ import {
 import { mentoringGroupApi } from '../api/mentoringGroupApi'
 import { useConversations } from '@/features/message/hooks/useChat'
 
+const LABEL_KEY_MAP: Record<string, string> = {
+  'Mentoring': 'mentoring.sectionMentoring',
+  'Dành cho Mentor': 'mentoring.sectionForMentor',
+  'Tổng quan': 'mentoring.navOverview',
+  'Tìm Mentor': 'mentoring.navFindMentor',
+  'Khám phá Mentor': 'mentoring.navDiscover',
+  'Mentor nổi bật': 'mentoring.navRanking',
+  'Mentoring của tôi': 'mentoring.navMyMentoring',
+  'Tạo yêu cầu mới': 'mentoring.navCreateRequest',
+  'Yêu cầu của tôi': 'mentoring.navMyRequests',
+  'Thỏa thuận': 'mentoring.navDeals',
+  'Công việc của tôi': 'mentoring.navMyTasks',
+  'Hoàn tiền': 'mentoring.navRefunds',
+  'Tin nhắn': 'mentoring.navMessages',
+  'Nhóm': 'mentoring.navGroups',
+  'Đăng ký làm Mentor': 'mentoring.navRegisterMentor',
+  'Trung tâm Mentor': 'mentoring.navMentorHub',
+  'Hồ sơ Mentor': 'mentoring.navMentorProfile',
+  'Công việc & Work Log': 'mentoring.navWorkLog',
+  'Thu nhập': 'mentoring.navEarnings',
+  'Trạng thái hồ sơ': 'mentoring.navProfileStatus',
+  'Gói dịch vụ': 'mentoring.navPackages',
+  'Yêu cầu gửi đến': 'mentoring.navIncomingRequests',
+  'Điều khoản dịch vụ': 'mentoring.navTerms',
+}
+
 type MentorshipSidebarContentProps = { onNavigate?: () => void }
 
 function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps) {
+  const { t } = useTranslation()
   const location = useLocation()
   const user = useAuthStore((state) => state.user)
   const isAlumni = user?.role === 'ALUMNI'
@@ -93,6 +121,11 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
     </span>
   ) : null
 
+  const getNavLabel = (label: string) => {
+    const key = LABEL_KEY_MAP[label]
+    return key ? t(key) : label
+  }
+
   const renderLink = (item: MentorshipNavigationItem, nested = false) => {
     if (!item.to) return null
     const Icon = item.icon
@@ -112,7 +145,7 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
         )}
       >
         <Icon className={cn('shrink-0 transition-colors', nested ? 'h-3.5 w-3.5' : 'h-4 w-4', isActive ? 'text-primary-solid' : 'text-text-subtle')} />
-        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        <span className="min-w-0 flex-1 truncate">{getNavLabel(item.label)}</span>
         {renderBadge(badgeFor(item))}
       </NavLink>
     )
@@ -138,7 +171,7 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
           )}
         >
           <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary-solid' : 'text-text-subtle')} />
-          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          <span className="min-w-0 flex-1 truncate">{getNavLabel(item.label)}</span>
           <ChevronDown className={cn('h-3.5 w-3.5 text-text-subtle transition-transform duration-200', isOpen && 'rotate-180')} />
         </button>
         <AnimatePresence initial={false}>
@@ -164,22 +197,22 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
     <div className="flex min-h-full flex-col">
       <div className="mb-3 flex items-center gap-2.5 px-2 pt-1">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-sm"><Sparkles className="h-4 w-4" /></span>
-        <div className="min-w-0"><p className="text-sm font-extrabold text-text">Mentoring</p><p className="truncate text-xs text-text-subtle">Kết nối · Hợp tác · Đồng hành</p></div>
+        <div className="min-w-0"><p className="text-sm font-extrabold text-text">{t('mentoring.sidebarBrand')}</p><p className="truncate text-xs text-text-subtle">{t('mentoring.sidebarSubtitle')}</p></div>
       </div>
 
       {hasAcceptedTerms ? (
-        <nav aria-label="Điều hướng Mentoring" className="space-y-3">
+        <nav aria-label={t('mentoring.sidebarBrand')} className="space-y-3">
           {sections.map((section) => (
             <section key={section.label} className="border-t border-border pt-2.5 first:border-t-0 first:pt-0">
-              <h3 className="mb-1 px-3 text-xs font-bold uppercase tracking-[0.12em] text-text-subtle">{section.label}</h3>
+              <h3 className="mb-1 px-3 text-xs font-bold uppercase tracking-[0.12em] text-text-subtle">{getNavLabel(section.label)}</h3>
               <div className="space-y-0.5">{section.items.map((item) => item.children ? renderParent(item) : renderLink(item))}</div>
             </section>
           ))}
         </nav>
       ) : (
         <div className="rounded-xl border border-primary-soft-border bg-brand-50/70 p-3 dark:bg-brand-500/10">
-          <p className="text-xs font-bold text-text">Hoàn tất bước xác nhận</p>
-          <p className="mt-1 text-xs leading-4 text-text-subtle">Đọc và chấp nhận điều khoản để sử dụng các chức năng Mentoring.</p>
+          <p className="text-xs font-bold text-text">{t('mentoring.completeConfirmation')}</p>
+          <p className="mt-1 text-xs leading-4 text-text-subtle">{t('mentoring.acceptTermsDesc')}</p>
         </div>
       )}
 
@@ -188,7 +221,20 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
         {hasAcceptedTerms && isAlumni && mentorStatus && (
           <div className="mt-2 flex items-center gap-2 rounded-xl border border-brand-100/70 bg-primary-soft px-3 py-2 dark:border-brand-500/20">
             <span className={cn('h-2 w-2 shrink-0 rounded-full', mentorStatus.active ? 'bg-success' : 'bg-warning')} />
-            <div className="min-w-0 flex-1"><p className="text-xs text-text-subtle">Trạng thái Mentor</p><p className="truncate text-xs font-semibold text-text">{mentorStatus.active ? 'Mentor đang hoạt động' : mentorStatus.statusMessage}</p></div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-text-subtle">{t('mentoring.mentorStatusLabel')}</p>
+              <p className="truncate text-xs font-semibold text-text">
+                {mentorStatus.active
+                  ? t('mentoring.mentorActiveStatus')
+                  : mentorStatus.mentorStatus === 'PAYMENT_PENDING'
+                  ? t('mentoring.statusPaymentPending')
+                  : mentorStatus.mentorStatus === 'EXPIRED'
+                  ? t('mentoring.statusExpired')
+                  : mentorStatus.mentorStatus === 'INCOMPLETE'
+                  ? t('mentoring.statusIncomplete')
+                  : mentorStatus.statusMessage || t('mentoring.statusIncomplete')}
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -197,17 +243,18 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
 }
 
 export function MentorshipSidebar() {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   return (
     <>
       <div className="mb-4 xl:hidden">
-        <button type="button" onClick={() => setIsOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-text-muted shadow-xs transition-colors hover:bg-primary-soft hover:text-primary-solid" aria-expanded={isOpen} aria-controls="mentorship-mobile-drawer"><Menu className="h-4 w-4 text-primary-solid" /> Menu Mentoring</button>
+        <button type="button" onClick={() => setIsOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-text-muted shadow-xs transition-colors hover:bg-primary-soft hover:text-primary-solid" aria-expanded={isOpen} aria-controls="mentorship-mobile-drawer"><Menu className="h-4 w-4 text-primary-solid" /> {t('mentoring.mobileMenuButton')}</button>
       </div>
       <aside className="hidden h-full min-h-0 w-full overflow-y-auto no-scrollbar xl:block" aria-label="Mentoring sidebar">
         <div className="min-h-full rounded-2xl border border-border bg-surface p-2.5 shadow-xs"><MentorshipSidebarContent /></div>
       </aside>
       <AnimatePresence>
-        {isOpen && <><motion.button type="button" aria-label="Đóng menu Mentoring" className="fixed inset-0 top-16 z-40 bg-plum-900/30 backdrop-blur-sm dark:bg-black/60 xl:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} /><motion.aside id="mentorship-mobile-drawer" className="fixed inset-y-0 left-0 top-16 z-50 w-[min(88vw,310px)] overflow-y-auto no-scrollbar border-r border-border bg-surface p-4 shadow-2xl xl:hidden" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', stiffness: 340, damping: 32 }}><div className="mb-2 flex justify-end"><button type="button" onClick={() => setIsOpen(false)} aria-label="Đóng menu Mentoring" className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle hover:bg-surface-2 hover:text-text"><X className="h-4 w-4" /></button></div><MentorshipSidebarContent onNavigate={() => setIsOpen(false)} /></motion.aside></>}
+        {isOpen && <><motion.button type="button" aria-label={t('mentoring.closeMobileMenu')} className="fixed inset-0 top-16 z-40 bg-plum-900/30 backdrop-blur-sm dark:bg-black/60 xl:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} /><motion.aside id="mentorship-mobile-drawer" className="fixed inset-y-0 left-0 top-16 z-50 w-[min(88vw,310px)] overflow-y-auto no-scrollbar border-r border-border bg-surface p-4 shadow-2xl xl:hidden" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', stiffness: 340, damping: 32 }}><div className="mb-2 flex justify-end"><button type="button" onClick={() => setIsOpen(false)} aria-label={t('mentoring.closeMobileMenu')} className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle hover:bg-surface-2 hover:text-text"><X className="h-4 w-4" /></button></div><MentorshipSidebarContent onNavigate={() => setIsOpen(false)} /></motion.aside></>}
       </AnimatePresence>
     </>
   )

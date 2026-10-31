@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { AlertTriangle, CheckCircle2, Loader2, Pencil } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import type { Comment } from '../model/comment'
@@ -38,6 +39,7 @@ export function EditCommentModal({
   postId: string
   comment: Comment | null
 }) {
+  const { t } = useTranslation()
   const {
     mutate,
     reset: resetMutation,
@@ -76,12 +78,12 @@ export function EditCommentModal({
       { commentId, content: values.content.trim() },
       {
         onSuccess: () => {
-          toast.success('Đã cập nhật bình luận thành công!')
+          toast.success(t('feed.editCommentSuccess'))
           onUpdated?.()
           onClose()
         },
         onError: (err: any) => {
-          toast.error(err?.message || 'Không thể cập nhật bình luận.')
+          toast.error(err?.message || t('feed.editCommentError'))
         },
       },
     )
@@ -91,13 +93,13 @@ export function EditCommentModal({
     <Modal
       isOpen={isOpen}
       onClose={close}
-      title="Chỉnh sửa bình luận"
+      title={t('feed.editCommentTitle')}
       icon={<Pencil size={18} />}
       maxWidthClassName="max-w-lg"
       footer={
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" size="md" onClick={close} disabled={isPending}>
-            Hủy
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -107,7 +109,7 @@ export function EditCommentModal({
             disabled={isPending}
             leftIcon={isPending ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
           >
-            {isPending ? 'Đang lưu…' : 'Lưu thay đổi'}
+            {isPending ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>
       }
@@ -119,7 +121,7 @@ export function EditCommentModal({
           </div>
         )}
         <label htmlFor="edit-comment-content" className="mb-1.5 block text-sm font-bold text-text">
-          Nội dung bình luận
+          {t('feed.editCommentLabel')}
         </label>
         <textarea
           id="edit-comment-content"

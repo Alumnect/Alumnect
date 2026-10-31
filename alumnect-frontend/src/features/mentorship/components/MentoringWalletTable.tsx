@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
 import { AlertTriangle, CheckCircle2, Clock, Wallet } from 'lucide-react'
 import { EmptyState } from '@/components/ui'
@@ -5,17 +6,17 @@ import { cn, vnd } from '@/lib/utils'
 import { MentoringBadge } from './MentoringUi'
 import type { MentoringWallet, MentoringWalletItem } from '../model/mentoringWalletTypes'
 
-const PROVIDER_STATUS_LABELS: Record<string, string> = {
-  QUEUED: 'Đang chờ gửi',
-  BANK_ACCOUNT_REQUIRED: 'Cần cập nhật tài khoản ngân hàng',
-  PROVIDER_UNAVAILABLE: 'Cổng chi tạm thời chưa tiếp nhận, hệ thống tự gửi lại',
-  SUBMIT_UNKNOWN: 'Đang xác minh với cổng chi',
-  RECEIVED: 'Cổng chi đã tiếp nhận',
-  PROCESSING: 'Ngân hàng đang xử lý',
-  REJECTED: 'Cổng chi từ chối',
-  BELOW_MINIMUM: 'Dưới mức chi tối thiểu, Ban Quản Trị xử lý thủ công',
-  INVALID_REQUEST: 'Lệnh chi không hợp lệ',
-  MOCK_VOIDED: 'Lệnh cũ chưa chuyển tiền thật, chờ chi lại',
+const PROVIDER_STATUS_KEY_MAP: Record<string, string> = {
+  QUEUED: 'mentoring.provStatusQueued',
+  BANK_ACCOUNT_REQUIRED: 'mentoring.provStatusBankRequired',
+  PROVIDER_UNAVAILABLE: 'mentoring.provStatusProviderUnavailable',
+  SUBMIT_UNKNOWN: 'mentoring.provStatusSubmitUnknown',
+  RECEIVED: 'mentoring.provStatusReceived',
+  PROCESSING: 'mentoring.provStatusProcessing',
+  REJECTED: 'mentoring.provStatusRejected',
+  BELOW_MINIMUM: 'mentoring.provStatusBelowMinimum',
+  INVALID_REQUEST: 'mentoring.provStatusInvalidRequest',
+  MOCK_VOIDED: 'mentoring.provStatusMockVoided',
 }
 
 interface Props {
@@ -44,20 +45,21 @@ function Summary({ icon, label, value, tone }: { icon: ReactNode; label: string;
 }
 
 function StatusCell({ item }: { item: MentoringWalletItem }) {
+  const { t } = useTranslation()
   const badge =
     item.status === 'SUCCEEDED' ? (
-      <MentoringBadge tone="mint" icon={<CheckCircle2 />}>Đã chuyển</MentoringBadge>
+      <MentoringBadge tone="mint" icon={<CheckCircle2 />}>{t('mentoring.walletBadgeTransferred')}</MentoringBadge>
     ) : item.status === 'FAILED' ? (
-      <MentoringBadge tone="coral" icon={<AlertTriangle />}>Chưa thành công</MentoringBadge>
+      <MentoringBadge tone="coral" icon={<AlertTriangle />}>{t('mentoring.walletBadgeFailed')}</MentoringBadge>
     ) : (
-      <MentoringBadge tone="gold" icon={<Clock />}>Đang xử lý</MentoringBadge>
+      <MentoringBadge tone="gold" icon={<Clock />}>{t('mentoring.walletBadgeProcessing')}</MentoringBadge>
     )
   return (
     <div className="space-y-1">
       {badge}
       {item.status !== 'SUCCEEDED' && item.providerStatus && (
         <p className="max-w-[260px] text-xs text-text-subtle">
-          {PROVIDER_STATUS_LABELS[item.providerStatus] || item.providerStatus}
+          {PROVIDER_STATUS_KEY_MAP[item.providerStatus] ? t(PROVIDER_STATUS_KEY_MAP[item.providerStatus]) : item.providerStatus}
         </p>
       )}
     </div>
@@ -66,6 +68,7 @@ function StatusCell({ item }: { item: MentoringWalletItem }) {
 
 /** Tổng hợp và danh sách các khoản chi ra (thù lao Mentor hoặc hoàn tiền Học viên). */
 export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, emptyTitle, emptyDescription }: Props) {
+  const { t } = useTranslation()
   if (isLoading) {
     return <div className="h-48 animate-pulse rounded-2xl bg-surface-2 dark:bg-white/[0.04]" />
   }
@@ -74,9 +77,9 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Summary icon={<CheckCircle2 />} label="Đã nhận" value={wallet?.totalReceived ?? 0} tone="text-success" />
-        <Summary icon={<Clock />} label="Đang xử lý" value={wallet?.totalProcessing ?? 0} tone="text-warning" />
-        <Summary icon={<AlertTriangle />} label="Chưa thành công" value={wallet?.totalFailed ?? 0} tone="text-danger" />
+        <Summary icon={<CheckCircle2 />} label={t('mentoring.walletSummaryReceived')} value={wallet?.totalReceived ?? 0} tone="text-success" />
+        <Summary icon={<Clock />} label={t('mentoring.walletSummaryProcessing')} value={wallet?.totalProcessing ?? 0} tone="text-warning" />
+        <Summary icon={<AlertTriangle />} label={t('mentoring.walletSummaryFailed')} value={wallet?.totalFailed ?? 0} tone="text-danger" />
       </div>
 
       {items.length === 0 ? (
@@ -107,11 +110,11 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
           <table className="hidden w-full text-left text-sm sm:table">
             <thead className="border-b border-border bg-cream-100/60 text-xs font-semibold text-text-subtle dark:bg-white/[0.03]">
               <tr>
-                <th className="px-4 py-3">Task</th>
+                <th className="px-4 py-3">{t('mentoring.walletTableColTask')}</th>
                 <th className="px-4 py-3">{counterpartLabel}</th>
-                <th className="px-4 py-3 text-right">Số tiền</th>
-                <th className="px-4 py-3">Trạng thái</th>
-                <th className="px-4 py-3">Thời gian</th>
+                <th className="px-4 py-3 text-right">{t('mentoring.walletTableColAmount')}</th>
+                <th className="px-4 py-3">{t('mentoring.walletTableColStatus')}</th>
+                <th className="px-4 py-3">{t('mentoring.walletTableColTime')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-plum-900/[0.05] dark:divide-white/5">

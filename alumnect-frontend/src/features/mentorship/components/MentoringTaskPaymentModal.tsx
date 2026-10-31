@@ -12,6 +12,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, DialogFrame } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { vnd } from '@/lib/utils'
@@ -44,6 +45,7 @@ export function MentoringTaskPaymentModal({
   topUpAmendment,
   onSuccess,
 }: MentoringTaskPaymentModalProps) {
+  const { t } = useTranslation()
   const isTopUp = Boolean(topUpAmendment)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState<number>(15 * 60) // 15 phút
@@ -111,7 +113,7 @@ export function MentoringTaskPaymentModal({
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
     setCopiedField(field)
-    toast.success(`Đã sao chép ${field}!`)
+    toast.success(t('mentoring.copiedFieldSuccess', { field }))
     setTimeout(() => setCopiedField(null), 2000)
   }
 
@@ -123,9 +125,9 @@ export function MentoringTaskPaymentModal({
     try {
       await cancelPaymentMutation.mutateAsync({
         orderCode: checkoutData.orderCode,
-        reason: 'Học viên hủy giao dịch thanh toán Task',
+        reason: t('mentoring.studentCancelledPayment'),
       })
-      toast.success('Đã hủy giao dịch thanh toán.')
+      toast.success(t('mentoring.paymentCancelledSuccess'))
       onClose()
     } catch {
       onClose()
@@ -159,7 +161,7 @@ export function MentoringTaskPaymentModal({
       className="p-6 sm:p-7 text-left space-y-6 overflow-y-auto chat-scrollbar"
     >
         {/* Nút đóng */}
-        <button aria-label="Đóng"
+        <button aria-label={t('common.close')}
           type="button"
           onClick={handleCancel}
           disabled={cancelPaymentMutation.isPending}
@@ -175,12 +177,12 @@ export function MentoringTaskPaymentModal({
           </div>
           <div>
             <h2 className="text-xl font-bold text-text">
-              {isTopUp ? 'Thanh toán bổ sung cho Task' : 'Thanh toán Mentoring Task'}
+              {isTopUp ? t('mentoring.topUpPaymentTitle') : t('mentoring.taskPaymentTitle')}
             </h2>
             <p className="text-xs text-text-subtle">
               {isTopUp
-                ? `Thanh toán khoản bổ sung của Ticket điều chỉnh v${topUpAmendment?.version ?? ''} để điều chỉnh có hiệu lực`
-                : `Thanh toán Deal #${deal.id} để kích hoạt Task và chuyển sang giai đoạn Chuẩn bị (PREPARATION)`}
+                ? t('mentoring.topUpPaymentSubtitle', { version: topUpAmendment?.version ?? '' })
+                : t('mentoring.taskPaymentSubtitle', { dealId: deal.id })}
             </p>
           </div>
         </div>
@@ -194,20 +196,20 @@ export function MentoringTaskPaymentModal({
 
             <div className="space-y-2">
               <h3 className="text-2xl font-bold text-text">
-                Thanh toán thành công!
+                {t('mentoring.paymentSuccessTitle')}
               </h3>
               <p className="text-sm text-text-muted max-w-md mx-auto">
-                Hệ thống đã xác nhận giao dịch số tiền{' '}
+                {t('mentoring.systemConfirmedTxAmount')}{' '}
                 <strong className="text-success font-bold">
                   {vnd(paidResult.amount || deal.agreedPrice)}
                 </strong>
                 .{' '}
                 {isTopUp ? (
-                  <>Khoản bổ sung đã được cộng vào quỹ Task #{paidResult.taskId || deal.taskId || ''} và điều chỉnh đã có hiệu lực.</>
+                  <>{t('mentoring.topUpSuccessNote', { taskId: paidResult.taskId || deal.taskId || '' })}</>
                 ) : (
                   <>
-                    Mentoring Task #{paidResult.taskId || deal.taskId || ''} đã chính thức bắt đầu ở giai đoạn{' '}
-                    <span className="font-bold text-primary-solid">CHUẨN BỊ </span>.
+                    {t('mentoring.taskStartedPrepNote', { taskId: paidResult.taskId || deal.taskId || '' })}{' '}
+                    <span className="font-bold text-primary-solid">{t('mentoring.preparationStage')}</span>.
                   </>
                 )}
               </p>
@@ -216,13 +218,13 @@ export function MentoringTaskPaymentModal({
             <div className="p-4 rounded-2xl bg-success-soft border border-success-border text-xs text-success text-left space-y-1">
               <div className="flex items-center gap-1.5 font-bold">
                 <Sparkles className="w-4 h-4 text-success" />
-                <span>Tiếp theo bạn có thể làm gì?</span>
+                <span>{t('mentoring.whatNext')}</span>
               </div>
               <p className="text-success">
-                • Mentor và Học viên có thể tiếp tục trao đổi chuẩn bị tài liệu trong phần Trò chuyện trực tiếp.
+                {t('mentoring.whatNext1')}
               </p>
               <p className="text-success">
-                • Theo dõi tiến độ nhiệm vụ trong khu vực Quản lý Mentoring Tasks.
+                {t('mentoring.whatNext2')}
               </p>
             </div>
 
@@ -232,7 +234,7 @@ export function MentoringTaskPaymentModal({
                 onClick={onClose}
                 className="rounded-2xl px-6 py-2.5 font-bold bg-primary-solid hover:bg-primary-hover text-on-primary shadow-lg shadow-brand-500/25"
               >
-                Hoàn tất & Tiếp tục
+                {t('mentoring.finishAndContinue')}
               </Button>
             </div>
           </div>
@@ -241,7 +243,7 @@ export function MentoringTaskPaymentModal({
           <div className="py-16 text-center space-y-4">
             <Loader2 className="w-10 h-10 animate-spin text-primary-solid mx-auto" />
             <p className="text-sm font-bold text-text-muted">
-              Đang tạo liên kết thanh toán PayOS VietQR an toàn...
+              {t('mentoring.creatingPaymentLink')}
             </p>
           </div>
         ) : checkoutData ? (
@@ -250,19 +252,19 @@ export function MentoringTaskPaymentModal({
             {/* Tóm tắt Deal */}
             <div className="p-4 rounded-2xl bg-cream-100/70 border border-border dark:bg-white/5 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-subtle">Cố vấn (Mentor):</span>
+                <span className="text-text-subtle">{t('mentoring.mentorLabel')}</span>
                 <span className="font-bold text-text">
                   {deal.mentorName || 'Mentor'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-subtle">Phạm vi nhiệm vụ:</span>
+                <span className="text-text-subtle">{t('mentoring.taskScopeLabel')}</span>
                 <span className="font-semibold text-text truncate max-w-[260px]">
                   {deal.taskScope}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm pt-2 border-t border-border">
-                <span className="font-bold text-text-muted">Số tiền thanh toán:</span>
+                <span className="font-bold text-text-muted">{t('mentoring.paymentAmountLabel')}</span>
                 <span className="text-base font-bold text-success">
                   {vnd(checkoutData.amount)}
                 </span>
@@ -279,7 +281,7 @@ export function MentoringTaskPaymentModal({
                 />
                 <div className="absolute inset-0 bg-brand-700/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                   <span className="bg-surface text-primary-solid text-xs font-bold px-2 py-1 rounded-full shadow">
-                    Quét bằng Mobile Banking
+                    {t('mentoring.scanMobileBanking')}
                   </span>
                 </div>
               </div>
@@ -287,7 +289,7 @@ export function MentoringTaskPaymentModal({
               {/* Đồng hồ đếm ngược */}
               <div className="flex items-center gap-2 text-xs font-bold text-text-muted">
                 <Clock className="w-4 h-4 text-primary-solid" />
-                <span>Thời gian thanh toán còn lại:</span>
+                <span>{t('mentoring.remainingPaymentTime')}</span>
                 <span
                   className={`px-2 py-0.5 rounded-full font-mono text-xs ${timeLeft < 180
                       ? 'bg-danger-soft text-danger'
@@ -301,31 +303,31 @@ export function MentoringTaskPaymentModal({
               {/* Trạng thái Polling động */}
               <div className="flex items-center gap-2 text-xs text-text-subtle">
                 <span aria-hidden className="inline-flex h-2.5 w-2.5 rounded-full bg-success"></span>
-                <span>Hệ thống đang tự động lắng nghe kết quả chuyển khoản...</span>
+                <span>{t('mentoring.autoListeningTransfer')}</span>
               </div>
             </div>
 
             {/* Hướng dẫn chuyển khoản nhanh & copy */}
             <div className="space-y-2.5">
               <p className="text-xs font-bold text-text-muted">
-                Hoặc chuyển khoản thủ công theo thông tin sau:
+                {t('mentoring.orManualTransferInfo')}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 {/* Số tiền */}
                 <div className="p-3 rounded-xl bg-cream-100/60 dark:bg-white/5 border border-border flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-text-subtle">Số tiền chính xác</p>
+                    <p className="text-xs text-text-subtle">{t('mentoring.exactAmount')}</p>
                     <p className="font-bold text-success">
                       {vnd(checkoutData.amount)}
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleCopy(checkoutData.amount.toString(), 'Số tiền')}
+                    onClick={() => handleCopy(checkoutData.amount.toString(), t('mentoring.copiedAmountField'))}
                     className="p-1.5 hover:bg-surface rounded-lg text-text-subtle transition-colors"
                   >
-                    {copiedField === 'Số tiền' ? (
+                    {copiedField === t('mentoring.copiedAmountField') ? (
                       <Check className="w-4 h-4 text-success" />
                     ) : (
                       <Copy className="w-4 h-4" />
@@ -336,7 +338,7 @@ export function MentoringTaskPaymentModal({
                 {/* Mã đơn hàng / Nội dung CK */}
                 <div className="p-3 rounded-xl bg-cream-100/60 dark:bg-white/5 border border-border flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-text-subtle">Nội dung CK / Mã đơn</p>
+                    <p className="text-xs text-text-subtle">{t('mentoring.transferContentOrderCode')}</p>
                     <p className="font-mono font-bold text-text">
                       {checkoutData.orderCode}
                     </p>
@@ -344,11 +346,11 @@ export function MentoringTaskPaymentModal({
                   <button
                     type="button"
                     onClick={() =>
-                      handleCopy(checkoutData.orderCode.toString(), 'Nội dung chuyển khoản')
+                      handleCopy(checkoutData.orderCode.toString(), t('mentoring.copiedContentField'))
                     }
                     className="p-1.5 hover:bg-surface rounded-lg text-text-subtle transition-colors"
                   >
-                    {copiedField === 'Nội dung chuyển khoản' ? (
+                    {copiedField === t('mentoring.copiedContentField') ? (
                       <Check className="w-4 h-4 text-success" />
                     ) : (
                       <Copy className="w-4 h-4" />
@@ -367,7 +369,7 @@ export function MentoringTaskPaymentModal({
                 disabled={cancelPaymentMutation.isPending}
                 className="text-xs text-danger hover:text-danger hover:bg-danger-soft"
               >
-                {cancelPaymentMutation.isPending ? 'Đang hủy...' : 'Hủy giao dịch'}
+                {cancelPaymentMutation.isPending ? t('mentoring.cancellingTx') : t('mentoring.cancelTxBtn')}
               </Button>
 
               <div className="flex items-center gap-2">
@@ -377,7 +379,7 @@ export function MentoringTaskPaymentModal({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-primary-soft text-primary-solid hover:bg-primary-soft transition-colors"
                 >
-                  <span>Mở trang PayOS</span>
+                  <span>{t('mentoring.openPayOSPage')}</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
@@ -391,11 +393,11 @@ export function MentoringTaskPaymentModal({
             </div>
             <div className="space-y-1">
               <h3 className="text-base font-bold text-text">
-                Chưa thể tạo liên kết thanh toán
+                {t('mentoring.cannotCreatePaymentLink')}
               </h3>
               <p className="text-xs text-text-subtle max-w-sm mx-auto">
                 {checkoutError?.message ||
-                  'Không thể kết nối cổng thanh toán PayOS lúc này hoặc thông tin đơn hàng không hợp lệ. Vui lòng thử lại.'}
+                  t('mentoring.paymentGatewayError')}
               </p>
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
@@ -405,7 +407,7 @@ export function MentoringTaskPaymentModal({
                 onClick={onClose}
                 className="rounded-xl px-4 text-xs font-bold text-text-muted hover:text-text"
               >
-                Đóng
+                {t('common.close')}
               </Button>
               <Button
                 variant="primary"
@@ -419,10 +421,11 @@ export function MentoringTaskPaymentModal({
                 ) : (
                   <RefreshCw className="w-3.5 h-3.5" />
                 )}
-                <span>Thử lại</span>
+                <span>{t('common.retry')}</span>
               </Button>
             </div>
           </div>
         )}
       </DialogFrame>
 }
+

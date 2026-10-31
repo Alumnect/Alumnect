@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Award, AlertCircle, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Skeleton, Badge, Button } from '@/components/ui'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { vnd } from '@/lib/utils'
@@ -21,6 +22,7 @@ import { MentorPageHeader } from './MentorPageHeader'
  * - Cơ chế bảo vệ và hướng dẫn người dùng trực quan khi đã có gói hiệu lực.
  */
 export function MentorSubscriptionList() {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { data: packages, isLoading: isLoadingPackages, isError: isErrorPackages, error: errorPackages } = useMentorPackages()
   const { data: mySubscription, isLoading: isLoadingSub } = useMyMentorSubscription()
@@ -33,7 +35,7 @@ export function MentorSubscriptionList() {
 
   const handleSelectPackage = async (packageId: number) => {
     if (isCurrentlyActive) {
-      toast.info('Bạn đang có gói Mentor còn hiệu lực. Vui lòng sử dụng hết gói hiện tại trước khi đăng ký hoặc gia hạn gói mới.')
+      toast.info(t('mentoring.hasActivePackageDisabled'))
       return
     }
     try {
@@ -49,7 +51,7 @@ export function MentorSubscriptionList() {
 
   const formatExpiry = (dateStr?: string) => {
     if (!dateStr) return ''
-    return new Date(dateStr).toLocaleDateString('vi-VN', {
+    return new Date(dateStr).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'vi-VN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -75,15 +77,15 @@ export function MentorSubscriptionList() {
     return (
       <Card hover={false} className="mx-auto max-w-xl p-8 text-center border border-danger-border bg-danger-soft">
         <AlertCircle className="w-10 h-10 text-danger mx-auto mb-3" />
-        <h3 className="font-bold text-danger text-lg">Không thể tải danh sách gói Mentor</h3>
-        <p className="mt-1 text-xs text-danger">{errorPackages?.message || 'Đã xảy ra lỗi hệ thống.'}</p>
+        <h3 className="font-bold text-danger text-lg">{t('mentoring.loadStatusErrorTitle')}</h3>
+        <p className="mt-1 text-xs text-danger">{errorPackages?.message || t('common.error')}</p>
         <Button
           variant="secondary"
           size="sm"
           className="mt-4"
           onClick={() => window.location.reload()}
         >
-          Tải lại trang
+          {t('mentoring.reloadPage')}
         </Button>
       </Card>
     )
@@ -93,9 +95,9 @@ export function MentorSubscriptionList() {
     <div className="space-y-3.5">
       <MentorPageHeader
         icon={<Award className="h-4 w-4" />}
-        eyebrow="Dành cho Mentor"
-        title="Gói dịch vụ Mentor"
-        description="Chọn thời hạn phù hợp để duy trì hồ sơ và tiếp nhận yêu cầu Mentor."
+        eyebrow={t('mentoring.packagesEyebrow')}
+        title={t('mentoring.packagesTitle')}
+        description={t('mentoring.packagesSubtitle')}
       />
 
       {/* 1. Thông báo gói Mentor hiện tại nếu đã kích hoạt hoặc đang chờ thanh toán (không hiển thị đơn đã hủy) */}
@@ -112,23 +114,23 @@ export function MentorSubscriptionList() {
                 </h3>
                 {isCurrentlyActive ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-success-soft text-success">
-                    Đang hoạt động
+                    {i18n.language === 'en' ? 'Active' : 'Đang hoạt động'}
                   </span>
                 ) : mySubscription.status === 'PENDING_PAYMENT' ? (
                   <Badge tone="gold" className="text-xs px-2 py-0.5">
-                    Chờ thanh toán
+                    {i18n.language === 'en' ? 'Pending Payment' : 'Chờ thanh toán'}
                   </Badge>
                 ) : mySubscription.status === 'EXPIRED' ? (
                   <Badge tone="danger" className="text-xs px-2 py-0.5">
-                    Đã hết hạn
+                    {i18n.language === 'en' ? 'Expired' : 'Đã hết hạn'}
                   </Badge>
                 ) : null}
                 <span className="text-xs text-text-subtle">
-                  {vnd(mySubscription.priceAtPurchase)} / {mySubscription.durationMonths} tháng
+                  {vnd(mySubscription.priceAtPurchase)} / {t('mentoring.durationMonthsFormat', { count: mySubscription.durationMonths })}
                 </span>
                 {mySubscription.endDate && (
                   <span className="text-xs text-text-subtle">
-                    • Hạn dùng: {formatExpiry(mySubscription.endDate)}
+                    {t('mentoring.packageExpiryPrefix', { date: formatExpiry(mySubscription.endDate) })}
                   </span>
                 )}
               </div>
@@ -143,7 +145,7 @@ export function MentorSubscriptionList() {
                   className="rounded-lg px-3.5 py-1.5 font-semibold text-xs shadow-xs"
                   onClick={() => navigate('/app/mentoring/subscription?step=checkout')}
                 >
-                  Thanh toán ngay
+                  {t('mentoring.payNow')}
                 </Button>
               )}
 
@@ -155,7 +157,7 @@ export function MentorSubscriptionList() {
                   onClick={() => navigate('/app/mentoring')}
                   rightIcon={<ArrowRight size={13} />}
                 >
-                  Về tổng quan
+                  {t('mentoring.actionActiveDashboard')}
                 </Button>
               )}
             </div>

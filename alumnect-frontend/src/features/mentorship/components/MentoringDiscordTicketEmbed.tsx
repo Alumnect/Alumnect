@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   FileText,
   Clock,
@@ -52,6 +53,7 @@ export function MentoringDiscordTicketEmbed({
   isRejecting = false,
   accompanyingText,
 }: MentoringDiscordTicketEmbedProps) {
+  const { t } = useTranslation()
   // Format tiền tệ VND
   const formatVND = (amount?: number) => {
     if (typeof amount !== 'number') return '0đ'
@@ -60,7 +62,7 @@ export function MentoringDiscordTicketEmbed({
 
   // Format ngày tháng DD/MM/YYYY
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Chưa xác định'
+    if (!dateStr) return t('mentoring.undetermined')
     try {
       const d = new Date(dateStr)
       if (isNaN(d.getTime())) return dateStr
@@ -92,27 +94,27 @@ export function MentoringDiscordTicketEmbed({
         return (
           <span className="inline-flex items-center gap-1 rounded-full border border-success-border bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success">
             <Check className="h-3 w-3" />
-            Đã xác nhận
+            {t('mentoring.statusConfirmed', 'Đã xác nhận')}
           </span>
         )
       case 'REJECTED':
         return (
           <span className="inline-flex items-center gap-1 rounded-full border border-danger-border bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger">
             <X className="h-3 w-3" />
-            Đã từ chối
+            {t('mentoring.statusRejected', 'Đã từ chối')}
           </span>
         )
       case 'ADJUSTMENT':
         return (
           <span className="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning">
             <RefreshCw className="h-3 w-3" />
-            Đã yêu cầu điều chỉnh
+            {t('mentoring.statusRequestedAdjustment', 'Đã yêu cầu điều chỉnh')}
           </span>
         )
       case 'SUPERSEDED':
         return (
           <span className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-text-muted dark:bg-surface-2">
-            Đã thay thế
+            {t('mentoring.statusSuperseded', 'Đã thay thế')}
           </span>
         )
       case 'PENDING':
@@ -120,7 +122,7 @@ export function MentoringDiscordTicketEmbed({
         return (
           <span className="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning">
             <Clock className="h-3 w-3 text-warning" />
-            Chờ xác nhận
+            {t('mentoring.statusPendingConfirmation', 'Chờ xác nhận')}
           </span>
         )
     }
@@ -177,11 +179,11 @@ export function MentoringDiscordTicketEmbed({
             </div>
             <div>
               <h4 className="font-display text-sm sm:text-base font-bold uppercase tracking-wider text-text">
-                {isExtension ? 'TICKET GIA HẠN' : 'DEAL TICKET'}
+                {isExtension ? t('mentoring.ticketExtension') : t('mentoring.dealTicketHeading')}
               </h4>
               <p className="text-xs text-text-subtle font-medium">
                 {ticket.ticketCode}
-                {ticket.version ? ` · Phiên bản ${ticket.version}` : ''}
+                {ticket.version ? t('mentoring.dealTicketVersionSuffix', { version: ticket.version }) : ''}
               </p>
             </div>
           </div>
@@ -197,9 +199,9 @@ export function MentoringDiscordTicketEmbed({
               <div className="flex items-start gap-2.5">
                 <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                 <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                  <span className="text-text-subtle shrink-0">Phạm vi:</span>
+                  <span className="text-text-subtle shrink-0">{t('mentoring.scopeLabel')}</span>
                   <span className="font-bold text-text line-clamp-2">
-                    {ticket.taskScope || 'Chưa cung cấp'}
+                    {ticket.taskScope || t('mentoring.notProvided')}
                   </span>
                 </div>
               </div>
@@ -208,7 +210,7 @@ export function MentoringDiscordTicketEmbed({
               <div className="flex items-center gap-2.5">
                 <CircleDollarSign className="h-4 w-4 shrink-0 text-primary-solid" />
                 <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">Giá thỏa thuận:</span>
+                  <span className="text-text-subtle">{t('mentoring.agreedPriceShort')}</span>
                   <span className="font-bold text-primary-solid text-sm sm:text-base">
                     {formatVND(ticket.agreedPrice)}
                   </span>
@@ -230,11 +232,11 @@ export function MentoringDiscordTicketEmbed({
               <div className="flex items-center gap-2.5">
                 <MessageSquare className="h-4 w-4 shrink-0 text-primary-solid" />
                 <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">Hình thức:</span>
+                  <span className="text-text-subtle">{t('mentoring.modeLabel')}</span>
                   <span className="font-semibold text-text">
-                    {MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || 'Linh hoạt'}
+                    {MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || t('mentoring.flexible')}
                     {' · '}
-                    {MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || 'Cá nhân (1-1)'}
+                    {MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || t('mentoring.individual1on1')}
                   </span>
                 </div>
               </div>
@@ -244,7 +246,7 @@ export function MentoringDiscordTicketEmbed({
                 <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                 <div className="flex flex-wrap gap-1.5">
                   <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-text-muted ring-1 ring-border">
-                    {MENTORING_TASK_TYPE_LABELS[ticket.taskType || ''] || ticket.taskType || 'Nhiệm vụ'}
+                    {MENTORING_TASK_TYPE_LABELS[ticket.taskType || ''] || ticket.taskType || t('mentoring.defaultTaskLabel')}
                   </span>
                   {ticket.proposalSource && (
                     <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-solid ring-1 ring-brand-200 dark:ring-brand-700/40">
@@ -259,7 +261,7 @@ export function MentoringDiscordTicketEmbed({
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                   <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                    <span className="text-text-subtle shrink-0">Kết quả:</span>
+                    <span className="text-text-subtle shrink-0">{t('mentoring.resultLabel')}</span>
                     <span className="font-semibold text-text line-clamp-2">{ticket.expectedResult}</span>
                   </div>
                 </div>
@@ -271,7 +273,7 @@ export function MentoringDiscordTicketEmbed({
               <div className="flex items-center gap-2.5">
                 <Calendar className="h-4 w-4 shrink-0 text-text-subtle" />
                 <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">Deadline hiện tại:</span>
+                  <span className="text-text-subtle">{t('mentoring.currentDeadlineLabel')}</span>
                   <span className="font-medium text-text-muted">
                     {formatDate(ticket.currentDeadline)}
                   </span>
@@ -282,7 +284,7 @@ export function MentoringDiscordTicketEmbed({
               <div className="flex items-center gap-2.5">
                 <Clock className="h-4 w-4 shrink-0 text-primary-solid" />
                 <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">Deadline đề xuất:</span>
+                  <span className="text-text-subtle">{t('mentoring.proposedDeadline')}</span>
                   <span className="font-bold text-primary-solid">
                     {formatDate(ticket.proposedDeadline)}
                   </span>
@@ -293,9 +295,9 @@ export function MentoringDiscordTicketEmbed({
               <div className="flex items-start gap-2.5">
                 <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
                 <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                  <span className="text-text-subtle shrink-0">Lý do:</span>
+                  <span className="text-text-subtle shrink-0">{t('mentoring.reasonLabel')}</span>
                   <span className="font-semibold text-text line-clamp-2">
-                    {ticket.extensionReason || 'Chưa cung cấp'}
+                    {ticket.extensionReason || t('mentoring.notProvided')}
                   </span>
                 </div>
               </div>
@@ -311,7 +313,7 @@ export function MentoringDiscordTicketEmbed({
             onClick={onViewDetail}
             className="group flex items-center gap-1 text-xs font-bold text-primary-solid hover:text-primary-solid transition-colors"
           >
-            <span>Xem chi tiết</span>
+            <span>{t('mentoring.viewDetailBtn')}</span>
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </button>
 
@@ -325,13 +327,13 @@ export function MentoringDiscordTicketEmbed({
                     type="button"
                     onClick={onReject}
                     disabled={isRejecting || isConfirming}
-                    title="Từ chối thỏa thuận này"
+                    title={t('mentoring.rejectDealTooltip')}
                     className="inline-flex items-center justify-center rounded-xl border border-danger bg-danger-soft px-3 py-1.5 text-xs font-bold text-danger transition hover:bg-danger-border/60 active:scale-95 disabled:opacity-50"
                   >
                     {isRejecting ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      'Từ chối'
+                      t('mentoring.rejectBtn')
                     )}
                   </button>
 
@@ -341,11 +343,11 @@ export function MentoringDiscordTicketEmbed({
                       type="button"
                       onClick={onRevert}
                       disabled={isRejecting || isConfirming}
-                      title="Yêu cầu Mentor điều chỉnh lại giá, hạn chót hoặc nội dung"
+                      title={t('mentoring.requestAdjustmentTooltip')}
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
                     >
                       <RefreshCw className="h-3.5 w-3.5 text-warning" />
-                      <span>Yêu cầu điều chỉnh</span>
+                      <span>{t('mentoring.requestAdjustmentBtn')}</span>
                     </button>
                   )}
 
@@ -359,7 +361,7 @@ export function MentoringDiscordTicketEmbed({
                     {isConfirming ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      'Xác nhận & thanh toán'
+                      t('mentoring.confirmAndPayBtn')
                     )}
                   </button>
                 </>
@@ -367,7 +369,7 @@ export function MentoringDiscordTicketEmbed({
                 /* Người gửi: hiển thị trạng thái chờ đối phương phản hồi */
                 <span className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1 text-xs font-semibold text-text-muted shadow-2xs">
                   <Clock className="h-3 w-3 text-warning" />
-                  Chờ phản hồi
+                  {t('mentoring.statusWaitingResponse', 'Chờ phản hồi')}
                 </span>
               )
             ) : ticket.status === 'CONFIRMED' ? (
@@ -382,57 +384,57 @@ export function MentoringDiscordTicketEmbed({
                         className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95"
                       >
                         <CreditCard className="h-3.5 w-3.5" />
-                        <span>Thanh toán Task ngay</span>
+                        <span>{t('mentoring.payTaskNowBtn')}</span>
                       </button>
                     ) : (
                       <span className="text-xs font-semibold text-success">
-                        Đã chốt • Chờ thanh toán
+                        {t('mentoring.statusFinalizedAwaitingPayment', 'Đã chốt • Chờ thanh toán')}
                       </span>
                     )}
                   </>
                 ) : (
                   <span className="text-xs font-bold text-success">
-                    Đã thanh toán
+                    {t('mentoring.statusPaid', 'Đã thanh toán')}
                   </span>
                 )}
               </div>
             ) : ticket.status === 'REJECTED' ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-danger">
-                  Đã từ chối {ticket.handlerName ? `(${ticket.handlerName})` : ''}
+                  {t('mentoring.rejectedByHandler', { handler: ticket.handlerName ? `(${ticket.handlerName})` : '' })}
                 </span>
                 {onRevert && (
                   <button
                     type="button"
                     onClick={onRevert}
-                    title="Đề xuất lại các điều khoản mới (Deal lại)"
+                    title={t('mentoring.redealTooltip')}
                     className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
                   >
                     <RefreshCw className="h-3.5 w-3.5 text-warning" />
-                    <span>Deal lại</span>
+                    <span>{t('mentoring.redealBtn')}</span>
                   </button>
                 )}
               </div>
             ) : ticket.status === 'ADJUSTMENT' ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-warning">
-                  Chờ Mentor gửi phiên bản mới
+                  {t('mentoring.statusWaitingMentorNewVersion', 'Chờ Mentor gửi phiên bản mới')}
                 </span>
                 {onRevert && (
                   <button
                     type="button"
                     onClick={onRevert}
-                    title="Gửi phiên bản Deal Ticket mới"
+                    title={t('mentoring.sendNewDealTicketTooltip')}
                     className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95"
                   >
                     <RefreshCw className="h-3.5 w-3.5 text-warning" />
-                    <span>Deal lại</span>
+                    <span>{t('mentoring.redealBtn')}</span>
                   </button>
                 )}
               </div>
             ) : (
               <span className="text-xs font-medium text-text-subtle">
-                Đã thay thế bởi phiên bản mới
+                {t('mentoring.statusSupersededByNewVersion', 'Đã thay thế bởi phiên bản mới')}
               </span>
             )}
           </div>

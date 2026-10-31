@@ -1,4 +1,5 @@
 import { CheckCircle2, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Badge, Button } from '@/components/ui'
 import { useNavigate } from 'react-router-dom'
 import type { PaymentTransactionStatusResponse } from '../model/mentorPaymentTypes'
@@ -17,6 +18,7 @@ export function MentorPaymentSuccessCard({
   packageName = 'Gói dịch vụ Mentor',
   durationMonths = 1,
 }: MentorPaymentSuccessCardProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const formatDate = (dateStr?: string) => {
@@ -29,10 +31,10 @@ export function MentorPaymentSuccessCard({
   }
 
   const getStatusText = (mentorStatus?: string) => {
-    if (!mentorStatus || mentorStatus === 'ACTIVE') return 'Đang hoạt động'
-    if (mentorStatus === 'PAYMENT_PENDING' || mentorStatus === 'PENDING_PAYMENT') return 'Chờ thanh toán'
-    if (mentorStatus === 'PENDING') return 'Chờ duyệt'
-    if (mentorStatus === 'INACTIVE') return 'Tạm ngưng'
+    if (!mentorStatus || mentorStatus === 'ACTIVE') return t('mentoring.statusActive')
+    if (mentorStatus === 'PAYMENT_PENDING' || mentorStatus === 'PENDING_PAYMENT') return t('mentoring.statusPaymentPending')
+    if (mentorStatus === 'PENDING') return t('mentoring.statusPendingApproval')
+    if (mentorStatus === 'INACTIVE') return t('mentoring.statusInactive')
     return mentorStatus
   }
 
@@ -49,35 +51,35 @@ export function MentorPaymentSuccessCard({
       <div className="space-y-2">
         <div className="inline-flex">
           <Badge tone="success" className="px-3 py-1 font-bold text-xs">
-            Thanh toán thành công
+            {t('mentoring.paymentSuccessBadge')}
           </Badge>
         </div>
         <h2 className="font-display text-2xl font-bold text-text">
-          Chúc Mừng Bạn Đã Trở Thành Mentor!
+          {t('mentoring.congratsBecomeMentor')}
         </h2>
       </div>
 
       {/* Thông tin gói và hiệu lực mới */}
       <div className="rounded-2xl bg-bg p-5 text-left border border-border space-y-3">
         <div className="flex items-center justify-between text-xs border-b border-border pb-2.5">
-          <span className="text-text-subtle">Gói dịch vụ kích hoạt</span>
+          <span className="text-text-subtle">{t('mentoring.activatedPackage')}</span>
           <span className="font-bold text-text">{packageName}</span>
         </div>
 
         <div className="flex items-center justify-between text-xs border-b border-border pb-2.5">
-          <span className="text-text-subtle">Thời hạn sử dụng</span>
-          <span className="font-semibold text-text">{durationMonths} tháng</span>
+          <span className="text-text-subtle">{t('mentoring.duration')}</span>
+          <span className="font-semibold text-text">{t('mentoring.monthsUnit', { months: durationMonths })}</span>
         </div>
 
         <div className="flex items-center justify-between text-xs border-b border-border pb-2.5">
-          <span className="text-text-subtle">Ngày hết hạn</span>
+          <span className="text-text-subtle">{t('mentoring.expiryDate')}</span>
           <span className="font-bold text-primary-solid">
             {formatDate(status.subscriptionEndDate)}
           </span>
         </div>
 
         <div className="flex items-center justify-between text-xs pt-1">
-          <span className="text-text-subtle">Trạng thái Mentor</span>
+          <span className="text-text-subtle">{t('mentoring.mentorStatusLabel')}</span>
           <Badge tone={status.mentorStatus === 'ACTIVE' || !status.mentorStatus ? 'success' : 'gold'}>
             {getStatusText(status.mentorStatus)}
           </Badge>
@@ -92,7 +94,7 @@ export function MentorPaymentSuccessCard({
           className="flex-1 cursor-pointer"
           onClick={() => navigate('/app/mentoring/subscription')}
         >
-          Xem gói dịch vụ
+          {t('mentoring.viewServicePackages')}
         </Button>
         <Button
           variant="primary"
@@ -100,7 +102,7 @@ export function MentorPaymentSuccessCard({
           className="flex-1 flex items-center justify-center gap-2 cursor-pointer"
           onClick={() => navigate('/app/mentoring')}
         >
-          <span>Vào bảng tin Mentor</span>
+          <span>{t('mentoring.goToMentorFeed')}</span>
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

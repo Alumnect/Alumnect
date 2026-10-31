@@ -1,4 +1,5 @@
 import { CheckCircle2, XCircle, ArrowRight, ShieldCheck, FileText, Building2, UserCheck } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Badge } from '@/components/ui/primitives'
 import { ButtonLink } from '@/components/ui/Button'
 import type { MentorStatusResponse } from '../model/mentorStatusTypes'
@@ -12,6 +13,7 @@ interface MentorRequirementChecklistProps {
  * Thiết kế tinh gọn, sạch sẽ, loại bỏ trùng lặp với thẻ Gói dịch vụ.
  */
 export function MentorRequirementChecklist({ status }: MentorRequirementChecklistProps) {
+  const { t, i18n } = useTranslation()
   const {
     profileComplete,
     missingProfileFields,
@@ -33,23 +35,33 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
   )
   const isProfileOnlyComplete = profileComplete || professionalMissingFields.length === 0
 
+  const getMissingFieldLabel = (field: string) => {
+    switch (field) {
+      case 'currentPosition': return t('mentoring.fieldCurrentPosition')
+      case 'workingMode': return t('mentoring.fieldWorkingMode')
+      case 'mentoringType': return t('mentoring.fieldMentoringType')
+      case 'supportedIndustries': return t('mentoring.fieldSupportedIndustries')
+      default: return field
+    }
+  }
+
   // 4 tiêu chí thẩm định hồ sơ chuyên môn
   const items = [
     {
       id: 'profile',
-      title: 'Hồ sơ năng lực & chuyên môn',
+      title: t('mentoring.reqProfileTitle'),
       isMet: isProfileOnlyComplete,
       icon: <UserCheck className="h-4.5 w-4.5 text-primary-solid" />,
-      actionText: isProfileOnlyComplete ? 'Cập nhật' : 'Bổ sung',
+      actionText: isProfileOnlyComplete ? t('mentoring.btnUpdate') : t('mentoring.btnAddMissing'),
       actionUrl: '/app/mentoring/become-mentor',
       content: isProfileOnlyComplete ? (
         <p className="text-xs font-medium text-success">
-          ✓ Đã hoàn thiện thông tin chuyên môn, kinh nghiệm và lĩnh vực hỗ trợ.
+          {t('mentoring.reqProfileMet')}
         </p>
       ) : (
         <div className="space-y-1">
           <p className="text-xs font-medium text-danger">
-            Cần bổ sung các thông tin:
+            {t('mentoring.reqProfileMissingPrompt')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {professionalMissingFields && professionalMissingFields.length > 0 ? (
@@ -58,19 +70,11 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
                   key={idx}
                   className="rounded-md bg-danger-soft border border-danger-border px-2 py-0.5 text-xs font-medium text-danger"
                 >
-                  {field === 'currentPosition'
-                    ? 'Vị trí công việc'
-                    : field === 'workingMode'
-                    ? 'Hình thức hướng dẫn'
-                    : field === 'mentoringType'
-                    ? 'Loại hình Mentor'
-                    : field === 'supportedIndustries'
-                    ? 'Lĩnh vực hỗ trợ'
-                    : field}
+                  {getMissingFieldLabel(field)}
                 </span>
               ))
             ) : (
-              <span className="text-xs text-text-subtle">Chưa bắt đầu điền hồ sơ</span>
+              <span className="text-xs text-text-subtle">{t('mentoring.notStartedProfile')}</span>
             )}
           </div>
         </div>
@@ -78,53 +82,57 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
     },
     {
       id: 'cv',
-      title: 'Tệp hồ sơ CV ứng tuyển',
+      title: t('mentoring.reqCvTitle'),
       isMet: hasCv,
       icon: <FileText className="h-4.5 w-4.5 text-warning" />,
-      actionText: hasCv ? 'Cập nhật' : 'Bổ sung',
+      actionText: hasCv ? t('mentoring.btnUpdate') : t('mentoring.btnAddMissing'),
       actionUrl: '/app/mentoring/become-mentor',
       content: hasCv ? (
         <p className="text-xs font-medium text-success">
-          ✓ Đã đính kèm tệp CV: <span className="font-semibold">{cvFileName || 'CV_Mentor.pdf'}</span>
+          {t('mentoring.reqCvMet', { filename: cvFileName || 'CV_Mentor.pdf' })}
         </p>
       ) : (
         <p className="text-xs font-medium text-danger">
-          ✕ Chưa có tệp CV, vui lòng tải tệp lên.
+          {t('mentoring.reqCvMissing')}
         </p>
       ),
     },
     {
       id: 'bank',
-      title: 'Tài khoản ngân hàng nhận thù lao',
+      title: t('mentoring.reqBankTitle'),
       isMet: bankInformationComplete,
       icon: <Building2 className="h-4.5 w-4.5 text-aqua-600 dark:text-aqua-400" />,
-      actionText: bankInformationComplete ? 'Cập nhật' : 'Bổ sung',
+      actionText: bankInformationComplete ? t('mentoring.btnUpdate') : t('mentoring.btnAddMissing'),
       actionUrl: '/app/mentoring/become-mentor',
       content: bankInformationComplete ? (
         <p className="text-xs font-medium text-success">
-          ✓ {bankName} • {maskedAccountNumber} <span className="text-text-subtle font-normal">({bankAccountHolder})</span>
+          {t('mentoring.reqBankMet', {
+            bank: bankName,
+            maskedAccount: maskedAccountNumber,
+            holder: bankAccountHolder,
+          })}
         </p>
       ) : (
         <p className="text-xs font-medium text-danger">
-          ✕ Chưa cập nhật thông tin ngân hàng để nhận thù lao khi hoàn thành thỏa thuận.
+          {t('mentoring.reqBankMissing')}
         </p>
       ),
     },
     {
       id: 'terms',
-      title: 'Điều khoản Hướng dẫn & Hỗ trợ',
+      title: t('mentoring.reqTermsTitle'),
       isMet: termsAccepted,
       icon: <ShieldCheck className="h-4.5 w-4.5 text-primary-solid" />,
-      actionText: 'Xem lại',
+      actionText: t('mentoring.btnReview'),
       actionUrl: '/app/mentoring/terms',
       content: termsAccepted ? (
         <p className="text-xs font-medium text-success">
-          ✓ Đã chấp thuận phiên bản {currentTermsVersion}
-          {termsAcceptedAt && ` (${new Date(termsAcceptedAt).toLocaleDateString('vi-VN')})`}.
+          {t('mentoring.reqTermsMet', { version: currentTermsVersion })}
+          {termsAcceptedAt && ` (${new Date(termsAcceptedAt).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'vi-VN')})`}.
         </p>
       ) : (
         <p className="text-xs font-medium text-danger">
-          ✕ Chưa xác nhận đồng ý với Quy tắc ứng xử và Điều khoản Mentor hiện hành.
+          {t('mentoring.reqTermsMissing')}
         </p>
       ),
     },
@@ -137,14 +145,14 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border pb-4">
         <div>
           <h2 className="font-display text-base sm:text-lg font-bold text-text">
-            Điều kiện hồ sơ Mentor
+            {t('mentoring.requirementsTitle')}
           </h2>
           <p className="text-xs text-text-subtle dark:text-text-subtle mt-0.5">
-            Các tiêu chuẩn thẩm định chuyên môn và cam kết đạo đức nghề nghiệp
+            {t('mentoring.requirementsDesc')}
           </p>
         </div>
         <Badge tone={completedCount === 4 ? 'success' : 'brand'} className="self-start sm:self-auto text-xs">
-          Hoàn thành {completedCount}/4 điều kiện
+          {t('mentoring.requirementsCompletedBadge', { completed: completedCount, total: 4 })}
         </Badge>
       </div>
 
@@ -162,11 +170,11 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
                   </h3>
                   {item.isMet ? (
                     <Badge tone="success" icon={<CheckCircle2 className="h-3 w-3" />} className="text-xs py-0 px-1.5">
-                      Đạt
+                      {t('mentoring.criteriaMet')}
                     </Badge>
                   ) : (
                     <Badge tone="danger" icon={<XCircle className="h-3 w-3" />} className="text-xs py-0 px-1.5">
-                      Chưa đạt
+                      {t('mentoring.criteriaNotMet')}
                     </Badge>
                   )}
                 </div>
@@ -191,3 +199,4 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
     </Card>
   )
 }
+

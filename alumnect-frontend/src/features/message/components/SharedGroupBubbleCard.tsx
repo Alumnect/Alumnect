@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ExternalLink, Users, Globe, Lock } from 'lucide-react'
 import { groupApi } from '@/features/group/api/groupApi'
@@ -13,6 +14,7 @@ interface SharedGroupBubbleCardProps {
 const groupCache = new Map<string, GroupDetail>()
 
 export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardProps) {
+  const { t } = useTranslation()
   const idStr = String(groupId)
   const [group, setGroup] = useState<GroupDetail | null>(() => groupCache.get(idStr) || null)
   const [loading, setLoading] = useState(!groupCache.has(idStr))
@@ -66,7 +68,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
           to={`/app/groups/${groupId}`}
           className="inline-flex items-center gap-1.5 text-xs underline font-medium text-primary-solid hover:text-primary-solid"
         >
-          <span>Xem hội nhóm #{groupId}</span>
+          <span>{t('messages.viewGroupWithId', { id: groupId, defaultValue: `Xem hội nhóm #${groupId}` })}</span>
           <ExternalLink size={12} />
         </Link>
       </div>
@@ -101,12 +103,12 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
             {(group.privacy ?? (group as any).visibility) === 'PUBLIC' ? (
               <>
                 <Globe size={10} />
-                Công khai
+                {t('group.public', 'Công khai')}
               </>
             ) : (
               <>
                 <Lock size={10} />
-                Riêng tư
+                {t('group.private', 'Riêng tư')}
               </>
             )}
           </span>
@@ -120,7 +122,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
 
         <div className="mt-1 flex items-center gap-1.5 text-xs text-text-subtle">
           <Users size={12} className="text-primary-solid shrink-0" />
-          <span>{group.memberCount} thành viên</span>
+          <span>{t('messages.membersCount', { count: group.memberCount, defaultValue: `${group.memberCount} thành viên` })}</span>
           {group.category && (
             <>
               <span>•</span>
@@ -138,7 +140,7 @@ export function SharedGroupBubbleCard({ groupId, isMe }: SharedGroupBubbleCardPr
         <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2 text-xs font-medium text-primary-solid">
           <span className="inline-flex items-center gap-1">
             <Users size={12} />
-            Xem hội nhóm
+            {t('messages.viewGroup', 'Xem hội nhóm')}
           </span>
           <ExternalLink size={12} className="transition-transform group-hover:translate-x-0.5" />
         </div>

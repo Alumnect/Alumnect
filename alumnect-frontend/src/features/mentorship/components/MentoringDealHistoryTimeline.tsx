@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import { History, GitCommit } from 'lucide-react'
@@ -16,10 +17,11 @@ export function MentoringDealHistoryTimeline({
   snapshots,
   currentVersion,
 }: MentoringDealHistoryTimelineProps) {
+  const { t } = useTranslation()
   if (!snapshots || snapshots.length === 0) {
     return (
       <div className="p-8 text-center text-xs text-text-subtle dark:text-text-subtle">
-        Chưa có lịch sử phiên bản nào được ghi nhận.
+        {t('mentoring.noVersionHistoryRecorded')}
       </div>
     )
   }
@@ -34,7 +36,7 @@ export function MentoringDealHistoryTimeline({
           <History className="h-4 w-4" />
         </span>
         <h4 className="font-display text-sm font-bold text-text">
-          Lịch sử điều chỉnh điều khoản ({snapshots.length} phiên bản)
+          {t('mentoring.dealAdjustmentHistoryTitle', { count: snapshots.length })}
         </h4>
       </div>
 
@@ -73,7 +75,7 @@ export function MentoringDealHistoryTimeline({
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-text">
-                      Phiên bản {snap.version}
+                      {t('mentoring.versionBadge', { version: snap.version })}
                     </span>
                     {isLatest && (
                       <span className="rounded-full bg-primary-solid px-2 py-0.5 text-xs font-bold text-on-primary">
@@ -91,11 +93,11 @@ export function MentoringDealHistoryTimeline({
                   <div className="flex items-center gap-2">
                     <Avatar
                       src={snap.modifiedByAvatar || undefined}
-                      name={snap.modifiedByName || 'Thành viên'}
+                      name={snap.modifiedByName || t('mentoring.memberFallback')}
                       size={24}
                     />
                     <span className="font-bold text-text">
-                      {snap.modifiedByName || 'Thành viên'}
+                      {snap.modifiedByName || t('mentoring.memberFallback')}
                     </span>
                   </div>
 
@@ -112,7 +114,7 @@ export function MentoringDealHistoryTimeline({
 
                 {/* Tóm tắt nhanh phạm vi công việc */}
                 <p className="mt-2 text-xs text-text-subtle line-clamp-2 dark:text-text-subtle">
-                  <strong>Phạm vi:</strong> {snap.taskScope}
+                  <strong>{t('mentoring.scopePrefix')}</strong> {snap.taskScope}
                 </p>
               </div>
             </div>

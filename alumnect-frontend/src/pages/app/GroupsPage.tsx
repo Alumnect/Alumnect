@@ -8,6 +8,7 @@
  *  - Lưới thẻ hội nhóm 3 cột chuẩn chỉ, khoảng cách rộng rãi, hiệu ứng lướt nhẹ.
  */
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Compass, Inbox, Loader2, Plus, Search, Users2, X } from 'lucide-react'
 import { Card, PageHeader } from '@/components/ui'
 import { Stagger, StaggerItem } from '@/components/motion'
@@ -48,6 +49,7 @@ function GroupCardSkeleton() {
 }
 
 export function GroupsPage() {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const promptLogin = useLoginPrompt((s) => s.open)
   const canCreate = !!user && user.role === 'ALUMNI'
@@ -70,7 +72,7 @@ export function GroupsPage() {
 
   const handleCreateClick = () => {
     if (!user) {
-      promptLogin('Đăng nhập để tạo hội nhóm của riêng bạn.')
+      promptLogin(t('groups.createGroup'))
       return
     }
     setCreateOpen(true)
@@ -81,8 +83,8 @@ export function GroupsPage() {
       {/* Tiêu đề trang gọn gàng, tinh tế theo chuẩn PageHeader */}
       <PageHeader
         icon={<Users2 size={20} />}
-        title="Hội nhóm"
-        subtitle="Không gian kết nối và trao đổi chuyên môn dành cho Cựu sinh viên."
+        title={t('groups.title')}
+        subtitle={t('groups.subtitle')}
         actions={
           canCreate ? (
             <Button
@@ -92,7 +94,7 @@ export function GroupsPage() {
               onClick={handleCreateClick}
               className="rounded-xl px-4 py-2 font-bold shadow-soft transition hover:scale-[1.02] active:scale-[0.98]"
             >
-              Tạo hội nhóm
+              {t('groups.createGroup')}
             </Button>
           ) : undefined
         }
@@ -103,15 +105,15 @@ export function GroupsPage() {
         <div className="flex gap-2">
           {(
             [
-              { key: 'discover', label: 'Khám phá cộng đồng', icon: Compass },
-              { key: 'mine', label: 'Hội nhóm của tôi', icon: Users2 },
+              { key: 'discover', label: t('groups.discoverTab'), icon: Compass },
+              { key: 'mine', label: t('groups.myGroupsTab'), icon: Users2 },
             ] as const
-          ).map((t) => {
-            const isActive = tab === t.key
+          ).map((tItem) => {
+            const isActive = tab === tItem.key
             return (
               <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
+                key={tItem.key}
+                onClick={() => setTab(tItem.key)}
                 className={cn(
                   'relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition',
                   isActive
@@ -119,15 +121,15 @@ export function GroupsPage() {
                     : 'bg-surface-2 text-text-muted hover:bg-border dark:hover:text-white',
                 )}
               >
-                <t.icon size={15} />
-                <span>{t.label}</span>
+                <tItem.icon size={15} />
+                <span>{tItem.label}</span>
               </button>
             )
           })}
         </div>
 
         {tab === 'mine' && !user && (
-          <p className="text-xs text-text-subtle">Đăng nhập để xem danh sách các nhóm bạn đã tham gia.</p>
+          <p className="text-xs text-text-subtle">{t('groups.loginToViewMyGroups')}</p>
         )}
       </div>
 
@@ -137,17 +139,17 @@ export function GroupsPage() {
           <div className="relative">
             <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
             <input
-              aria-label="Tìm kiếm hội nhóm theo tên, từ khóa hoặc chủ đề…"
+              aria-label={t('groups.searchPlaceholder')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Tìm kiếm hội nhóm theo tên, từ khóa hoặc chủ đề…"
+              placeholder={t('groups.searchPlaceholder')}
               maxLength={GROUP_SEARCH_MAX}
               className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle focus:border-brand-500/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
             />
             {searchInput && (
               <button
                 onClick={() => setSearchInput('')}
-                aria-label="Xóa tìm kiếm"
+                aria-label={t('common.clearSearch')}
                 className="absolute right-3.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
               >
                 <X size={14} />
@@ -170,11 +172,11 @@ export function GroupsPage() {
             <AlertTriangle size={24} />
           </span>
           <div>
-            <p className="font-bold text-text">Không tải được danh sách hội nhóm</p>
-            <p className="mt-1 text-sm text-text-subtle">{(query.error as Error)?.message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+            <p className="font-bold text-text">{t('groups.loadError')}</p>
+            <p className="mt-1 text-sm text-text-subtle">{(query.error as Error)?.message ?? t('common.error')}</p>
           </div>
           <Button variant="secondary" size="sm" onClick={() => query.refetch()}>
-            Thử lại
+            {t('common.tryAgain')}
           </Button>
         </Card>
       ) : groups.length === 0 ? (
@@ -184,23 +186,19 @@ export function GroupsPage() {
           </span>
           <div>
             <p className="text-base font-extrabold text-text">
-              {tab === 'mine' ? 'Bạn chưa tham gia hội nhóm nào' : filtering ? 'Không tìm thấy hội nhóm phù hợp' : 'Chưa có hội nhóm nào'}
+              {t('groups.emptyTitle')}
             </p>
             <p className="mt-1 text-sm text-text-subtle">
-              {tab === 'mine'
-                ? 'Khám phá và tham gia các hội nhóm để kết nối với cựu sinh viên FPTU.'
-                : filtering
-                ? 'Thử đổi từ khóa hoặc chọn danh mục khác.'
-                : 'Hãy là người đầu tiên tạo dựng hội nhóm cộng đồng.'}
+              {t('groups.emptyDesc')}
             </p>
           </div>
           {tab === 'mine' ? (
             <Button variant="secondary" size="sm" onClick={() => setTab('discover')} className="rounded-xl">
-              Khám phá hội nhóm ngay
+              {t('groups.discoverTab')}
             </Button>
           ) : filtering ? (
             <Button variant="secondary" size="sm" onClick={resetFilter} className="rounded-xl">
-              Xóa bộ lọc
+              {t('common.clearFilter')}
             </Button>
           ) : null}
         </Card>
@@ -224,7 +222,7 @@ export function GroupsPage() {
                 leftIcon={query.isFetchingNextPage ? <Loader2 size={16} className="animate-spin" /> : undefined}
                 className="rounded-2xl px-6 py-2.5 font-bold"
               >
-                {query.isFetchingNextPage ? 'Đang tải thêm…' : 'Tải thêm hội nhóm'}
+                {query.isFetchingNextPage ? t('common.loading') : t('common.viewMore')}
               </Button>
             </div>
           )}

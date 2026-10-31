@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import {
   Bell,
   Heart,
@@ -67,16 +69,16 @@ const TONES: Record<NotificationType, string> = {
   MENTORING_ACCOUNT: 'bg-info text-text-inverse shadow-md shadow-sky-600/30',
 }
 
-function formatRelativeTime(dateString: string): string {
+function formatRelativeTime(dateString: string, t: TFunction, lng?: string): string {
   try {
     const diff = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000)
-    if (diff < 60) return 'Vừa xong'
-    if (diff < 3600) return `${Math.floor(diff / 60)} phút`
-    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ`
-    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày`
-    return new Date(dateString).toLocaleDateString('vi-VN')
+    if (diff < 60) return t('notification.justNow')
+    if (diff < 3600) return t('notification.minutesAgo', { count: Math.floor(diff / 60) })
+    if (diff < 86400) return t('notification.hoursAgo', { count: Math.floor(diff / 3600) })
+    if (diff < 604800) return t('notification.daysAgo', { count: Math.floor(diff / 86400) })
+    return new Date(dateString).toLocaleDateString(lng === 'vi' ? 'vi-VN' : 'en-US')
   } catch {
-    return 'Gần đây'
+    return t('notification.recent')
   }
 }
 
@@ -87,6 +89,7 @@ function parseGroupId(targetId?: string | null): number {
 }
 
 export function NotificationsPage() {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
@@ -126,7 +129,7 @@ export function NotificationsPage() {
         [notification.id]: 'ACCEPTED',
         [groupId]: 'ACCEPTED',
       }))
-      toast.success('Bạn đã chấp nhận tham gia nhóm mentoring!')
+      toast.success(t('notification.acceptSuccess', 'Bạn đã chấp nhận tham gia nhóm mentoring!'))
       if (!notification.isRead) {
         markAsReadMutation.mutate(notification.id)
       }
@@ -135,17 +138,18 @@ export function NotificationsPage() {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Không thể chấp nhận lời mời'
+      const errMsg = err instanceof Error ? err.message : t('notification.cannotAcceptInvite', 'Không thể chấp nhận lời mời')
       if (
         errMsg.toLowerCase().includes('đã là thành viên') ||
-        errMsg.toLowerCase().includes('đã tham gia')
+        errMsg.toLowerCase().includes('đã tham gia') ||
+        errMsg.toLowerCase().includes('already a member')
       ) {
         setRespondedInvitations((prev) => ({
           ...prev,
           [notification.id]: 'ACCEPTED',
           [groupId]: 'ACCEPTED',
         }))
-        toast.info('Bạn đã là thành viên của nhóm này')
+        toast.info(t('notification.alreadyMember', 'Bạn đã là thành viên của nhóm này'))
         if (!notification.isRead) {
           markAsReadMutation.mutate(notification.id)
         }
@@ -166,7 +170,7 @@ export function NotificationsPage() {
         [notification.id]: 'DECLINED',
         [groupId]: 'DECLINED',
       }))
-      toast.success('Đã từ chối lời mời tham gia nhóm')
+      toast.success(t('notification.declineSuccess', 'Đã từ chối lời mời tham gia nhóm'))
       if (!notification.isRead) {
         markAsReadMutation.mutate(notification.id)
       }
@@ -175,7 +179,7 @@ export function NotificationsPage() {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Không thể từ chối lời mời'
+      const errMsg = err instanceof Error ? err.message : t('notification.cannotDeclineInvite', 'Không thể từ chối lời mời')
       toast.error(errMsg)
     } finally {
       setRespondingId(null)
@@ -187,17 +191,17 @@ export function NotificationsPage() {
       setRespondingId(notification.id)
       if (accepted) {
         await acceptIncomingMutation.mutateAsync({ requestId })
-        toast.success('Đã nhận yêu cầu Mentoring. Kênh trao đổi đã được mở.')
+        toast.success(t('notification.receiveMentoringSuccess', 'Đã nhận yêu cầu Mentoring. Kênh trao đổi đã được mở.'))
       } else {
         await declineIncomingMutation.mutateAsync({ requestId })
-        toast.success('Đã bỏ qua yêu cầu Mentoring.')
+        toast.success(t('notification.ignoreMentoringSuccess', 'Đã bỏ qua yêu cầu Mentoring.'))
       }
       if (!notification.isRead) markAsReadMutation.mutate(notification.id)
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Không thể xử lý yêu cầu Mentoring'
+      const message = err instanceof Error ? err.message : t('notification.cannotProcessMentoring', 'Không thể xử lý yêu cầu Mentoring')
       // Yêu cầu đã đóng/hết hạn: nút phản hồi không còn tác dụng, đánh dấu đã đọc để ẩn đi và tránh bấm lặp
-      if (message.includes('đã đóng')) {
+      if (message.includes('đã đóng') || message.toLowerCase().includes('closed') || message.toLowerCase().includes('expired')) {
         if (!notification.isRead) markAsReadMutation.mutate(notification.id)
         queryClient.invalidateQueries({ queryKey: ['notifications'] })
         queryClient.invalidateQueries({ queryKey: ['mentoring', 'incoming-requests'] })
@@ -269,8 +273,8 @@ export function NotificationsPage() {
     <div className="mx-auto max-w-3xl pb-10">
       <PageHeader
         icon={<Bell size={20} />}
-        title="Thông báo"
-        subtitle="Cập nhật thông báo các hoạt động gần đây."
+        title={t('notification.title')}
+        subtitle={t('notification.subtitle')}
         actions={
           hasUnread && (
             <Button
@@ -280,7 +284,7 @@ export function NotificationsPage() {
               disabled={markAllMutation.isPending}
               onClick={() => markAllMutation.mutate()}
             >
-              Đánh dấu tất cả đã đọc
+              {t('notification.markAllAsRead')}
             </Button>
           )
         }
@@ -302,8 +306,8 @@ export function NotificationsPage() {
         <Card className="py-12">
           <EmptyState
             icon={<Bell size={40} className="text-text-subtle" />}
-            title="Chưa có thông báo nào"
-            description="Bạn sẽ nhận được thông báo khi có người thích, bình luận bài viết, theo dõi hoặc trả lời câu hỏi của bạn."
+            title={t('notification.noNotifications')}
+            description={t('notification.noNotificationsDesc')}
           />
         </Card>
       ) : (
@@ -311,7 +315,7 @@ export function NotificationsPage() {
           {notifications.map((n) => {
             const Icon = ICONS[n.type] || Bell
             const toneClass = TONES[n.type] || 'bg-brand-500/15 text-primary-solid'
-            const avatarName = n.senderName || 'Hệ thống AlumNect'
+            const avatarName = n.senderName || t('notification.systemSender', 'Hệ thống AlumNect')
             const isSystemBroadcast = n.type === 'SYSTEM_BROADCAST'
             const isReportResolved = n.type === 'REPORT_RESOLVED'
 
@@ -337,7 +341,7 @@ export function NotificationsPage() {
                       </div>
                       <span
                         className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-success text-text-inverse ring-2 ring-surface shadow-xs"
-                        title="Thông báo chính thức từ hệ thống"
+                        title={t('notification.systemNoticeTitle', 'Thông báo chính thức từ hệ thống')}
                       >
                         <ShieldCheck size={12} strokeWidth={3} className="text-white" />
                       </span>
@@ -349,7 +353,7 @@ export function NotificationsPage() {
                       </div>
                       <span
                         className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-warning text-text-inverse ring-2 ring-surface shadow-xs"
-                        title="Vi phạm tiêu chuẩn cộng đồng"
+                        title={t('notification.policyViolationTitle', 'Vi phạm tiêu chuẩn cộng đồng')}
                       >
                         <AlertTriangle size={11} strokeWidth={3} className="text-white" />
                       </span>
@@ -385,7 +389,7 @@ export function NotificationsPage() {
                       <span className="text-text-muted">{n.content}</span>
                     </p>
                     <span className="mt-1 block text-xs text-text-subtle dark:text-text-subtle">
-                      {formatRelativeTime(n.createdAt)}
+                      {formatRelativeTime(n.createdAt, t, i18n.language)}
                     </span>
 
                     {/* Interactive Group Invitation Actions */}
@@ -416,7 +420,7 @@ export function NotificationsPage() {
                           <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-1">
                             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/40">
                               <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                              Đã tham gia nhóm
+                              {t('notification.joinedGroup')}
                             </span>
                             <Button
                               size="sm"
@@ -427,7 +431,7 @@ export function NotificationsPage() {
                                 navigate(`/app/mentoring/groups/${groupId}`)
                               }}
                             >
-                              Xem nhóm
+                              {t('notification.viewGroup')}
                               <ChevronRight className="h-3.5 w-3.5" />
                             </Button>
                           </div>
@@ -439,7 +443,7 @@ export function NotificationsPage() {
                           <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-1">
                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-muted bg-surface-soft px-2.5 py-1 rounded-lg border border-border">
                               <X className="h-3.5 w-3.5 text-text-muted" />
-                              Đã từ chối lời mời
+                              {t('notification.declinedInvite')}
                             </span>
                           </div>
                         )
@@ -450,7 +454,7 @@ export function NotificationsPage() {
                         return (
                           <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-1">
                             <span className="text-xs text-text-subtle">
-                              Lời mời đã đóng hoặc đã được phản hồi
+                              {t('notification.inviteClosed')}
                             </span>
                             <button
                               type="button"
@@ -460,7 +464,7 @@ export function NotificationsPage() {
                                 navigate(`/app/mentoring/groups/${groupId}`)
                               }}
                             >
-                              Xem nhóm
+                              {t('notification.viewGroup')}
                             </button>
                           </div>
                         )
@@ -483,7 +487,7 @@ export function NotificationsPage() {
                             ) : (
                               <Check className="h-3 w-3" />
                             )}
-                            Chấp nhận
+                            {t('notification.accept')}
                           </Button>
                           <Button
                             size="sm"
@@ -496,7 +500,7 @@ export function NotificationsPage() {
                             disabled={respondingId === n.id}
                           >
                             <X className="h-3 w-3 mr-1" />
-                            Từ chối
+                            {t('notification.decline')}
                           </Button>
                           <button
                             type="button"
@@ -506,7 +510,7 @@ export function NotificationsPage() {
                               navigate(`/app/mentoring/groups/${groupId}`)
                             }}
                           >
-                            Xem nhóm
+                            {t('notification.viewGroup')}
                           </button>
                         </div>
                       )
@@ -529,7 +533,7 @@ export function NotificationsPage() {
                             disabled={respondingId === n.id}
                           >
                             {respondingId === n.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                            Nhận
+                            {t('notification.receive')}
                           </Button>
                           <Button
                             size="sm"
@@ -542,7 +546,7 @@ export function NotificationsPage() {
                             disabled={respondingId === n.id}
                           >
                             <X className="mr-1 h-3 w-3" />
-                            Bỏ qua
+                            {t('notification.ignore')}
                           </Button>
                           <button
                             type="button"
@@ -552,7 +556,7 @@ export function NotificationsPage() {
                               navigate(`/app/mentoring/incoming-requests/${requestId}`)
                             }}
                           >
-                            Xem chi tiết
+                            {t('notification.viewDetails')}
                           </button>
                         </div>
                       )
@@ -561,7 +565,7 @@ export function NotificationsPage() {
 
                   {!n.isRead && (
                     <span
-                      title="Chưa đọc"
+                      title={t('notification.unreadBadge', 'Chưa đọc')}
                       className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary-solid shadow-sm"
                     />
                   )}

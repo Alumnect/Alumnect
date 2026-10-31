@@ -1,4 +1,6 @@
+import i18n from '@/i18n'
 import type { MentoringWorkingMode, MentoringType } from './mentorRegistrationTypes'
+import { createLocalizedMap } from './mentoringFlowLabels'
 
 export type { MentoringWorkingMode, MentoringType }
 
@@ -21,56 +23,87 @@ export type MentoringRequestStatus = 'OPEN' | 'MATCHED' | 'CLOSED' | 'CANCELLED'
 /**
  * Nhãn tiếng Việt và mô tả cho các loại nhiệm vụ.
  */
+/** Chọn chuỗi theo ngôn ngữ hiện tại tại thời điểm truy cập (đổi ngôn ngữ không cần tải lại trang). */
+const pick = (vi: string, en: string) => (i18n.language === 'en' ? en : vi)
+
+const taskTypeOption = (
+  value: MentoringTaskType,
+  label: [string, string],
+  description: [string, string],
+) => ({
+  value,
+  get label() {
+    return pick(label[0], label[1])
+  },
+  get description() {
+    return pick(description[0], description[1])
+  },
+})
+
 export const TASK_TYPE_OPTIONS: { value: MentoringTaskType; label: string; description: string }[] = [
-  {
-    value: 'CAREER_ORIENTATION',
-    label: 'Định hướng nghề nghiệp',
-    description: 'Tư vấn lộ trình sự nghiệp, cơ hội việc làm và định vị bản thân',
-  },
-  {
-    value: 'RESUME_REVIEW',
-    label: 'Đánh giá & Góp ý CV',
-    description: 'Tối ưu hóa hồ sơ năng lực, sửa lỗi và làm nổi bật thế mạnh',
-  },
-  {
-    value: 'MOCK_INTERVIEW',
-    label: 'Phỏng vấn thử nghiệm',
-    description: 'Luyện tập trả lời phỏng vấn chuyên môn và phỏng vấn hành vi',
-  },
-  {
-    value: 'TECHNICAL_CONSULTING',
-    label: 'Tư vấn chuyên môn & Kỹ thuật',
-    description: 'Giải đáp vướng mắc công nghệ, bài toán kiến trúc hoặc coding',
-  },
-  {
-    value: 'CAPSTONE_ADVICE',
-    label: 'Cố vấn đồ án tốt nghiệp',
-    description: 'Hỗ trợ phương pháp nghiên cứu, phản biện và hoàn thiện đồ án',
-  },
-  {
-    value: 'OTHER',
-    label: 'Nhu cầu hỗ trợ khác',
-    description: 'Các yêu cầu trao đổi, chia sẻ và kết nối khác theo thỏa thuận',
-  },
+  taskTypeOption(
+    'CAREER_ORIENTATION',
+    ['Định hướng nghề nghiệp', 'Career orientation'],
+    ['Tư vấn lộ trình sự nghiệp, cơ hội việc làm và định vị bản thân', 'Career path advice, job opportunities and positioning yourself'],
+  ),
+  taskTypeOption(
+    'RESUME_REVIEW',
+    ['Đánh giá & Góp ý CV', 'Resume review & feedback'],
+    ['Tối ưu hóa hồ sơ năng lực, sửa lỗi và làm nổi bật thế mạnh', 'Polish your profile, fix mistakes and highlight your strengths'],
+  ),
+  taskTypeOption(
+    'MOCK_INTERVIEW',
+    ['Phỏng vấn thử nghiệm', 'Mock interview'],
+    ['Luyện tập trả lời phỏng vấn chuyên môn và phỏng vấn hành vi', 'Practice technical and behavioral interview answers'],
+  ),
+  taskTypeOption(
+    'TECHNICAL_CONSULTING',
+    ['Tư vấn chuyên môn & Kỹ thuật', 'Technical consulting'],
+    ['Giải đáp vướng mắc công nghệ, bài toán kiến trúc hoặc coding', 'Help with technology blockers, architecture problems or coding'],
+  ),
+  taskTypeOption(
+    'CAPSTONE_ADVICE',
+    ['Cố vấn đồ án tốt nghiệp', 'Capstone project advice'],
+    ['Hỗ trợ phương pháp nghiên cứu, phản biện và hoàn thiện đồ án', 'Support with research methods, critique and finishing your capstone'],
+  ),
+  taskTypeOption(
+    'OTHER',
+    ['Nhu cầu hỗ trợ khác', 'Other support'],
+    ['Các yêu cầu trao đổi, chia sẻ và kết nối khác theo thỏa thuận', 'Other discussion, sharing and networking requests by agreement'],
+  ),
 ]
 
 /**
- * Nhãn hiển thị cho phương thức làm việc.
+ * Nhãn hiển thị cho phương thức làm việc (theo ngôn ngữ hiện tại).
  */
-export const WORKING_MODE_LABELS: Record<MentoringWorkingMode, string> = {
-  ONLINE: 'Trực tuyến (Online)',
-  OFFLINE: 'Gặp trực tiếp (Offline)',
-  BOTH: 'Linh hoạt (Cả Online & Offline)',
-}
+export const WORKING_MODE_LABELS = createLocalizedMap(
+  {
+    ONLINE: 'Trực tuyến (Online)',
+    OFFLINE: 'Gặp trực tiếp (Offline)',
+    BOTH: 'Linh hoạt (Cả Online & Offline)',
+  },
+  {
+    ONLINE: 'Online',
+    OFFLINE: 'In person (Offline)',
+    BOTH: 'Flexible (Online & Offline)',
+  },
+) as Record<MentoringWorkingMode, string>
 
 /**
- * Nhãn hiển thị cho hình thức tham gia.
+ * Nhãn hiển thị cho hình thức tham gia (theo ngôn ngữ hiện tại).
  */
-export const PARTICIPATION_TYPE_LABELS: Record<MentoringType, string> = {
-  INDIVIDUAL: 'Cá nhân 1-1',
-  GROUP: 'Theo nhóm',
-  BOTH: 'Cá nhân hoặc Nhóm',
-}
+export const PARTICIPATION_TYPE_LABELS = createLocalizedMap(
+  {
+    INDIVIDUAL: 'Cá nhân 1-1',
+    GROUP: 'Theo nhóm',
+    BOTH: 'Cá nhân hoặc Nhóm',
+  },
+  {
+    INDIVIDUAL: 'Individual 1-on-1',
+    GROUP: 'Group',
+    BOTH: 'Individual or Group',
+  },
+) as Record<MentoringType, string>
 
 /**
  * Cấu trúc một tệp tin đính kèm trong payload gửi lên.

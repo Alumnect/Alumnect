@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AlertCircle, RefreshCw, Trophy, Search } from 'lucide-react'
 import { Card } from '@/components/ui/primitives'
 import { Button } from '@/components/ui/Button'
@@ -13,8 +14,9 @@ interface MentorDetailErrorStateProps {
  * Hiển thị thông điệp lỗi nghiệp vụ thực tế từ Backend và cung cấp các lựa chọn điều hướng an toàn.
  */
 export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStateProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
-  const errorMessage = error?.message || 'Không thể tải thông tin chi tiết Mentor. Vui lòng thử lại sau.'
+  const errorMessage = error?.message || t('mentoring.errorLoadingMentorDetail', 'Không thể tải thông tin chi tiết Mentor. Vui lòng thử lại sau.')
 
   const isNotFound = errorMessage.toLowerCase().includes('không tìm thấy') ||
     errorMessage.toLowerCase().includes('not found') ||
@@ -29,7 +31,7 @@ export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStat
 
         <div className="space-y-2">
           <h2 className="text-xl font-display font-bold text-text">
-            {isNotFound ? 'Không tìm thấy Mentor' : 'Đã xảy ra lỗi kết nối'}
+            {isNotFound ? t('mentoring.mentorNotFound', 'Không tìm thấy Mentor') : t('mentoring.connectionError', 'Đã xảy ra lỗi kết nối')}
           </h2>
           <p className="text-sm text-text-muted leading-relaxed">
             {errorMessage}
@@ -45,7 +47,7 @@ export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStat
               onClick={onRetry}
               className="w-full sm:w-auto rounded-xl font-bold"
             >
-              Thử lại
+              {t('common.retry', 'Thử lại')}
             </Button>
           )}
 
@@ -56,7 +58,7 @@ export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStat
             onClick={() => navigate('/app/mentoring/discover')}
             className="w-full sm:w-auto rounded-xl font-bold bg-primary-solid hover:bg-primary-hover"
           >
-            Khám phá Mentor
+            {t('mentoring.discoverMentors', 'Khám phá Mentor')}
           </Button>
 
           <Button
@@ -66,7 +68,7 @@ export function MentorDetailErrorState({ error, onRetry }: MentorDetailErrorStat
             onClick={() => navigate('/app/mentoring/ranking')}
             className="w-full sm:w-auto rounded-xl font-bold text-text-muted"
           >
-            Bảng xếp hạng
+            {t('mentoring.leaderboard', 'Bảng xếp hạng')}
           </Button>
         </div>
       </Card>

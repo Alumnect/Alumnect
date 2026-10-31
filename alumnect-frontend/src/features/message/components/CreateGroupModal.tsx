@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Users, Search, Check, Loader2, Camera } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, Button, toast, DialogFrame } from '@/components/ui'
 import { chatApi } from '../api/chatApi'
 import { useAuthStore } from '@/store/authStore'
@@ -21,6 +22,7 @@ interface SelectableUser {
 }
 
 export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModalProps) {
+  const { t } = useTranslation()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const [groupName, setGroupName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -43,7 +45,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
       setAvatarUrl(res.url)
     } catch (err) {
       console.error('Lỗi tải ảnh đại diện nhóm:', err)
-      toast.error('Không thể tải ảnh đại diện lên. Vui lòng thử lại.')
+      toast.error(t('messages.groupAvatarError', 'Không thể tải ảnh đại diện lên. Vui lòng thử lại.'))
     } finally {
       setIsUploadingAvatar(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -94,11 +96,11 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!groupName.trim()) {
-      toast.error('Vui lòng nhập tên nhóm trò chuyện.')
+      toast.error(t('messages.enterGroupNameError', 'Vui lòng nhập tên nhóm trò chuyện.'))
       return
     }
     if (selectedUserIds.length === 0) {
-      toast.error('Vui lòng chọn ít nhất 1 thành viên khác vào nhóm.')
+      toast.error(t('messages.selectMembersError', 'Vui lòng chọn ít nhất 1 thành viên khác vào nhóm.'))
       return
     }
 
@@ -108,7 +110,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
         avatarUrl: avatarUrl || undefined,
         memberIds: selectedUserIds,
       })
-      toast.success('Tạo nhóm trò chuyện thành công!')
+      toast.success(t('messages.createGroupSuccess', 'Tạo nhóm trò chuyện thành công!'))
       onCreated(res.data)
       onClose()
       setGroupName('')
@@ -120,7 +122,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
       let errorMsg =
         err?.response?.data?.message ||
         err?.message ||
-        'Không thể tạo nhóm trò chuyện. Vui lòng thử lại.'
+        t('messages.createGroupError', 'Không thể tạo nhóm trò chuyện. Vui lòng thử lại.')
       const fieldErrors = err?.data?.data || err?.response?.data?.data
       if (fieldErrors && typeof fieldErrors === 'object' && !Array.isArray(fieldErrors)) {
         const firstVal = Object.values(fieldErrors)[0]
@@ -132,7 +134,8 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
     }
   }
 
-  return <DialogFrame
+  return (
+    <DialogFrame
       onClose={onClose}
       zIndexClassName="z-[9999]"
       maxWidthClassName="max-w-md"
@@ -144,9 +147,9 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary-soft text-primary-solid">
               <Users size={18} />
             </div>
-            <h3 className="text-base font-bold text-text">Tạo nhóm trò chuyện</h3>
+            <h3 className="text-base font-bold text-text">{t('messages.createGroupTitle', 'Tạo nhóm trò chuyện')}</h3>
           </div>
-          <button aria-label="Đóng"
+          <button aria-label={t('common.close', 'Đóng')}
             type="button"
             onClick={onClose}
             className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted"
@@ -171,7 +174,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
                 type="button"
                 disabled={isUploadingAvatar}
                 onClick={() => fileInputRef.current?.click()}
-                title="Tải ảnh đại diện nhóm (không bắt buộc)"
+                title={t('messages.groupAvatarHint', 'Tải ảnh đại diện nhóm (không bắt buộc)')}
                 className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 text-white opacity-0 transition-opacity hover:opacity-100 group-hover:opacity-100 cursor-pointer disabled:pointer-events-none"
               >
                 {isUploadingAvatar ? (
@@ -191,14 +194,14 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
 
             <div className="flex-1">
               <label className="mb-1 block text-xs font-bold text-text-muted">
-                Tên nhóm <span className="text-danger">*</span>
+                {t('messages.groupName', 'Tên nhóm')} <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
-                placeholder="Nhập tên nhóm trò chuyện..."
+                placeholder={t('messages.groupNamePlaceholder', 'Nhập tên nhóm trò chuyện...')}
                 className="h-10 w-full rounded-2xl border border-border-strong bg-surface px-3.5 text-sm text-text transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -207,17 +210,17 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
           <div className="mb-2">
             <div className="flex items-center justify-between">
               <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-text-muted">
-                Chọn thành viên ({selectedUserIds.length}) <span className="text-danger">*</span>
+                {t('messages.selectMembers', { count: selectedUserIds.length, defaultValue: `Chọn thành viên (${selectedUserIds.length})` })} <span className="text-danger">*</span>
               </label>
             </div>
             <div className="relative flex items-center">
               <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
               <input
-                aria-label="Tìm kiếm theo tên thành viên..."
+                aria-label={t('messages.searchMembersPlaceholder', 'Tìm kiếm theo tên thành viên...')}
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm kiếm theo tên thành viên..."
+                placeholder={t('messages.searchMembersPlaceholder', 'Tìm kiếm theo tên thành viên...')}
                 className="h-9 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text focus:border-primary focus:bg-surface focus:outline-none"
               />
             </div>
@@ -231,7 +234,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
               </div>
             ) : candidates.length === 0 ? (
               <div className="py-8 text-center text-xs text-text-subtle">
-                Không tìm thấy thành viên nào.
+                {t('messages.noMembersFound', 'Không tìm thấy thành viên nào.')}
               </div>
             ) : (
               candidates.map((user) => {
@@ -274,16 +277,17 @@ export function CreateGroupModal({ isOpen, onClose, onCreated }: CreateGroupModa
           {/* Footer actions */}
           <div className="mt-6 flex items-center justify-end gap-2.5">
             <Button type="button" variant="outline" onClick={onClose} className="rounded-xl px-4 text-xs font-semibold">
-              Hủy
+              {t('common.cancel', 'Hủy')}
             </Button>
             <Button
               type="submit"
               disabled={!groupName.trim() || selectedUserIds.length === 0 || createGroupMutation.isPending}
               className="rounded-xl bg-primary-solid px-5 text-xs font-bold text-on-primary hover:bg-primary-hover"
             >
-              {createGroupMutation.isPending ? 'Đang tạo...' : 'Tạo nhóm'}
+              {createGroupMutation.isPending ? t('messages.creatingGroup', 'Đang tạo...') : t('messages.createGroupBtn', 'Tạo nhóm')}
             </Button>
           </div>
         </form>
       </DialogFrame>
+  )
 }

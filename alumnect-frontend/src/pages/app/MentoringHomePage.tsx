@@ -1,5 +1,6 @@
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
   MentoringTermsGate,
@@ -54,6 +55,7 @@ type MentoringHomeContentProps = {
  * Người thuê Mentor: yêu cầu đã gửi, Task đang chạy, hoàn tiền + nhắc khai báo tài khoản nhận hoàn tiền.
  */
 function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
+  const { t } = useTranslation()
   const isRequester = !isMentorActive
   const incoming = useIncomingMentoringRequests({ status: 'WAITING', size: 1, enabled: isMentorActive })
   const myRequests = useMyMentoringRequests({ page: 0, size: 1, enabled: isRequester })
@@ -79,9 +81,9 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
       to="/app/mentoring/tasks"
       tone="navy"
       icon={<BriefcaseBusiness />}
-      label="Task đang chạy"
+      label={t('mentoring.activeTasks')}
       value={activeTasks.data?.totalElements ?? 0}
-      hint="Chuẩn bị · đang làm · chờ nghiệm thu"
+      hint={t('mentoring.taskHint')}
       loading={activeTasks.isLoading}
     />
   )
@@ -92,7 +94,7 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
 
   return (
     <motion.section variants={itemVariants} className="space-y-3">
-      <h2 className="font-display text-lg font-bold text-text">Việc của bạn</h2>
+      <h2 className="font-display text-lg font-bold text-text">{t('mentoring.yourWork')}</h2>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {isMentorActive ? (
@@ -101,9 +103,9 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
               to="/app/mentoring/incoming-requests"
               tone="brand"
               icon={<Inbox />}
-              label="Yêu cầu chờ phản hồi"
+              label={t('mentoring.incomingRequests')}
               value={incoming.data?.totalElements ?? 0}
-              hint="Phản hồi sớm để nhận Task"
+              hint={t('mentoring.respondEarlyHint')}
               loading={incoming.isLoading}
             />
             {taskTile}
@@ -111,9 +113,9 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
               to="/app/mentoring/earnings"
               tone="mint"
               icon={<Landmark />}
-              label="Thu nhập đang xử lý"
+              label={t('mentoring.processingEarnings')}
               value={vnd(earnings.data?.totalProcessing ?? 0)}
-              hint={`Đã nhận ${vnd(earnings.data?.totalReceived ?? 0)}`}
+              hint={t('mentoring.receivedAmount', { amount: vnd(earnings.data?.totalReceived ?? 0) })}
               loading={earnings.isLoading}
             />
           </>
@@ -123,9 +125,9 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
               to="/app/mentoring/requests"
               tone="brand"
               icon={<BookOpen />}
-              label="Yêu cầu đã gửi"
+              label={t('mentoring.sentRequests')}
               value={myRequests.data?.totalElements ?? 0}
-              hint="Theo dõi Mentor phản hồi"
+              hint={t('mentoring.trackMentorResponse')}
               loading={myRequests.isLoading}
             />
             {taskTile}
@@ -133,12 +135,12 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
               to="/app/mentoring/refunds"
               tone="gold"
               icon={<RotateCcw />}
-              label="Hoàn tiền đang xử lý"
+              label={t('mentoring.pendingRefunds')}
               value={vnd(refunds.data?.totalProcessing ?? 0)}
               hint={
                 account
-                  ? `Nhận về ${account.bankName} ••• ${account.bankAccountNumber.slice(-4)}`
-                  : 'Chưa khai báo tài khoản nhận'
+                  ? t('mentoring.refundAccountReceiving', { bank: account.bankName, last4: account.bankAccountNumber.slice(-4) })
+                  : t('mentoring.noBankDeclared')
               }
               loading={refunds.isLoading}
             />
@@ -150,15 +152,14 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
         <MentoringActionCard
           tone="gold"
           icon={<ShieldAlert />}
-          title="Khai báo tài khoản nhận hoàn tiền"
+          title={t('mentoring.declareBankTitle')}
           actions={
             <ButtonLink to="/app/mentoring/refunds" size="sm" className="h-8 rounded-lg px-3 text-xs">
-              Khai báo ngay
+              {t('mentoring.declareNow')}
             </ButtonLink>
           }
         >
-          Bắt buộc trước khi gửi hoặc đồng ý thỏa thuận dừng Task. Khai báo sớm để tiền hoàn được chuyển ngay khi Task dừng
-          hoặc được Ban Quản Trị phân xử.
+          {t('mentoring.declareBankDesc')}
         </MentoringActionCard>
       )}
 
@@ -166,14 +167,14 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
         <MentoringActionCard
           tone="coral"
           icon={<ShieldAlert />}
-          title="Có khoản thù lao đang chờ tài khoản nhận tiền"
+          title={t('mentoring.payoutAccountPendingTitle')}
           actions={
             <ButtonLink to="/app/mentoring/become-mentor" size="sm" className="h-8 rounded-lg px-3 text-xs">
-              Cập nhật tài khoản
+              {t('mentoring.updateAccount')}
             </ButtonLink>
           }
         >
-          Tài khoản ngân hàng trong hồ sơ Mentor chưa hợp lệ. Cập nhật để hệ thống chuyển thù lao cho bạn.
+          {t('mentoring.payoutAccountPendingDesc')}
         </MentoringActionCard>
       )}
     </motion.section>
@@ -181,6 +182,7 @@ function MentoringWorkSummary({ isMentorActive }: { isMentorActive: boolean }) {
 }
 
 function MentoringHomeContent({ status }: MentoringHomeContentProps) {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const isAlumni = user?.role === 'ALUMNI'
   const mentorStatus = status?.mentorStatus
@@ -211,13 +213,13 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
 
         <div className="relative z-10 max-w-2xl space-y-2.5">
           <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-text">
-            Kết nối cùng Mentor
+            {t('mentoring.connectHeroTitle')}
           </h1>
 
           <p className="text-sm leading-relaxed text-text-muted">
             {isExpired
-              ? 'Gói dịch vụ Mentor của bạn đã hết hạn. Hãy gia hạn để tiếp tục nhận yêu cầu kết nối mới từ các thành viên.'
-              : 'Tìm người đồng hành phù hợp để định hướng nghề nghiệp, phát triển kỹ năng và hoàn thành mục tiêu của bạn.'}
+              ? t('mentoring.expiredPackageDesc')
+              : t('mentoring.connectHeroSubtitle')}
           </p>
 
           {/* Cụm hành động chính tinh gọn, không lặp lại các nút trong sidebar */}
@@ -229,7 +231,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
               leftIcon={<Search className="h-4 w-4" />}
               className="shadow-xs font-semibold"
             >
-              Khám phá Mentor
+              {t('mentoring.exploreMentors')}
             </ButtonLink>
 
             {isAlumni ? (
@@ -240,7 +242,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
                   size="sm"
                   leftIcon={<UserCheck className="h-4 w-4" />}
                 >
-                  Hồ sơ Mentor
+                  {t('mentoring.mentorProfile')}
                 </ButtonLink>
               ) : isExpired ? (
                 <ButtonLink
@@ -249,7 +251,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
                   size="sm"
                   rightIcon={<ArrowRight className="h-4 w-4" />}
                 >
-                  Gia hạn gói dịch vụ
+                  {t('mentoring.renewPackage')}
                 </ButtonLink>
               ) : isPaymentPending ? (
                 <ButtonLink
@@ -258,7 +260,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
                   size="sm"
                   rightIcon={<ArrowRight className="h-4 w-4" />}
                 >
-                  Kích hoạt gói dịch vụ
+                  {t('mentoring.activatePackage')}
                 </ButtonLink>
               ) : !status?.hasMentorProfile ? (
                 <ButtonLink
@@ -267,7 +269,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
                   size="sm"
                   rightIcon={<ArrowRight className="h-4 w-4" />}
                 >
-                  Đăng ký làm Mentor
+                  {t('mentoring.becomeMentor')}
                 </ButtonLink>
               ) : null
             ) : (
@@ -277,7 +279,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
                 size="sm"
                 leftIcon={<Sparkles className="h-4 w-4 text-primary-solid" />}
               >
-                Tạo yêu cầu
+                {t('mentoring.createRequest')}
               </ButtonLink>
             )}
           </div>
@@ -292,15 +294,15 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <h2 className="font-display text-lg font-bold text-text">
-              Mentor tiêu biểu
+              {t('mentoring.featuredMentors')}
             </h2>
-            <p className="text-xs text-text-subtle">Các Mentor uy tín và tích cực nhất đang đồng hành cùng sinh viên</p>
+            <p className="text-xs text-text-subtle">{t('mentoring.featuredMentorsDesc')}</p>
           </div>
           <Link
             to="/app/mentoring/discover"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-solid hover:text-primary-solid transition-colors"
           >
-            <span>Xem tất cả</span>
+            <span>{t('common.viewAll')}</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -331,7 +333,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
           </div>
         ) : (
           <Card className="p-8 text-center border border-border bg-surface/60">
-            <p className="text-xs text-text-subtle">Chưa có Mentor nào trong danh sách tiêu biểu.</p>
+            <p className="text-xs text-text-subtle">{t('mentoring.noFeaturedMentors')}</p>
           </Card>
         )}
       </motion.div>

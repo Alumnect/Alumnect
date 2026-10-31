@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Send, Loader2, MessageCircle, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, Skeleton, toast } from '@/components/ui'
 import { useComments, useCreateComment } from '@/features/post'
 import { useLoginPrompt } from '@/store/loginPrompt'
@@ -21,6 +22,7 @@ export function InlineComments({
   canInteract,
   onCommentAdded,
 }: InlineCommentsProps) {
+  const { t } = useTranslation()
   const [content, setContent] = useState('')
   const promptLogin = useLoginPrompt((s) => s.open)
 
@@ -37,7 +39,7 @@ export function InlineComments({
     if (!trimmed) return
 
     if (!canInteract) {
-      promptLogin('Đăng nhập để bình luận về bài viết.')
+      promptLogin(t('auth.loginToComment'))
       return
     }
 
@@ -46,11 +48,11 @@ export function InlineComments({
       {
         onSuccess: () => {
           setContent('')
-          toast.success('Đã gửi bình luận!')
+          toast.success(t('feed.commentSent'))
           onCommentAdded?.()
         },
         onError: (err: any) => {
-          const msg = err.response?.data?.message || err.message || 'Không thể gửi bình luận. Vui lòng thử lại.'
+          const msg = err.response?.data?.message || err.message || t('common.error')
           toast.error(msg)
         },
       }
@@ -65,18 +67,18 @@ export function InlineComments({
           <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
           <div className="relative flex-1">
             <input
-              aria-label="Viết phản hồi công khai..."
+              aria-label={t('feed.writePublicComment')}
               type="text"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               maxLength={1000}
-              placeholder="Viết phản hồi công khai..."
+              placeholder={t('feed.writePublicComment')}
               className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
             />
             <button
               type="submit"
               disabled={!content.trim() || createComment.isPending}
-              aria-label="Gửi bình luận"
+              aria-label={t('feed.sendComment')}
               className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
             >
               {createComment.isPending ? (
@@ -89,13 +91,13 @@ export function InlineComments({
         </form>
       ) : (
         <div className="flex items-center justify-between rounded-xl bg-surface p-3 border border-border shadow-2xs">
-          <p className="text-xs text-text-subtle">Đăng nhập để tham gia bình luận.</p>
+          <p className="text-xs text-text-subtle">{t('auth.loginToComment')}</p>
           <button
             type="button"
-            onClick={() => promptLogin('Đăng nhập để tham gia bình luận.')}
+            onClick={() => promptLogin(t('auth.loginToComment'))}
             className="text-xs font-bold text-primary-solid hover:underline flex items-center gap-1 cursor-pointer"
           >
-            Đăng nhập <ArrowRight size={12} />
+            {t('common.login')} <ArrowRight size={12} />
           </button>
         </div>
       )}
@@ -116,7 +118,7 @@ export function InlineComments({
 
       {/* Error state */}
       {!isLoading && isError && (
-        <p className="text-xs text-text-subtle py-1 text-center dark:text-text-subtle">Không thể tải bình luận lúc này.</p>
+        <p className="text-xs text-text-subtle py-1 text-center dark:text-text-subtle">{t('feed.commentError')}</p>
       )}
 
       {/* Comment List (Top 3) */}
@@ -166,7 +168,7 @@ export function InlineComments({
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-solid hover:underline"
               >
                 <MessageCircle size={13} />
-                Xem tất cả {totalComments} bình luận <ArrowRight size={12} />
+                {t('feed.viewAllComments', { count: totalComments })} <ArrowRight size={12} />
               </Link>
             </div>
           )}
@@ -176,7 +178,7 @@ export function InlineComments({
       {/* Empty comments */}
       {!isLoading && !isError && displayComments.length === 0 && (
         <p className="text-center text-xs text-text-subtle py-1">
-          Chưa có bình luận nào. Hãy là người đầu tiên để lại ý kiến!
+          {t('feed.noComments')}
         </p>
       )}
     </div>

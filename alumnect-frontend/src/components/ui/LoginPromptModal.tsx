@@ -2,6 +2,7 @@ import { useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { TRANSITION } from '@/lib/motion'
 import { X, LogIn, ArrowRight } from 'lucide-react'
 import { useLoginPrompt } from '@/store/loginPrompt'
@@ -13,6 +14,7 @@ import { useDialog } from '@/hooks/useDialog'
  * render một lần trong `AppShell` để dùng chung cho toàn khu vực app.
  */
 export function LoginPromptModal() {
+  const { t } = useTranslation()
   const isOpen = useLoginPrompt((s) => s.isOpen)
   const message = useLoginPrompt((s) => s.message)
   const close = useLoginPrompt((s) => s.close)
@@ -49,7 +51,7 @@ export function LoginPromptModal() {
               type="button"
               onClick={close}
               data-dialog-close
-              aria-label="Đóng"
+              aria-label={t('common.close')}
               className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
             >
               <X size={18} />
@@ -58,7 +60,7 @@ export function LoginPromptModal() {
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary-soft text-primary-solid">
               <LogIn size={26} />
             </span>
-            <h3 id={titleId} className="mt-4 text-lg font-extrabold text-text">Đăng nhập để tiếp tục</h3>
+            <h3 id={titleId} className="mt-4 text-lg font-extrabold text-text">{t('auth.loginPromptTitle')}</h3>
             <p className="mt-1.5 text-sm text-text-subtle">{message}</p>
 
             <div className="mt-5 flex flex-col gap-2.5">
@@ -67,14 +69,14 @@ export function LoginPromptModal() {
                 onClick={close}
                 className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary-solid text-sm font-semibold text-on-primary shadow-sm transition-transform hover:bg-primary-hover hover:-translate-y-0.5"
               >
-                Đăng nhập <ArrowRight size={16} />
+                {t('common.login')} <ArrowRight size={16} />
               </Link>
               <Link
                 to="/register"
                 onClick={close}
                 className="inline-flex h-11 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2"
               >
-                Tạo tài khoản mới
+                {t('auth.registerTitle')}
               </Link>
             </div>
           </motion.div>

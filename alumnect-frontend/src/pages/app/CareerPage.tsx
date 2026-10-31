@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import {
   Route as RouteIcon,
@@ -41,7 +42,7 @@ const formatLocationCityOnly = (location?: string | null): string => {
 }
 
 export function CareerPage() {
-
+  const { t } = useTranslation()
   const { data: majors = [] } = useMajors()
   const [search, setSearch] = useState('')
   const [title, setTitle] = useState('')
@@ -130,8 +131,8 @@ export function CareerPage() {
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 text-left">
       <PageHeader
         icon={<RouteIcon size={20} />}
-        title="Lộ trình sự nghiệp"
-        subtitle="Khám phá hành trình thực tế các cựu sinh viên FPTU đã đi qua để đạt được vị trí hiện tại."
+        title={t('career.title')}
+        subtitle={t('career.subtitle')}
       />
 
       {/* Search & Filter */}
@@ -142,9 +143,9 @@ export function CareerPage() {
             <div className="relative flex-1 w-full">
               <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
-                aria-label="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
+                aria-label={t('career.searchPlaceholder')}
                 type="text"
-                placeholder="Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty..."
+                placeholder={t('career.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full h-12 rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle transition focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -154,7 +155,7 @@ export function CareerPage() {
                   type="button"
                   onClick={() => setSearch('')}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-text-subtle hover:bg-surface-3 hover:text-text-muted transition-colors"
-                  title="Xóa từ khóa tìm kiếm"
+                  title={t('career.clearSearchKeyword')}
                 >
                   <X size={15} />
                 </button>
@@ -169,7 +170,7 @@ export function CareerPage() {
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="h-12 px-5 rounded-2xl shrink-0 w-full sm:w-auto flex items-center justify-center gap-2 font-semibold"
             >
-              <span>Bộ lọc nâng cao</span>
+              <span>{t('career.advancedFilter')}</span>
               {activeFilterCount > 0 && (
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary-solid shadow-sm">
                   {activeFilterCount}
@@ -192,22 +193,22 @@ export function CareerPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
-                        <BookOpen size={12} className="text-info" /> Chuyên ngành
+                        <BookOpen size={12} className="text-info" /> {t('career.major')}
                       </label>
                       <SelectDropdown<string | number>
                         value={majorId}
                         onChange={(val) => setMajorId(val === '' ? '' : Number(val))}
-                        options={[{ value: '', label: 'Tất cả chuyên ngành' }, ...majors.map((m) => ({ value: m.id, label: m.name }))]}
-                        placeholder="Tất cả chuyên ngành"
+                        options={[{ value: '', label: t('career.allMajors') }, ...majors.map((m) => ({ value: m.id, label: m.name }))]}
+                        placeholder={t('career.allMajors')}
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
-                        <Briefcase size={12} className="text-primary-solid" /> Chức danh
+                        <Briefcase size={12} className="text-primary-solid" /> {t('career.titleField')}
                       </label>
                       <input
                         type="text"
-                        placeholder="VD: Frontend Developer..."
+                        placeholder={t('career.titlePlaceholder')}
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -215,11 +216,11 @@ export function CareerPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
-                        <Building2 size={12} className="text-info" /> Công ty
+                        <Building2 size={12} className="text-info" /> {t('career.company')}
                       </label>
                       <input
                         type="text"
-                        placeholder="VD: FPT Software, VNG..."
+                        placeholder={t('career.companyPlaceholder')}
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -227,11 +228,11 @@ export function CareerPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
-                        <MapPin size={12} className="text-success" /> Địa điểm
+                        <MapPin size={12} className="text-success" /> {t('career.location')}
                       </label>
                       <input
                         type="text"
-                        placeholder="VD: Hà Nội, TP.HCM..."
+                        placeholder={t('career.cityPlaceholder')}
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                         className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -239,11 +240,11 @@ export function CareerPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
-                        <GraduationCap size={12} className="text-warning" /> Khóa học
+                        <GraduationCap size={12} className="text-warning" /> {t('career.cohort')}
                       </label>
                       <input
                         type="number"
-                        placeholder="VD: 14, 15, 16..."
+                        placeholder={t('career.cohortPlaceholder')}
                         value={cohort}
                         onChange={(e) => setCohort(e.target.value ? Number(e.target.value) : '')}
                         className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -253,7 +254,7 @@ export function CareerPage() {
 
                   <div className="mt-3 flex items-center justify-between">
                     <p className="text-xs text-text-subtle">
-                      Kết hợp các tiêu chí để lọc lộ trình chính xác nhất.
+                      {t('career.filterCombineTip')}
                     </p>
                     {!!(search || title || company || location || cohort || majorId) && (
                       <button
@@ -261,7 +262,7 @@ export function CareerPage() {
                         onClick={handleClearFilters}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger transition-colors"
                       >
-                        <RotateCcw size={12} /> Xóa tất cả bộ lọc
+                        <RotateCcw size={12} /> {t('career.resetFilter')}
                       </button>
                     )}
                   </div>
@@ -278,13 +279,13 @@ export function CareerPage() {
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl w-full" />)}
         </div>
       ) : error ? (
-        <EmptyState icon={<RouteIcon size={22} />} title="Lỗi tải dữ liệu" description={error.message || 'Không thể kết nối đến máy chủ.'} />
+        <EmptyState icon={<RouteIcon size={22} />} title={t('common.error')} description={error.message || ''} />
       ) : !pageData || pageData.content.length === 0 ? (
         <EmptyState
           icon={<RouteIcon size={22} />}
-          title="Không tìm thấy lộ trình phù hợp"
-          description="Thử thay đổi từ khóa hoặc bộ lọc của bạn để có kết quả tốt hơn."
-          action={<Button variant="secondary" size="sm" onClick={handleClearFilters}>Đặt lại bộ lọc</Button>}
+          title={t('career.emptyTitle')}
+          description={t('career.emptyDesc')}
+          action={<Button variant="secondary" size="sm" onClick={handleClearFilters}>{t('career.resetFilter')}</Button>}
         />
       ) : (
         <div className="space-y-3">
@@ -317,7 +318,7 @@ export function CareerPage() {
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-bold text-text truncate">{alumni.fullName}</h3>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-subtle mt-0.5">
-                            <span className="font-medium text-text-subtle">{alumni.major || 'Đại học FPT'}</span>
+                            <span className="font-medium text-text-subtle">{alumni.major || t('career.fptUniversity')}</span>
                             {alumni.cohort && (<><span className="opacity-40">·</span><span>K{alumni.cohort}</span></>)}
                           </div>
                           {(alumni.currentTitle || alumni.currentCompany) && (
@@ -325,7 +326,7 @@ export function CareerPage() {
                               <Briefcase size={11} className="text-brand-400 shrink-0" />
                               <span className="truncate">
                                 <span className="font-semibold text-text-muted">{alumni.currentTitle}</span>
-                                {alumni.currentCompany && <> tại <span className="font-semibold text-text">{alumni.currentCompany}</span></>}
+                                {alumni.currentCompany && <> {t('career.at')} <span className="font-semibold text-text">{alumni.currentCompany}</span></>}
                                 {alumni.currentLocation && <span className="text-text-subtle font-normal"> · {formatLocationCityOnly(alumni.currentLocation)}</span>}
                               </span>
                             </p>
@@ -360,7 +361,7 @@ export function CareerPage() {
                         <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wide transition-colors ${
                           isActive ? 'text-primary-solid' : 'text-text-subtle'
                         }`}>
-                          <span>{alumni.totalExperiences} vai trò</span>
+                          <span>{t('career.rolesCount', { count: alumni.totalExperiences })}</span>
                           <ChevronRight size={13} className={`transition-transform duration-200 ${isActive ? 'rotate-90 text-brand-500' : 'group-hover:translate-x-0.5'}`} />
                         </div>
                       </div>
@@ -428,7 +429,7 @@ export function CareerPage() {
                   <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 dark:hidden pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
 
                   {/* Close */}
-                  <button aria-label="Đóng"
+                  <button aria-label={t('common.close')}
                     onClick={() => setSelectedAlumni(null)}
                     className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface/80 active:scale-90 transition duration-150 cursor-pointer"
                   >
@@ -449,10 +450,10 @@ export function CareerPage() {
                       <h2 className="text-lg font-extrabold text-text leading-tight">{selectedAlumni.fullName}</h2>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
                         <span className="inline-block text-xs font-bold text-primary-solid bg-primary-soft border border-brand-200/50 px-2.5 py-0.5 rounded-full dark:border-brand-500/30">
-                          {selectedAlumni.major || 'Đại học FPT'}
+                          {selectedAlumni.major || t('career.fptUniversity')}
                         </span>
                         {selectedAlumni.cohort && (
-                          <span className="text-xs text-text-subtle font-semibold">Khóa K{selectedAlumni.cohort}</span>
+                          <span className="text-xs text-text-subtle font-semibold">{t('career.cohortLabel', { cohort: selectedAlumni.cohort })}</span>
                         )}
                       </div>
                       {(selectedAlumni.currentTitle || selectedAlumni.currentCompany) && (
@@ -472,12 +473,12 @@ export function CareerPage() {
                   <div className="flex items-center gap-2 mt-4">
                     <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-border px-3 py-1.5 shadow-sm dark:bg-surface-2">
                       <Star size={11} className="text-warning" />
-                      <span className="text-xs font-bold text-text-muted">{selectedAlumni.totalExperiences} vai trò</span>
+                      <span className="text-xs font-bold text-text-muted">{t('career.rolesCount', { count: selectedAlumni.totalExperiences })}</span>
                     </div>
                     {selectedAlumni.cohort && (
                       <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-border px-3 py-1.5 shadow-sm dark:bg-surface-2">
                         <Calendar size={11} className="text-brand-400" />
-                        <span className="text-xs font-bold text-text-muted">Khóa K{selectedAlumni.cohort}</span>
+                        <span className="text-xs font-bold text-text-muted">{t('career.cohortLabel', { cohort: selectedAlumni.cohort })}</span>
                       </div>
                     )}
                   </div>
@@ -492,7 +493,7 @@ export function CareerPage() {
                 <div
                   className="shrink-0 px-6 py-4 flex items-center justify-between gap-3 border-t border-border bg-surface"
                 >
-                  <p className="text-xs text-text-subtle font-medium">Nhấn Esc để đóng</p>
+                  <p className="text-xs text-text-subtle font-medium">{t('career.pressEscToClose')}</p>
                   <ViewProfileButton userId={selectedAlumni.userId} />
                 </div>
               </motion.aside>
@@ -507,6 +508,7 @@ export function CareerPage() {
 
 /* -------------------------------------------------------------------------- */
 function ViewProfileButton({ userId }: { userId: number }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   return (
     <button
@@ -515,7 +517,7 @@ function ViewProfileButton({ userId }: { userId: number }) {
       style={{ boxShadow: '0 4px 16px -4px rgb(124 134 238 / 0.5)' }}
     >
       <User size={12} />
-      Xem hồ sơ
+      {t('career.viewProfile')}
       <ExternalLink size={10} className="opacity-70" />
     </button>
   )
@@ -523,6 +525,7 @@ function ViewProfileButton({ userId }: { userId: number }) {
 
 /* -------------------------------------------------------------------------- */
 function CareerDetailTimeline({ userId }: { userId: number }) {
+  const { t } = useTranslation()
   const { data: detail, isLoading, error } = useCareerPathDetail(userId)
 
   if (isLoading) {
@@ -531,7 +534,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
         {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-2xl w-full" />)}
         <div className="flex items-center justify-center gap-2 py-6">
           <Loader2 size={15} className="animate-spin text-brand-400" />
-          <span className="text-xs text-text-subtle font-medium">Đang tải lộ trình...</span>
+          <span className="text-xs text-text-subtle font-medium">{t('career.loadingCareerPath')}</span>
         </div>
       </div>
     )
@@ -543,8 +546,8 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
         <div className="w-12 h-12 rounded-2xl bg-danger-soft flex items-center justify-center mb-3">
           <RouteIcon size={20} className="text-danger" />
         </div>
-        <p className="text-sm font-semibold text-text-muted">Không thể tải dữ liệu</p>
-        <p className="text-xs text-text-subtle mt-1">Lỗi khi tải chi tiết lộ trình.</p>
+        <p className="text-sm font-semibold text-text-muted">{t('career.cannotLoadData')}</p>
+        <p className="text-xs text-text-subtle mt-1">{t('career.errorLoadingDetail')}</p>
       </div>
     )
   }
@@ -556,7 +559,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
   detail.experiences.forEach((exp: ExperienceTimelineResponse) => {
     const lastGroup = groupedTimeline[groupedTimeline.length - 1]
     const start = exp.startDate ? formatPeriodDate(exp.startDate) : ''
-    const end = exp.isCurrent ? 'Hiện tại' : exp.endDate ? formatPeriodDate(exp.endDate) : ''
+    const end = exp.isCurrent ? t('career.present') : exp.endDate ? formatPeriodDate(exp.endDate) : ''
     const roleObj: GroupedRole = {
       id: exp.id, title: exp.title, period: `${start} – ${end}`,
       description: exp.description, isCurrent: exp.isCurrent, isPrimary: exp.isPrimary,
@@ -575,7 +578,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
         <div className="h-px flex-1 bg-surface-3" />
         <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary-solid px-3 py-1 rounded-full bg-primary-soft border border-primary-soft-border shadow-xs">
           <RouteIcon size={13} />
-          Lộ trình sự nghiệp
+          {t('career.careerPathHeading')}
         </span>
         <div className="h-px flex-1 bg-surface-3" />
       </div>
@@ -629,7 +632,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
                         {role.isPrimary && (
                           <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-gold-300/35 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-gold-700 border border-gold-300/50">
                             <Star size={7} className="fill-warning text-warning" />
-                            Chính
+                            {t('career.primaryBadge')}
                           </span>
                         )}
                       </div>
@@ -653,7 +656,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
       </ol>
 
       {groupedTimeline.length === 0 && (
-        <p className="text-xs text-text-subtle text-center py-10">Chưa có dữ liệu lộ trình.</p>
+        <p className="text-xs text-text-subtle text-center py-10">{t('career.noCareerData')}</p>
       )}
     </div>
   )

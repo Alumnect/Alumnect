@@ -2,6 +2,7 @@ import { useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X, AlertTriangle, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useDialog } from '@/hooks/useDialog'
 
@@ -25,13 +26,16 @@ export function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmText = 'Xác nhận',
-  cancelText = 'Hủy',
+  confirmText,
+  cancelText,
   variant = 'danger',
   icon,
   isLoading = false,
   zIndexClassName = 'z-50',
 }: ConfirmModalProps) {
+  const { t } = useTranslation()
+  const resolvedConfirmText = confirmText ?? t('common.confirm')
+  const resolvedCancelText = cancelText ?? t('common.cancel')
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
   // Đang xử lý: Esc không đóng hộp thoại
@@ -83,7 +87,7 @@ export function ConfirmModal({
                 type="button"
                 onClick={onClose}
                 data-dialog-close
-                aria-label="Đóng"
+                aria-label={t('common.close')}
                 className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
               >
                 <X size={16} />
@@ -113,7 +117,7 @@ export function ConfirmModal({
                 disabled={isLoading}
                 className="h-11 flex-1 rounded-xl bg-surface-2 text-sm font-semibold text-text transition-colors hover:bg-surface-3 disabled:opacity-50"
               >
-                {cancelText}
+                {resolvedCancelText}
               </button>
               <button
                 type="button"
@@ -125,7 +129,7 @@ export function ConfirmModal({
                 )}
               >
                 {isLoading && <Loader2 size={13} className="animate-spin" />}
-                {confirmText}
+                {resolvedConfirmText}
               </button>
             </div>
           </motion.div>

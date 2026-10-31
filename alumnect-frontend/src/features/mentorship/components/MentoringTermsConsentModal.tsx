@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { CheckCircle2, FileText, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { DialogFrame } from '@/components/ui/DialogFrame'
@@ -15,6 +16,7 @@ interface MentoringTermsConsentModalProps {
 export function MentoringTermsConsentModal({
   source,
 }: MentoringTermsConsentModalProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const acceptMutation = useAcceptMentoringTerms()
   const [isChecked, setIsChecked] = useState(false)
@@ -30,7 +32,7 @@ export function MentoringTermsConsentModal({
               id="mentoring-consent-title"
               className="text-lg font-semibold leading-snug text-text sm:text-xl"
             >
-              Chấp nhận điều khoản Mentoring
+              {t('mentoring.consentModalTitle')}
             </h2>
           </div>
         </div>
@@ -39,21 +41,21 @@ export function MentoringTermsConsentModal({
           id="mentoring-consent-description"
           className="mt-4 text-sm leading-6 text-text-muted"
         >
-          Các chức năng Mentor chỉ được mở sau khi bạn xác nhận quy tắc tham gia và bảo vệ quyền lợi của các bên.
+          {t('mentoring.consentModalDesc')}
         </p>
 
         <div className="mt-4 space-y-2 rounded-xl border border-border bg-surface-2 p-3.5 text-sm text-text-muted">
           <p className="flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-            Cung cấp thông tin trung thực và bảo mật dữ liệu trao đổi.
+            {t('mentoring.consentBullet1')}
           </p>
           <p className="flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-            Giao tiếp tôn trọng, minh bạch về phạm vi và chi phí.
+            {t('mentoring.consentBullet2')}
           </p>
           <p className="flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-            Tuân thủ thỏa thuận và quy trình xử lý của AlumNect.
+            {t('mentoring.consentBullet3')}
           </p>
         </div>
 
@@ -62,7 +64,7 @@ export function MentoringTermsConsentModal({
           className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-primary-solid hover:underline"
         >
           <FileText className="h-4 w-4" />
-          Đọc toàn bộ điều khoản
+          {t('mentoring.readAllTerms')}
         </Link>
 
         <label
@@ -80,13 +82,13 @@ export function MentoringTermsConsentModal({
             className="mt-0.5 h-5 w-5 shrink-0 rounded border-border-strong accent-primary-solid focus:ring-primary"
           />
           <span className="text-sm font-medium leading-5 text-text">
-            Tôi đã đọc, hiểu và đồng ý với Điều khoản Mentoring.
+            {t('mentoring.agreeTermsCheckbox')}
           </span>
         </label>
 
         {acceptMutation.isError && (
           <p className="mt-3 rounded-xl border border-danger-border bg-danger-soft p-3 text-sm font-medium text-danger" role="alert">
-            {acceptMutation.error?.message || 'Không thể ghi nhận xác nhận. Vui lòng thử lại.'}
+            {acceptMutation.error?.message || t('mentoring.consentSaveError')}
           </p>
         )}
 
@@ -97,7 +99,7 @@ export function MentoringTermsConsentModal({
             size="md"
             onClick={() => navigate('/app')}
           >
-            Để sau
+            {t('mentoring.laterBtn')}
           </Button>
           <Button
             type="button"
@@ -109,7 +111,7 @@ export function MentoringTermsConsentModal({
               ? <Loader2 className="h-4 w-4 animate-spin" />
               : <CheckCircle2 className="h-4 w-4" />}
           >
-            {acceptMutation.isPending ? 'Đang ghi nhận...' : 'Đồng ý và tiếp tục'}
+            {acceptMutation.isPending ? t('mentoring.savingBtn') : t('mentoring.confirmAndContinueBtn')}
           </Button>
         </div>
     </DialogFrame>

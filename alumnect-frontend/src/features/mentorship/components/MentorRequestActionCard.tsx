@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Send, AlertTriangle, CheckCircle, Clock, Laptop, HeartHandshake, Info } from 'lucide-react'
 import { Card, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -14,6 +15,7 @@ interface MentorRequestActionCardProps {
  * Thiết kế gọn gàng, hiển thị thông tin thực tế về buổi hướng dẫn và chuyển hướng đến trang tạo Direct Request.
  */
 export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const currentUser = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -23,18 +25,18 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
 
   const handleOpenRequest = () => {
     if (!isAuthenticated) {
-      toast.info('Vui lòng đăng nhập để gửi yêu cầu cố vấn')
+      toast.info(t('mentoring.loginToRequestMentoring'))
       navigate('/auth/login')
       return
     }
 
     if (isSelfMentor) {
-      toast.warning('Bạn không thể gửi yêu cầu cố vấn cho chính tài khoản của mình')
+      toast.warning(t('mentoring.cannotRequestSelf'))
       return
     }
 
     if (!mentor.canReceiveRequest) {
-      toast.warning(mentor.availabilityReason || 'Mentor hiện đang tạm ngưng tiếp nhận yêu cầu mới')
+      toast.warning(mentor.availabilityReason || t('mentoring.mentorUnavailableDefault'))
       return
     }
 
@@ -52,7 +54,7 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
             <Send className="h-4 w-4" />
           </span>
           <h3 className="font-display text-base font-bold text-text">
-            Thông tin phiên cố vấn
+            {t('mentoring.mentoringSessionInfo')}
           </h3>
         </div>
 
@@ -61,15 +63,15 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
           <div className="flex items-center justify-between py-1 border-b border-border dark:border-white/[0.05]">
             <span className="inline-flex items-center gap-1.5 text-text-subtle">
               <Clock className="h-3.5 w-3.5 text-primary-solid" />
-              <span>Thời lượng gợi ý</span>
+              <span>{t('mentoring.suggestedDuration')}</span>
             </span>
-            <strong className="text-text">45 – 60 phút</strong>
+            <strong className="text-text">{t('mentoring.suggestedDurationValue')}</strong>
           </div>
 
           <div className="flex items-center justify-between py-1 border-b border-border dark:border-white/[0.05]">
             <span className="inline-flex items-center gap-1.5 text-text-subtle">
               <Laptop className="h-3.5 w-3.5 text-primary-solid" />
-              <span>Nền tảng gặp mặt</span>
+              <span>{t('mentoring.meetingPlatform')}</span>
             </span>
             <strong className="text-text">Google Meet / Zoom</strong>
           </div>
@@ -77,9 +79,9 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
           <div className="flex items-center justify-between py-1">
             <span className="inline-flex items-center gap-1.5 text-text-subtle">
               <HeartHandshake className="h-3.5 w-3.5 text-success" />
-              <span>Mức phí tham khảo</span>
+              <span>{t('mentoring.referenceFee')}</span>
             </span>
-            <strong className="text-success font-bold">Hỗ trợ cộng đồng</strong>
+            <strong className="text-success font-bold">{t('mentoring.communitySupportFee')}</strong>
           </div>
         </div>
 
@@ -87,7 +89,7 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
           <div className="space-y-3 pt-1">
             <div className="rounded-xl bg-primary-soft p-3 border border-primary-soft-border flex items-center gap-2 text-primary-solid text-xs font-semibold">
               <Info className="h-4 w-4 text-primary-solid shrink-0" />
-              <span>Đây là hồ sơ cố vấn của bạn</span>
+              <span>{t('mentoring.thisIsYourMentorProfile')}</span>
             </div>
 
             <Button
@@ -96,14 +98,14 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
               onClick={() => navigate('/app/mentoring/status')}
               className="w-full rounded-2xl font-bold py-3 border-primary-soft-border text-primary-solid hover:bg-primary-soft"
             >
-              Quản lý hồ sơ Mentor
+              {t('mentoring.manageMentorProfile')}
             </Button>
           </div>
         ) : mentor.canReceiveRequest ? (
           <div className="space-y-3 pt-1">
             <div className="rounded-xl bg-success-soft p-3 border border-success-border flex items-center gap-2 text-success text-xs font-semibold">
               <CheckCircle className="h-4 w-4 text-success shrink-0" />
-              <span>Mentor đang sẵn sàng nhận yêu cầu</span>
+              <span>{t('mentoring.mentorReadyToReceive')}</span>
             </div>
 
             <Button
@@ -113,14 +115,14 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
               onClick={handleOpenRequest}
               className="w-full rounded-2xl font-bold py-3 bg-primary-solid hover:bg-primary-hover shadow-raised active:scale-[0.98]"
             >
-              Gửi yêu cầu cố vấn
+              {t('mentoring.sendMentoringRequestBtn')}
             </Button>
           </div>
         ) : (
           <div className="space-y-3 pt-1">
             <div className="rounded-xl bg-danger-soft p-3 border border-danger-border flex items-start gap-2 text-danger text-xs">
               <AlertTriangle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
-              <span>{mentor.availabilityReason || 'Mentor tạm ngưng tiếp nhận yêu cầu mới.'}</span>
+              <span>{mentor.availabilityReason || t('mentoring.mentorUnavailableDefault')}</span>
             </div>
 
             <Button
@@ -128,12 +130,12 @@ export function MentorRequestActionCard({ mentor }: MentorRequestActionCardProps
               size="lg"
               onClick={() =>
                 toast.warning(
-                  mentor.availabilityReason || 'Mentor hiện đang tạm ngưng tiếp nhận yêu cầu cố vấn mới do gói dịch vụ đã hết hạn hoặc Mentor đang bận.'
+                  mentor.availabilityReason || t('mentoring.temporarilyPausedNotice')
                 )
               }
               className="w-full rounded-2xl font-bold py-3 bg-surface-3 text-text-subtle hover:bg-surface-3"
             >
-              Tạm ngưng nhận yêu cầu
+              {t('mentoring.temporarilyPausedReceiving')}
             </Button>
           </div>
         )}

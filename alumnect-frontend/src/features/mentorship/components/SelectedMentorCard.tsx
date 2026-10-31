@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Target,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Avatar } from '@/components/ui'
 import type { MentorDetailData } from '../model/mentorDetailTypes'
 
@@ -23,6 +24,8 @@ interface SelectedMentorCardProps {
  * Tuân thủ nghiêm ngặt Premium Pastel Design System của AlumNect.
  */
 export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }) => {
+  const { t } = useTranslation()
+
   return (
     <Card
       hover={false}
@@ -32,14 +35,14 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-border dark:border-white/[0.06]">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-solid border border-brand-500/25">
           <Target className="h-3.5 w-3.5 text-primary-solid" />
-          <span>Yêu cầu cố vấn trực tiếp</span>
+          <span>{t('mentoring.directMentoringRequest')}</span>
         </div>
 
         <Link
           to={`/app/mentoring/mentors/${mentor.mentorId}`}
           className="inline-flex items-center gap-1 text-xs font-bold text-text-muted hover:text-primary-solid transition-colors"
         >
-          <span>Xem trang chi tiết</span>
+          <span>{t('mentoring.viewDetail')}</span>
           <ExternalLink className="h-3 w-3" />
         </Link>
       </div>
@@ -57,7 +60,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
           {mentor.mentorStatus === 'ACTIVE' && (
             <span
               className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white bg-success shadow-sm dark:border-border"
-              title="Mentor đang hoạt động"
+              title={t('mentoring.mentorActive')}
             />
           )}
         </div>
@@ -72,10 +75,10 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
             {mentor.isVerifiedAlumni && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-solid border border-primary-soft-border"
-                title="Cựu sinh viên FPT University đã được xác thực"
+                title={t('mentoring.verifiedAlumniTooltip')}
               >
                 <ShieldCheck className="h-3 w-3 text-primary-solid" />
-                <span>Xác thực FPT</span>
+                <span>{t('mentoring.fptVerified')}</span>
               </span>
             )}
           </div>
@@ -83,7 +86,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
           <p className="text-sm font-semibold text-text-muted">
             {mentor.currentPosition
               ? `${mentor.currentPosition}${mentor.currentCompany ? ` @ ${mentor.currentCompany}` : ''}`
-              : mentor.headline || 'Cố vấn chuyên môn'}
+              : mentor.headline || t('mentoring.expertMentor')}
           </p>
 
           {/* Học vị & Cơ sở */}
@@ -107,7 +110,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
             <Trophy className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-xs text-text-subtle">Uy tín</div>
+            <div className="text-xs text-text-subtle">{t('mentoring.reputationScore')}</div>
             <strong className="text-xs sm:text-sm font-bold text-text">
               {mentor.reputationScore ?? 0} pts
             </strong>
@@ -119,7 +122,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
             <Star className="h-4 w-4 fill-danger text-danger" />
           </div>
           <div>
-            <div className="text-xs text-text-subtle">Đánh giá</div>
+            <div className="text-xs text-text-subtle">{t('mentoring.rating')}</div>
             <strong className="text-xs sm:text-sm font-bold text-text">
               {mentor.rating ? Number(mentor.rating).toFixed(1) : '5.0'} ★
             </strong>
@@ -131,9 +134,9 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
             <CheckCircle2 className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-xs text-text-subtle">Hoàn thành</div>
+            <div className="text-xs text-text-subtle">{t('mentoring.completedTasks')}</div>
             <strong className="text-xs sm:text-sm font-bold text-text">
-              {mentor.completedTasks ?? 0} phiên
+              {t('mentoring.sessionsFormat', { count: mentor.completedTasks ?? 0 })}
             </strong>
           </div>
         </div>
@@ -144,7 +147,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
         <div className="mt-4 pt-3.5 border-t border-border dark:border-white/[0.05] space-y-2">
           <div className="flex items-center gap-1.5 text-xs font-bold text-text-muted">
             <Briefcase className="h-3.5 w-3.5 text-primary-solid" />
-            <span>Lĩnh vực Mentor nhận cố vấn:</span>
+            <span>{t('mentoring.mentorSupportedFieldsTitle')}</span>
           </div>
 
           <div className="flex flex-wrap gap-1.5">

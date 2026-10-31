@@ -6,6 +6,7 @@
  */
 import { useState } from 'react'
 import { AlertTriangle, LineChart, Pencil, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useMyContributions } from '../hooks/useSalary'
@@ -14,12 +15,13 @@ import { getIndustryIcon } from '../model/salary'
 import { DeleteSalaryContributionModal } from './DeleteSalaryContributionModal'
 
 export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void; onEdit: (contribution: SalaryContribution) => void }) {
+  const { t, i18n } = useTranslation()
   const { data, isLoading, isError, error, refetch } = useMyContributions()
   const contributions = data ?? []
   const [deleting, setDeleting] = useState<SalaryContribution | null>(null)
 
   return (
-    <Modal isOpen onClose={onClose} title="Đóng góp của tôi" icon={<ShieldCheck size={18} className="text-primary-solid" />} maxWidthClassName="max-w-lg">
+    <Modal isOpen onClose={onClose} title={t('salary.myContributionsTitle')} icon={<ShieldCheck size={18} className="text-primary-solid" />} maxWidthClassName="max-w-lg">
 
       {isLoading ? (
         <div className="space-y-3">
@@ -32,16 +34,16 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-danger-soft text-danger">
             <AlertTriangle size={20} />
           </span>
-          <p className="text-sm text-text-subtle">{(error as Error)?.message ?? 'Không tải được danh sách đóng góp của bạn.'}</p>
+          <p className="text-sm text-text-subtle">{(error as Error)?.message ?? t('salary.loadMyContributionsError')}</p>
           <Button size="sm" variant="secondary" leftIcon={<RefreshCw size={14} />} onClick={() => refetch()}>
-            Thử lại
+            {t('common.tryAgain')}
           </Button>
         </div>
       ) : contributions.length === 0 ? (
         <EmptyState
           icon={<LineChart size={22} />}
-          title="Bạn chưa đóng góp dữ liệu lương nào"
-          description="Đóng góp để hỗ trợ cộng đồng tham khảo."
+          title={t('salary.noMyContributions')}
+          description={t('salary.noMyContributionsDesc')}
         />
       ) : (
         <div className="space-y-2.5">
@@ -64,16 +66,16 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
                   ))}
                 </div>
                 <p className="mt-1 text-xs font-semibold text-primary-solid">
-                  {c.grossAmount.toLocaleString('vi-VN')} {c.currency} / tháng
+                  {c.grossAmount.toLocaleString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')} {c.currency} {t('salary.perMonth')}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <Button size="sm" variant="secondary" leftIcon={<Pencil size={13} />} onClick={() => onEdit(c)}>
-                  Sửa
+                  {t('common.edit')}
                 </Button>
                 <button
                   onClick={() => setDeleting(c)}
-                  aria-label="Xóa"
+                  aria-label={t('common.delete')}
                   className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
                 >
                   <Trash2 size={15} />
@@ -91,7 +93,7 @@ export function MyContributionsModal({ onClose, onEdit }: { onClose: () => void;
           onClose={() => setDeleting(null)}
           onDeleted={() => {
             setDeleting(null)
-            toast.success('Đã xóa dữ liệu lương thành công')
+            toast.success(t('salary.deleteSalarySuccess'))
           }}
         />
       )}

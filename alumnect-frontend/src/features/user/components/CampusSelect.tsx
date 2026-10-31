@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Building2, ChevronDown, Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { FPT_CAMPUSES } from '../model/userTypes'
@@ -16,8 +17,10 @@ export function CampusSelect({
   onChange,
   disabled = false,
   className,
-  placeholder = '-- Chọn Cơ sở FPT University --',
+  placeholder,
 }: CampusSelectProps) {
+  const { t } = useTranslation()
+  const defaultPlaceholder = placeholder || t('user.selectCampusPlaceholder', '-- Chọn Cơ sở FPT University --')
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -65,7 +68,7 @@ export function CampusSelect({
             size={17}
             className={value ? 'text-primary-solid' : 'text-text-subtle'}
           />
-          <span className="truncate">{value || placeholder}</span>
+          <span className="truncate">{value || defaultPlaceholder}</span>
         </span>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -74,7 +77,7 @@ export function CampusSelect({
               type="button"
               onClick={handleClear}
               className="p-1 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"
-              title="Bỏ chọn"
+              title={t('user.clearSelection', 'Bỏ chọn')}
             >
               <X size={14} />
             </button>
@@ -93,8 +96,8 @@ export function CampusSelect({
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 z-50 w-full bg-surface rounded-3xl border border-border shadow-2xl overflow-hidden animate-scale-up p-1.5">
           <div className="px-3 py-2 text-xs font-extrabold text-text-subtle uppercase tracking-wider border-b border-border mb-1 flex items-center justify-between">
-            <span>Cơ sở FPT University</span>
-            <span className="text-xs lowercase font-normal text-text-subtle">5 cơ sở</span>
+            <span>{t('user.fptuCampuses', 'Cơ sở FPT University')}</span>
+            <span className="text-xs lowercase font-normal text-text-subtle">{t('user.countCampuses', '5 cơ sở')}</span>
           </div>
 
           <div className="space-y-0.5 max-h-64 overflow-y-auto overscroll-contain pr-1">

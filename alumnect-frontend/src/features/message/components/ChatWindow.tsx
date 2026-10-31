@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { MessagesSquare, Users, Loader2, Info, Check, Trash2, ExternalLink, ChevronLeft } from 'lucide-react'
 import { format, isToday } from 'date-fns'
@@ -40,6 +41,7 @@ export function ChatWindow({
   onConversationUpdated,
   onBack,
 }: ChatWindowProps) {
+  const { t } = useTranslation()
   const currentUserId = useAuthStore((state) => state.user?.id)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const isInitialLoadRef = useRef(true)
@@ -107,7 +109,7 @@ export function ChatWindow({
     return (
       <div className="flex h-full flex-col items-center justify-center bg-surface p-8 text-center">
         <Loader2 size={36} className="animate-spin text-primary-solid mb-3" />
-        <p className="text-sm font-medium text-text-subtle">Đang chuẩn bị cuộc trò chuyện...</p>
+        <p className="text-sm font-medium text-text-subtle">{t('messages.preparingChat', 'Đang chuẩn bị cuộc trò chuyện...')}</p>
       </div>
     )
   }
@@ -118,14 +120,14 @@ export function ChatWindow({
         <span className="mb-4 grid h-16 w-16 place-items-center rounded-full border border-border text-text-muted">
           <MessagesSquare size={30} />
         </span>
-        <h3 className="text-lg font-bold text-text">Tin nhắn của bạn</h3>
-        <p className="mt-1 max-w-xs text-sm text-text-subtle">Chọn một cuộc trò chuyện bên trái, hoặc nhắn tin cho thành viên từ danh bạ để bắt đầu.</p>
+        <h3 className="text-lg font-bold text-text">{t('messages.title')}</h3>
+        <p className="mt-1 max-w-xs text-sm text-text-subtle">{t('messages.selectConversation')}</p>
         <Link
           to="/app/alumni"
           className="mt-5 inline-flex h-10 items-center gap-2 rounded-full bg-primary-solid px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
         >
           <Users size={16} />
-          Tìm thành viên để nhắn tin
+          {t('directory.connect')}
         </Link>
       </div>
     )
@@ -133,12 +135,12 @@ export function ChatWindow({
 
   const isGroup = isGroupConversation(conversation)
   const isStrangerRequest = conversation.isAccepted === false
-  const displayName = isGroup ? conversation.title || 'Nhóm trò chuyện' : conversation.recipientName
+  const displayName = isGroup ? conversation.title || t('messages.chatGroup', 'Nhóm trò chuyện') : conversation.recipientName
 
   const handleAcceptRequest = async () => {
     if (!conversation.id) return
     await acceptConversationMutation.mutateAsync(conversation.id)
-    toast.success('Đã chấp nhận cuộc trò chuyện')
+    toast.success(t('messages.acceptedConversation', 'Đã chấp nhận cuộc trò chuyện'))
     if (onConversationAccepted) onConversationAccepted()
   }
 
@@ -151,12 +153,12 @@ export function ChatWindow({
     if (!conversation.id) return
     try {
       await deleteConversationMutation.mutateAsync(conversation.id)
-      toast.success('Đã xóa cuộc trò chuyện')
+      toast.success(t('messages.deletedConversation', 'Đã xóa cuộc trò chuyện'))
       setIsDeleteDialogOpen(false)
       if (onConversationDeleted) onConversationDeleted()
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } }; message?: string }
-      toast.error(err?.response?.data?.message || err?.message || 'Không thể xóa cuộc trò chuyện. Vui lòng thử lại.')
+      toast.error(err?.response?.data?.message || err?.message || t('messages.deleteConversationError', 'Không thể xóa cuộc trò chuyện. Vui lòng thử lại.'))
     }
   }
 
@@ -165,7 +167,7 @@ export function ChatWindow({
       {/* Header cuộc trò chuyện */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3 py-3 sm:px-5">
         {onBack && (
-          <button type="button" onClick={onBack} aria-label="Quay lại danh sách" className="-ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-full text-text-muted hover:bg-surface-2 md:hidden">
+          <button type="button" onClick={onBack} aria-label={t('messages.backToList', 'Quay lại danh sách')} className="-ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-full text-text-muted hover:bg-surface-2 md:hidden">
             <ChevronLeft size={22} />
           </button>
         )}
@@ -175,7 +177,7 @@ export function ChatWindow({
               type="button"
               onClick={() => setIsGroupInfoOpen(true)}
               className="relative shrink-0 transition-opacity hover:opacity-85"
-              title="Xem thông tin và quản lý nhóm"
+              title={t('messages.viewGroupInfo', 'Xem thông tin và quản lý nhóm')}
             >
               <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary-soft text-primary-solid shadow-xs ring-1 ring-primary/20">
                 {conversation.avatarUrl ? (
@@ -194,14 +196,14 @@ export function ChatWindow({
                   type="button"
                   onClick={() => setIsGroupInfoOpen(true)}
                   className="truncate text-left text-sm font-bold text-text transition-colors hover:text-primary-solid"
-                  title="Xem thông tin và quản lý nhóm"
+                  title={t('messages.viewGroupInfo', 'Xem thông tin và quản lý nhóm')}
                 >
                   {displayName}
                 </button>
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <span className="font-medium text-text-subtle">
-                  {conversation.memberCount || 2} thành viên
+                  {t('messages.membersCount', { count: conversation.memberCount || 2, defaultValue: `${conversation.memberCount || 2} thành viên` })}
                 </span>
               </div>
             </div>
@@ -210,7 +212,7 @@ export function ChatWindow({
           <Link
             to={conversation.recipientId ? `/app/profile?userId=${conversation.recipientId}` : '#'}
             className="flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-90"
-            title={`Xem hồ sơ của ${displayName}`}
+            title={t('messages.viewProfileOf', { name: displayName, defaultValue: `Xem hồ sơ của ${displayName}` })}
           >
             <Avatar
               src={conversation.recipientAvatar || undefined}
@@ -225,7 +227,7 @@ export function ChatWindow({
                 </p>
               ) : (
                 <p className="text-xs font-medium text-text-subtle">
-                  Thành viên AlumNect
+                  {t('messages.alumnectMember', 'Thành viên AlumNect')}
                 </p>
               )}
             </div>
@@ -237,12 +239,12 @@ export function ChatWindow({
           {isGroup && conversation.communityGroupId && (
             <Link
               to={`/app/groups/${conversation.communityGroupId}`}
-              title={`Đến trang hội nhóm: ${conversation.communityGroupName || displayName}`}
+              title={t('messages.goToCommunity', { name: conversation.communityGroupName || displayName, defaultValue: `Đến trang hội nhóm: ${conversation.communityGroupName || displayName}` })}
               className="inline-flex items-center gap-1.5 rounded-xl border border-primary-soft-border bg-brand-50/70 px-2.5 py-1.5 text-xs font-semibold text-primary-solid transition hover:bg-primary-soft hover:border-primary-soft-border active:scale-95 dark:bg-brand-950/50"
             >
               <Users size={13} className="shrink-0 text-primary-solid" />
               <span className="hidden sm:inline max-w-[120px] md:max-w-[180px] truncate">
-                {conversation.communityGroupName || 'Hội nhóm'}
+                {conversation.communityGroupName || t('messages.communityFallback', 'Hội nhóm')}
               </span>
               <ExternalLink size={12} className="shrink-0 opacity-70" />
             </Link>
@@ -251,7 +253,7 @@ export function ChatWindow({
             <button
               type="button"
               onClick={() => setIsGroupInfoOpen(true)}
-              title="Thông tin nhóm"
+              title={t('messages.groupInfoTitle', 'Thông tin nhóm')}
               className="grid h-8 w-8 place-items-center rounded-xl bg-surface-2 text-text-muted transition-colors hover:bg-primary-soft hover:text-primary-solid"
             >
               <Info size={16} />
@@ -264,7 +266,7 @@ export function ChatWindow({
       {isStrangerRequest && (
         <div className="flex shrink-0 items-center justify-between border-b border-warning-border bg-warning-soft px-5 py-3 text-xs text-warning">
           <p className="font-medium">
-            Người này không nằm trong danh bạ theo dõi của bạn. Bạn có muốn chấp nhận cuộc trò chuyện không?
+            {t('messages.strangerNotice', 'Người này không nằm trong danh bạ theo dõi của bạn. Bạn có muốn chấp nhận cuộc trò chuyện không?')}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -274,7 +276,7 @@ export function ChatWindow({
               className="h-7 rounded-xl bg-primary-solid px-3 text-xs font-bold text-on-primary hover:bg-primary-hover"
             >
               <Check size={12} className="mr-1" />
-              Chấp nhận
+              {t('messages.accept', 'Chấp nhận')}
             </Button>
             <Button
               size="sm"
@@ -284,7 +286,7 @@ export function ChatWindow({
               className="h-7 rounded-xl border-warning-border text-xs font-bold text-danger hover:bg-danger-soft"
             >
               <Trash2 size={12} className="mr-1" />
-              Xóa
+              {t('common.delete', 'Xóa')}
             </Button>
           </div>
         </div>
@@ -315,7 +317,7 @@ export function ChatWindow({
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center text-text-subtle">
-            <p className="text-sm">Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên.</p>
+            <p className="text-sm">{t('messages.noMessages', 'Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên.')}</p>
           </div>
         ) : (
           messages.map((m, i) => {
@@ -369,10 +371,10 @@ export function ChatWindow({
         isOpen={isDeleteDialogOpen}
         onClose={() => !deleteConversationMutation.isPending && setIsDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Xóa cuộc trò chuyện?"
-        message="Xóa vĩnh viễn đoạn chat này?"
-        confirmText="Xóa"
-        cancelText="Hủy"
+        title={t('messages.deleteChatTitle', 'Xóa cuộc trò chuyện?')}
+        message={t('messages.deleteChatMessage', 'Xóa vĩnh viễn đoạn chat này?')}
+        confirmText={t('common.delete', 'Xóa')}
+        cancelText={t('common.cancel', 'Hủy')}
         variant="danger"
         icon={<Trash2 size={24} />}
         isLoading={deleteConversationMutation.isPending}

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Users, Loader2, UserPlus, UserMinus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/Button'
 import { Avatar, Skeleton, EmptyState, Modal } from '@/components/ui'
 import { useUserFollowers, useUserFollowing } from '../hooks/useUserQueries'
@@ -21,6 +22,7 @@ interface FollowListModalProps {
  * Sử dụng phân trang vô hạn (Infinite Scroll) thông qua IntersectionObserver và useInfiniteQuery.
  */
 export function FollowListModal({ isOpen, onClose, userId, type }: FollowListModalProps) {
+  const { t } = useTranslation()
   const pageSize = 10
 
   // Lấy trạng thái đăng nhập
@@ -113,7 +115,7 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
 
   const handleFollowAction = async (targetUserId: number, isCurrentlyFollowing: boolean) => {
     if (!isAuthenticated) {
-      triggerLoginPrompt('Đăng nhập để theo dõi thành viên này.')
+      triggerLoginPrompt(t('profile.promptLoginFollow', 'Đăng nhập để theo dõi thành viên này.'))
       return
     }
 
@@ -126,12 +128,12 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
       }
     } catch (err: any) {
       // [MSG_FOLLOW_04] Lưu lại lỗi inline tương ứng cho từng thành viên
-      const msg = err?.message || err?.response?.data?.message || 'Có lỗi xảy ra.'
+      const msg = err?.message || err?.response?.data?.message || t('common.errorOccurred', 'Có lỗi xảy ra.')
       setFollowErrors((prev) => ({ ...prev, [targetUserId]: msg }))
     }
   }
 
-  const titleText = type === 'followers' ? 'Người theo dõi' : 'Đang theo dõi'
+  const titleText = type === 'followers' ? t('profile.followers') : t('profile.following')
 
   return (
     <Modal
@@ -157,14 +159,14 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
         ) : error ? (
           <EmptyState
             icon={<Users size={22} />}
-            title="Đã xảy ra lỗi"
-            description={error instanceof Error ? error.message : 'Không thể tải danh sách.'}
+            title={t('common.error', 'Đã xảy ra lỗi')}
+            description={error instanceof Error ? error.message : t('common.cannotLoad', 'Không thể tải danh sách.')}
           />
         ) : allItems.length === 0 ? (
           <EmptyState
             icon={<Users size={22} />}
-            title="Danh sách trống"
-            description={type === 'followers' ? 'Chưa có ai theo dõi thành viên này.' : 'Thành viên này chưa theo dõi ai.'}
+            title={t('common.emptyList', 'Danh sách trống')}
+            description={type === 'followers' ? t('profile.emptyFollowers', 'Chưa có ai theo dõi thành viên này.') : t('profile.emptyFollowing', 'Thành viên này chưa theo dõi ai.')}
           />
         ) : (
           <div className="space-y-3">
@@ -226,7 +228,7 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
                           )
                         }
                       >
-                        {item.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
+                        {item.isFollowing ? t('profile.unfollow') : t('profile.follow')}
                       </Button>
                     )}
                   </div>

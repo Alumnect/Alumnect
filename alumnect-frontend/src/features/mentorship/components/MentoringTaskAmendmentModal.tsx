@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FileEdit, Send } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { Modal } from '@/components/ui'
@@ -39,6 +40,7 @@ export function MentoringTaskAmendmentModal({
   currentDeadline,
   onSuccess,
 }: MentoringTaskAmendmentModalProps) {
+  const { t } = useTranslation()
   const [newScope, setNewScope] = useState(currentScope)
   const [newExpectedResult, setNewExpectedResult] = useState(currentExpectedResult)
   const [additionalAmount, setAdditionalAmount] = useState('')
@@ -50,7 +52,7 @@ export function MentoringTaskAmendmentModal({
 
   const amount = additionalAmount === '' ? 0 : Number(additionalAmount)
   const deadlineLabel = (() => {
-    if (!currentDeadline) return 'Chưa thiết lập'
+    if (!currentDeadline) return t('mentoring.notSet')
     try {
       return format(parseISO(currentDeadline), 'HH:mm dd/MM/yyyy')
     } catch {
@@ -67,18 +69,18 @@ export function MentoringTaskAmendmentModal({
     setErrorMsg(null)
     const scopeChanged = newScope.trim() !== currentScope.trim()
     const resultChanged = newExpectedResult.trim() !== currentExpectedResult.trim()
-    if (!Number.isInteger(amount) || amount < 0) return setErrorMsg('Tiền bổ sung phải là số nguyên không âm.')
-    if (amount > 0 && amount < MIN_TOPUP) return setErrorMsg(`Tiền bổ sung tối thiểu là ${formatVnd(MIN_TOPUP)}.`)
+    if (!Number.isInteger(amount) || amount < 0) return setErrorMsg(t('mentoring.additionalAmountNonNegative'))
+    if (amount > 0 && amount < MIN_TOPUP) return setErrorMsg(t('mentoring.additionalAmountMin', { amount: formatVnd(MIN_TOPUP) }))
     let isoDeadline: string | undefined
     if (newDeadline) {
       const d = new Date(newDeadline)
-      if (d.getTime() <= Date.now()) return setErrorMsg('Deadline mới phải ở trong tương lai.')
+      if (d.getTime() <= Date.now()) return setErrorMsg(t('mentoring.newDeadlineMustBeFuture'))
       isoDeadline = d.toISOString()
     }
     if (!scopeChanged && !resultChanged && amount === 0 && !isoDeadline) {
-      return setErrorMsg('Bạn chưa thay đổi nội dung nào so với Task hiện tại.')
+      return setErrorMsg(t('mentoring.noChangeDetected'))
     }
-    if (reason.trim().length < 10) return setErrorMsg('Vui lòng nêu lý do điều chỉnh (tối thiểu 10 ký tự).')
+    if (reason.trim().length < 10) return setErrorMsg(t('mentoring.reasonRequired10'))
     try {
       await createMutation.mutateAsync({
         newScope: scopeChanged ? newScope.trim() : undefined,
@@ -90,7 +92,7 @@ export function MentoringTaskAmendmentModal({
       onSuccess?.()
       close()
     } catch (err) {
-      setErrorMsg(apiErrorMessage(err, 'Không thể gửi đề xuất điều chỉnh.'))
+      setErrorMsg(apiErrorMessage(err, t('mentoring.cannotSendAmendmentProposal')))
     }
   }
 
@@ -98,16 +100,16 @@ export function MentoringTaskAmendmentModal({
     <Modal
       isOpen={isOpen}
       onClose={close}
-      title="Điều chỉnh Task & tăng tiền"
+      title={t('mentoring.taskAmendmentModalTitle')}
       icon={<FileEdit className="h-5 w-5" />}
       maxWidthClassName="max-w-xl"
       footer={
         <div className="flex justify-end gap-2">
           <MentoringActionButton intent="ghost" onClick={close} disabled={createMutation.isPending}>
-            Hủy
+            {t('common.cancel')}
           </MentoringActionButton>
           <MentoringActionButton intent="primary" icon={<Send className="h-3.5 w-3.5" />} loading={createMutation.isPending} onClick={submit}>
-            Gửi đề xuất
+            {t('mentoring.sendProposal')}
           </MentoringActionButton>
         </div>
       }
@@ -116,24 +118,24 @@ export function MentoringTaskAmendmentModal({
         <MentoringFormError message={errorMsg} />
         <div className="grid gap-2 rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm dark:bg-white/[0.04] sm:grid-cols-2">
           <p>
-            <span className="text-text-subtle">Giá hiện tại: </span>
+            <span className="text-text-subtle">{t('mentoring.currentPrice')}</span>
             <span className="font-semibold text-text">{formatVnd(currentPrice)}</span>
             {amount > 0 && <span className="font-semibold text-primary-solid"> → {formatVnd(currentPrice + amount)}</span>}
           </p>
           <p>
-            <span className="text-text-subtle">Deadline: </span>
+            <span className="text-text-subtle">{t('mentoring.deadlineLabel')}</span>
             <span className="font-semibold text-text">{deadlineLabel}</span>
           </p>
         </div>
 
-        <MentoringField label="Phạm vi công việc">
+        <MentoringField label={t('mentoring.scopeOfWork')}>
           <textarea rows={3} value={newScope} onChange={(e) => setNewScope(e.target.value)} className={`${MENTORING_INPUT} resize-none`} />
         </MentoringField>
-        <MentoringField label="Kết quả bàn giao">
+        <MentoringField label={t('mentoring.expectedDeliverable')}>
           <textarea rows={2} value={newExpectedResult} onChange={(e) => setNewExpectedResult(e.target.value)} className={`${MENTORING_INPUT} resize-none`} />
         </MentoringField>
         <div className="grid gap-4 sm:grid-cols-2">
-          <MentoringField label="Tiền bổ sung (VND)" hint={`Để trống nếu không tăng tiền · tối thiểu ${formatVnd(MIN_TOPUP)}`}>
+          <MentoringField label={t('mentoring.additionalAmountVnd')} hint={t('mentoring.additionalAmountHint', { amount: formatVnd(MIN_TOPUP) })}>
             <input
               type="number"
               inputMode="numeric"
@@ -145,7 +147,7 @@ export function MentoringTaskAmendmentModal({
               className={MENTORING_INPUT}
             />
           </MentoringField>
-          <MentoringField label="Deadline mới" hint="Để trống nếu giữ nguyên">
+          <MentoringField label={t('mentoring.newDeadline')} hint={t('mentoring.keepCurrentDeadlineHint')}>
             <DateTimePicker
               mode="datetime"
               value={newDeadline}
@@ -155,13 +157,13 @@ export function MentoringTaskAmendmentModal({
             />
           </MentoringField>
         </div>
-        <MentoringField label="Lý do" required hint="Có tiền bổ sung: Học viên thanh toán sau khi đồng ý, điều chỉnh có hiệu lực khi thanh toán xong.">
+        <MentoringField label={t('mentoring.reasonLabel')} required hint={t('mentoring.amendmentReasonHint')}>
           <textarea
             rows={3}
             maxLength={1000}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Ví dụ: Học viên muốn bổ sung phần thiết kế cơ sở dữ liệu..."
+            placeholder={t('mentoring.amendmentReasonPlaceholder')}
             className={`${MENTORING_INPUT} resize-none`}
           />
         </MentoringField>

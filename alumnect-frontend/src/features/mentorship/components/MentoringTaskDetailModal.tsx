@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { X, ClipboardCheck, CalendarDays, Wallet, Link2, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
@@ -22,6 +23,7 @@ interface MentoringTaskDetailModalProps {
  * kèm liên kết truy ngược Request → Deal → Chat for Task và điều hướng sang trang quản lý toàn diện UC106 & UC107.
  */
 export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringTaskDetailModalProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: detail, isLoading, error } = useTaskDetail(taskId ?? undefined)
 
@@ -69,24 +71,24 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
           </div>
         ) : error || !detail || !overview ? (
           <p className="rounded-2xl bg-danger-soft p-3 text-xs font-semibold text-danger">
-            {error?.message || 'Không thể tải thông tin Task.'}
+            {error?.message || t('mentoring.cannotLoadTaskInfo')}
           </p>
         ) : (
           <div className="space-y-4 text-sm">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">Phạm vi công việc</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">{t('mentoring.scopeOfWork')}</p>
               <p className="mt-1 whitespace-pre-wrap text-text">{overview.taskScope}</p>
             </div>
             {deal && (
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">Kết quả kỳ vọng</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">{t('mentoring.expectedDeliverable')}</p>
                 <p className="mt-1 whitespace-pre-wrap text-text">{deal.expectedResult}</p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-2xl bg-cream-100/70 p-3 dark:bg-white/5">
                 <p className="flex items-center gap-1 font-bold text-text-subtle">
-                  <Wallet className="h-3.5 w-3.5" /> Giá đã thanh toán
+                  <Wallet className="h-3.5 w-3.5" /> {t('mentoring.paidPriceLabel')}
                 </p>
                 <p className="mt-1 font-display text-base font-bold text-text">{formatVnd(overview.agreedPrice)}</p>
               </div>
@@ -110,11 +112,11 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
             </div>
             <div className="rounded-2xl border border-border p-3 text-xs text-text-muted space-y-1">
               <p className="flex items-center gap-1.5 font-bold text-text">
-                <Link2 className="h-3.5 w-3.5" /> Truy vết nghiệp vụ
+                <Link2 className="h-3.5 w-3.5" /> {t('mentoring.businessTraceLabel')}
               </p>
               <p>Request #{detail.requestId ?? '—'}{detail.requestTitle ? ` · ${detail.requestTitle}` : ''}</p>
-              <p>Thỏa thuận #{detail.deal.id} → Nhiệm vụ #{overview.id} · Cuộc trò chuyện #{detail.conversationId ?? '—'}</p>
-              <p>Kích hoạt lúc {formatDate(overview.startedAt)}</p>
+              <p>{t('mentoring.businessTraceLine', { dealId: detail.deal.id, taskId: overview.id, conversationId: detail.conversationId ?? '—' })}</p>
+              <p>{t('mentoring.activatedAtTime', { time: formatDate(overview.startedAt) })}</p>
             </div>
 
             <div className="pt-2">
@@ -125,7 +127,7 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
                 }}
                 className="w-full rounded-2xl bg-primary-solid text-on-primary hover:bg-primary-hover text-xs font-bold gap-2 py-2.5 shadow-sm shadow-brand-600/20"
               >
-                <span>Mở trang chi tiết & Quản lý Work Log</span>
+                <span>{t('mentoring.openDetailAndManageWorkLog')}</span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </Button>
             </div>

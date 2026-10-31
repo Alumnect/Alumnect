@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CalendarDays, Crown, Globe, Lock, MessagesSquare, Share2, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, Badge, Card, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { ShareModal } from '@/features/feed/components/ShareModal'
@@ -19,13 +20,14 @@ export function GroupDetailHeader({
   onManage?: () => void
   onLeave: () => void
 }) {
+  const { t, i18n } = useTranslation()
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const navigate = useNavigate()
   const createChatMut = useCreateGroupChat()
   const joinChatMut = useJoinGroupChat()
 
   const isPrivate = group.privacy === 'PRIVATE'
-  const createdDate = group.createdAt ? new Date(group.createdAt).toLocaleDateString('vi-VN') : ''
+  const createdDate = group.createdAt ? new Date(group.createdAt).toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US') : ''
   const isActiveMember = group.viewerMembershipStatus === 'ACTIVE'
   const isOwner = group.viewerRole === 'OWNER'
 
@@ -38,11 +40,11 @@ export function GroupDetailHeader({
   const handleJoinChat = () => {
     joinChatMut.mutate(group.id, {
       onSuccess: (res) => {
-        toast.success('Đã tham gia nhóm trò chuyện!')
+        toast.success(t('groups.joinedChatSuccess'))
         navigate(`/app/messages?conversationId=${res.conversationId}`)
       },
       onError: (err) => {
-        toast.error((err as Error)?.message || 'Không thể tham gia nhóm trò chuyện, vui lòng thử lại.')
+        toast.error((err as Error)?.message || t('groups.joinedChatError'))
       },
     })
   }
@@ -50,11 +52,11 @@ export function GroupDetailHeader({
   const handleCreateChat = () => {
     createChatMut.mutate(group.id, {
       onSuccess: (res) => {
-        toast.success('Khởi tạo nhóm trò chuyện thành công!')
+        toast.success(t('groups.createdChatSuccess'))
         navigate(`/app/messages?conversationId=${res.conversationId}`)
       },
       onError: (err) => {
-        toast.error((err as Error)?.message || 'Không thể tạo nhóm trò chuyện, vui lòng thử lại.')
+        toast.error((err as Error)?.message || t('groups.createdChatError'))
       },
     })
   }
@@ -73,18 +75,18 @@ export function GroupDetailHeader({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
                 <Badge tone="violet" className="rounded-full px-2.5 py-0.5 text-xs font-bold">
-                  {categoryLabel(group.category)}
+                  {t(`groups.categories.${group.category}`, { defaultValue: categoryLabel(group.category) })}
                 </Badge>
                 <Badge
                   tone={isPrivate ? 'gold' : 'aqua'}
                   icon={isPrivate ? <Lock size={10} /> : <Globe size={10} />}
                   className="rounded-full px-2.5 py-0.5 text-xs font-bold"
                 >
-                  {isPrivate ? 'Riêng tư' : 'Công khai'}
+                  {isPrivate ? t('groups.private') : t('groups.public')}
                 </Badge>
                 {group.status === 'INACTIVE' && (
                   <Badge tone="neutral" className="rounded-full px-2.5 py-0.5 text-xs font-bold">
-                    Tạm ngừng
+                    {t('groups.pausedBadge')}
                   </Badge>
                 )}
               </div>
@@ -96,12 +98,12 @@ export function GroupDetailHeader({
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-text-subtle">
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <Users size={16} className="text-primary-solid" />
-                  <strong className="text-text">{group.memberCount}</strong> thành viên
+                  <strong className="text-text">{t('groups.membersCount', { count: group.memberCount })}</strong>
                 </span>
 
                 {createdDate && (
                   <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays size={15} /> Thành lập {createdDate}
+                    <CalendarDays size={15} /> {t('groups.established', { date: createdDate })}
                   </span>
                 )}
 
@@ -113,7 +115,7 @@ export function GroupDetailHeader({
                     <Crown size={15} className="shrink-0 text-warning" />
                     <Avatar src={group.owner.avatarUrl ?? ''} name={group.owner.fullName} size={20} />
                     <span className="truncate">{group.owner.fullName}</span>
-                    <span className="hidden shrink-0 text-xs text-text-subtle sm:inline">(Người sáng lập)</span>
+                    <span className="hidden shrink-0 text-xs text-text-subtle sm:inline">{t('groups.founderBadge')}</span>
                   </Link>
                 )}
               </div>
@@ -131,7 +133,7 @@ export function GroupDetailHeader({
                     onClick={handleOpenChat}
                     className="rounded-xl shadow-xs"
                   >
-                    Nhắn tin nhóm
+                    {t('groups.chatBtn')}
                   </Button>
                 ) : (
                   <Button
@@ -142,7 +144,7 @@ export function GroupDetailHeader({
                     disabled={joinChatMut.isPending}
                     className="rounded-xl shadow-xs"
                   >
-                    {joinChatMut.isPending ? 'Đang tham gia...' : 'Tham gia nhóm chat'}
+                    {joinChatMut.isPending ? t('groups.joiningChat') : t('groups.joinChatBtn')}
                   </Button>
                 )
               ) : (
@@ -155,7 +157,7 @@ export function GroupDetailHeader({
                     disabled={createChatMut.isPending}
                     className="rounded-xl border border-primary-soft-border bg-brand-50/70 text-primary-solid hover:bg-primary-soft dark:bg-brand-500/10"
                   >
-                    {createChatMut.isPending ? 'Đang khởi tạo...' : 'Tạo nhóm chat'}
+                    {createChatMut.isPending ? t('groups.creatingChat') : t('groups.createChatBtn')}
                   </Button>
                 )
               )
@@ -168,7 +170,7 @@ export function GroupDetailHeader({
               onClick={() => setShareModalOpen(true)}
               className="rounded-xl border border-border bg-surface-2"
             >
-              Chia sẻ
+              {t('groups.share')}
             </Button>
 
             <GroupMembershipActions group={group} size="sm" onLeave={onLeave} hideManageButton={true} />
@@ -183,10 +185,10 @@ export function GroupDetailHeader({
           onClose={() => setShareModalOpen(false)}
           shareItem={{
             title: group.name,
-            subtitle: `${group.memberCount} thành viên • ${group.description || 'Hội nhóm trên AlumNect'}`,
+            subtitle: `${t('groups.membersCount', { count: group.memberCount })} • ${group.description || 'AlumNect'}`,
             thumbnail: group.coverImageUrl,
             url: `${window.location.origin}/app/groups/${group.id}`,
-            typeLabel: 'hội nhóm',
+            typeLabel: t('groups.groupNoun'),
           }}
         />
       )}

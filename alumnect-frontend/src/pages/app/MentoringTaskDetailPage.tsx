@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
   MessageSquare,
@@ -27,6 +28,7 @@ import {
  * Trang chi tiết toàn diện Mentoring Task (UC106) & Quản lý Work Log (UC107).
  */
 function MentoringTaskDetailContent() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const taskId = id ? parseInt(id, 10) : undefined
   const navigate = useNavigate()
@@ -58,10 +60,10 @@ function MentoringTaskDetailContent() {
   if (isError || !taskDetail || !taskDetail.overview) {
     return (
       <EmptyState
-        title="Không tìm thấy nhiệm vụ"
+        title={t('mentoring.taskNotFoundTitle')}
         description={
           error?.message ||
-          'Nhiệm vụ không tồn tại hoặc bạn không có quyền truy cập vào thông tin nhiệm vụ này.'
+          t('mentoring.taskNotFoundDesc')
         }
         action={
           <div className="flex gap-3">
@@ -70,10 +72,10 @@ function MentoringTaskDetailContent() {
               onClick={() => navigate('/app/mentoring/tasks')}
               className="rounded-2xl"
             >
-              Quay lại danh sách
+              {t('mentoring.backToListTasks')}
             </Button>
             <Button onClick={() => refetch()} className="rounded-2xl">
-              Thử lại
+              {t('common.retry')}
             </Button>
           </div>
         }
@@ -127,7 +129,7 @@ function MentoringTaskDetailContent() {
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted transition hover:text-primary-solid"
         >
           <ArrowLeft className="h-4 w-4" />
-          Công việc của tôi
+          {t('mentoring.myTasksNav')}
         </button>
         <div className="flex items-center gap-2">
           <Button
@@ -138,7 +140,7 @@ function MentoringTaskDetailContent() {
             leftIcon={<RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />}
             className="h-9 rounded-xl text-xs"
           >
-            Cập nhật
+            {t('mentoring.updateBtn')}
           </Button>
           {conversationId && (
             <Button
@@ -147,7 +149,7 @@ function MentoringTaskDetailContent() {
               leftIcon={<MessageSquare className="h-3.5 w-3.5" />}
               className="h-9 rounded-xl text-xs"
             >
-              Mở trao đổi
+              {t('mentoring.openChatBtn')}
             </Button>
           )}
         </div>
@@ -162,7 +164,7 @@ function MentoringTaskDetailContent() {
           <MentoringTaskBadge status={overview.status} />
           {overdue && (
             <span className="rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger">
-              Quá hạn
+              {t('mentoring.overdueBadge')}
             </span>
           )}
         </div>
@@ -177,13 +179,13 @@ function MentoringTaskDetailContent() {
       {permissions.isReadOnly && overview.status === 'COMPLETED' && (
         <div className="flex items-center gap-2.5 rounded-2xl border border-success-border bg-success-soft px-4 py-3 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          Task đã hoàn thành. Toàn bộ thông tin và Work Log được lưu ở chế độ chỉ xem.
+          {t('mentoring.taskCompletedNotice')}
         </div>
       )}
       {permissions.isDisputed && (
         <div className="flex items-center gap-2.5 rounded-2xl border border-danger-border bg-danger-soft px-4 py-3 text-sm text-danger">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          Task đang được Ban Quản Trị phân xử khiếu nại. Work Log mới tạm thời bị khóa.
+          {t('mentoring.taskDisputedNotice')}
         </div>
       )}
 

@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { Crown, Loader2, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -12,6 +13,7 @@ import { useGroupMembers } from '../hooks/useGroups'
 import { useLeaveGroup } from '../hooks/useGroupActions'
 
 export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone }: { groupId: number; currentUserId: number; onClose: () => void; onDone: () => void }) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const keyword = useDebouncedValue(search, 400)
   const [selected, setSelected] = useState<number | null>(null)
@@ -26,10 +28,10 @@ export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone
       { id: groupId, transferToUserId: selected },
       {
         onSuccess: (res) => {
-          toast.success(res.message || 'Đã chuyển quyền sở hữu và rời nhóm.')
+          toast.success(res.message || t('groups.transferSuccess'))
           onDone()
         },
-        onError: (err) => toast.error((err as Error).message || 'Không thể chuyển quyền sở hữu, vui lòng thử lại.'),
+        onError: (err) => toast.error((err as Error).message || t('groups.transferError')),
       },
     )
   }
@@ -38,28 +40,28 @@ export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone
     <Modal
       isOpen
       onClose={leaveMut.isPending ? () => undefined : onClose}
-      title="Chuyển quyền sở hữu"
+      title={t('groups.transferOwnershipTitle')}
       icon={<Crown size={16} />}
       maxWidthClassName="max-w-lg"
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="secondary" size="md" onClick={onClose} disabled={leaveMut.isPending}>
-            Hủy
+            {t('common.cancel')}
           </Button>
           <Button variant="primary" size="md" onClick={confirm} disabled={selected === null || leaveMut.isPending} leftIcon={leaveMut.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}>
-            Chuyển quyền & rời nhóm
+            {t('groups.transferAndLeave')}
           </Button>
         </div>
       }
     >
-      <p className="mb-3 text-sm text-text-subtle">Bạn là chủ sở hữu. Hãy chọn một thành viên để chuyển quyền sở hữu trước khi rời hội nhóm.</p>
+      <p className="mb-3 text-sm text-text-subtle">{t('groups.transferOwnershipNotice')}</p>
       <div className="relative mb-3">
         <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
         <input
-          aria-label="Tìm thành viên theo tên…"
+          aria-label={t('groups.searchMemberPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm thành viên theo tên…"
+          placeholder={t('groups.searchMemberPlaceholder')}
           className="h-10 w-full rounded-xl bg-surface-2 pl-10 pr-3 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
@@ -69,7 +71,7 @@ export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone
           <Loader2 size={20} className="animate-spin" />
         </div>
       ) : candidates.length === 0 ? (
-        <p className="py-6 text-center text-sm text-text-subtle">Không có thành viên nào phù hợp.</p>
+        <p className="py-6 text-center text-sm text-text-subtle">{t('groups.noMembersMatch')}</p>
       ) : (
         <ul className="space-y-1.5">
           {candidates.map((m) => (
@@ -88,7 +90,7 @@ export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone
                   <span className="block truncate text-sm font-semibold text-text">{m.fullName}</span>
                   {m.headline && <span className="block truncate text-xs text-text-subtle">{m.headline}</span>}
                 </span>
-                {m.role === 'ADMIN' && <span className="text-xs font-semibold text-primary-solid">Quản trị viên</span>}
+                {m.role === 'ADMIN' && <span className="text-xs font-semibold text-primary-solid">{t('groups.adminRole')}</span>}
               </button>
             </li>
           ))}
@@ -98,7 +100,7 @@ export function TransferOwnershipModal({ groupId, currentUserId, onClose, onDone
       {hasNextPage && (
         <div className="pt-3 text-center">
           <Button variant="secondary" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-            {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm'}
+            {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
           </Button>
         </div>
       )}

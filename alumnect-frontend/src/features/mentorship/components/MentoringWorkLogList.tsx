@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Calendar,
   FileText,
@@ -45,6 +46,7 @@ export function MentoringWorkLogList({
   onAddWorkLog,
   onEditWorkLog,
 }: MentoringWorkLogListProps) {
+  const { t } = useTranslation()
   const [confirmingLog, setConfirmingLog] = useState<MentoringWorkLog | null>(null)
   const [rejectingLog, setRejectingLog] = useState<MentoringWorkLog | null>(null)
   const [expandedHistoryLogId, setExpandedHistoryLogId] = useState<number | null>(null)
@@ -92,21 +94,21 @@ export function MentoringWorkLogList({
         return (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-0.5 text-xs font-bold text-warning ring-1 ring-warning">
             <Clock className="h-3.5 w-3.5 text-warning" />
-            <span>Chờ học viên xác nhận</span>
+            <span>{t('mentoring.workLogPendingConfirmation')}</span>
           </span>
         )
       case 'CONFIRMED':
         return (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-0.5 text-xs font-bold text-success ring-1 ring-success">
             <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-            <span>Đã xác nhận</span>
+            <span>{t('mentoring.workLogConfirmed')}</span>
           </span>
         )
       case 'REJECTED':
         return (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-3 py-0.5 text-xs font-bold text-danger ring-1 ring-danger">
             <AlertCircle className="h-3.5 w-3.5 text-danger" />
-            <span>Yêu cầu điều chỉnh</span>
+            <span>{t('mentoring.workLogAdjustmentRequested')}</span>
           </span>
         )
     }
@@ -123,12 +125,12 @@ export function MentoringWorkLogList({
       },
       {
         onSuccess: () => {
-          toast.success('Đã xác nhận Work Log thành công!')
+          toast.success(t('mentoring.confirmWorkLogSuccess'))
           setConfirmingLog(null)
           setFeedbackText('')
         },
         onError: (err: any) => {
-          const msg = err.response?.data?.message || err.message || 'Không thể xác nhận Work Log.'
+          const msg = err.response?.data?.message || err.message || t('mentoring.confirmWorkLogError')
           setActionError(msg)
           toast.error(msg)
         },
@@ -140,7 +142,7 @@ export function MentoringWorkLogList({
     if (!rejectingLog) return
     const trimmed = feedbackText.trim()
     if (trimmed.length < 5) {
-      setActionError('Vui lòng nhập lý do điều chỉnh tối thiểu 5 ký tự.')
+      setActionError(t('mentoring.adjustmentReasonMinLength'))
       return
     }
     setActionError(null)
@@ -152,12 +154,12 @@ export function MentoringWorkLogList({
       },
       {
         onSuccess: () => {
-          toast.success('Đã gửi yêu cầu điều chỉnh tới Mentor!')
+          toast.success(t('mentoring.requestAdjustmentSuccess'))
           setRejectingLog(null)
           setFeedbackText('')
         },
         onError: (err: any) => {
-          const msg = err.response?.data?.message || err.message || 'Không thể gửi yêu cầu điều chỉnh.'
+          const msg = err.response?.data?.message || err.message || t('mentoring.requestAdjustmentError')
           setActionError(msg)
           toast.error(msg)
         },
@@ -175,10 +177,10 @@ export function MentoringWorkLogList({
           </div>
           <div>
             <h4 className="text-base font-bold text-text">
-              Nhật ký công việc (Work Logs)
+              {t('mentoring.workLogsHeading')}
             </h4>
             <p className="text-xs text-text-subtle">
-              {workLogs.length} bản ghi đã ghi nhận ({workLogs.filter((w) => w.status === 'PENDING_CONFIRMATION').length} chờ xác nhận)
+              {t('mentoring.workLogsSummaryCount', { total: workLogs.length, pending: workLogs.filter((w) => w.status === 'PENDING_CONFIRMATION').length })}
             </p>
           </div>
         </div>
@@ -190,7 +192,7 @@ export function MentoringWorkLogList({
             leftIcon={<Plus className="h-4 w-4" />}
             className="rounded-xl shadow-xs"
           >
-            Thêm Work Log
+            {t('mentoring.addWorkLog')}
           </Button>
         )}
       </div>
@@ -202,12 +204,12 @@ export function MentoringWorkLogList({
             <FileText className="h-7 w-7" />
           </div>
           <h5 className="mt-4 text-sm font-bold text-text">
-            Chưa có Work Log nào được ghi nhận
+            {t('mentoring.noWorkLogsRecorded')}
           </h5>
           <p className="mt-1 text-xs text-text-subtle max-w-sm mx-auto">
             {canAddWorkLog
-              ? 'Hãy tạo Work Log đầu tiên để ghi lại tiến độ công việc và gửi cho học viên xác nhận nghiệm thu.'
-              : 'Mentor sẽ sớm cập nhật nhật ký công việc tại đây để bạn tiện theo dõi và nghiệm thu.'}
+              ? t('mentoring.workLogEmptyMentor')
+              : t('mentoring.workLogEmptyStudent')}
           </p>
           {canAddWorkLog && (
             <Button
@@ -217,7 +219,7 @@ export function MentoringWorkLogList({
               leftIcon={<Plus className="h-4 w-4" />}
               className="mt-4 rounded-xl"
             >
-              Tạo Work Log ngay
+              {t('mentoring.createWorkLogNow')}
             </Button>
           )}
         </div>
@@ -258,16 +260,16 @@ export function MentoringWorkLogList({
                     </span>
                     <span className="flex items-center gap-1 text-xs font-bold text-text-muted">
                       <Calendar className="h-3.5 w-3.5 text-primary-solid" />
-                      Ngày thực hiện: {formatDate(log.logDate)}
+                      {t('mentoring.logDateLabel', { date: formatDate(log.logDate) })}
                     </span>
                     {log.revisionNumber && log.revisionNumber > 1 && (
                       <span className="rounded-md bg-info-soft px-2 py-0.5 text-xs font-bold text-info">
-                        Phiên bản v{log.revisionNumber}
+                        {t('mentoring.revisionVersionLabel', { version: log.revisionNumber })}
                       </span>
                     )}
                     {isLatest && (
                       <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-bold uppercase text-primary-solid">
-                        Mới nhất
+                        {t('mentoring.newest')}
                       </span>
                     )}
                   </div>
@@ -280,10 +282,10 @@ export function MentoringWorkLogList({
                         type="button"
                         onClick={() => onEditWorkLog(log)}
                         className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-bold text-text-muted transition-colors hover:bg-primary-soft hover:text-primary-solid"
-                        title="Chỉnh sửa nhật ký công việc"
+                        title={t('mentoring.editWorkLogTitle')}
                       >
                         <Edit2 className="h-3 w-3" />
-                        <span>Sửa</span>
+                        <span>{t('mentoring.editBtn')}</span>
                       </button>
                     )}
                   </div>
@@ -293,7 +295,7 @@ export function MentoringWorkLogList({
                 <div className="mt-4 space-y-3 text-sm">
                   <div>
                     <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
-                      Mô tả tóm tắt
+                      {t('mentoring.summaryDescription')}
                     </span>
                     <p className="mt-1 font-bold text-text leading-relaxed">
                       {log.description}
@@ -302,7 +304,7 @@ export function MentoringWorkLogList({
 
                   <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg">
                     <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
-                      Nội dung công việc hoàn thành
+                      {t('mentoring.completedWorkContent')}
                     </span>
                     <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed">
                       {log.workCompleted}
@@ -311,7 +313,7 @@ export function MentoringWorkLogList({
 
                   <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg">
                     <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
-                      Kết quả & Sản phẩm đạt được
+                      {t('mentoring.achievedResultsDeliverables')}
                     </span>
                     <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed">
                       {log.result}
@@ -321,7 +323,7 @@ export function MentoringWorkLogList({
                   {log.nextAction && (
                     <div>
                       <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
-                        Hành động tiếp theo
+                        {t('mentoring.nextActions')}
                       </span>
                       <p className="mt-1 text-xs text-text-muted leading-relaxed">
                         {log.nextAction}
@@ -334,7 +336,7 @@ export function MentoringWorkLogList({
                     <div className="pt-2">
                       <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">
                         <Paperclip className="h-3.5 w-3.5" />
-                        Tài liệu minh chứng đính kèm ({log.attachments.length})
+                        {t('mentoring.evidenceAttachmentsHeading', { count: log.attachments.length })}
                       </span>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {log.attachments.map((att) => {
@@ -373,7 +375,7 @@ export function MentoringWorkLogList({
                       <ShieldCheck className="h-4 w-4 text-success shrink-0 mt-0.5" />
                       <div>
                         <div className="font-bold text-success">
-                          Đã xác nhận nghiệm thu bởi {log.confirmedByName || 'Học viên'} {log.confirmedAt ? `lúc ${formatDateTime(log.confirmedAt)}` : ''}
+                          {t('mentoring.acceptedByStudentNotice', { name: log.confirmedByName || t('mentoring.roleStudent'), time: log.confirmedAt ? formatDateTime(log.confirmedAt) : '' })}
                         </div>
                         {log.studentFeedback && (
                           <p className="mt-1.5 text-success whitespace-pre-line font-medium">
@@ -381,7 +383,7 @@ export function MentoringWorkLogList({
                           </p>
                         )}
                         <p className="mt-1.5 text-xs text-success">
-                          Bản ghi này đã trở thành bằng chứng nghiệm thu được bảo vệ, Mentor không thể chỉnh sửa hoặc xóa bỏ.
+                          {t('mentoring.workLogProtectedNotice')}
                         </p>
                       </div>
                     </div>
@@ -393,9 +395,9 @@ export function MentoringWorkLogList({
                       <AlertCircle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <div className="font-bold flex items-center justify-between text-danger">
-                          <span>Yêu cầu điều chỉnh từ học viên</span>
+                          <span>{t('mentoring.adjustmentRequestedFromStudent')}</span>
                           <span className="text-xs font-normal text-danger">
-                            Đang chờ Mentor bổ sung & gửi lại
+                            {t('mentoring.waitingMentorReviseResubmit')}
                           </span>
                         </div>
                         {log.studentFeedback && (
@@ -416,7 +418,7 @@ export function MentoringWorkLogList({
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-text-muted hover:text-primary-solid transition-colors"
                       >
                         <History className="h-3.5 w-3.5" />
-                        <span>Lịch sử phản hồi & các phiên bản sửa đổi ({log.feedbacks?.length || 0})</span>
+                        <span>{t('mentoring.feedbackHistoryTitle', { count: log.feedbacks?.length || 0 })}</span>
                         {isHistoryOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                       </button>
 
@@ -426,7 +428,7 @@ export function MentoringWorkLogList({
                             <div key={fb.id} className="border-b border-border/50 pb-2 last:border-b-0 last:pb-0">
                               <div className="flex items-center justify-between text-xs text-muted-foreground">
                                 <span className="font-bold text-foreground">
-                                  {fb.action === 'CONFIRMED' ? 'Xác nhận nghiệm thu' : 'Yêu cầu điều chỉnh (v' + fb.revisionNumber + ')'}
+                                  {fb.action === 'CONFIRMED' ? t('mentoring.reviewConfirmationAction') : t('mentoring.requestAdjustmentRevisionAction', { version: fb.revisionNumber })}
                                 </span>
                                 <span>{formatDateTime(fb.createdAt)}</span>
                               </div>
@@ -450,10 +452,10 @@ export function MentoringWorkLogList({
                       <div>
                         <h6 className="text-xs font-bold text-success flex items-center gap-1.5">
                           <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                          Học viên xác nhận nghiệm thu phần công việc này
+                          {t('mentoring.studentReviewSectionHeading')}
                         </h6>
                         <p className="text-xs text-success mt-0.5">
-                          Kiểm tra nội dung hoàn thành và tài liệu minh chứng để xác nhận nghiệm thu hoặc yêu cầu Mentor điều chỉnh.
+                          {t('mentoring.studentReviewSectionDesc')}
                         </p>
                       </div>
 
@@ -470,7 +472,7 @@ export function MentoringWorkLogList({
                           className="rounded-xl border-danger-border text-danger hover:bg-danger-soft hover:border-danger text-xs font-bold"
                         >
                           <RotateCcw className="h-3.5 w-3.5 mr-1 text-danger" />
-                          Yêu cầu điều chỉnh
+                          {t('mentoring.requestRevision')}
                         </Button>
 
                         <Button
@@ -484,7 +486,7 @@ export function MentoringWorkLogList({
                           className="rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary text-xs font-bold shadow-xs shadow-brand-600/30"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                          Xác nhận nghiệm thu
+                          {t('mentoring.confirmAcceptance')}
                         </Button>
                       </div>
                     </div>
@@ -499,9 +501,9 @@ export function MentoringWorkLogList({
                       name={log.mentorName}
                       className="h-5 w-5 rounded-full"
                     />
-                    <span>Ghi nhận bởi {log.mentorName}</span>
+                    <span>{t('mentoring.recordedByMentor', { name: log.mentorName })}</span>
                   </div>
-                  <span>Cập nhật: {formatDateTime(log.updatedAt || log.createdAt)}</span>
+                  <span>{t('mentoring.updatedAtLabel', { time: formatDateTime(log.updatedAt || log.createdAt) })}</span>
                 </div>
               </div>
             )
@@ -522,10 +524,10 @@ export function MentoringWorkLogList({
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <h3 className="text-base font-bold text-text">
-                  Xác nhận nghiệm thu công việc
+                  {t('mentoring.confirmWorkAcceptance')}
                 </h3>
               </div>
-              <button aria-label="Đóng"
+              <button aria-label={t('common.close')}
                 type="button"
                 onClick={() => setConfirmingLog(null)}
                 className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted transition-colors"
@@ -536,12 +538,12 @@ export function MentoringWorkLogList({
 
             <div className="space-y-3.5 text-xs">
               <div className="rounded-2xl border border-success bg-success-soft p-3.5 text-success leading-relaxed font-medium">
-                Bạn xác nhận nội dung công việc Mentor đã ghi nhận là chính xác. <strong className="font-bold text-success">Thao tác này không đồng nghĩa với việc xác nhận hoàn thành toàn bộ Mentoring Task.</strong>
+                {t('mentoring.confirmWorkLogModalNotice')}
               </div>
 
               <div className="rounded-2xl border border-border bg-cream-100/80 p-3.5 dark:bg-bg">
                 <p className="text-xs font-bold text-text-subtle">
-                  Nhật ký công việc ngày <strong className="text-text">{formatDate(confirmingLog.logDate)}</strong>:
+                  {t('mentoring.workLogForDate', { date: formatDate(confirmingLog.logDate) })}
                 </p>
                 <p className="mt-1 font-bold text-text">
                   "{confirmingLog.description}"
@@ -550,12 +552,12 @@ export function MentoringWorkLogList({
 
               <div>
                 <label className="block text-xs font-bold text-text-muted mb-1.5">
-                  Nhận xét phản hồi gửi Mentor (Tùy chọn):
+                  {t('mentoring.feedbackToMentorOptional')}
                 </label>
                 <textarea
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="Ví dụ: Nội dung hoàn thành đúng hạn, hướng dẫn rất nhiệt tình và rõ ràng..."
+                  placeholder={t('mentoring.feedbackPlaceholder')}
                   rows={3}
                   maxLength={2000}
                   className="w-full rounded-2xl border border-border-strong bg-surface-2 p-3 text-xs text-text placeholder:text-text-subtle focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-hidden transition"
@@ -578,7 +580,7 @@ export function MentoringWorkLogList({
                 disabled={confirmMutation.isPending}
                 className="rounded-xl font-bold"
               >
-                Hủy bỏ
+                {t('common.cancel')}
               </Button>
               <Button
                 size="sm"
@@ -589,7 +591,7 @@ export function MentoringWorkLogList({
                 {confirmMutation.isPending && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                 )}
-                Xác nhận nghiệm thu
+                {t('mentoring.confirmAcceptance')}
               </Button>
             </div>
           </DialogFrame>}
@@ -607,10 +609,10 @@ export function MentoringWorkLogList({
                   <RotateCcw className="h-5 w-5" />
                 </div>
                 <h3 className="text-base font-bold text-text">
-                  Yêu cầu Mentor điều chỉnh Work Log
+                  {t('mentoring.requestMentorReviseWorkLog')}
                 </h3>
               </div>
-              <button aria-label="Đóng"
+              <button aria-label={t('common.close')}
                 type="button"
                 onClick={() => setRejectingLog(null)}
                 className="rounded-xl p-1.5 text-text-subtle hover:bg-surface-2 hover:text-text-muted transition-colors"
@@ -621,12 +623,12 @@ export function MentoringWorkLogList({
 
             <div className="space-y-3.5 text-xs">
               <div className="rounded-2xl border border-warning bg-warning-soft p-3.5 text-warning leading-relaxed font-medium">
-                Vui lòng chỉ rõ lý do hoặc những phần kết quả cần bổ sung/chỉnh sửa để Mentor nắm bắt và cập nhật lại Work Log này.
+                {t('mentoring.requestMentorAdjustDesc')}
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-text-muted mb-1.5">
-                  Lý do / Hướng dẫn điều chỉnh <span className="text-danger">* (tối thiểu 5 ký tự)</span>:
+                  {t('mentoring.adjustReasonLabel')}
                 </label>
                 <textarea
                   value={feedbackText}
@@ -634,13 +636,13 @@ export function MentoringWorkLogList({
                     setFeedbackText(e.target.value)
                     if (actionError) setActionError(null)
                   }}
-                  placeholder="Ví dụ: Cần đính kèm thêm slide tài liệu hướng dẫn và cập nhật kết quả kiểm thử chức năng..."
+                  placeholder={t('mentoring.adjustReasonPlaceholder')}
                   rows={4}
                   maxLength={2000}
                   className="w-full rounded-2xl border border-border-strong bg-surface-2 p-3 text-xs text-text placeholder:text-text-subtle focus:bg-surface focus:border-danger focus:ring-2 focus:ring-danger focus:outline-hidden transition"
                 />
                 <span className="mt-1 block text-right text-xs text-text-subtle">
-                  {feedbackText.length}/2000 ký tự
+                  {t('mentoring.charCountFormat', { current: feedbackText.length, max: 2000 })}
                 </span>
               </div>
 
@@ -660,7 +662,7 @@ export function MentoringWorkLogList({
                 disabled={rejectMutation.isPending}
                 className="rounded-xl font-bold"
               >
-                Hủy bỏ
+                {t('common.cancel')}
               </Button>
               <Button
                 size="sm"
@@ -671,7 +673,7 @@ export function MentoringWorkLogList({
                 {rejectMutation.isPending && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                 )}
-                Gửi yêu cầu điều chỉnh
+                {t('mentoring.sendRevisionRequestBtn')}
               </Button>
             </div>
           </DialogFrame>}

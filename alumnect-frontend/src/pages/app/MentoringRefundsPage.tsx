@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Building, CheckCircle2, RotateCcw, Save, ShieldAlert } from 'lucide-react'
 import { Container, toast, SelectDropdown, type SelectOption } from '@/components/ui'
 import { MentorPageHeader, MentoringTermsGate, TASK_QUERY_KEYS } from '@/features/mentorship'
@@ -22,6 +23,7 @@ const EMPTY: RefundAccount = { bankName: '', bankBin: '', bankAccountNumber: '',
  * Tài khoản là bắt buộc trước khi Học viên gửi hoặc đồng ý thỏa thuận dừng Task.
  */
 function MentoringRefundsContent() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { banks, isLoading: banksLoading } = usePayoutBanks()
   // Bản nháp đang sửa; chưa sửa thì hiển thị tài khoản đã lưu
@@ -56,25 +58,25 @@ function MentoringRefundsContent() {
     if (form.bankBin && !banks.some((b) => b.bin === form.bankBin)) {
       list.unshift({
         value: form.bankBin,
-        label: form.bankName || 'Ngân hàng đã lưu',
+        label: form.bankName || t('mentoring.savedBankLabel'),
         sublabel: `BIN ${form.bankBin}`,
         icon: <Building className="h-4 w-4 text-text-subtle shrink-0" />,
       })
     }
 
     return list
-  }, [banks, form.bankBin, form.bankName])
+  }, [banks, form.bankBin, form.bankName, t])
 
   const save = useMutation({
     mutationFn: () => mentoringWalletApi.saveRefundAccount(form),
     onSuccess: () => {
-      toast.success('Đã lưu tài khoản nhận hoàn tiền')
+      toast.success(t('mentoring.savedRefundAccountSuccess'))
       setDraft(null)
       queryClient.invalidateQueries({ queryKey: ['mentoring-wallet'] })
       // Quyền thao tác của Task (hasRefundAccount) phụ thuộc tài khoản này
       queryClient.invalidateQueries({ queryKey: TASK_QUERY_KEYS.all })
     },
-    onError: (err: Error) => toast.error(err.message || 'Không thể lưu tài khoản'),
+    onError: (err: Error) => toast.error(err.message || t('mentoring.saveRefundAccountError')),
   })
 
   const accountNumberValid = /^\d{6,30}$/.test(form.bankAccountNumber)
@@ -84,14 +86,14 @@ function MentoringRefundsContent() {
     <div className="space-y-5">
       <MentorPageHeader
         icon={<RotateCcw className="h-4 w-4" />}
-        eyebrow="Thanh toán Mentoring"
-        title="Hoàn tiền"
-        description="Khoản hoàn khi Task dừng theo thỏa thuận hoặc được Ban Quản Trị phân xử sẽ chuyển về tài khoản bạn khai báo."
+        eyebrow={t('mentoring.mentoringPaymentEyebrow')}
+        title={t('mentoring.refundsPageTitle')}
+        description={t('mentoring.refundsPageDesc')}
       />
 
       {refunds.data?.bankAccountRequired && (
-        <MentoringActionCard tone="coral" icon={<ShieldAlert />} title="Có khoản hoàn tiền đang chờ tài khoản">
-          Khai báo tài khoản bên dưới, hệ thống sẽ chuyển tiền ngay sau khi lưu.
+        <MentoringActionCard tone="coral" icon={<ShieldAlert />} title={t('mentoring.pendingRefundWarningTitle')}>
+          {t('mentoring.pendingRefundWarningDesc')}
         </MentoringActionCard>
       )}
 
@@ -99,24 +101,24 @@ function MentoringRefundsContent() {
         {account.isSuccess &&
           (saved ? (
             <MentoringStatusStrip tone="mint" icon={<CheckCircle2 />} className="rounded-t-2xl">
-              Đã khai báo: {saved.bankName} ••• {saved.bankAccountNumber.slice(-4)} · {saved.bankAccountHolder}
+              {t('mentoring.declaredAccountInfo', { bankName: saved.bankName, last4: saved.bankAccountNumber.slice(-4), holder: saved.bankAccountHolder })}
             </MentoringStatusStrip>
           ) : (
             <MentoringStatusStrip tone="gold" icon={<ShieldAlert />} className="rounded-t-2xl">
-              Chưa khai báo — bắt buộc trước khi gửi hoặc đồng ý thỏa thuận dừng Task.
+              {t('mentoring.notDeclaredAccountInfo')}
             </MentoringStatusStrip>
           ))}
 
         <div className="p-5 sm:p-6">
-          <h2 className="font-display text-base font-bold text-text">Tài khoản nhận hoàn tiền</h2>
+          <h2 className="font-display text-base font-bold text-text">{t('mentoring.refundAccountHeading')}</h2>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <MentoringField label="Ngân hàng" required>
+              <MentoringField label={t('mentoring.bankLabel')} required>
                 <SelectDropdown
                   value={form.bankBin}
                   disabled={banksLoading}
-                  placeholder={banksLoading ? 'Đang tải danh sách ngân hàng...' : 'Chọn ngân hàng'}
-                  searchPlaceholder="Tìm ngân hàng theo tên viết tắt, tên đầy đủ hoặc mã BIN..."
+                  placeholder={banksLoading ? t('mentoring.loadingBanksPlaceholder') : t('mentoring.selectBankPlaceholder')}
+                  searchPlaceholder={t('mentoring.searchBankPlaceholder')}
                   options={bankOptions}
                   onChange={(selectedBin) => {
                     const bank = banks.find((b) => b.bin === selectedBin)
@@ -149,19 +151,19 @@ function MentoringRefundsContent() {
               )}
             </div>
             <MentoringField
-              label="Số tài khoản"
+              label={t('mentoring.accountNumberLabel')}
               required
-              hint={form.bankAccountNumber && !accountNumberValid ? 'Số tài khoản gồm 6–30 chữ số.' : undefined}
+              hint={form.bankAccountNumber && !accountNumberValid ? t('mentoring.accountNumberHint') : undefined}
             >
               <input
                 className={MENTORING_INPUT}
                 inputMode="numeric"
-                placeholder="Ví dụ: 0123456789"
+                placeholder={t('mentoring.accountNumberPlaceholder')}
                 value={form.bankAccountNumber}
                 onChange={(e) => setDraft({ ...form, bankAccountNumber: e.target.value.replace(/\D/g, '') })}
               />
             </MentoringField>
-            <MentoringField label="Tên chủ tài khoản" required hint="IN HOA, không dấu, đúng như trên thẻ ngân hàng.">
+            <MentoringField label={t('mentoring.accountHolderLabel')} required hint={t('mentoring.accountHolderHint')}>
               <input
                 className={`${MENTORING_INPUT} uppercase`}
                 placeholder="NGUYEN VAN A"
@@ -173,7 +175,7 @@ function MentoringRefundsContent() {
           <div className="mt-5 flex justify-end gap-2">
             {dirty && (
               <MentoringActionButton intent="ghost" onClick={() => setDraft(null)} disabled={save.isPending}>
-                Hoàn tác
+                {t('mentoring.undoBtn')}
               </MentoringActionButton>
             )}
             <MentoringActionButton
@@ -183,7 +185,7 @@ function MentoringRefundsContent() {
               disabled={!canSave}
               onClick={() => save.mutate()}
             >
-              {saved ? 'Cập nhật tài khoản' : 'Lưu tài khoản'}
+              {saved ? t('mentoring.updateAccountBtn') : t('mentoring.saveAccountBtn')}
             </MentoringActionButton>
           </div>
         </div>
@@ -193,8 +195,8 @@ function MentoringRefundsContent() {
         wallet={refunds.data}
         isLoading={refunds.isLoading}
         counterpartLabel="Mentor"
-        emptyTitle="Chưa có khoản hoàn tiền nào"
-        emptyDescription="Khoản hoàn xuất hiện khi Task dừng có hoàn tiền hoặc được phân xử hoàn tiền."
+        emptyTitle={t('mentoring.noRefundsTitle')}
+        emptyDescription={t('mentoring.noRefundsDesc')}
       />
     </div>
   )
@@ -209,3 +211,4 @@ export function MentoringRefundsPage() {
     </Container>
   )
 }
+

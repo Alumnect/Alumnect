@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FileText,
   X,
@@ -27,6 +28,7 @@ export function MentoringSubmitSettlementTicketModal({
   taskId,
   onSuccess,
 }: MentoringSubmitSettlementTicketModalProps) {
+  const { t } = useTranslation()
   const [note, setNote] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -54,7 +56,7 @@ export function MentoringSubmitSettlementTicketModal({
     setErrorMsg(null)
 
     if (!snapshot || !snapshot.settlementProposalId) {
-      setErrorMsg('Không tìm thấy thông tin thỏa thuận hợp lệ để tạo Ticket.')
+      setErrorMsg(t('mentoring.settlementInfoNotFound'))
       return
     }
 
@@ -70,7 +72,7 @@ export function MentoringSubmitSettlementTicketModal({
       setErrorMsg(
         err?.response?.data?.message ||
           err?.message ||
-          'Có lỗi xảy ra khi gửi Settlement Ticket tới Admin.'
+          t('mentoring.settlementTicketSendError')
       )
     }
   }
@@ -94,11 +96,11 @@ export function MentoringSubmitSettlementTicketModal({
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-text">Gửi yêu cầu tất toán tới Admin</h3>
-              <p className="text-xs text-text-subtle">Yêu cầu Ban Quản Trị giải ngân và hoàn tiền theo thỏa thuận</p>
+              <h3 className="font-bold text-lg text-text">{t('mentoring.submitSettlementTicketTitle')}</h3>
+              <p className="text-xs text-text-subtle">{t('mentoring.submitSettlementTicketSubtitle')}</p>
             </div>
           </div>
-          <button aria-label="Đóng"
+          <button aria-label={t('common.close')}
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-text-subtle hover:text-text-muted hover:bg-surface-3 dark:hover:bg-surface-2 transition-colors"
@@ -112,14 +114,14 @@ export function MentoringSubmitSettlementTicketModal({
           {isLoadingSnapshot ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3 text-text-subtle">
               <Loader2 className="w-8 h-8 animate-spin text-info" />
-              <p className="text-sm">Đang tải biên bản Settlement Snapshot...</p>
+              <p className="text-sm">{t('mentoring.loadingSettlementSnapshot')}</p>
             </div>
           ) : isError || !snapshot ? (
             <div className="p-4 rounded-xl border border-danger-border bg-danger-soft text-danger text-sm flex items-start gap-2.5">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold">Không thể tải Settlement Snapshot</p>
-                <p className="text-xs mt-0.5">Vui lòng đảm bảo hai bên đã đồng thuận đề xuất dừng Task trước khi gửi Ticket.</p>
+                <p className="font-semibold">{t('mentoring.cannotLoadSettlementSnapshot')}</p>
+                <p className="text-xs mt-0.5">{t('mentoring.ensureBothAgreedNotice')}</p>
               </div>
             </div>
           ) : (
@@ -135,15 +137,15 @@ export function MentoringSubmitSettlementTicketModal({
               <div className="p-4 rounded-xl border border-border bg-surface-2 space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-border">
                   <span className="text-xs font-semibold text-text-subtle uppercase tracking-wider">
-                    Biên bản chốt thỏa thuận
+                    {t('mentoring.settlementAgreedReport')}
                   </span>
                   <span className="text-xs text-text-subtle">
-                    Thời gian chốt: {formatDt(snapshot.agreedAt)}
+                    {t('mentoring.agreedTime', { time: formatDt(snapshot.agreedAt) })}
                   </span>
                 </div>
 
                 <div className="text-sm">
-                  <span className="text-text-subtle">Nhiệm vụ: </span>
+                  <span className="text-text-subtle">{t('mentoring.taskLabel')}</span>
                   <span className="font-semibold text-text">{snapshot.taskTitle}</span>
                 </div>
 
@@ -154,7 +156,7 @@ export function MentoringSubmitSettlementTicketModal({
                       Mentor ({mentorPercent}%): {formatVnd(snapshot.mentorAmount)}
                     </span>
                     <span className="text-info">
-                      Bên tạo yêu cầu ({studentPercent}%): {formatVnd(snapshot.studentRefund)}
+                      {t('mentoring.requesterSplitLabel', { percent: studentPercent, amount: formatVnd(snapshot.studentRefund) })}
                     </span>
                   </div>
                   <div className="h-2.5 w-full bg-info-soft rounded-full overflow-hidden flex">
@@ -168,13 +170,13 @@ export function MentoringSubmitSettlementTicketModal({
                     />
                   </div>
                   <div className="text-right text-xs text-text-subtle">
-                    Tổng ngân sách: <strong>{formatVnd(total)}</strong>
+                    {t('mentoring.totalBudgetLabel')}<strong>{formatVnd(total)}</strong>
                   </div>
                 </div>
 
                 {/* Lý do thỏa thuận */}
                 <div className="p-3 rounded-lg bg-surface border border-border text-xs text-text space-y-1">
-                  <span className="font-medium text-text-subtle block">Lý do hai bên thống nhất:</span>
+                  <span className="font-medium text-text-subtle block">{t('mentoring.unifiedReasonLabel')}</span>
                   <p className="italic">&ldquo;{snapshot.reason}&rdquo;</p>
                 </div>
               </div>
@@ -182,18 +184,18 @@ export function MentoringSubmitSettlementTicketModal({
               {/* Note input */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-text">
-                  Ghi chú thêm gửi Ban Quản Trị (Tùy chọn)
+                  {t('mentoring.extraNoteToAdminOptional')}
                 </label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   maxLength={1000}
                   rows={3}
-                  placeholder="Ghi chú thêm về thông tin tài khoản hoặc ngữ cảnh bàn giao..."
+                  placeholder={t('mentoring.extraNotePlaceholder')}
                   className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
                 />
                 <div className="text-right text-xs text-text-subtle">
-                  {note.length}/1000 ký tự
+                  {t('mentoring.charCount', { count: note.length, defaultValue: `${note.length}/1000 ký tự` })}
                 </div>
               </div>
 
@@ -201,9 +203,9 @@ export function MentoringSubmitSettlementTicketModal({
               <div className="p-3.5 rounded-xl border border-warning-border bg-warning-soft text-warning text-xs flex items-start gap-2.5">
                 <ShieldAlert className="w-5 h-5 shrink-0 text-warning mt-0.5" />
                 <div className="space-y-1">
-                  <p className="font-semibold">Lưu ý quan trọng trước khi gửi Ticket</p>
+                  <p className="font-semibold">{t('mentoring.importantNoticeBeforeSubmit')}</p>
                   <p className="text-xs leading-relaxed text-warning">
-                    Khi gửi Ticket, nhiệm vụ sẽ chính thức chuyển sang trạng thái <strong>Dừng (CANCELLED)</strong>. Ban Quản Trị sẽ căn cứ vào biên bản này để tiến hành giải ngân thanh toán và hoàn tiền về ví/tài khoản của hai bên.
+                    {t('mentoring.settlementImportantNoticeDesc')}
                   </p>
                 </div>
               </div>
@@ -216,7 +218,7 @@ export function MentoringSubmitSettlementTicketModal({
                   onClick={onClose}
                   disabled={submitTicketMutation.isPending}
                 >
-                  Hủy bỏ
+                  {t('common.cancel', 'Hủy bỏ')}
                 </Button>
                 <Button
                   type="submit"
@@ -226,12 +228,12 @@ export function MentoringSubmitSettlementTicketModal({
                   {submitTicketMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Đang gửi Ticket...
+                      {t('mentoring.sendingTicket', 'Đang gửi Ticket...')}
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4 mr-2" />
-                      Xác nhận gửi Ticket tới Admin
+                      {t('mentoring.confirmSendTicketToAdmin', 'Xác nhận gửi Ticket tới Admin')}
                     </>
                   )}
                 </Button>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Flame, Star, CheckCircle2, GraduationCap, Sparkles } from 'lucide-react'
 import { Card, Avatar, Badge } from '@/components/ui'
 import type { MentorCardData } from '../model/mentorSearchTypes'
@@ -13,6 +14,7 @@ interface MentorCardProps {
  * Lược bỏ: Đoạn bio dài, các badge hình thức (online/offline, 1-1/nhóm) và mức giá thỏa thuận.
  */
 export function MentorCard({ mentor }: MentorCardProps) {
+  const { t } = useTranslation()
   const mentorDetailUrl = `/app/mentoring/mentors/${mentor.mentorId || mentor.userId}`
 
   // Danh sách lĩnh vực hỗ trợ
@@ -51,7 +53,7 @@ export function MentorCard({ mentor }: MentorCardProps) {
             {mentor.active && (
               <span
                 className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-success dark:border-border"
-                title="Mentor đang hoạt động"
+                title={t('mentoring.mentorActiveNow')}
               />
             )}
           </Link>
@@ -68,7 +70,7 @@ export function MentorCard({ mentor }: MentorCardProps) {
             <p className="mt-0.5 min-h-10 text-sm font-medium leading-5 text-text-muted dark:text-text-muted">
               {mentor.currentPosition
                 ? `${mentor.currentPosition}${mentor.currentCompany ? ` @ ${mentor.currentCompany}` : ''}`
-                : mentor.headline || 'Cố vấn chuyên môn'}
+                : mentor.headline || t('mentoring.expertAdvisor')}
             </p>
 
             {/* Ngành học */}
@@ -104,39 +106,39 @@ export function MentorCard({ mentor }: MentorCardProps) {
       <div className="mt-4 border-t border-border pt-3.5">
         <div className="mb-3 grid grid-cols-3 gap-2">
           {/* Điểm uy tín */}
-          <div className="min-w-0" title="Điểm uy tín Mentor">
+          <div className="min-w-0" title={t('mentoring.reputationScore')}>
             <span className="flex items-center gap-1 text-sm font-bold text-text">
               <Flame className="h-4 w-4 shrink-0 text-warning" />
               {mentor.reputationScore}
             </span>
-            <span className="mt-0.5 block text-xs text-text-subtle">Uy tín</span>
+            <span className="mt-0.5 block text-xs text-text-subtle">{t('mentoring.reputationScore')}</span>
           </div>
 
           {/* Đánh giá sao */}
           {mentor.rating > 0 ? (
-            <div className="min-w-0" title="Đánh giá trung bình">
+            <div className="min-w-0" title={t('mentoring.rating')}>
               <span className="flex items-center gap-1 text-sm font-bold text-text">
                 <Star className="h-3.5 w-3.5 fill-warning text-warning" />
                 {Number(mentor.rating).toFixed(1)}
               </span>
               <span className="mt-0.5 block text-xs text-text-subtle">
-                {mentor.reviewCount > 0 ? `${mentor.reviewCount} đánh giá` : 'Đánh giá'}
+                {mentor.reviewCount > 0 ? t('mentoring.ratingWithCount', { count: mentor.reviewCount }) : t('mentoring.rating')}
               </span>
             </div>
           ) : (
             <div className="min-w-0 text-text-subtle">
-              <span className="flex items-center gap-1 text-sm font-bold"><Sparkles className="h-3.5 w-3.5" />Mới</span>
-              <span className="mt-0.5 block text-xs">Đánh giá</span>
+              <span className="flex items-center gap-1 text-sm font-bold"><Sparkles className="h-3.5 w-3.5" />{t('mentoring.newStatus')}</span>
+              <span className="mt-0.5 block text-xs">{t('mentoring.rating')}</span>
             </div>
           )}
 
           {/* Nhiệm vụ hoàn thành */}
-          <div className="min-w-0" title="Số nhiệm vụ hướng dẫn hoàn thành">
+          <div className="min-w-0" title={t('mentoring.completedTasks')}>
             <span className="flex items-center gap-1 text-sm font-bold text-text">
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
               {completedCount}
             </span>
-            <span className="mt-0.5 block text-xs text-text-subtle">Hoàn thành</span>
+            <span className="mt-0.5 block text-xs text-text-subtle">{t('mentoring.completed')}</span>
           </div>
         </div>
 
@@ -146,7 +148,7 @@ export function MentorCard({ mentor }: MentorCardProps) {
           onClick={(e) => e.stopPropagation()}
           className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2.5 text-sm font-semibold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-[0.98] dark:text-text-inverse"
         >
-          <span>Xem hồ sơ</span>
+          <span>{t('mentoring.viewProfile')}</span>
         </Link>
       </div>
     </Card>

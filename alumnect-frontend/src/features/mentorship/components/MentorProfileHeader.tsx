@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   ShieldCheck,
@@ -21,6 +22,7 @@ interface MentorProfileHeaderProps {
  * Thiết kế tối giản, thanh lịch, tập trung vào định danh và CTA chính.
  */
 export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHeaderProps) {
+  const { t } = useTranslation()
   const isMentorActive = mentor.mentorStatus === 'ACTIVE'
   const primaryField = mentor.supportedFields && mentor.supportedFields.length > 0 ? mentor.supportedFields[0].name : null
   const showCity = mentor.city && mentor.city.trim().toLowerCase() !== mentor.academicInfo?.campus?.trim().toLowerCase()
@@ -45,7 +47,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
             {isMentorActive && (
               <span
                 className="absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-white bg-success shadow-sm dark:border-border"
-                title="Mentor đang sẵn sàng hoạt động"
+                title={t('mentoring.mentorReadyActiveTitle')}
               />
             )}
           </div>
@@ -61,10 +63,10 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
               {mentor.isVerifiedAlumni && (
                 <span
                   className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-solid border border-primary-soft-border"
-                  title="Cựu sinh viên FPT University đã được hệ thống xác thực"
+                  title={t('mentoring.fptVerifiedAlumniTitle')}
                 >
                   <ShieldCheck className="h-3.5 w-3.5 text-primary-solid" />
-                  <span>Xác thực FPT</span>
+                  <span>{t('mentoring.fptVerifiedBadge')}</span>
                 </span>
               )}
             </div>
@@ -73,7 +75,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
             <p className="text-base font-semibold text-text">
               {mentor.currentPosition
                 ? `${mentor.currentPosition}${mentor.currentCompany ? ` @ ${mentor.currentCompany}` : ''}`
-                : mentor.headline || 'Cố vấn chuyên môn'}
+                : mentor.headline || t('mentoring.professionalMentorDefault')}
             </p>
 
             {/* Thông tin học vấn & Lĩnh vực hỗ trợ */}
@@ -82,7 +84,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <GraduationCap className="h-4 w-4 text-primary-solid shrink-0" />
                   <span>
-                    {mentor.academicInfo.campus || 'Đại học FPT'}
+                    {mentor.academicInfo.campus || t('mentoring.fptUniversityDefault')}
                     {mentor.academicInfo.majorName ? ` • ${mentor.academicInfo.majorName}` : ''}
                     {mentor.academicInfo.majorCode ? ` (${mentor.academicInfo.majorCode})` : ''}
                     {mentor.academicInfo.cohort ? ` • K${mentor.academicInfo.cohort}` : ''}
@@ -93,7 +95,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
               {primaryField && (
                 <span className="inline-flex items-center gap-1.5 font-medium text-primary-solid">
                   <Briefcase className="h-3.5 w-3.5 text-primary-solid" />
-                  <span>Lĩnh vực: {primaryField}</span>
+                  <span>{t('mentoring.industryFieldLabel', { field: primaryField })}</span>
                 </span>
               )}
 
@@ -121,17 +123,17 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
                 : 'bg-surface-3 text-text-subtle cursor-not-allowed'
             }`}
           >
-            {mentor.canReceiveRequest ? 'Gửi yêu cầu cố vấn' : 'Tạm ngưng nhận yêu cầu'}
+            {mentor.canReceiveRequest ? t('mentoring.sendMentoringRequest') : t('mentoring.temporarilyPausedBadge')}
           </Button>
 
           {mentor.userId && (
             <Link
               to={`/app/profile?userId=${mentor.userId}`}
               className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid active:scale-95"
-              title="Xem trang cá nhân của Mentor"
+              title={t('mentoring.viewMentorProfileTitle')}
             >
               <User className="h-3.5 w-3.5 text-text-subtle" />
-              <span>Trang cá nhân</span>
+              <span>{t('mentoring.personalProfileBtn')}</span>
             </Link>
           )}
         </div>

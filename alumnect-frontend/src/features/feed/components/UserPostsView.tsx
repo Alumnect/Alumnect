@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Filter, Loader2, AlertCircle, FileText } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { EmptyState } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
@@ -15,14 +16,15 @@ interface UserPostsViewProps {
   userId: number
 }
 
-const FILTER_TABS: { id: FeedFilter; label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }[] = [
-  { id: 'all', label: 'Tất cả', tone: 'brand' },
-  { id: 'achievement', label: 'Thành tựu', tone: 'gold' },
-  { id: 'recruitment', label: 'Tuyển dụng', tone: 'aqua' },
-  { id: 'event', label: 'Sự kiện', tone: 'violet' },
+const FILTER_TAB_DEFS: { id: FeedFilter; labelKey: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }[] = [
+  { id: 'all', labelKey: 'common.all', tone: 'brand' },
+  { id: 'achievement', labelKey: 'feed.achievement', tone: 'gold' },
+  { id: 'recruitment', labelKey: 'feed.recruitment', tone: 'aqua' },
+  { id: 'event', labelKey: 'feed.event', tone: 'violet' },
 ]
 
 export function UserPostsView({ userId }: UserPostsViewProps) {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState<FeedFilter>('all')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [deletingPost, setDeletingPost] = useState<Post | null>(null)
@@ -84,7 +86,7 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
             <Filter size={20} />
           </div>
           <div className="flex flex-1 gap-1 overflow-x-auto pb-1 scrollbar-hide sm:gap-2 sm:pb-0">
-            {FILTER_TABS.map((tab) => (
+            {FILTER_TAB_DEFS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
@@ -94,7 +96,7 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
                     : 'bg-transparent text-text-subtle hover:bg-surface-2 hover:text-text'
                 }`}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             ))}
           </div>
@@ -111,19 +113,19 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
         ) : isError ? (
           <EmptyState
             icon={<AlertCircle size={24} />}
-            title="Lỗi tải bảng tin"
-            description="Đã xảy ra sự cố khi lấy bài viết của người dùng này. Vui lòng thử lại sau."
+            title={t('feed.loadError')}
+            description={t('feed.loadErrorDesc')}
             action={
               <Button type="button" variant="secondary" size="md" onClick={() => refetch()}>
-                Thử lại
+                {t('common.tryAgain')}
               </Button>
             }
           />
         ) : posts.length === 0 ? (
           <EmptyState
             icon={<FileText size={24} />}
-            title="Chưa có bài viết nào"
-            description="Người dùng này chưa có bài viết nào hoặc chưa phù hợp với bộ lọc hiện tại."
+            title={t('feed.noUserPosts')}
+            description={t('feed.noUserPostsDesc')}
           />
         ) : (
           <>
@@ -158,11 +160,11 @@ export function UserPostsView({ userId }: UserPostsViewProps) {
               {isFetchingNextPage && (
                 <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
                   <Loader2 size={18} className="animate-spin text-primary-solid" />
-                  <span>Đang tải thêm bài viết…</span>
+                  <span>{t('feed.loadingMore')}</span>
                 </div>
               )}
               {!hasNextPage && posts.length > 0 && (
-                <p className="text-sm text-text-subtle">Đã hiển thị tất cả bài viết</p>
+                <p className="text-sm text-text-subtle">{t('feed.endOfFeed')}</p>
               )}
             </div>
           </>

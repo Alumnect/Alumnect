@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useMemo } from 'react'
 import { Sparkles, Briefcase, Hash, Layers } from 'lucide-react'
 import { Card, Badge } from '@/components/ui'
@@ -12,12 +13,13 @@ interface MentorExpertiseSectionProps {
  * Phân biệt rõ ràng giữa Supported Fields (danh mục chuẩn) và Skills (kỹ năng cá nhân).
  */
 export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) {
+  const { t } = useTranslation()
   // Gom nhóm các kỹ năng theo groupName
   const groupedSkills = useMemo(() => {
     if (!mentor.skills || mentor.skills.length === 0) return {}
 
     return mentor.skills.reduce<Record<string, MentorSkillItem[]>>((acc, skill) => {
-      const group = skill.groupName || 'Kỹ năng chung'
+      const group = skill.groupName || t('mentoring.generalSkillsDefault')
       if (!acc[group]) {
         acc[group] = []
       }
@@ -40,7 +42,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
           <Sparkles className="h-4 w-4" />
         </span>
         <h2 className="font-display text-lg font-bold text-text">
-          Lĩnh vực hỗ trợ & Kỹ năng chuyên môn
+          {t('mentoring.supportFieldsAndSkillsTitle')}
         </h2>
       </div>
 
@@ -49,7 +51,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
         <div className="flex items-center gap-2">
           <Briefcase className="h-4 w-4 text-primary-solid" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
-            Lĩnh vực cố vấn
+            {t('mentoring.mentoringFieldSubheading')}
           </h3>
         </div>
 
@@ -67,12 +69,12 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
           </div>
         ) : (
           <p className="text-xs text-text-subtle italic">
-            Mentor chưa chọn lĩnh vực cố vấn cụ thể.
+            {t('mentoring.noMentoringFieldSelected')}
           </p>
         )}
       </div>
 
-      {/* 2. Chủ đề cố vấn chuyên sâu (Topics) */}
+      {/* 2. {t('mentoring.mentoringTopicsSubheading')} (Topics) */}
       {hasTopics && (
         <div className="space-y-3 border-t border-border pt-4">
           <div className="flex items-center gap-2">
@@ -126,7 +128,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
           </div>
         ) : (
           <p className="text-xs text-text-subtle italic">
-            Mentor chưa cập nhật danh sách kỹ năng chuyên môn.
+            {t('mentoring.noSkillsUpdated')}
           </p>
         )}
       </div>

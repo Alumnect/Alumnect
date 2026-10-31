@@ -9,6 +9,7 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import {
@@ -50,20 +51,12 @@ import type { FeedFilter, Post } from '@/features/feed'
 import type { PostType } from '@/features/feed/model/post'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
-const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
-  achievement: { label: 'Thành tựu', tone: 'gold' },
-  recruitment: { label: 'Tuyển dụng', tone: 'aqua' },
-  event: { label: 'Sự kiện', tone: 'violet' },
-  normal: { label: 'Bài viết', tone: 'brand' },
+const TYPE_META: Record<string, { labelKey: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
+  achievement: { labelKey: 'feed.achievement', tone: 'gold' },
+  recruitment: { labelKey: 'feed.recruitment', tone: 'aqua' },
+  event: { labelKey: 'feed.event', tone: 'violet' },
+  normal: { labelKey: 'feed.normal', tone: 'brand' },
 }
-
-/** Các tab lọc bảng tin theo loại bài viết (UC15: lọc theo loại). */
-const FILTERS: { key: FeedFilter; label: string }[] = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'achievement', label: 'Thành tựu' },
-  { key: 'recruitment', label: 'Tuyển dụng' },
-  { key: 'event', label: 'Sự kiện' },
-]
 
 /**
  * Ô soạn bài viết ở đầu bảng tin — chỉ hiển thị cho thành viên đã đăng nhập
@@ -72,12 +65,13 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
  * @param viewer Người dùng hiện tại dùng để hiển thị avatar/tên
  */
 function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostType) => void }) {
-  const firstName = viewer.name ? viewer.name.trim().split(' ').slice(-1)[0] : 'bạn'
+  const { t } = useTranslation()
+  const firstName = viewer.name ? viewer.name.trim().split(' ').slice(-1)[0] : t('common.you', 'bạn')
   const quick: { type: PostType; label: string; icon: ReactNode }[] = [
-    { type: 'normal', label: 'Ảnh / Video', icon: <ImageIcon size={18} /> },
-    { type: 'recruitment', label: 'Tuyển dụng', icon: <Briefcase size={18} /> },
-    { type: 'event', label: 'Sự kiện', icon: <CalendarPlus size={18} /> },
-    { type: 'achievement', label: 'Thành tựu', icon: <Award size={18} /> },
+    { type: 'normal', label: t('feed.photoVideo'), icon: <ImageIcon size={18} /> },
+    { type: 'recruitment', label: t('feed.recruitment'), icon: <Briefcase size={18} /> },
+    { type: 'event', label: t('feed.event'), icon: <CalendarPlus size={18} /> },
+    { type: 'achievement', label: t('feed.achievement'), icon: <Award size={18} /> },
   ]
   return (
     <div className="rounded-2xl border border-border bg-surface px-4 py-3.5 sm:px-5">
@@ -88,10 +82,10 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
           onClick={() => onOpen()}
           className="h-10 min-w-0 flex-1 truncate text-left text-[15px] text-text-subtle transition-colors hover:text-text-muted"
         >
-          {firstName} ơi, bạn đang nghĩ gì thế?
+          {t('feed.createPostPrompt', { name: firstName })}
         </button>
         <Button type="button" size="sm" variant="primary" className="shrink-0 rounded-full px-5" onClick={() => onOpen()}>
-          Đăng
+          {t('feed.post')}
         </Button>
       </div>
       <div className="mt-1 flex items-center gap-1 pl-[52px]">
@@ -144,6 +138,7 @@ export function PostCard({
   onShare?: (post: Post) => void
   onCancelEvent?: (post: Post) => void
 }) {
+  const { t } = useTranslation()
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState<number>(post.likes)
@@ -157,6 +152,16 @@ export function PostCard({
 
   const viewer = useAuthStore((s) => s.user)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
+  const typeLabel = post.type === 'normal'
+    ? t('feed.normal')
+    : post.type === 'achievement'
+    ? t('feed.achievement')
+    : post.type === 'recruitment'
+    ? t('feed.recruitment')
+    : post.type === 'event'
+    ? t('feed.event')
+    : t(meta.labelKey)
+
   // Bài dài chỉ hiện ~6 dòng + "Xem thêm" để các thẻ trong bảng tin có chiều cao gần nhau, dễ quét mắt
   const isLongText = (post.text?.length ?? 0) > 320 || (post.text?.split('\n').length ?? 0) > 6
 
@@ -179,7 +184,7 @@ export function PostCard({
    */
   const handleLike = () => {
     if (!canInteract) {
-      promptLogin('Đăng nhập để thích và tương tác với bài viết.')
+      promptLogin(t('feed.loginToInteract'))
       return
     }
     const next = !liked
@@ -206,7 +211,7 @@ export function PostCard({
    */
   const handleSave = () => {
     if (!canInteract) {
-      promptLogin('Đăng nhập để lưu bài viết.')
+      promptLogin(t('feed.loginToSave'))
       return
     }
     const next = !saved
@@ -253,7 +258,7 @@ export function PostCard({
           <Link
             to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
             className="shrink-0"
-            title={`Xem hồ sơ của ${post.author}`}
+            title={t('feed.viewProfile', { name: post.author })}
           >
             <Avatar src={post.avatar} name={post.author} size={44} verified={post.verified} />
           </Link>
@@ -262,14 +267,14 @@ export function PostCard({
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
                 className="truncate text-[15px] font-bold text-text hover:underline"
-                title={`Xem hồ sơ của ${post.author}`}
+                title={t('feed.viewProfile', { name: post.author })}
               >
                 {post.author}
               </Link>
               {post.type !== 'normal' && (
                 <Link to={`/app/posts/${post.id}`} className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold text-text-muted hover:text-text">
                   {post.type === 'achievement' && <Award size={12} className="text-warning" />}
-                  {meta.label}
+                  {typeLabel}
                 </Link>
               )}
             </div>
@@ -294,7 +299,7 @@ export function PostCard({
             <p className={cn('mt-3 whitespace-pre-line text-[15px] leading-relaxed text-text', isLongText && 'line-clamp-6')}>{post.text}</p>
             {isLongText && (
               <Link to={`/app/posts/${post.id}`} className="mt-1 inline-block text-sm font-semibold text-text-subtle hover:text-text">
-                Xem thêm
+                {t('common.viewMore')}
               </Link>
             )}
           </>
@@ -308,7 +313,7 @@ export function PostCard({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1 rounded-md bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
-                  <Briefcase size={12} /> Tuyển dụng
+                  <Briefcase size={12} /> {t('feed.recruitment')}
                 </span>
                 <span className="text-xs text-text-muted font-semibold truncate">{post.job.company}</span>
               </div>
@@ -324,7 +329,7 @@ export function PostCard({
                 className="shrink-0 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-solid px-4 text-sm font-bold text-on-primary hover:bg-primary-hover transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                Ứng tuyển <ExternalLink size={12} />
+                {t('feed.applyNow')} <ExternalLink size={12} />
               </a>
             )}
           </div>
@@ -339,13 +344,16 @@ export function PostCard({
               <span className="inline-flex items-center gap-1 font-semibold text-success">
                 <Coins size={13} />
                 {post.job.salaryMin && post.job.salaryMax
-                  ? `${post.job.salaryMin.toLocaleString('vi-VN')} - ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
+                  ? t('feed.salaryRange', {
+                      min: post.job.salaryMin.toLocaleString('vi-VN'),
+                      max: post.job.salaryMax.toLocaleString('vi-VN'),
+                    })
                   : post.job.salaryMin
-                  ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
-                  : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
+                  ? t('feed.salaryFrom', { amount: post.job.salaryMin.toLocaleString('vi-VN') })
+                  : t('feed.salaryUpTo', { amount: post.job.salaryMax?.toLocaleString('vi-VN') })}
               </span>
             ) : (
-              <span className="text-text-subtle">Lương thỏa thuận</span>
+              <span className="text-text-subtle">{t('feed.salaryNegotiable')}</span>
             )}
             {post.job.contactEmail && (
               <span className="inline-flex items-center gap-1 text-text-subtle">
@@ -363,11 +371,11 @@ export function PostCard({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1 rounded-md bg-info-soft px-2 py-0.5 text-xs font-bold text-info">
-                  <CalendarPlus size={12} /> Sự kiện
+                  <CalendarPlus size={12} /> {t('feed.event')}
                 </span>
                 {post.event.status === 'CANCELLED' && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2 py-0.5 text-xs font-bold text-danger">
-                    <Ban size={12} /> Đã hủy
+                    <Ban size={12} /> {t('feed.eventCancelled')}
                   </span>
                 )}
               </div>
@@ -408,7 +416,7 @@ export function PostCard({
             )}
             {post.event.capacity && (
               <span className="inline-flex items-center gap-1 text-text-subtle">
-                <Users size={13} className="text-text-subtle" /> Tối đa {post.event.capacity} người
+                <Users size={13} className="text-text-subtle" /> {t('feed.maxAttendees', { count: post.event.capacity })}
               </span>
             )}
           </div>
@@ -427,7 +435,7 @@ export function PostCard({
               {imgs.length === 1 && (
                 <img
                   src={imgs[0]}
-                  alt="Ảnh bài viết"
+                  alt={t('feed.postImage', 'Ảnh bài viết')}
                   loading="lazy"
                   decoding="async"
                   onClick={(e) => {
@@ -444,7 +452,7 @@ export function PostCard({
                     <img
                       key={i}
                       src={url}
-                      alt="Ảnh bài viết"
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
                       loading="lazy"
                       decoding="async"
                       onClick={(e) => {
@@ -461,7 +469,7 @@ export function PostCard({
                 <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
                   <img
                     src={imgs[0]}
-                    alt="Ảnh bài viết"
+                    alt={t('feed.postImage', 'Ảnh bài viết')}
                     loading="lazy"
                     decoding="async"
                     onClick={(e) => {
@@ -474,7 +482,7 @@ export function PostCard({
                     <img
                       key={i}
                       src={url}
-                      alt="Ảnh bài viết"
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
                       loading="lazy"
                       decoding="async"
                       onClick={(e) => {
@@ -493,7 +501,7 @@ export function PostCard({
                     <img
                       key={i}
                       src={url}
-                      alt="Ảnh bài viết"
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
                       loading="lazy"
                       decoding="async"
                       onClick={(e) => {
@@ -512,7 +520,7 @@ export function PostCard({
                   >
                     <img
                       src={imgs[3]}
-                      alt="Ảnh bài viết"
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
                       loading="lazy"
                       decoding="async"
                       className="h-full w-full object-cover transition-opacity hover:opacity-95"
@@ -539,7 +547,7 @@ export function PostCard({
             handleLike()
           }}
           aria-pressed={liked}
-          aria-label={liked ? 'Bỏ thích bài viết' : 'Thích bài viết'}
+          aria-label={liked ? t('feed.unlike') : t('feed.likeAction')}
           className={cn(
             'inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-semibold transition-colors hover:bg-surface-2',
             liked ? 'text-danger' : 'hover:text-danger',
@@ -556,13 +564,13 @@ export function PostCard({
           onClick={(e) => {
             e.stopPropagation()
             if (!canInteract) {
-              promptLogin('Đăng nhập để bình luận về bài viết.')
+              promptLogin(t('feed.loginToComment'))
               return
             }
             setShowComments((prev) => !prev)
           }}
           aria-expanded={showComments}
-          aria-label="Bình luận"
+          aria-label={t('feed.comment')}
           className={cn(
             'inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-semibold transition-colors hover:bg-surface-2',
             showComments ? 'text-primary-solid' : 'hover:text-text',
@@ -578,12 +586,12 @@ export function PostCard({
             e.preventDefault()
             e.stopPropagation()
             if (!canInteract) {
-              promptLogin('Đăng nhập để chia sẻ bài viết.')
+              promptLogin(t('feed.loginToShare'))
             } else if (onShare) {
               onShare(post)
             }
           }}
-          aria-label="Chia sẻ bài viết"
+          aria-label={t('feed.sharePost')}
           className="inline-flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 transition-colors hover:bg-surface-2 hover:text-text"
         >
           <Send size={19} />
@@ -592,7 +600,7 @@ export function PostCard({
         <div className="ml-auto flex items-center">
           <button
             type="button"
-            aria-label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+            aria-label={saved ? t('feed.unsave') : t('feed.save')}
             aria-pressed={saved}
             onClick={(e) => {
               e.stopPropagation()
@@ -608,9 +616,9 @@ export function PostCard({
               onClick={(e) => {
                 e.stopPropagation()
                 if (canReport) onReport?.(post)
-                else promptLogin('Đăng nhập để báo cáo bài viết.')
+                else promptLogin(t('feed.loginToReport'))
               }}
-              aria-label="Báo cáo bài viết"
+              aria-label={t('feed.report')}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-danger-soft hover:text-danger"
             >
               <Flag size={19} />
@@ -646,7 +654,7 @@ export function PostCard({
         isOpen={!!previewImage}
         onClose={() => setPreviewImage(null)}
         src={previewImage || ''}
-        alt={post.text?.slice(0, 50) || 'Ảnh bài viết'}
+        alt={post.text?.slice(0, 50) || t('feed.postImage', 'Ảnh bài viết')}
         senderName={post.author}
         senderAvatar={post.avatar}
         time={post.time}
@@ -657,8 +665,9 @@ export function PostCard({
 
 /** Khung xương (skeleton) hiển thị trong lúc tải bảng tin lần đầu. */
 function PostSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div className="rounded-2xl border border-border bg-surface px-4 py-4 sm:px-5" role="status" aria-label="Đang tải bài viết">
+    <div className="rounded-2xl border border-border bg-surface px-4 py-4 sm:px-5" role="status" aria-label={t('feed.loadingPosts', 'Đang tải bài viết')}>
       <div className="flex items-center gap-3">
         <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-surface-3" />
         <div className="flex-1 space-y-2">
@@ -681,25 +690,27 @@ function PostSkeleton() {
  * @param onRetry Hàm gọi lại API
  */
 function FeedError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
       <AlertTriangle size={32} className="text-danger" aria-hidden />
       <div>
-        <p className="font-bold text-text">Không tải được bảng tin</p>
-        <p className="mt-1 text-sm text-text-subtle">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">{t('feed.loadError')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('feed.loadErrorDesc')}</p>
       </div>
-      <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
+      <Button variant="secondary" size="sm" onClick={onRetry}>{t('common.tryAgain')}</Button>
     </div>
   )
 }
 
 /** Trạng thái rỗng khi cộng đồng chưa có bài viết nào ("No posts yet"). */
 function FeedEmpty() {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <Inbox size={40} className="mb-3 text-text-subtle" aria-hidden />
-      <h3 className="mb-1 text-lg font-bold text-text">Chưa có bài viết nào</h3>
-      <p className="text-sm text-text-subtle">Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên.</p>
+      <h3 className="mb-1 text-lg font-bold text-text">{t('feed.emptyFeed')}</h3>
+      <p className="text-sm text-text-subtle">{t('feed.emptyFeedDesc')}</p>
     </div>
   )
 }
@@ -711,6 +722,7 @@ function FeedEmpty() {
  * trạng thái loading / empty / error / permission.
  */
 export function FeedPage() {
+  const { t } = useTranslation()
   // === Bước 1: State cục bộ — bộ lọc loại bài viết, mở/đóng modal & bài viết đang sửa (UC14/UC22) ===
   const [filter, setFilter] = useState<FeedFilter>('all')
   const [composerOpen, setComposerOpen] = useState(false)
@@ -722,6 +734,13 @@ export function FeedPage() {
   const [cancellingEventPost, setCancellingEventPost] = useState<Post | null>(null)
 
   const cancelEventMutation = useCancelEvent()
+
+  const filters: { key: FeedFilter; label: string }[] = [
+    { key: 'all', label: t('feed.all') },
+    { key: 'achievement', label: t('feed.achievement') },
+    { key: 'recruitment', label: t('feed.recruitment') },
+    { key: 'event', label: t('feed.event') },
+  ]
 
   // Danh sách các bài viết người dùng vừa đăng trong phiên làm việc hiện tại
   // (Kiểu Facebook: hiển thị ngay tức thì ở đầu bảng tin trên máy người đăng;
@@ -838,8 +857,8 @@ export function FeedPage() {
           )}
 
           {/* Bộ lọc theo loại bài viết: tab gạch chân chia đều (kiểu Threads) */}
-          <div role="tablist" aria-label="Lọc bài viết theo loại" className="flex border-b border-border-strong/60">
-            {FILTERS.map((f) => {
+          <div role="tablist" aria-label={t('feed.filterByType', 'Lọc bài viết theo loại')} className="flex border-b border-border-strong/60">
+            {filters.map((f) => {
               const isActive = filter === f.key
               return (
                 <button
@@ -875,9 +894,9 @@ export function FeedPage() {
             debouncedKeyword ? (
               <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-6 py-16 text-center">
                 <Search size={36} className="mb-3 text-text-subtle" aria-hidden />
-                <h3 className="mb-1 text-lg font-bold text-text">Không tìm thấy kết quả</h3>
+                <h3 className="mb-1 text-lg font-bold text-text">{t('feed.searchNoResults')}</h3>
                 <p className="text-sm text-text-subtle">
-                  Không có bài viết nào khớp với từ khóa "<span className="font-semibold">{debouncedKeyword}</span>"
+                  {t('feed.searchNoResultsDesc', { keyword: debouncedKeyword })}
                 </p>
               </div>
             ) : (
@@ -910,10 +929,10 @@ export function FeedPage() {
                 {isFetchingNextPage && (
                   <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
                     <Loader2 size={18} className="animate-spin text-primary-solid" />
-                    <span>Đang tải thêm bài viết…</span>
+                    <span>{t('feed.loadingMore')}</span>
                   </div>
                 )}
-                {!hasNextPage && posts.length > 0 && <p className="text-sm text-text-subtle">Bạn đã xem hết bảng tin</p>}
+                {!hasNextPage && posts.length > 0 && <p className="text-sm text-text-subtle">{t('feed.endOfFeed')}</p>}
               </div>
             </>
           )}
@@ -948,13 +967,13 @@ export function FeedPage() {
                 { eventId },
                 {
                   onSuccess: (res) => {
-                    toast.success(res.message || 'Đã hủy sự kiện thành công!')
+                    toast.success(res.message || t('event.cancelEventSuccess', 'Đã hủy sự kiện thành công!'))
                     setCancellingEventPost(null)
                     refetch()
                   },
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onError: (err: any) => {
-                    toast.error(err.response?.data?.message || err.message || 'Không thể hủy sự kiện. Vui lòng thử lại.')
+                    toast.error(err.response?.data?.message || err.message || t('event.cancelEventError', 'Không thể hủy sự kiện. Vui lòng thử lại.'))
                   },
                 },
               )

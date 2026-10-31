@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
+import i18n from '@/i18n'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -47,10 +48,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <AlertTriangle className="h-8 w-8" />
           </div>
           <h2 className="mt-4 font-heading text-xl font-extrabold text-text">
-            Đã có sự cố xảy ra khi tải trang
+            {i18n.t('common.errorBoundaryTitle')}
           </h2>
           <p className="mt-2 max-w-md text-xs text-text-muted sm:text-sm">
-            Hệ thống gặp lỗi không mong muốn trong khi hiển thị nội dung. Bạn có thể thử tải lại trang hoặc quay về trang chủ.
+            {i18n.t('common.errorBoundaryDesc')}
           </p>
           {this.state.error?.message && (
             <div className="mt-3 max-w-2xl w-full rounded-xl border border-border bg-surface-2 px-3.5 py-2 text-left font-mono text-xs text-text-muted dark:text-[#c0c2c6]">
@@ -69,7 +70,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               className="inline-flex items-center gap-2 rounded-2xl bg-primary-solid px-5 py-2.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95 cursor-pointer"
             >
               <RefreshCw className="h-4 w-4" />
-              <span>Tải lại trang</span>
+              <span>{i18n.t('common.reloadPage')}</span>
             </button>
             <button
               type="button"
@@ -77,7 +78,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               className="inline-flex items-center gap-2 rounded-2xl border border-border bg-surface px-5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition hover:bg-primary-soft hover:text-primary-solid cursor-pointer"
             >
               <Home className="h-4 w-4" />
-              <span>Về Trang chủ</span>
+              <span>{i18n.t('common.goHome')}</span>
             </button>
           </div>
         </div>

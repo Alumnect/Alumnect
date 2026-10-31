@@ -9,11 +9,11 @@ import { EventRsvpButton, CancelEventModal, useCancelEvent, EventHistoryView, Ev
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { compact, cn } from '@/lib/utils'
-
-const TABS = ['Sắp diễn ra', 'Trong tháng này', 'Lịch sử tham gia']
+import { useTranslation } from 'react-i18next'
 
 export function EventsPage() {
-  const [tab, setTab] = useState('Sắp diễn ra')
+  const { t, i18n } = useTranslation()
+  const [tabKey, setTabKey] = useState<'upcoming' | 'this_month' | 'history'>('upcoming')
   const [keyword, setKeyword] = useState('')
   const [saved, setSaved] = useState<Record<string, boolean>>({})
   const [cancelEventTarget, setCancelEventTarget] = useState<{ id: string | number; title?: string } | null>(null)
@@ -30,7 +30,7 @@ export function EventsPage() {
   const toggleSave = useToggleSavePost()
   const cancelEventMutation = useCancelEvent()
 
-  const currentEventFilter = tab === 'Sắp diễn ra' ? 'upcoming' : tab === 'Trong tháng này' ? 'this_month' : undefined
+  const currentEventFilter = tabKey === 'upcoming' ? 'upcoming' : tabKey === 'this_month' ? 'this_month' : undefined
 
   // Lấy danh sách sự kiện đã được Backend lọc trực tiếp từ Database (chỉ lấy sự kiện hợp lệ, chưa kết thúc, chưa hủy)
   const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useFeed('event', '', 12, currentEventFilter)
@@ -50,23 +50,29 @@ export function EventsPage() {
   }, [data, keyword])
 
   const getEventDateInfo = (isoString?: string | null) => {
-    if (!isoString) return { month: 'TH--', day: '--', dateStr: 'Chưa xác định', timeStr: '' }
+    if (!isoString) return { month: 'TH--', day: '--', dateStr: t('event.unknownDate'), timeStr: '' }
     const date = new Date(isoString)
-    const month = 'TH' + (date.getMonth() + 1)
+    const month = (i18n.language === 'vi' ? 'TH' : 'M') + (date.getMonth() + 1)
     return {
       month,
       day: date.getDate().toString().padStart(2, '0'),
-      dateStr: date.toLocaleDateString('vi-VN', { dateStyle: 'medium' }),
-      timeStr: date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+      dateStr: date.toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', { dateStyle: 'medium' }),
+      timeStr: date.toLocaleTimeString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' })
     }
   }
+
+  const tabList = useMemo(() => [
+    { key: 'upcoming' as const, label: t('event.tabUpcoming') },
+    { key: 'this_month' as const, label: t('event.tabThisMonth') },
+    { key: 'history' as const, label: t('event.tabHistory') },
+  ], [t])
 
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
         icon={<CalendarDays size={20} />}
-        title="Sự kiện & Họp mặt"
-        subtitle="Tham gia các buổi giao lưu, hội thảo và ngày hội cựu sinh viên FPTU."
+        title={t('event.pageTitle')}
+        subtitle={t('event.pageSubtitle')}
       />
 
       {/* Khung tìm kiếm sự kiện & lọc tab thời gian */}
@@ -75,16 +81,16 @@ export function EventsPage() {
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
           <input
-            aria-label="Tìm kiếm sự kiện theo tên, địa điểm hoặc từ khóa..."
+            aria-label={t('event.searchPlaceholder')}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Tìm kiếm sự kiện theo tên, địa điểm hoặc từ khóa..."
+            placeholder={t('event.searchPlaceholder')}
             className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
           />
           {keyword && (
             <button
               onClick={() => setKeyword('')}
-              aria-label="Xóa tìm kiếm"
+              aria-label={t('common.clearSearch')}
               className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted cursor-pointer"
             >
               <X size={13} />
@@ -94,44 +100,44 @@ export function EventsPage() {
 
         {/* Cụm Tabs thời gian */}
         <div className="no-scrollbar flex gap-2 overflow-x-auto pt-0.5">
-          {TABS.map((t) => (
+          {tabList.map((tItem) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={tItem.key}
+              onClick={() => setTabKey(tItem.key)}
               className={cn(
                 'shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors cursor-pointer',
-                tab === t
+                tabKey === tItem.key
                   ? 'bg-primary-solid text-on-primary shadow-raised'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3',
               )}
             >
-              {t}
+              {tItem.label}
             </button>
           ))}
         </div>
       </Card>
 
-      <FadeSwitch id={tab}>
-      {tab === 'Lịch sử tham gia' ? (
+      <FadeSwitch id={tabKey}>
+      {tabKey === 'history' ? (
         !isAuthenticated ? (
           <EmptyState
             icon={<CalendarDays size={24} />}
-            title="Đăng nhập để xem lịch sử"
-            description="Vui lòng đăng nhập với tài khoản Sinh viên hoặc Cựu sinh viên để xem lịch sử các sự kiện bạn đã tham gia."
+            title={t('event.loginToViewHistory')}
+            description={t('event.loginToViewHistoryDesc')}
             action={
-              <Button size="sm" variant="primary" onClick={() => promptLogin('Đăng nhập để xem lịch sử tham gia sự kiện.')}>
-                Đăng nhập ngay
+              <Button size="sm" variant="primary" onClick={() => promptLogin(t('event.promptLoginViewHistory'))}>
+                {t('common.loginNow')}
               </Button>
             }
           />
         ) : currentUser?.role === 'ADMIN' ? (
           <EmptyState
             icon={<CalendarDays size={24} />}
-            title="Không áp dụng cho Quản trị viên"
-            description="Tài khoản Quản trị viên không tham gia vào các sự kiện cộng đồng."
+            title={t('event.adminNotApplicableTitle')}
+            description={t('event.adminNotApplicableDesc')}
             action={
-              <Button size="sm" variant="secondary" onClick={() => setTab('Sắp diễn ra')}>
-                Quay lại danh sách sự kiện
+              <Button size="sm" variant="secondary" onClick={() => setTabKey('upcoming')}>
+                {t('event.backToEvents')}
               </Button>
             }
           />
@@ -147,23 +153,23 @@ export function EventsPage() {
           ) : isError ? (
             <EmptyState
               icon={<CalendarDays size={24} />}
-              title="Không tải được danh sách sự kiện"
-              description="Đã xảy ra lỗi khi kết nối tới máy chủ."
-              action={<Button size="sm" variant="secondary" onClick={() => window.location.reload()}>Thử lại</Button>}
+              title={t('event.loadError')}
+              description={t('event.loadErrorDesc')}
+              action={<Button size="sm" variant="secondary" onClick={() => window.location.reload()}>{t('common.tryAgain')}</Button>}
             />
           ) : filteredEvents.length === 0 ? (
             <EmptyState
               icon={<CalendarDays size={24} />}
-              title={keyword ? `Không tìm thấy sự kiện nào khớp "${keyword.trim()}"` : 'Chưa có sự kiện nào ở mục này'}
-              description={keyword ? 'Thử tìm với từ khóa khác hoặc xóa ô tìm kiếm để xem tất cả sự kiện.' : 'Hãy thử chọn tab khác hoặc quay lại sau để xem các sự kiện mới.'}
+              title={keyword ? t('event.noEventsMatched', { keyword: keyword.trim() }) : t('event.noEvents')}
+              description={keyword ? t('event.noEventsMatchedDesc') : t('event.noEventsOtherDesc')}
               action={
                 keyword ? (
                   <Button size="sm" variant="secondary" onClick={() => setKeyword('')}>
-                    Xóa tìm kiếm
+                    {t('common.clearSearch')}
                   </Button>
                 ) : (
-                  <Button size="sm" variant="secondary" onClick={() => setTab('Sắp diễn ra')}>
-                    Xem tất cả sự kiện
+                  <Button size="sm" variant="secondary" onClick={() => setTabKey('upcoming')}>
+                    {t('event.filterAll')}
                   </Button>
                 )
               }
@@ -180,7 +186,7 @@ export function EventsPage() {
                   <Card hover={false} className="group h-full flex flex-col overflow-hidden transition-shadow duration-200">
                     <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden">
                       <Link to={`/app/posts/${post.id}`} className="block h-full w-full">
-                        <SmartImage src={cover} alt={event.title || 'Sự kiện'} className="h-full w-full" imgClassName="object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <SmartImage src={cover} alt={event.title || t('event.unnamedEvent')} className="h-full w-full" imgClassName="object-cover transition-transform duration-500 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-t from-plum-900/85 to-transparent" />
                         <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center">
                           <span className="text-xs font-bold uppercase text-warning">{dateInfo.month}</span>
@@ -188,7 +194,7 @@ export function EventsPage() {
                         </div>
                         {event.status === 'CANCELLED' && (
                           <div className="absolute left-20 top-3 flex items-center gap-1 rounded-xl bg-danger-soft px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-xs">
-                            <Ban size={13} /> Đã hủy
+                            <Ban size={13} /> {t('event.cancelled')}
                           </div>
                         )}
                       </Link>
@@ -200,7 +206,7 @@ export function EventsPage() {
                           e.preventDefault()
                           e.stopPropagation()
                           if (!isAuthenticated) {
-                            promptLogin('Đăng nhập để lưu sự kiện.')
+                            promptLogin(t('event.promptLoginSave'))
                             return
                           }
                           const isSaved = saved[post.id] ?? post.saved
@@ -224,15 +230,15 @@ export function EventsPage() {
                             ? 'bg-surface text-primary-solid shadow-orange-500/20'
                             : 'bg-black/35 text-white/90 hover:bg-black/55 hover:text-white backdrop-blur-xs'
                         )}
-                        aria-label="Lưu sự kiện"
-                        title={(saved[post.id] ?? post.saved) ? 'Bỏ lưu sự kiện' : 'Lưu sự kiện'}
+                        aria-label={t('event.saveEventTooltip')}
+                        title={(saved[post.id] ?? post.saved) ? t('event.unsaveEventTooltip') : t('event.saveEventTooltip')}
                       >
                         <Bookmark size={17} className={(saved[post.id] ?? post.saved) ? 'fill-[#F27024]' : ''} />
                       </button>
                     </div>
                     <div className="flex flex-col justify-between flex-1 p-5">
                       <Link to={`/app/posts/${post.id}`} className="block">
-                        <h2 className="text-lg font-bold text-text line-clamp-2 hover:underline hover:text-primary-solid transition-colors">{event.title || 'Sự kiện chưa đặt tên'}</h2>
+                        <h2 className="text-lg font-bold text-text line-clamp-2 hover:underline hover:text-primary-solid transition-colors">{event.title || t('event.unnamedEvent')}</h2>
                         {event.location && (
                           <p className="mt-2 flex items-center gap-1.5 text-sm text-text-subtle truncate">
                             <MapPin size={14} className="shrink-0" /> {event.location}
@@ -274,7 +280,7 @@ export function EventsPage() {
                               })
                             }}
                             className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-text-subtle hover:bg-primary-soft hover:text-primary-solid transition-colors"
-                            title="Bấm để xem danh sách người tham gia"
+                            title={t('event.viewAttendeesTooltip')}
                           >
                             <Users size={12} className="text-primary-solid" />
                             <span>
@@ -299,9 +305,9 @@ export function EventsPage() {
                                   })
                                 }}
                                 className="h-8 px-3 text-xs gap-1.5 rounded-xl font-semibold border-danger-border text-danger hover:bg-danger-soft hover:border-danger-border"
-                                title="Hủy tổ chức sự kiện này"
+                                title={t('event.cancelEventTooltip')}
                               >
-                                <Ban size={13} /> Hủy sự kiện
+                                <Ban size={13} /> {t('event.cancelEventAction')}
                               </Button>
                             )}
                           <EventRsvpButton
@@ -336,7 +342,7 @@ export function EventsPage() {
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
                 >
-                  {isFetchingNextPage ? 'Đang tải...' : 'Tải thêm sự kiện'}
+                  {isFetchingNextPage ? t('common.loading') : t('event.loadMore')}
                 </Button>
               </div>
             </Reveal>
@@ -355,14 +361,14 @@ export function EventsPage() {
               { eventId: cancelEventTarget.id },
               {
                 onSuccess: (res) => {
-                  toast.success(res.message || 'Đã hủy sự kiện thành công!')
+                  toast.success(res.message || t('event.cancelEventSuccess'))
                   setCancelEventTarget(null)
                 },
                 onError: (err: any) => {
                   toast.error(
                     err.response?.data?.message ||
                       err.message ||
-                      'Không thể hủy sự kiện. Vui lòng thử lại.'
+                      t('event.cancelEventError')
                   )
                 },
               }

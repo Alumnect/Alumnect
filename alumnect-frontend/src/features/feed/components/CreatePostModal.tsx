@@ -1,4 +1,5 @@
 import { useState, useEffect, type ChangeEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import DatePicker from 'react-datepicker'
@@ -53,6 +54,7 @@ export function CreatePostModal({
   defaultType?: PostType
   onPostCreated?: (post: Post) => void
 }) {
+  const { t } = useTranslation()
   const createMutation = useCreatePost()
   const editMutation = useEditPost()
   const activeMutation = editPost ? editMutation : createMutation
@@ -154,23 +156,31 @@ export function CreatePostModal({
       // Auto-fill content for Job/Event if user left it empty (Backend @NotBlank constraint)
       if (!payload.content.trim()) {
         if (payload.type === 'recruitment') {
-          payload.content = `Tuyển dụng: ${payload.job?.title || 'Vị trí mới'} tại ${payload.job?.company || 'công ty'}`
+          payload.content = t('feed.recruitmentFallback', {
+            title: payload.job?.title || t('feed.newPosition', 'Vị trí mới'),
+            company: payload.job?.company || t('feed.companyFallback', 'công ty'),
+          })
         } else if (payload.type === 'event') {
-          payload.content = `Sự kiện: ${payload.event?.title || 'Sự kiện mới'}`
+          payload.content = t('feed.eventFallback', {
+            title: payload.event?.title || t('event.unnamedEvent'),
+          })
         } else if (payload.type === 'achievement') {
-          payload.content = 'Thành tựu mới'
+          payload.content = t('feed.achievementFallback')
         }
       }
 
       if (payload.type === 'event' && payload.event) {
         if (payload.event.capacity !== undefined && payload.event.capacity !== null && !isNaN(payload.event.capacity)) {
           if (payload.event.capacity < 1) {
-            toast.error('Sức chứa sự kiện tối thiểu là 1 người.')
+            toast.error(t('event.capacityMinError'))
             return
           }
           if (currentAttendees > 0 && payload.event.capacity < currentAttendees) {
             toast.error(
-              `Sức chứa tối đa (${payload.event.capacity}) không thể nhỏ hơn số người đã đăng ký tham gia (${currentAttendees} người).`
+              t('event.capacityLessThanAttendeesError', {
+                capacity: payload.event.capacity,
+                attendees: currentAttendees,
+              })
             )
             return
           }
@@ -188,24 +198,24 @@ export function CreatePostModal({
           { postId: editPost.id, input: payload },
           {
             onSuccess: () => {
-              toast.success('Đã cập nhật bài viết thành công!')
+              toast.success(t('feed.updatePostSuccess'))
               close()
             },
             onError: (err: any) => {
-              toast.error(err?.message || 'Không thể cập nhật bài viết.')
+              toast.error(err?.message || t('feed.updatePostError'))
             }
           }
         )
       } else {
         createMutation.mutate(payload, {
           onSuccess: (newPost: any) => {
-            toast.success('Đăng bài viết thành công!')
+            toast.success(t('feed.createPostSuccess'))
             onPostCreated?.(newPost)
             close()
             window.scrollTo({ top: 0, behavior: 'smooth' })
           },
           onError: (err: any) => {
-            toast.error(err?.message || 'Không thể đăng bài viết, vui lòng thử lại.')
+            toast.error(err?.message || t('feed.createPostError'))
           }
         })
       }
@@ -223,7 +233,7 @@ export function CreatePostModal({
       (f) => !f.type.startsWith('image/') && !f.type.startsWith('video/')
     )
     if (invalidFile) {
-      setUploadError('Chỉ hỗ trợ tệp định dạng Hình ảnh hoặc Video. Không nhận tài liệu (Word, PDF,...) hoặc tệp khác.')
+      setUploadError(t('feed.mediaTypeUnsupported'))
       return
     }
 
@@ -245,13 +255,13 @@ export function CreatePostModal({
             video.src = URL.createObjectURL(vf)
           })
           if (duration > 60) {
-            setUploadError('Video không được vượt quá 1 phút.')
+            setUploadError(t('feed.videoDurationLimit'))
             e.target.value = ''
             return
           }
         }
       } catch (err) {
-        setUploadError('Đã có lỗi khi kiểm tra tệp video.')
+        setUploadError(t('feed.videoCheckError'))
         e.target.value = ''
         return
       }
@@ -262,7 +272,7 @@ export function CreatePostModal({
     try {
       const current = (watch('mediaUrls') ?? []).filter(Boolean)
       if (current.length + files.length > 10) {
-        setUploadError('Tối đa 10 ảnh mỗi bài viết.')
+        setUploadError(t('feed.maxImagesLimit'))
         return
       }
       const uploaded = await Promise.all(files.map((f) => feedApi.uploadPostImage(f)))
@@ -270,7 +280,7 @@ export function CreatePostModal({
       // Clear legacy imageUrl
       setValue('imageUrl', undefined)
     } catch {
-      setUploadError('Tải ảnh lên thất bại. Vui lòng thử lại.')
+      setUploadError(t('feed.uploadFailed'))
     } finally {
       setIsUploading(false)
       setUploadingCount(0)
@@ -291,12 +301,12 @@ export function CreatePostModal({
             {/* Header */}
             <div className="flex items-center justify-between p-6 pb-4 border-b border-border bg-surface shrink-0">
               <h3 className="text-xl font-bold text-text">
-                {editPost ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
+                {editPost ? t('feed.editPost') : t('feed.createPost')}
               </h3>
               <button
                 type="button"
                 onClick={close}
-                aria-label="Đóng"
+                aria-label={t('common.close')}
                 className="grid h-9 w-9 place-items-center rounded-xl text-text-subtle hover:bg-surface-2 hover:text-text transition-colors cursor-pointer"
               >
                 <X size={18} />
@@ -320,8 +330,8 @@ export function CreatePostModal({
                       {...register('content')}
                       rows={5}
                       maxLength={POST_CONTENT_MAX}
-                      aria-label="Nội dung bài viết"
-                      placeholder={type === 'recruitment' ? "Mô tả chi tiết công việc tuyển dụng..." : "Bạn muốn chia sẻ điều gì với cộng đồng?"}
+                      aria-label={t('feed.contentLabel')}
+                      placeholder={type === 'recruitment' ? t('feed.recruitmentPrompt') : t('feed.sharePrompt')}
                       className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-4 text-[15px] leading-relaxed text-text outline-none transition-colors placeholder:text-text-subtle focus:border-primary transition duration-300 focus:bg-surface dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
                     />
                     <div className="mt-1 flex items-center justify-between">
@@ -339,22 +349,31 @@ export function CreatePostModal({
 
                 {/* Chọn loại bài viết */}
                 <div className="flex flex-wrap gap-2">
-                  {POST_TYPES.map((t) => {
-                    const Icon = TYPE_ICONS[t] ?? FileText
+                  {POST_TYPES.map((postType) => {
+                    const Icon = TYPE_ICONS[postType] ?? FileText
+                    const label = postType === 'normal'
+                      ? t('feed.typeNormal')
+                      : postType === 'achievement'
+                      ? t('feed.typeAchievement')
+                      : postType === 'recruitment'
+                      ? t('feed.typeRecruitment')
+                      : postType === 'event'
+                      ? t('feed.typeEvent')
+                      : POST_TYPE_LABELS[postType]
                     return (
                       <button
-                        key={t}
+                        key={postType}
                         type="button"
                         disabled={!!editPost}
-                        onClick={() => setValue('type', t)}
+                        onClick={() => setValue('type', postType)}
                         className={cn(
                           'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed',
-                          type === t
+                          type === postType
                             ? 'bg-primary-solid text-on-primary shadow-sm enabled:hover:bg-brand-700'
                             : 'bg-surface text-text-muted border border-border enabled:hover:border-brand-300 enabled:hover:text-brand-600 dark:border-border-strong dark:enabled:hover:border-brand-400 dark:enabled:hover:text-brand-400'
                         )}
                       >
-                        <Icon size={15} /> {POST_TYPE_LABELS[t]}
+                        <Icon size={15} /> {label}
                       </button>
                     )
                   })}
@@ -364,13 +383,13 @@ export function CreatePostModal({
                 {type === 'recruitment' && (
                   <div className="space-y-4 rounded-xl border border-brand-500/10 bg-brand-50/40 p-4 animate-fade-in dark:border-brand-500/25 dark:bg-bg">
                     <h4 className="flex items-center gap-2 text-sm font-bold text-primary-solid">
-                      <Briefcase size={16} /> Thông tin tuyển dụng
+                      <Briefcase size={16} /> {t('feed.recruitmentInfo')}
                     </h4>
                     {/* Chức danh + Công ty */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          Chức vụ <span className="text-danger">*</span>
+                          {t('feed.jobTitle')} <span className="text-danger">*</span>
                         </label>
                         <input
                           {...register('job.title')}
@@ -381,7 +400,7 @@ export function CreatePostModal({
                       </div>
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          Công ty <span className="text-danger">*</span>
+                          {t('feed.company')} <span className="text-danger">*</span>
                         </label>
                         <input
                           {...register('job.company')}
@@ -396,7 +415,7 @@ export function CreatePostModal({
                     <div className="grid grid-cols-1 gap-4">
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <MapPin size={13} /> Địa điểm
+                          <MapPin size={13} /> {t('feed.location')}
                         </label>
                         <Controller
                           control={control}
@@ -406,7 +425,7 @@ export function CreatePostModal({
                               value={field.value || ''}
                               onChange={(val) => field.onChange(val)}
                               onSelect={(place) => field.onChange(place?.location || '')}
-                              placeholder="Hà Nội, Remote..."
+                              placeholder={t('feed.locationPlaceholder', 'Hà Nội, Remote...')}
                               inputClassName="!rounded-lg !py-2 h-[38px] text-sm dark:!border-border-strong dark:!bg-surface dark:!text-text"
                             />
                           )}
@@ -417,7 +436,7 @@ export function CreatePostModal({
                     {/* Mức lương */}
                     <div>
                       <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                        <Coins size={13} className="text-success" /> Mức lương (VNĐ) <span className="font-normal text-text-subtle dark:text-text-muted">— Để trống nếu thỏa thuận</span>
+                        <Coins size={13} className="text-success" /> {t('feed.salaryVND')} <span className="font-normal text-text-subtle dark:text-text-muted">— {t('feed.salaryNegotiableHint')}</span>
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="relative">
@@ -427,9 +446,9 @@ export function CreatePostModal({
                             step={500000}
                             {...register('job.salaryMin', { valueAsNumber: true })}
                             className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                            placeholder="Tối thiểu"
+                            placeholder={t('feed.salaryPlaceholderMin')}
                           />
-                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VNĐ</span>
+                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VND</span>
                         </div>
                         <div className="relative">
                           <input
@@ -438,9 +457,9 @@ export function CreatePostModal({
                             step={500000}
                             {...register('job.salaryMax', { valueAsNumber: true })}
                             className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                            placeholder="Tối đa"
+                            placeholder={t('feed.salaryPlaceholderMax')}
                           />
-                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VNĐ</span>
+                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VND</span>
                         </div>
                       </div>
                     </div>
@@ -449,7 +468,7 @@ export function CreatePostModal({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Mail size={13} /> Email liên hệ
+                          <Mail size={13} /> {t('feed.contactEmail')}
                         </label>
                         <input
                           {...register('job.contactEmail')}
@@ -461,7 +480,7 @@ export function CreatePostModal({
                       </div>
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Link size={13} /> Link ứng tuyển
+                          <Link size={13} /> {t('feed.applyUrl')}
                         </label>
                         <input
                           {...register('job.applyUrl')}
@@ -477,17 +496,17 @@ export function CreatePostModal({
                 {type === 'event' && (
                   <div className="space-y-4 rounded-xl border border-info bg-info-soft p-4 animate-fade-in dark:bg-bg">
                     <h4 className="flex items-center gap-2 text-sm font-bold text-info">
-                      <CalendarPlus size={16} /> Thông tin sự kiện
+                      <CalendarPlus size={16} /> {t('feed.eventInfo')}
                     </h4>
                     {/* Tên sự kiện */}
                     <div>
                       <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                        Tên sự kiện <span className="text-danger">*</span>
+                        {t('feed.eventTitle')} <span className="text-danger">*</span>
                       </label>
                       <input
                         {...register('event.title')}
                         className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                        placeholder="VD: Hội thảo công nghệ 2024"
+                        placeholder={t('feed.eventTitlePlaceholder')}
                       />
                       {errors.event?.title && <p className="mt-1 text-xs text-danger">{errors.event.title.message}</p>}
                     </div>
@@ -496,7 +515,7 @@ export function CreatePostModal({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Clock size={13} /> Bắt đầu <span className="text-danger">*</span>
+                          <Clock size={13} /> {t('feed.startTime')} <span className="text-danger">*</span>
                         </label>
                         <Controller
                           control={control}
@@ -513,7 +532,7 @@ export function CreatePostModal({
                               showYearDropdown
                               dropdownMode="select"
                               minDate={new Date()}
-                              placeholderText="Chọn ngày giờ"
+                              placeholderText={t('feed.selectDateTime')}
                               wrapperClassName="w-full"
                               popperPlacement="bottom-start"
                               className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
@@ -524,7 +543,7 @@ export function CreatePostModal({
                       </div>
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Clock size={13} /> Kết thúc
+                          <Clock size={13} /> {t('feed.endTime')}
                         </label>
                         <Controller
                           control={control}
@@ -541,7 +560,7 @@ export function CreatePostModal({
                               showYearDropdown
                               dropdownMode="select"
                               minDate={watch('event.startTime') ? new Date(watch('event.startTime') as string) : new Date()}
-                              placeholderText="Chọn ngày giờ"
+                              placeholderText={t('feed.selectDateTime')}
                               wrapperClassName="w-full"
                               popperPlacement="bottom-end"
                               className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
@@ -556,7 +575,7 @@ export function CreatePostModal({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <MapPin size={13} /> Địa điểm
+                          <MapPin size={13} /> {t('feed.eventLocation')}
                         </label>
                         <Controller
                           control={control}
@@ -566,7 +585,7 @@ export function CreatePostModal({
                               value={field.value || ''}
                               onChange={(val) => field.onChange(val)}
                               onSelect={(place) => field.onChange(place?.location || '')}
-                              placeholder="Tòa nhà Alpha, ĐH FPT"
+                              placeholder={t('feed.eventLocationPlaceholder')}
                               inputClassName="!rounded-lg !py-2 h-[38px] text-sm dark:!border-border-strong dark:!bg-surface dark:!text-text"
                             />
                           )}
@@ -574,7 +593,7 @@ export function CreatePostModal({
                       </div>
                       <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Users size={13} /> Sức chứa (người)
+                          <Users size={13} /> {t('feed.eventCapacity')}
                         </label>
                         <input
                           type="number"
@@ -591,13 +610,13 @@ export function CreatePostModal({
                     {/* Mô tả sự kiện */}
                     <div className="pt-2 border-t border-info mt-4">
                       <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                        <FileText size={13} /> Mô tả chi tiết sự kiện
+                        <FileText size={13} /> {t('feed.eventDescription')}
                       </label>
                       <textarea
                         {...register('content')}
                         rows={4}
                         maxLength={POST_CONTENT_MAX}
-                        placeholder="Giới thiệu về nội dung sự kiện, khách mời, lịch trình..."
+                        placeholder={t('feed.eventDescriptionPlaceholder')}
                         className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm leading-relaxed text-text outline-none focus:border-primary transition duration-300 focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
                       />
                     </div>
@@ -605,11 +624,11 @@ export function CreatePostModal({
                     {/* Ảnh sự kiện */}
                     <div className="pt-2">
                       <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                        <ImageIcon size={13} /> Ảnh sự kiện
+                        <ImageIcon size={13} /> {t('feed.eventPhotos')}
                       </label>
                       {allImages.length > 0 && (
                         <div className="space-y-2 mb-2">
-                          <ImageCarousel images={allImages} height={180} altPrefix="Ảnh xem trước" className="rounded-xl" />
+                          <ImageCarousel images={allImages} height={180} altPrefix={t('feed.previewAltPrefix')} className="rounded-xl" />
                           <div className="flex gap-1.5 flex-wrap">
                             {allImages.map((url, idx) => {
                               const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
@@ -618,9 +637,9 @@ export function CreatePostModal({
                                   {isVid ? (
                                     <video src={url} className="h-full w-full object-cover" />
                                   ) : (
-                                    <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
+                                    <img src={url} alt={t('common.imageIndex', { index: idx + 1 })} className="h-full w-full object-cover" />
                                   )}
-                                  <button aria-label="Xóa"
+                                  <button aria-label={t('common.delete')}
                                     type="button"
                                     onClick={() => removeImage(idx)}
                                     className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -636,9 +655,9 @@ export function CreatePostModal({
                       {allImages.length < 10 && (
                         <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border-strong px-4 py-2 text-xs font-semibold text-text-subtle transition-colors hover:bg-surface dark:border-border-strong dark:bg-surface dark:hover:bg-[#2a2b2d]">
                           {isUploading ? (
-                            <><Loader2 size={14} className="animate-spin" /> Đang tải {uploadingCount} phương tiện lên…</>
+                            <><Loader2 size={14} className="animate-spin" /> {t('feed.uploadingMedia', { count: uploadingCount })}</>
                           ) : (
-                            <><ImageIcon size={14} className="text-info" /> {allImages.length > 0 ? 'Thêm ảnh/video khác' : 'Tải ảnh hoặc video lên'}</>
+                            <><ImageIcon size={14} className="text-info" /> {allImages.length > 0 ? t('feed.uploadMoreMedia') : t('feed.uploadMedia')}</>
                           )}
                           <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
                         </label>
@@ -652,7 +671,7 @@ export function CreatePostModal({
                   <>
                     {allImages.length > 0 && (
                       <div className="space-y-2">
-                        <ImageCarousel images={allImages} height={280} altPrefix="Ảnh xem trước" className="rounded-xl" />
+                        <ImageCarousel images={allImages} height={280} altPrefix={t('feed.previewAltPrefix')} className="rounded-xl" />
                         <div className="flex gap-1.5 flex-wrap">
                           {allImages.map((url, idx) => {
                             const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
@@ -661,9 +680,9 @@ export function CreatePostModal({
                                 {isVid ? (
                                   <video src={url} className="h-full w-full object-cover" />
                                 ) : (
-                                  <img src={url} alt={`Ảnh ${idx + 1}`} className="h-full w-full object-cover" />
+                                  <img src={url} alt={t('common.imageIndex', { index: idx + 1 })} className="h-full w-full object-cover" />
                                 )}
-                                <button aria-label="Xóa"
+                                <button aria-label={t('common.delete')}
                                   type="button"
                                   onClick={() => removeImage(idx)}
                                   className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -679,9 +698,9 @@ export function CreatePostModal({
                     {allImages.length < 10 && (
                       <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border-strong px-4 py-3 text-sm font-semibold text-text-subtle transition-colors hover:bg-surface-2">
                         {isUploading ? (
-                          <><Loader2 size={16} className="animate-spin" /> Đang tải {uploadingCount} phương tiện lên…</>
+                          <><Loader2 size={16} className="animate-spin" /> {t('feed.uploadingMedia', { count: uploadingCount })}</>
                         ) : (
-                          <><ImageIcon size={16} className="text-aqua-500" /> {allImages.length > 0 ? 'Thêm ảnh/video khác' : 'Thêm ảnh hoặc Video (tùy chọn)'}</>
+                          <><ImageIcon size={16} className="text-aqua-500" /> {allImages.length > 0 ? t('feed.uploadMoreMedia') : t('feed.addPhotosVideos')}</>
                         )}
                         <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
                       </label>
@@ -696,8 +715,8 @@ export function CreatePostModal({
                     <AlertCircle size={15} className="mt-0.5 shrink-0 text-warning" />
                     <span>
                       {isEventCancelled
-                        ? 'Sự kiện đã bị hủy, không thể chỉnh sửa thông tin.'
-                        : 'Sự kiện đã kết thúc, không thể chỉnh sửa thông tin.'}
+                        ? t('feed.eventCancelledWarning')
+                        : t('feed.eventEndedWarning')}
                     </span>
                   </div>
                 )}
@@ -715,7 +734,7 @@ export function CreatePostModal({
               {/* Sticky Action Footer */}
               <div className="shrink-0 border-t border-border bg-surface px-6 md:px-8 py-4 flex items-center justify-end gap-3">
                 <Button type="button" variant="secondary" onClick={close}>
-                  Hủy
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -724,11 +743,11 @@ export function CreatePostModal({
                 >
                   {editPost
                     ? activeMutation.isPending
-                      ? 'Đang lưu…'
-                      : 'Lưu thay đổi'
+                      ? t('feed.savingAction')
+                      : t('feed.saveAction')
                     : activeMutation.isPending
-                      ? 'Đang đăng…'
-                      : 'Đăng bài'}
+                      ? t('feed.postingAction')
+                      : t('feed.postAction')}
                 </Button>
               </div>
             </form>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, Briefcase, CheckCircle2, Clock, Coins, Laptop, XCircle } from 'lucide-react'
 import { Avatar } from '@/components/ui'
 import { ButtonLink } from '@/components/ui/Button'
@@ -21,11 +22,11 @@ function formatDate(value?: string | null) {
     : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function formatBudget(min?: number | null, max?: number | null) {
+function formatBudget(min?: number | null, max?: number | null, freeLabel = 'Miễn phí') {
   if (min == null && max == null) return null
   if (min != null && max != null && min !== max) return `${formatVnd(min)} – ${formatVnd(max)}`
   const value = max ?? min ?? 0
-  return value === 0 ? 'Miễn phí' : formatVnd(value)
+  return value === 0 ? freeLabel : formatVnd(value)
 }
 
 /**
@@ -33,6 +34,7 @@ function formatBudget(min?: number | null, max?: number | null) {
  * và phản hồi của Mentor (Mentor được gửi trực tiếp, hoặc số Mentor đồng ý / đang chờ / từ chối).
  */
 export function MyRequestCard({ request }: MyRequestCardProps) {
+  const { t } = useTranslation()
   const detailPath = `/app/mentoring/requests/${request.id}`
   const isDirect = request.requestType === 'DIRECT'
   const summary = request.responseSummary
@@ -40,7 +42,7 @@ export function MyRequestCard({ request }: MyRequestCardProps) {
   const waiting = summary?.waitingCount ?? request.matchedCount ?? 0
   const declined = summary?.declinedCount ?? 0
   const hasNews = isDirect ? request.directMentorResponseStatus === 'ACCEPTED' : accepted > 0
-  const budget = formatBudget(request.budgetMin, request.budgetMax)
+  const budget = formatBudget(request.budgetMin, request.budgetMax, t('common.free', 'Miễn phí'))
 
   const facts = [
     { icon: <Briefcase />, text: TASK_TYPE_OPTIONS.find((t) => t.value === request.taskType)?.label ?? request.taskType },
@@ -85,9 +87,17 @@ export function MyRequestCard({ request }: MyRequestCardProps) {
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-1.5">
-            <MentoringBadge tone={accepted > 0 ? 'mint' : 'neutral'} icon={<CheckCircle2 />}>{accepted} đồng ý</MentoringBadge>
-            <MentoringBadge tone="gold" icon={<Clock />}>{waiting} đang chờ</MentoringBadge>
-            {declined > 0 && <MentoringBadge tone="coral" icon={<XCircle />}>{declined} từ chối</MentoringBadge>}
+            <MentoringBadge tone={accepted > 0 ? 'mint' : 'neutral'} icon={<CheckCircle2 />}>
+              {t('mentoring.acceptedCountText', { count: accepted, defaultValue: `${accepted} đồng ý` })}
+            </MentoringBadge>
+            <MentoringBadge tone="gold" icon={<Clock />}>
+              {t('mentoring.waitingCountText', { count: waiting, defaultValue: `${waiting} đang chờ` })}
+            </MentoringBadge>
+            {declined > 0 && (
+              <MentoringBadge tone="coral" icon={<XCircle />}>
+                {t('mentoring.declinedCountText', { count: declined, defaultValue: `${declined} từ chối` })}
+              </MentoringBadge>
+            )}
           </div>
         )}
         <ButtonLink
@@ -97,7 +107,7 @@ export function MyRequestCard({ request }: MyRequestCardProps) {
           rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
           className="h-8 rounded-lg px-3 text-xs"
         >
-          {hasNews ? 'Xem phản hồi' : 'Xem chi tiết'}
+          {hasNews ? t('mentoring.viewFeedback', 'Xem phản hồi') : t('common.viewDetails', 'Xem chi tiết')}
         </ButtonLink>
       </div>
     </article>

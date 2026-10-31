@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, Users, MapPin } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, Skeleton } from '@/components/ui'
 import { useFeed } from '@/features/feed/hooks/useFeed'
 import { EventRsvpButton } from './EventRsvpButton'
@@ -12,6 +13,7 @@ interface UpcomingEventsWidgetProps {
 }
 
 export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWidgetProps) {
+  const { t, i18n } = useTranslation()
   const { data, isLoading, isError } = useFeed('event', '', limit, 'upcoming')
 
   const events = useMemo(() => {
@@ -38,11 +40,15 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
   }, [data, limit])
 
   const getDateInfo = (isoString?: string | null) => {
-    if (!isoString) return { month: 'TH--', day: '--', isPast: false }
+    if (!isoString) return { month: '--', day: '--', isPast: false }
     const date = new Date(isoString)
     const isPast = date.getTime() < Date.now()
+    const isEn = i18n.language?.startsWith('en')
+    const month = isEn
+      ? date.toLocaleDateString('en-US', { month: 'short' })
+      : 'TH' + (date.getMonth() + 1).toString().padStart(2, '0')
     return {
-      month: 'TH' + (date.getMonth() + 1),
+      month,
       day: date.getDate().toString().padStart(2, '0'),
       isPast,
     }
@@ -76,17 +82,17 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-bold text-text flex items-center gap-1.5">
             <CalendarDays size={16} className="text-primary-solid" />
-            Sự kiện sắp diễn ra
+            {t('feed.upcomingEvents')}
           </h3>
           <Link
             to="/app/events"
             className="text-xs font-semibold text-primary-solid hover:text-primary-solid"
           >
-            Tất cả
+            {t('common.all')}
           </Link>
         </div>
         <div className="py-4 text-center text-xs text-text-subtle">
-          <p>Chưa có sự kiện nào sắp tới</p>
+          <p>{t('feed.noUpcomingEvents')}</p>
         </div>
       </Card>
     )
@@ -97,13 +103,13 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-bold text-text flex items-center gap-1.5">
           <CalendarDays size={16} className="text-primary-solid" />
-          Sự kiện sắp diễn ra
+          {t('feed.upcomingEvents')}
         </h3>
         <Link
           to="/app/events"
           className="text-xs font-semibold text-primary-solid hover:text-primary-solid transition-colors"
         >
-          Xem tất cả
+          {t('common.viewAll')}
         </Link>
       </div>
 
@@ -112,7 +118,7 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
           const event = post.event!
           const dateInfo = getDateInfo(event.startTime)
           const eventTitle =
-            event.title || post.text?.split('\n')[0]?.replace(/^#+\s*/, '') || 'Sự kiện cộng đồng'
+            event.title || post.text?.split('\n')[0]?.replace(/^#+\s*/, '') || t('feed.communityEvent')
 
           return (
             <li
@@ -145,7 +151,7 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
                   <span className="flex items-center gap-1">
                     <Users size={11} className="shrink-0" />
                     {compact(event.attendeeCount ?? 0)}
-                    {event.capacity ? `/${compact(event.capacity)}` : ''} người
+                    {event.capacity ? `/${compact(event.capacity)}` : ''} {t('common.people')}
                   </span>
                   {event.location && (
                     <span className="flex items-center gap-0.5 truncate max-w-[120px]">

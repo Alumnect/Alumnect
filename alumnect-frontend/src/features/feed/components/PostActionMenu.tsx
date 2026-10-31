@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { TRANSITION } from '@/lib/motion'
 import { MoreHorizontal, Pencil, Trash2, Ban } from 'lucide-react'
 import type { Post } from '../model/post'
@@ -23,6 +24,7 @@ export function PostActionMenu({
   onCancelEvent,
   className = '',
 }: PostActionMenuProps) {
+  const { t } = useTranslation()
   // Khi không phải chính tác giả bài viết thì không cần hiển thị menu "..."
   // vì các hành động Chia sẻ, Báo cáo, Lưu, Thích, Bình luận đã có đầy đủ ở thanh bên dưới.
   const [isOpen, setIsOpen] = useState(false)
@@ -69,7 +71,7 @@ export function PostActionMenu({
           e.stopPropagation()
           setIsOpen((prev) => !prev)
         }}
-        aria-label="Tùy chọn bài viết"
+        aria-label={t('common.actions')}
         aria-expanded={isOpen}
         className="grid h-8 w-8 place-items-center rounded-lg text-text-subtle transition-colors hover:bg-border hover:text-text"
       >
@@ -104,14 +106,14 @@ export function PostActionMenu({
                 }`}
                 title={
                   isEventCancelled
-                    ? 'Sự kiện đã bị hủy, không thể chỉnh sửa'
+                    ? t('feed.eventCancelledWarning')
                     : isEventEnded
-                    ? 'Sự kiện đã kết thúc, không thể chỉnh sửa'
-                    : 'Chỉnh sửa bài viết'
+                    ? t('feed.eventEndedWarning')
+                    : t('feed.editPost')
                 }
               >
                 <Pencil size={14} className={isEventImmutable ? 'text-plum-300 dark:text-text-disabled' : 'text-text-subtle'} />
-                <span>Chỉnh sửa bài viết</span>
+                <span>{t('feed.editPost')}</span>
               </button>
             )}
 
@@ -128,7 +130,7 @@ export function PostActionMenu({
                 className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-warning transition-colors hover:bg-warning-soft hover:text-warning"
               >
                 <Ban size={14} className="text-warning" />
-                <span>Hủy tổ chức sự kiện</span>
+                <span>{t('event.cancelEvent')}</span>
               </button>
             )}
 
@@ -148,7 +150,7 @@ export function PostActionMenu({
                 className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-danger transition-colors hover:bg-danger-soft hover:text-danger"
               >
                 <Trash2 size={14} className="text-danger" />
-                <span>Xóa bài viết</span>
+                <span>{t('feed.deletePostTitle')}</span>
               </button>
             )}
           </motion.div>

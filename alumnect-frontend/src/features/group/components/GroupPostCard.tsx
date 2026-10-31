@@ -14,6 +14,7 @@ import {
   Trash2,
   Loader2,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast, ImageViewerModal, ImageCarousel } from '@/components/ui'
 import { Avatar, Badge, Card } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
@@ -73,6 +74,7 @@ interface GroupPostCardProps {
 }
 
 export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, topics, detailMode = false, onDeleted }: GroupPostCardProps) {
+  const { t, i18n } = useTranslation()
   const now = useSyncExternalStore(subscribeToMinute, getMinuteSnapshot, getMinuteSnapshot) * 60000
   const currentUser = useAuthStore((s) => s.user)
   const [showComments, setShowComments] = useState(detailMode)
@@ -115,7 +117,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
   const handleToggleLike = () => {
     if (!isGroupActive) return
     if (!isActiveMember) {
-      toast.error('Vui lòng tham gia hội nhóm để thích bài viết!')
+      toast.error(t('groups.mustJoinToLike'))
       return
     }
     likeMutation.mutate(post.id)
@@ -140,7 +142,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
     const trimmed = commentText.trim()
     if (!trimmed) return
     if (!isActiveMember) {
-      toast.error('Vui lòng tham gia hội nhóm để bình luận!')
+      toast.error(t('groups.mustJoinToComment'))
       return
     }
 
@@ -194,13 +196,13 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
     try {
       const d = new Date(iso)
       const diffMin = Math.round((now - d.getTime()) / 60000)
-      if (diffMin < 1) return 'Vừa xong'
-      if (diffMin < 60) return `${diffMin} phút trước`
+      if (diffMin < 1) return t('common.justNow')
+      if (diffMin < 60) return t('common.minutesAgo', { count: diffMin })
       const diffHour = Math.round(diffMin / 60)
-      if (diffHour < 24) return `${diffHour} giờ trước`
+      if (diffHour < 24) return t('common.hoursAgo', { count: diffHour })
       const diffDay = Math.round(diffHour / 24)
-      if (diffDay < 7) return `${diffDay} ngày trước`
-      return d.toLocaleDateString('vi-VN')
+      if (diffDay < 7) return t('common.daysAgo', { count: diffDay })
+      return d.toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')
     } catch {
       return ''
     }
@@ -232,13 +234,13 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
                 {post.author.groupRole === 'OWNER' && (
                   <Badge tone="gold" icon={<Crown size={11} />} className="px-1.5 py-0.5 text-xs">
-                    Sáng lập
+                    {t('groups.ownerRole')}
                   </Badge>
                 )}
 
                 {post.author.groupRole === 'ADMIN' && (
                   <Badge tone="brand" icon={<ShieldCheck size={11} />} className="px-1.5 py-0.5 text-xs">
-                    Quản trị viên
+                    {t('groups.adminRole')}
                   </Badge>
                 )}
               </div>
@@ -247,18 +249,18 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                 {detailMode ? (
                   <span>{formatTime(post.createdAt)}</span>
                 ) : (
-                  <Link to={`/app/groups/${groupId}/posts/${post.id}`} className="hover:underline" title="Xem chi tiết bài viết">
+                  <Link to={`/app/groups/${groupId}/posts/${post.id}`} className="hover:underline" title={t('groups.viewPostDetails')}>
                     {formatTime(post.createdAt)}
                   </Link>
                 )}
                 {post.updatedAt && new Date(post.updatedAt).getTime() - new Date(post.createdAt).getTime() > 10000 && (
-                  <span>• Đã chỉnh sửa</span>
+                  <span>• {t('common.edited')}</span>
                 )}
                 {post.isPinned && (
                   <>
                     <span>•</span>
                     <span className="inline-flex items-center gap-1 font-bold text-warning">
-                      <Pin size={11} /> Đã ghim
+                      <Pin size={11} /> {t('groups.pinned')}
                     </span>
                   </>
                 )}
@@ -272,7 +274,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               <button
                 type="button"
                 onClick={() => setMenuOpen(!menuOpen)}
-                aria-label="Tùy chọn bài viết"
+                aria-label={t('groups.postOptions')}
                 aria-expanded={menuOpen}
                 className="grid h-8 w-8 place-items-center rounded-full text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
               >
@@ -299,7 +301,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                         }}
                         className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-text-muted transition-colors hover:bg-surface-2"
                       >
-                        <Pencil size={14} /> Chỉnh sửa bài viết
+                        <Pencil size={14} /> {t('groups.editPost')}
                       </button>
                     )}
                     {post.canPin && (
@@ -309,7 +311,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                         className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-text-muted transition-colors hover:bg-surface-2"
                       >
                         <Pin size={14} className={post.isPinned ? 'text-warning' : ''} />
-                        <span>{post.isPinned ? 'Bỏ ghim bài viết' : 'Ghim bài viết'}</span>
+                        <span>{post.isPinned ? t('groups.unpinPost') : t('groups.pinPost')}</span>
                       </button>
                     )}
 
@@ -323,7 +325,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                         className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-danger transition-colors hover:bg-danger-soft"
                       >
                         <Trash2 size={14} />
-                        <span>Xóa bài viết</span>
+                        <span>{t('groups.deletePost')}</span>
                       </button>
                     )}
                   </motion.div>
@@ -350,7 +352,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
             <ImageCarousel
               images={post.imageUrls}
               height={detailMode ? 520 : 420}
-              altPrefix="Ảnh bài viết"
+              altPrefix={t('groups.postImageAltPrefix')}
               onImageClick={(_url, index) => setPreviewIndex(index)}
             />
           </div>
@@ -360,7 +362,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
           <div data-interactive className="mt-3.5 grid gap-2 sm:grid-cols-2">
             {post.videoUrls.map((url, index) => (
               <video key={`${url}-${index}`} src={url} controls preload="metadata"
-                aria-label={`Video đính kèm ${index + 1}`}
+                aria-label={t('groups.attachedVideoAria', { index: index + 1 })}
                 className="max-h-[460px] w-full rounded-2xl bg-black" />
             ))}
           </div>
@@ -393,7 +395,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                   <Heart size={16} className={cn(post.likedByViewer && 'fill-danger text-danger')} />
                 </motion.span>
               </AnimatePresence>
-              <span>{post.likeCount} thích</span>
+              <span>{t('groups.likesCount', { count: post.likeCount })}</span>
             </button>
 
             <button
@@ -402,7 +404,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               className="inline-flex items-center gap-1.5 hover:text-primary-solid"
             >
               <MessageCircle size={16} />
-              <span>{post.commentCount} bình luận</span>
+              <span>{t('groups.commentsCount', { count: post.commentCount })}</span>
             </button>
 
             <button
@@ -411,7 +413,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               className="inline-flex items-center gap-1.5 hover:text-info"
             >
               <Repeat size={16} />
-              <span>Chia sẻ</span>
+              <span>{t('groups.share')}</span>
             </button>
           </div>
         </div>
@@ -434,24 +436,24 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                   <form onSubmit={handleSendComment} className="flex items-center gap-2.5">
                     <Avatar
                       src={currentUser?.avatarUrl ?? ''}
-                      name={currentUser?.name ?? 'Thành viên'}
+                      name={currentUser?.name ?? t('groups.memberAvatar')}
                       size={32}
                       className="shrink-0"
                     />
                     <div className="relative flex-1">
                       <input
-                        aria-label="Viết phản hồi của bạn..."
+                        aria-label={t('groups.commentInputPlaceholder')}
                         type="text"
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
                         maxLength={1000}
-                        placeholder="Viết phản hồi của bạn..."
+                        placeholder={t('groups.commentInputPlaceholder')}
                         className="w-full rounded-2xl border border-border bg-surface-2 py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
                       />
                       <button
                         type="submit"
                         disabled={!commentText.trim() || createCommentMutation.isPending}
-                        aria-label="Gửi bình luận"
+                        aria-label={t('groups.sendCommentAria')}
                         className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 cursor-pointer place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40"
                       >
                         {createCommentMutation.isPending ? (
@@ -464,7 +466,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                   </form>
                 ) : (
                   <p className="text-center text-xs text-text-subtle dark:text-text-subtle">
-                    {isGroupActive ? 'Vui lòng tham gia hội nhóm để tham gia bình luận.' : 'Hội nhóm đang tạm ngừng tương tác.'}
+                    {isGroupActive ? t('groups.mustJoinToCommentMsg') : t('groups.groupPausedCommentsMsg')}
                   </p>
                 )}
 
@@ -499,17 +501,17 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                               </Link>
 
                               {c.author.groupRole === 'OWNER' && (
-                                <span className="text-xs font-semibold text-warning">Sáng lập</span>
+                                <span className="text-xs font-semibold text-warning">{t('groups.ownerRole')}</span>
                               )}
                               {c.author.groupRole === 'ADMIN' && (
-                                <span className="text-xs font-semibold text-primary-solid">Quản trị</span>
+                                <span className="text-xs font-semibold text-primary-solid">{t('groups.adminRole')}</span>
                               )}
 
                               <span className="text-xs text-text-subtle">
                                 • {formatTime(c.createdAt)}
                               </span>
                               {c.updatedAt && new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime() > 10000 && (
-                                <span className="text-xs text-text-subtle">• Đã chỉnh sửa</span>
+                                <span className="text-xs text-text-subtle">• {t('common.edited')}</span>
                               )}
                             </div>
 
@@ -522,7 +524,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                                     setEditingCommentText(c.content)
                                   }}
                                   className="text-text-subtle hover:text-primary-solid"
-                                  aria-label="Chỉnh sửa bình luận"
+                                  aria-label={t('groups.editCommentAria')}
                                 ><Pencil size={13} /></button>
                               )}
                               {isGroupActive && c.canDelete && (
@@ -530,7 +532,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                                   type="button"
                                   onClick={() => setDeletingCommentId(c.id)}
                                   className="text-text-subtle hover:text-danger"
-                                  aria-label="Xóa bình luận"
+                                  aria-label={t('groups.deleteCommentAria')}
                                 ><Trash2 size={13} /></button>
                               )}
                             </div>
@@ -553,9 +555,9 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                                 className="w-full rounded-xl border border-border bg-surface p-2 text-xs text-text focus:border-primary focus:outline-none"
                               />
                               <div className="flex justify-end gap-2">
-                                <button type="button" onClick={() => setEditingCommentId(null)} disabled={updateCommentMutation.isPending} className="text-xs text-text-subtle">Hủy</button>
+                                <button type="button" onClick={() => setEditingCommentId(null)} disabled={updateCommentMutation.isPending} className="text-xs text-text-subtle">{t('common.cancel')}</button>
                                 <button type="submit" disabled={!editingCommentText.trim() || updateCommentMutation.isPending} className="text-xs font-bold text-primary-solid disabled:opacity-50">
-                                  {updateCommentMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+                                  {updateCommentMutation.isPending ? t('common.processing') : t('common.saveChanges')}
                                 </button>
                               </div>
                             </form>
@@ -574,19 +576,19 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                               setReplyingTo(c.id)
                               setReplyText('')
                             }} className="mt-1.5 text-xs font-semibold text-primary-solid hover:underline">
-                              Trả lời
+                              {t('groups.reply')}
                             </button>
                           )}
                           {replyingTo === c.id && (
                             <form onSubmit={(event) => handleSendReply(event, c.id)} className="mt-2 space-y-2">
-                              <label className="block text-xs text-text-subtle">Trả lời {c.author.fullName}</label>
+                              <label className="block text-xs text-text-subtle">{t('groups.replyTo', { name: c.author.fullName })}</label>
                               <textarea value={replyText} onChange={(event) => setReplyText(event.target.value)}
                                 maxLength={1000} rows={2} autoFocus
                                 className="w-full rounded-xl border border-border bg-surface p-2 text-xs text-text focus:border-primary focus:outline-none" />
                               <div className="flex justify-end gap-2">
-                                <button type="button" onClick={() => setReplyingTo(null)} className="text-xs text-text-subtle">Hủy</button>
+                                <button type="button" onClick={() => setReplyingTo(null)} className="text-xs text-text-subtle">{t('common.cancel')}</button>
                                 <button type="submit" disabled={!replyText.trim() || createCommentMutation.isPending}
-                                  className="text-xs font-bold text-primary-solid disabled:opacity-50">Gửi trả lời</button>
+                                  className="text-xs font-bold text-primary-solid disabled:opacity-50">{t('groups.sendReply')}</button>
                               </div>
                             </form>
                           )}
@@ -597,13 +599,13 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                     {hasMoreComments && (
                       <button type="button" onClick={() => fetchMoreComments()} disabled={isFetchingNextPage}
                         className="block w-full py-2 text-center text-xs font-semibold text-primary-solid hover:underline">
-                        {isFetchingNextPage ? 'Đang tải...' : 'Xem thêm bình luận'}
+                        {isFetchingNextPage ? t('common.loading') : t('groups.loadMoreComments')}
                       </button>
                     )}
                   </div>
                 ) : (
                   <p className="py-2 text-center text-xs text-text-subtle dark:text-text-subtle">
-                    Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm nghĩ!
+                    {t('groups.noCommentsYet')}
                   </p>
                 )}
               </div>
@@ -615,9 +617,9 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
       {/* Modal xác nhận xóa bài viết */}
       <ConfirmDialog
         open={confirmDelete}
-        title="Xóa bài viết thảo luận"
-        message="Bạn có chắc chắn muốn xóa bài viết này không? Toàn bộ hình ảnh và bình luận liên quan cũng sẽ bị xóa vĩnh viễn."
-        confirmLabel="Xóa bài viết"
+        title={t('groups.deletePostModalTitle')}
+        message={t('groups.deletePostModalMsg')}
+        confirmLabel={t('groups.deletePost')}
         danger
         loading={deleteMutation.isPending}
         onConfirm={handleDeletePost}
@@ -626,9 +628,9 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
       <ConfirmDialog
         open={deletingCommentId !== null}
-        title="Xóa bình luận"
-        message="Bạn có chắc chắn muốn xóa bình luận này không?"
-        confirmLabel="Xóa bình luận"
+        title={t('groups.deleteCommentModalTitle')}
+        message={t('groups.deleteCommentModalMsg')}
+        confirmLabel={t('groups.deleteComment')}
         danger
         loading={deleteCommentMutation.isPending}
         onConfirm={() => {
@@ -648,7 +650,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
         onPrev={imageCount > 1 ? () => setPreviewIndex((i) => ((i ?? 0) - 1 + imageCount) % imageCount) : undefined}
         onNext={imageCount > 1 ? () => setPreviewIndex((i) => ((i ?? 0) + 1) % imageCount) : undefined}
         counter={imageCount > 1 && previewIndex !== null ? `${previewIndex + 1} / ${imageCount}` : undefined}
-        alt="Ảnh bài viết hội nhóm"
+        alt={t('groups.postImageAlt')}
         senderName={post.author.fullName}
         senderAvatar={post.author.avatarUrl}
         time={formatTime(post.createdAt)}
@@ -660,11 +662,11 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
           onClose={() => setShareModalOpen(false)}
           shareItem={{
             title: post.author.fullName,
-            subtitle: post.content || 'Bài viết trong nhóm',
+            subtitle: post.content || t('groups.postInGroup'),
             thumbnail: post.imageUrls?.[0] ?? null,
             avatarUrl: post.author.avatarUrl,
             url: `${window.location.origin}/app/groups/${groupId}?postId=${post.id}`,
-            typeLabel: 'bài viết nhóm',
+            typeLabel: t('groups.groupPostNoun'),
           }}
         />
       )}

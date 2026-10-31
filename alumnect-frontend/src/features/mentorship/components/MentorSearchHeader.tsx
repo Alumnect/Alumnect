@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Search, X, ArrowUpDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { SelectDropdown, Card } from '@/components/ui'
 import { MentorPageHeader } from './MentorPageHeader'
 
@@ -28,6 +29,7 @@ export function MentorSearchHeader({
   sortDir,
   onSortChange,
 }: MentorSearchHeaderProps) {
+  const { t } = useTranslation()
   const [localKeyword, setLocalKeyword] = useState(keyword)
 
   useEffect(() => {
@@ -53,12 +55,12 @@ export function MentorSearchHeader({
     <div className="space-y-3">
       <MentorPageHeader
         icon={<Search className="h-4 w-4" />}
-        eyebrow="Mạng lưới cố vấn"
-        title="Khám phá Mentor"
-        description="Tìm Mentor phù hợp theo chuyên môn, kinh nghiệm và hình thức hỗ trợ."
+        eyebrow={t('mentoring.eyebrowNetwork')}
+        title={t('mentoring.exploreMentors')}
+        description={t('mentoring.connectHeroSubtitle')}
         actions={!isLoading ? (
           <span className="rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary-solid ring-1 ring-inset ring-brand-200 dark:ring-brand-300/20">
-            {totalElements} Mentor
+            {t('mentoring.mentorCount', { count: totalElements })}
           </span>
         ) : undefined}
       />
@@ -76,8 +78,8 @@ export function MentorSearchHeader({
               type="text"
               value={localKeyword}
               onChange={(e) => setLocalKeyword(e.target.value)}
-              placeholder="Tìm theo tên mentor, từ khóa, lĩnh vực, chuyên ngành..."
-              aria-label="Tìm kiếm Mentor"
+              placeholder={t('mentoring.searchMentorsPlaceholder')}
+              aria-label={t('mentoring.exploreMentors')}
               className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm font-medium text-text transition placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
 
@@ -85,8 +87,8 @@ export function MentorSearchHeader({
               <button
                 type="button"
                 onClick={handleClear}
-                aria-label="Xóa từ khóa tìm kiếm"
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-subtle transition-colors hover:text-text-muted"
+                aria-label={t('common.clearSearch')}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-subtle transition-colors hover:text-text-muted cursor-pointer"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -102,12 +104,12 @@ export function MentorSearchHeader({
                 onSortChange(newSortBy, newSortDir)
               }}
               options={[
-                { value: 'reputationScore_desc', label: 'Điểm uy tín cao nhất' },
-                { value: 'rating_desc', label: 'Đánh giá sao cao nhất' },
-                { value: 'completedMissions_desc', label: 'Số nhiệm vụ nhiều nhất' },
-                { value: 'fullName_asc', label: 'Tên A-Z' },
+                { value: 'reputationScore_desc', label: t('mentoring.sortReputation') },
+                { value: 'rating_desc', label: t('mentoring.sortRating') },
+                { value: 'completedMissions_desc', label: t('mentoring.sortCompletedMissions') },
+                { value: 'fullName_asc', label: t('mentoring.sortName') },
               ]}
-              placeholder="Sắp xếp kết quả"
+              placeholder={t('mentoring.sortResults')}
               align="right"
               icon={<ArrowUpDown className="h-3.5 w-3.5 text-primary-solid" />}
             />

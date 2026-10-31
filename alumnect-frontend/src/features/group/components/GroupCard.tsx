@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Globe, Lock, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Badge, Card } from '@/components/ui'
 import { categoryLabel } from '../model/group'
 import type { GroupCard as GroupCardData } from '../model/group'
@@ -8,19 +9,20 @@ import { GroupMembershipActions } from './GroupMembershipActions'
 
 /** Thẻ hội nhóm (Group Card) theo phong cách Threads/Instagram hiện đại: ảnh bìa góc bo lớn, huy hiệu nổi, minh chứng cộng đồng và nút thao tác nhanh. */
 export function GroupCard({ group }: { group: GroupCardData }) {
+  const { t } = useTranslation()
   const isPrivate = group.privacy === 'PRIVATE'
   const detailPath = `/app/groups/${group.id}`
 
   return (
     <Card hover className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border p-0 shadow-card dark:bg-surface">
       {/* Khung ảnh bìa với huy hiệu nổi trên ảnh */}
-      <Link to={detailPath} className="relative block overflow-hidden" aria-label={`Xem hội nhóm ${group.name}`}>
+      <Link to={detailPath} className="relative block overflow-hidden" aria-label={t('groups.viewGroupAria', { name: group.name })}>
         <GroupCover url={group.coverImageUrl} name={group.name} aspect="aspect-[16/9]" />
 
         {/* Badges kính mờ nổi trên góc ảnh bìa */}
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
           <span className="inline-flex items-center rounded-full bg-white/85 px-2.5 py-0.5 text-xs font-bold text-text shadow-sm backdrop-blur-md dark:bg-black/60">
-            {categoryLabel(group.category)}
+            {t(`groups.categories.${group.category}`, { defaultValue: categoryLabel(group.category) })}
           </span>
         </div>
 
@@ -33,7 +35,7 @@ export function GroupCard({ group }: { group: GroupCardData }) {
             }`}
           >
             {isPrivate ? <Lock size={10} /> : <Globe size={10} />}
-            {isPrivate ? 'Riêng tư' : 'Công khai'}
+            {isPrivate ? t('groups.private') : t('groups.public')}
           </span>
         </div>
       </Link>
@@ -42,7 +44,7 @@ export function GroupCard({ group }: { group: GroupCardData }) {
         {group.status === 'INACTIVE' && (
           <div className="mb-2">
             <Badge tone="neutral" className="px-2 py-0.5 text-xs">
-              Tạm ngừng
+              {t('groups.pausedBadge')}
             </Badge>
           </div>
         )}
@@ -64,7 +66,7 @@ export function GroupCard({ group }: { group: GroupCardData }) {
               <Users size={12} />
             </span>
             <span className="text-xs font-semibold text-text-muted">
-              {group.memberCount} thành viên
+              {t('groups.membersCount', { count: group.memberCount })}
             </span>
           </div>
 

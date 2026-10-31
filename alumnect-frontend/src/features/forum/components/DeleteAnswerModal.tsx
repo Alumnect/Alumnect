@@ -6,6 +6,7 @@
  *  - Chỉ mở được bởi chính tác giả câu trả lời (nút "Xóa" đã ẩn với người khác ở nơi gọi).
  */
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useDeleteAnswer } from '../hooks/useAnswers'
@@ -21,16 +22,17 @@ export function DeleteAnswerModal({
   onClose: () => void
   onDeleted: () => void
 }) {
+  const { t } = useTranslation()
   const deleteAnswer = useDeleteAnswer(questionId)
 
   const handleDelete = () => {
     deleteAnswer.mutate(answerId, {
       onSuccess: () => {
-        toast.success('Đã xóa câu trả lời thành công')
+        toast.success(t('forum.deleteAnswerSuccess'))
         onDeleted()
       },
       onError: (err: any) => {
-        toast.error(err?.message || 'Không thể xóa câu trả lời')
+        toast.error(err?.message || t('forum.deleteAnswerError'))
       },
     })
   }
@@ -38,7 +40,7 @@ export function DeleteAnswerModal({
   const footer = (
     <div className="flex justify-end gap-3">
       <Button variant="secondary" onClick={onClose} disabled={deleteAnswer.isPending}>
-        Hủy
+        {t('common.cancel')}
       </Button>
       <Button
         variant="primary"
@@ -47,7 +49,7 @@ export function DeleteAnswerModal({
         leftIcon={deleteAnswer.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
         className="border-danger bg-danger text-text-inverse hover:opacity-90"
       >
-        {deleteAnswer.isPending ? 'Đang xóa…' : 'Xóa'}
+        {deleteAnswer.isPending ? t('common.processing') : t('common.delete')}
       </Button>
     </div>
   )
@@ -56,14 +58,14 @@ export function DeleteAnswerModal({
     <Modal
       isOpen
       onClose={deleteAnswer.isPending ? () => {} : onClose}
-      title="Xóa câu trả lời"
+      title={t('forum.deleteAnswerTitle')}
       icon={<AlertTriangle size={18} className="text-danger" />}
       footer={footer}
     >
-      <p className="text-sm text-text-muted">Bạn có chắc muốn xóa câu trả lời này không?</p>
+      <p className="text-sm text-text-muted">{t('forum.deleteAnswerConfirm')}</p>
       {deleteAnswer.isError && (
         <p className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
-          {(deleteAnswer.error as Error)?.message || 'Không thể xóa câu trả lời, vui lòng thử lại sau.'}
+          {(deleteAnswer.error as Error)?.message || t('forum.deleteAnswerError')}
         </p>
       )}
     </Modal>

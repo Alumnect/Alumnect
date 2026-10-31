@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, Button, Card, Skeleton } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
@@ -14,6 +15,7 @@ interface ConnectionSuggestionItemProps {
 }
 
 function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
+  const { t } = useTranslation()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const openLoginPrompt = useLoginPrompt((s) => s.open)
 
@@ -27,7 +29,7 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
     e.preventDefault()
 
     if (!isAuthenticated) {
-      openLoginPrompt('Vui lòng đăng nhập để theo dõi và kết nối với thành viên này.')
+      openLoginPrompt(t('auth.loginPromptNotice') || 'Vui lòng đăng nhập để theo dõi và kết nối với thành viên này.')
       return
     }
 
@@ -45,17 +47,17 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
   }
 
   const subtitle = user.mutualFollowsCount && user.mutualFollowsCount > 0
-    ? `${user.mutualFollowsCount} bạn chung`
+    ? t('feed.mutualFriends', { count: user.mutualFollowsCount })
     : user.cohort
     ? `K${user.cohort}${user.major?.code ? ` • ${user.major.code}` : ''}`
-    : user.major?.code || (user.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên')
+    : user.major?.code || (user.role === 'ALUMNI' ? t('common.alumni') : t('common.student'))
 
   return (
     <li className="flex items-center gap-3">
       <Link
         to={`/app/profile?userId=${user.userId}`}
         className="shrink-0 transition-transform duration-200 hover:scale-105"
-        title={`Xem hồ sơ của ${user.fullName}`}
+        title={t('feed.viewProfile', { name: user.fullName })}
       >
         <Avatar
           src={user.avatarUrl || undefined}
@@ -93,9 +95,9 @@ function ConnectionSuggestionItem({ user }: ConnectionSuggestionItemProps) {
         {isPending ? (
           <Loader2 size={13} className="animate-spin" />
         ) : isFollowing ? (
-          'Đang theo dõi'
+          t('profile.following')
         ) : (
-          'Theo dõi'
+          t('profile.follow')
         )}
       </Button>
     </li>
@@ -108,6 +110,7 @@ interface ConnectionSuggestionsWidgetProps {
 }
 
 export function ConnectionSuggestionsWidget({ limit = 4, className }: ConnectionSuggestionsWidgetProps) {
+  const { t } = useTranslation()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const currentUserId = useAuthStore((s) => s.user?.id)
   const { data: suggestions = [], isLoading, isError } = useConnectionSuggestions(limit, {
@@ -145,7 +148,6 @@ export function ConnectionSuggestionsWidget({ limit = 4, className }: Connection
   const displayedSuggestions = currentUserId
     ? suggestions.filter((s) => Number(s.userId) !== Number(currentUserId))
     : suggestions
-
   if (isError || displayedSuggestions.length === 0) {
     return null
   }
@@ -153,12 +155,12 @@ export function ConnectionSuggestionsWidget({ limit = 4, className }: Connection
   return (
     <Card hover={false} className={cn('p-5', className)}>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-bold text-text">Gợi ý kết nối</h3>
+        <h3 className="font-bold text-text">{t('feed.suggestedConnections')}</h3>
         <Link
           to="/app/alumni"
           className="text-xs font-semibold text-primary-solid hover:text-primary-solid"
         >
-          Xem tất cả
+          {t('common.viewAll')}
         </Link>
       </div>
 

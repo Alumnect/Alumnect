@@ -4,12 +4,14 @@
  */
 import { Link } from 'react-router-dom'
 import { Check, Inbox, Loader2, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Avatar, EmptyState, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useJoinRequests } from '../hooks/useGroups'
 import { useHandleJoinRequest } from '../hooks/useGroupActions'
 
 export function JoinRequestsList({ groupId }: { groupId: number }) {
+  const { t, i18n } = useTranslation()
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } = useJoinRequests(groupId, true)
   const handleMut = useHandleJoinRequest(groupId)
 
@@ -19,8 +21,8 @@ export function JoinRequestsList({ groupId }: { groupId: number }) {
     handleMut.mutate(
       { requestId, action },
       {
-        onSuccess: (res) => toast.success(res.message || 'Đã xử lý yêu cầu.'),
-        onError: (err) => toast.error((err as Error).message || 'Không thể xử lý yêu cầu, vui lòng thử lại.'),
+        onSuccess: (res) => toast.success(res.message || t('groups.requestProcessed')),
+        onError: (err) => toast.error((err as Error).message || t('groups.requestProcessError')),
       },
     )
   }
@@ -35,10 +37,10 @@ export function JoinRequestsList({ groupId }: { groupId: number }) {
     )
   }
   if (isError) {
-    return <p className="rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">{(error as Error)?.message ?? 'Không tải được danh sách yêu cầu.'}</p>
+    return <p className="rounded-xl bg-danger-soft px-3 py-2 text-sm font-medium text-danger">{(error as Error)?.message ?? t('groups.loadRequestsError')}</p>
   }
   if (requests.length === 0) {
-    return <EmptyState icon={<Inbox size={22} />} title="Không có yêu cầu nào đang chờ duyệt" description="Khi có người gửi yêu cầu tham gia, họ sẽ xuất hiện ở đây." className="py-10" />
+    return <EmptyState icon={<Inbox size={22} />} title={t('groups.noPendingRequests')} description={t('groups.noPendingRequestsDesc')} className="py-10" />
   }
 
   const busyId = handleMut.isPending ? handleMut.variables?.requestId : undefined
@@ -59,15 +61,15 @@ export function JoinRequestsList({ groupId }: { groupId: number }) {
                 </Link>
                 <p className="truncate text-xs text-text-subtle">
                   {r.headline ? `${r.headline} · ` : ''}
-                  {r.requestedAt ? `Gửi lúc ${new Date(r.requestedAt).toLocaleString('vi-VN')}` : ''}
+                  {r.requestedAt ? t('groups.sentAt', { time: new Date(r.requestedAt).toLocaleString(i18n.language === 'vi' ? 'vi-VN' : 'en-US') }) : ''}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
                 <Button variant="primary" size="sm" disabled={handleMut.isPending} onClick={() => handle(r.requestId, 'APPROVE')} leftIcon={busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}>
-                  Chấp nhận
+                  {t('groups.accept')}
                 </Button>
                 <Button variant="secondary" size="sm" disabled={handleMut.isPending} onClick={() => handle(r.requestId, 'REJECT')} leftIcon={<X size={14} />}>
-                  Từ chối
+                  {t('groups.reject')}
                 </Button>
               </div>
             </li>
@@ -77,7 +79,7 @@ export function JoinRequestsList({ groupId }: { groupId: number }) {
       {hasNextPage && (
         <div className="pt-3 text-center">
           <Button variant="secondary" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-            {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm yêu cầu'}
+            {isFetchingNextPage ? t('common.loading') : t('groups.loadMoreRequests')}
           </Button>
         </div>
       )}

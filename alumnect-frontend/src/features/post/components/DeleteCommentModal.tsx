@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import type { Comment } from '../model/comment'
@@ -22,6 +23,7 @@ export function DeleteCommentModal({
   postId: string
   comment: Comment | null
 }) {
+  const { t } = useTranslation()
   const deleteComment = useDeleteComment(postId)
   const resetMutation = deleteComment.reset
 
@@ -37,12 +39,12 @@ export function DeleteCommentModal({
     if (!comment) return
     deleteComment.mutate(comment.id, {
       onSuccess: () => {
-        toast.success('Đã xóa bình luận thành công')
+        toast.success(t('feed.deleteCommentSuccess'))
         onDeleted?.()
         onClose()
       },
       onError: (err: any) => {
-        toast.error(err?.message || 'Không thể xóa bình luận')
+        toast.error(err?.message || t('feed.deleteCommentError'))
       }
     })
   }
@@ -51,13 +53,13 @@ export function DeleteCommentModal({
     <Modal
       isOpen={isOpen}
       onClose={close}
-      title="Xóa bình luận"
+      title={t('feed.deleteCommentTitle')}
       icon={<Trash2 size={18} className="text-danger" />}
       maxWidthClassName="max-w-md"
       footer={
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" size="md" onClick={close} disabled={deleteComment.isPending}>
-            Hủy
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
@@ -68,7 +70,7 @@ export function DeleteCommentModal({
             leftIcon={deleteComment.isPending ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
             className="border-danger bg-danger text-text-inverse hover:opacity-90"
           >
-            {deleteComment.isPending ? 'Đang xóa…' : 'Xóa'}
+            {deleteComment.isPending ? t('feed.deleting') : t('common.delete')}
           </Button>
         </div>
       }
@@ -79,7 +81,7 @@ export function DeleteCommentModal({
         </div>
       )}
       <p className="text-sm leading-relaxed text-text-muted">
-        Bạn có chắc muốn xóa bình luận này không?
+        {t('feed.deleteCommentConfirm')}
       </p>
     </Modal>
   )

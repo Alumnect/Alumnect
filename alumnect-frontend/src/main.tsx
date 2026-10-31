@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from '@/lib/queryClient'
 import './index.css'
 import '@/store/themeStore'
+import i18n from '@/i18n'
 import { installAutoLabel } from '@/lib/autoLabel'
 import App from './App.tsx'
 
@@ -15,7 +16,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {/* Cung cấp TanStack Query cho toàn app: cache dữ liệu feed, auth mutations, v.v. */}
     <QueryClientProvider client={queryClient}>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''} locale={i18n.language}>
         <MotionConfig reducedMotion="user">
           <App />
         </MotionConfig>

@@ -1,4 +1,5 @@
 import { Activity, ArrowRight, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import type { MentorStatusResponse } from '../model/mentorStatusTypes'
 import { MentorPageHeader } from './MentorPageHeader'
@@ -10,26 +11,32 @@ interface MentorStatusHeroProps {
 }
 
 export function MentorStatusHero({ status, onRefresh, isRefreshing }: MentorStatusHeroProps) {
+  const { t, i18n } = useTranslation()
   const { statusMessage, nextAction, actionUrl } = status
 
   const getActionLabel = () => {
     switch (nextAction) {
-      case 'ACTIVE_DASHBOARD': return 'Về tổng quan'
-      case 'RESUME_PAYMENT': return 'Tiếp tục thanh toán'
-      case 'PAYMENT_CHECKOUT': return 'Kích hoạt gói'
-      case 'SELECT_PACKAGE': return 'Chọn gói dịch vụ'
-      case 'RENEW_SUBSCRIPTION': return 'Gia hạn gói'
-      case 'ACCEPT_TERMS': return 'Xem điều khoản'
-      default: return 'Hoàn thiện hồ sơ'
+      case 'ACTIVE_DASHBOARD': return t('mentoring.actionActiveDashboard')
+      case 'RESUME_PAYMENT': return t('mentoring.actionResumePayment')
+      case 'PAYMENT_CHECKOUT': return t('mentoring.actionPaymentCheckout')
+      case 'SELECT_PACKAGE': return t('mentoring.actionSelectPackage')
+      case 'RENEW_SUBSCRIPTION': return t('mentoring.actionRenewSubscription')
+      case 'ACCEPT_TERMS': return t('mentoring.actionAcceptTerms')
+      default: return t('mentoring.actionCompleteProfile')
     }
   }
+
+  const description =
+    i18n.language === 'en'
+      ? (status.active ? t('mentoring.mentorStatusActiveDesc') : t('mentoring.mentorStatusDefaultDesc'))
+      : (statusMessage || t('mentoring.mentorStatusDefaultDesc'))
 
   return (
     <MentorPageHeader
       icon={<Activity className="h-4 w-4" />}
-      eyebrow="Quản lý Mentor"
-      title="Trạng thái Mentor và gói dịch vụ"
-      description={statusMessage}
+      eyebrow={t('mentoring.mentorStatusEyebrow')}
+      title={t('mentoring.mentorStatusTitle')}
+      description={description}
       actions={
         <>
           <ButtonLink
@@ -48,7 +55,7 @@ export function MentorStatusHero({ status, onRefresh, isRefreshing }: MentorStat
               onClick={onRefresh}
               disabled={isRefreshing}
             >
-              Làm mới
+              {t('mentoring.refreshBtn')}
             </Button>
           )}
         </>
@@ -56,3 +63,4 @@ export function MentorStatusHero({ status, onRefresh, isRefreshing }: MentorStat
     />
   )
 }
+

@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useDeletePost } from '../hooks/useDeletePost'
@@ -15,17 +16,18 @@ export function DeletePostModal({
   post: Post
   onDeleted?: () => void
 }) {
+  const { t } = useTranslation()
   const deletePost = useDeletePost()
 
   const handleDelete = () => {
     deletePost.mutate(post.id, {
       onSuccess: () => {
-        toast.success('Đã xóa bài viết thành công')
+        toast.success(t('feed.deletePostSuccess'))
         onClose()
         if (onDeleted) onDeleted()
       },
       onError: (err) => {
-        toast.error(err.message || 'Không thể xóa bài viết, vui lòng thử lại sau.')
+        toast.error(err.message || t('feed.deletePostError'))
       }
     })
   }
@@ -33,7 +35,7 @@ export function DeletePostModal({
   const footer = (
     <div className="flex justify-end gap-3">
       <Button variant="secondary" onClick={onClose} disabled={deletePost.isPending}>
-        Hủy
+        {t('common.cancel')}
       </Button>
       <Button 
         variant="primary" 
@@ -42,7 +44,7 @@ export function DeletePostModal({
         leftIcon={deletePost.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
         className="bg-danger hover:opacity-90 border-danger text-text-inverse"
       >
-        {deletePost.isPending ? 'Đang xóa...' : 'Xóa'}
+        {deletePost.isPending ? t('feed.deleting') : t('common.delete')}
       </Button>
     </div>
   )
@@ -51,12 +53,12 @@ export function DeletePostModal({
     <Modal
       isOpen={open}
       onClose={deletePost.isPending ? () => {} : onClose}
-      title="Xóa bài viết"
+      title={t('feed.deletePostTitle')}
       icon={<AlertTriangle size={18} className="text-danger" />}
       footer={footer}
     >
       <p className="text-sm text-text-muted">
-        Bạn có chắc muốn xóa bài viết này không?
+        {t('feed.deletePostConfirm')}
       </p>
     </Modal>
   )

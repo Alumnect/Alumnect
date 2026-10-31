@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,6 +25,7 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
+  const { t } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -112,7 +114,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
       setValue('proofUrl', publicUrl)
     } catch (err: any) {
       console.error(err)
-      setUploadError(err.response?.data?.message || err.message || 'Lỗi xảy ra khi tải ảnh lên R2')
+      setUploadError(err.response?.data?.message || err.message || t('auth.uploadProofError'))
       setValue('proofUrl', '')
     } finally {
       setIsUploading(false)
@@ -140,7 +142,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           studentCode: data.studentCode,
           proofUrl: data.proofUrl || undefined,
         })
-        toast.success('Đăng ký thành công! Vui lòng nhập mã OTP gửi tới email.')
+        toast.success(t('auth.registerSuccessOtpPrompt'))
         onSuccess(data.email, data.role)
       }
     } catch (err: any) {
@@ -152,18 +154,18 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
     <>
       <div className="flex items-center gap-2">
         <Sparkles size={20} className="text-primary-solid animate-pulse" />
-        <span className="text-xs font-bold uppercase tracking-wider text-primary-solid">Gia nhập AlumNect</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-primary-solid">{t('auth.registerTitle')}</span>
       </div>
-      <h1 className="mt-1 text-3xl font-extrabold text-text tracking-tight">Đăng ký tài khoản</h1>
-      <p className="mt-1 text-sm text-text-subtle">Kết nối với cộng đồng sinh viên và cựu sinh viên FPTU.</p>
+      <h1 className="mt-1 text-3xl font-extrabold text-text tracking-tight">{t('auth.registerTitle')}</h1>
+      <p className="mt-1 text-sm text-text-subtle">{t('auth.registerSubtitle')}</p>
 
       {googleData && (
         <div className="mt-4 rounded-xl bg-primary-soft border border-primary-soft-border p-3 text-xs text-primary-solid flex items-start gap-2 animate-pop">
           <Sparkles size={16} className="shrink-0 mt-0.5 text-primary-solid animate-pulse" />
           <div>
-            <p className="font-bold">Đăng ký qua Google</p>
+            <p className="font-bold">Google Registration</p>
             <p className="mt-0.5 text-text-muted">
-              Hệ thống đã nhận email xác thực <strong className="text-text font-semibold">{googleData.email}</strong>. Vui lòng điền thông tin dưới đây để hoàn tất hồ sơ.
+              {googleData.email}
             </p>
           </div>
         </div>
@@ -172,8 +174,8 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
       {/* Chọn vai trò (Role Selector) */}
       <div className="mt-6 grid grid-cols-2 gap-3">
         {[
-          { key: 'STUDENT', label: 'Sinh viên', desc: 'Đang theo học', icon: Users },
-          { key: 'ALUMNI', label: 'Cựu sinh viên', desc: 'Đã tốt nghiệp', icon: GraduationCap },
+          { key: 'STUDENT', label: t('common.student'), desc: 'FPT University', icon: Users },
+          { key: 'ALUMNI', label: t('common.alumni'), desc: 'Alumni Network', icon: GraduationCap },
         ].map((r) => {
           const active = currentRole === r.key
           return (
@@ -207,15 +209,15 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
       <form className="mt-5 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         {/* Thông tin chung */}
         <Field
-          label="Họ và tên"
-          placeholder="Nguyễn Văn A"
+          label={t('auth.fullName')}
+          placeholder="Nguyen Van A"
           trailing={<User size={16} />}
           error={errors.fullName?.message}
           {...register('fullName')}
         />
 
         <Field
-          label="Email"
+          label={t('auth.email')}
           type="email"
           placeholder="you@fpt.edu.vn"
           trailing={<Mail size={16} />}
@@ -227,16 +229,16 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
 
         {!googleData && (
           <Field
-            label="Mật khẩu"
+            label={t('auth.password')}
             type={showPassword ? 'text' : 'password'}
-            placeholder="Tối thiểu 8 ký tự, có cả chữ và số"
+            placeholder="••••••••"
             error={errors.password?.message}
             trailing={
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="flex h-6 w-6 items-center justify-center text-text-subtle hover:text-text-muted transition-colors cursor-pointer"
-                aria-label="Ẩn/hiện mật khẩu"
+                aria-label={t('auth.togglePasswordVisibility')}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -247,14 +249,14 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
 
         {/* Dropdown Chuyên ngành */}
         <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold text-text-muted">Chuyên ngành</span>
+          <span className="mb-1.5 block text-sm font-semibold text-text-muted">{t('auth.major')}</span>
           <SelectDropdown
             value={watch('majorId') ? Number(watch('majorId')) : ''}
             onChange={(val) => setValue('majorId', val as number, { shouldValidate: true, shouldDirty: true })}
             options={majors.map((m) => ({ value: m.id, label: `${m.code} - ${m.name}` }))}
-            placeholder="Chọn chuyên ngành"
+            placeholder={t('auth.selectMajor')}
             disabled={isLoadingMajors}
-            searchPlaceholder="Tìm chuyên ngành…"
+            searchPlaceholder={t('auth.searchMajor')}
             buttonClassName={cn('h-12 text-sm', errors.majorId && 'border-danger ring-danger/20')}
           />
           {errors.majorId && (
@@ -264,8 +266,8 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
 
         {/* Mã số sinh viên */}
         <Field
-          label="Mã số sinh viên"
-          placeholder="Ví dụ: HE180000"
+          label={t('auth.studentCodeLabel')}
+          placeholder={t('auth.studentCodePlaceholder')}
           error={errors.studentCode?.message}
           {...register('studentCode')}
         />
@@ -275,34 +277,34 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           <div className="space-y-4 p-4 rounded-2xl bg-gold-400/5 border border-gold-400/15 animate-pop">
             <div className="text-xs font-semibold text-warning flex items-center gap-1.5">
               <GraduationCap size={16} />
-              <span>Yêu cầu xác minh cho Cựu sinh viên</span>
+              <span>{t('auth.alumniVerificationNotice')}</span>
             </div>
 
             {/* Upload tệp tin minh chứng tốt nghiệp */}
             <div className="block">
-              <span className="mb-1.5 block text-sm font-semibold text-text-muted">Minh chứng bằng tốt nghiệp</span>
+              <span className="mb-1.5 block text-sm font-semibold text-text-muted">{t('auth.graduationProofLabel')}</span>
               <div className="relative flex items-center justify-center border-2 border-dashed border-border-strong rounded-xl bg-cream-100/50 p-4 transition-colors hover:bg-surface-2">
                 {isUploading ? (
                   <div className="flex flex-col items-center py-2">
                     <Loader2 className="h-6 w-6 animate-spin text-primary-solid" />
-                    <span className="mt-2 text-xs text-text-subtle">Đang tải ảnh lên Cloudflare R2...</span>
+                    <span className="mt-2 text-xs text-text-subtle">{t('auth.uploadingProof')}</span>
                   </div>
                 ) : currentProofUrl ? (
                   <div className="w-full flex flex-col items-center">
-                    <img src={currentProofUrl} alt="Minh chứng" className="h-28 w-full object-cover rounded-lg border border-border" />
+                    <img src={currentProofUrl} alt={t('auth.proofAlt')} className="h-28 w-full object-cover rounded-lg border border-border" />
                     <span className="mt-2 text-xs text-success font-medium flex items-center gap-1">
-                      <CheckCircle2 size={12} /> Tải lên thành công!
+                      <CheckCircle2 size={12} /> {t('auth.uploadSuccess')}
                     </span>
                     <label className="mt-2 text-xs text-primary-solid hover:text-primary-solid font-bold cursor-pointer">
-                      Thay đổi tệp
+                      {t('auth.changeFile')}
                       <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
                     </label>
                   </div>
                 ) : (
                   <label className="flex flex-col items-center cursor-pointer w-full py-4">
                     <Upload className="h-6 w-6 text-text-subtle" />
-                    <span className="mt-2 text-xs font-semibold text-text-muted">Nhấp để tải ảnh lên (JPG, PNG)</span>
-                    <span className="text-xs text-text-subtle mt-1">Ảnh chụp bằng tốt nghiệp hoặc bảng điểm</span>
+                    <span className="mt-2 text-xs font-semibold text-text-muted">{t('auth.clickToUpload')}</span>
+                    <span className="text-xs text-text-subtle mt-1">{t('auth.proofHint')}</span>
                     <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
                   </label>
                 )}
@@ -325,7 +327,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
           disabled={registerMutation.isPending || googleRegisterMutation.isPending || isUploading}
           rightIcon={registerMutation.isPending || googleRegisterMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={18} />}
         >
-          {registerMutation.isPending || googleRegisterMutation.isPending ? 'Đang khởi tạo tài khoản & gửi mã...' : 'Đăng ký tài khoản'}
+          {registerMutation.isPending || googleRegisterMutation.isPending ? t('common.processing') : t('auth.registerTitle')}
         </Button>
       </form>
 
@@ -333,7 +335,7 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
         <>
           <div className="my-6 flex items-center gap-4">
             <span className="h-px flex-1 bg-border" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">hoặc</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">{t('common.or')}</span>
             <span className="h-px flex-1 bg-border" />
           </div>
 
@@ -352,9 +354,9 @@ export function RegisterForm({ googleData, onSuccess }: RegisterFormProps) {
       )}
 
       <p className="mt-8 text-center text-sm text-text-subtle">
-        Đã có tài khoản?{' '}
+        {t('auth.alreadyHaveAccount')}{' '}
         <Link to="/login" className="font-bold text-primary-solid hover:text-primary-solid transition-colors">
-          Đăng nhập ngay
+          {t('common.loginNow')}
         </Link>
       </p>
     </>
