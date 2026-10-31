@@ -56,6 +56,9 @@ import static org.mockito.Mockito.when;
 class FE22_EditPostTest {
 
     @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+    @Mock
     private PostRepository postRepository;
 
     @Mock

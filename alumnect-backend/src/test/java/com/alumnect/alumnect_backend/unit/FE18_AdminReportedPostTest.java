@@ -2,13 +2,18 @@ package com.alumnect.alumnect_backend.unit;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.ReportStatus;
+import com.alumnect.alumnect_backend.dao.post.PostRepository;
 import com.alumnect.alumnect_backend.dao.report.ReportRepository;
+import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.response.admin.AdminReportResponse;
 import com.alumnect.alumnect_backend.entity.report.Report;
+import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.admin.AdminReportMapper;
 import com.alumnect.alumnect_backend.service.admin.AdminReportServiceImpl;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +33,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,8 +53,25 @@ class FE18_AdminReportedPostTest {
     @Mock
     private AdminReportMapper adminReportMapper;
 
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PostRepository postRepository;
+
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private AdminReportServiceImpl adminReportService;
+
+    private static final String ADMIN_EMAIL = "admin@alumnect.vn";
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(userRepository.findByEmail(ADMIN_EMAIL))
+                .thenReturn(Optional.of(User.builder().id(1L).email(ADMIN_EMAIL).build()));
+    }
 
     // ================= getReports =================
 
@@ -69,7 +92,7 @@ class FE18_AdminReportedPostTest {
 
         // When
         PageResponse<AdminReportResponse> result = adminReportService.getReports(
-                "spam", "", "SPAM", "PENDING", "GENERAL", 10L, 0, 10
+                "spam", "", "SPAM", "PENDING", "GENERAL", 10L, null, 0, 10
         );
 
         // Then
@@ -89,7 +112,7 @@ class FE18_AdminReportedPostTest {
 
         // When
         PageResponse<AdminReportResponse> result = adminReportService.getReports(
-                null, null, null, null, null, null, 0, 10
+                null, null, null, null, null, null, null, 0, 10
         );
 
         // Then
@@ -108,7 +131,7 @@ class FE18_AdminReportedPostTest {
         when(reportRepository.findById(3L)).thenReturn(Optional.of(report));
 
         // When
-        adminReportService.updateReportStatus(3L, "RESOLVED");
+        adminReportService.updateReportStatus(3L, "RESOLVED", ADMIN_EMAIL);
 
         // Then
         assertThat(report.getStatus()).isEqualTo(ReportStatus.RESOLVED);
@@ -123,7 +146,7 @@ class FE18_AdminReportedPostTest {
         when(reportRepository.findById(3L)).thenReturn(Optional.of(report));
 
         // When
-        adminReportService.updateReportStatus(3L, " dismissed ");
+        adminReportService.updateReportStatus(3L, " dismissed ", ADMIN_EMAIL);
 
         // Then
         assertThat(report.getStatus()).isEqualTo(ReportStatus.DISMISSED);
@@ -138,7 +161,7 @@ class FE18_AdminReportedPostTest {
         when(reportRepository.findById(3L)).thenReturn(Optional.of(report));
 
         // When + Then
-        assertThatThrownBy(() -> adminReportService.updateReportStatus(3L, "PENDING"))
+        assertThatThrownBy(() -> adminReportService.updateReportStatus(3L, "PENDING", ADMIN_EMAIL))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Không thể cập nhật báo cáo quay lại trạng thái PENDING.");
     }
@@ -151,7 +174,7 @@ class FE18_AdminReportedPostTest {
         when(reportRepository.findById(3L)).thenReturn(Optional.of(report));
 
         // When + Then
-        assertThatThrownBy(() -> adminReportService.updateReportStatus(3L, "FOO"))
+        assertThatThrownBy(() -> adminReportService.updateReportStatus(3L, "FOO", ADMIN_EMAIL))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Trạng thái báo cáo không hợp lệ: FOO");
     }
@@ -163,7 +186,7 @@ class FE18_AdminReportedPostTest {
         when(reportRepository.findById(404L)).thenReturn(Optional.empty());
 
         // When + Then
-        assertThatThrownBy(() -> adminReportService.updateReportStatus(404L, "RESOLVED"))
+        assertThatThrownBy(() -> adminReportService.updateReportStatus(404L, "RESOLVED", ADMIN_EMAIL))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Không tìm thấy báo cáo vi phạm với ID: 404");
     }
