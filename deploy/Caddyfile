@@ -1,0 +1,14 @@
+{$SITE_ADDRESS} {
+	encode gzip zstd
+
+	@backend path /api/* /ws /ws/* /v3/api-docs* /swagger-ui*
+	handle @backend {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		root * /srv/www
+		try_files {path} /index.html
+		file_server
+	}
+}
