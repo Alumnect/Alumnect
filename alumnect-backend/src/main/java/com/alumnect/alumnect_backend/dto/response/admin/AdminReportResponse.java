@@ -65,4 +65,22 @@ public class AdminReportResponse {
 
     /** Thời điểm gửi báo cáo */
     private Instant createdAt;
+
+    /** Điểm số rủi ro do bộ lọc từ cấm đánh giá (0.00 đến 1.00) */
+    private Double aiScore;
+
+    /** Lý do hoặc mã phân loại vi phạm */
+    private String aiFlaggedReason;
+
+    /** Đã tự động bị ẩn do vi phạm nghiêm trọng chưa */
+    private Boolean autoModerated;
+
+    /** Danh sách từ cấm phát hiện được */
+    private String detectedKeywords;
+
+    /** Mức độ rủi ro hiển thị giao diện (HIGH, MEDIUM, LOW) */
+    private String riskLevel;
+
+    /** Báo cáo do hệ thống tự động tạo, không có người gửi */
+    private Boolean systemGenerated;
 }

@@ -60,6 +60,9 @@ import static org.mockito.Mockito.when;
 class FE20_PublishPostTest {
 
     @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+    @Mock
     private PostRepository postRepository;
 
     @Mock

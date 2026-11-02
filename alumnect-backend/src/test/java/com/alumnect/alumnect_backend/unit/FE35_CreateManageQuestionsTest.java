@@ -63,6 +63,9 @@ class FE35_CreateManageQuestionsTest {
 
     // ===== Mocks (dependencies) =====
     @Mock
+    private com.alumnect.alumnect_backend.service.moderation.ContentModerationService contentModerationService;
+
+    @Mock
     private QuestionRepository questionRepository;
 
     @Mock
@@ -107,6 +110,9 @@ class FE35_CreateManageQuestionsTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+                .when(contentModerationService.sanitizeContent(org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
 

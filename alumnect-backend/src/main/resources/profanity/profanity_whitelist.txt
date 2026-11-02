@@ -1,0 +1,45 @@
+# Cụm an toàn cho kiểm duyệt nội dung tự động (UC123).
+# Cụm chỉ bảo vệ đúng đoạn văn của nó, không bảo vệ cả bài. Cụm có dấu phải khớp đúng dấu;
+# cụm gõ không dấu đối chiếu với dạng không dấu. Phần lớn bắt nhầm đã được chặn bởi quy tắc đúng dấu,
+# nên danh sách này chỉ cần cho viết tắt và những từ thường đứng cạnh từ trùng hình thức.
+
+# Viết tắt mang nghĩa bình thường
+dm {mình|em|anh|chị|tớ|tôi|cho|page|riêng|nhé|nha|qua|giúp|shop|ad|admin}
+{inbox|ib|check} dm
+cc {cho|mail|email|thư|anh|chị|em|tôi|mình|trưởng phòng|sếp}
+{gửi|send|forward} cc
+{xe|động cơ|phân khối} cc
+cl {2024|2025|2026|bóng đá}
+cúp cl
+ml {nước|sữa|dung dịch|engineer|model|ops|pipeline}
+{học máy|machine learning|kỹ sư|engineer|mô hình|model|ai} ml
+
+# Từ có nghĩa thường khi đi cùng ngữ cảnh
+lon {bia|nước|nước ngọt|sữa|coca|pepsi|redbull|sting|cá|thịt|thiếc|nhôm}
+{bia|nước|nước ngọt|coca} lon
+{một|hai|ba|mấy|vài} lon
+ngu {ý|công|ngơ}
+éo le
+phò {mã|tá|trợ}
+xoạc chân
+dái tai
+chim cút
+trứng cút
+mồ côi mồ cút
+cút kít
+xe cút kít
+chim sủa
+chó sủa
+tiếng chó sủa
+mồ tổ tiên
+
+# Cách nói phóng đại, không phải lời trù ẻo
+chết đi được
+chết đi sống lại
+sống đi chết lại
+chết đi rồi
+chết đi thì
+khi chết đi
+sau khi chết đi
+lúc chết đi
+{mệt|buồn|sợ|nhớ|yêu|thương|đói|khát|vui|đau} chết đi

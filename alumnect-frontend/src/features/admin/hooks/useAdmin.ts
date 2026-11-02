@@ -179,6 +179,7 @@ export function useAdminReports(filters: {
   status?: string
   type?: string
   postId?: number
+  riskLevel?: string
   page: number
   size: number
 }) {

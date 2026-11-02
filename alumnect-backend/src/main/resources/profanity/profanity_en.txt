@@ -1,0 +1,96 @@
+# Từ điển từ cấm tiếng Anh cho kiểm duyệt nội dung tự động (UC123).
+# Cùng cú pháp với profanity_vi.txt. Chỉ gồm lời lẽ tục tĩu và lăng mạ.
+# Không đưa thuật ngữ kỹ thuật, an ninh mạng và tin tức (hack, virus, sql injection, ddos, exploit, kill process)
+# vào đây vì đây là mạng lưới cựu sinh viên công nghệ, các từ đó xuất hiện hằng ngày trong trao đổi chuyên môn.
+
+[severe]
+fuck
+fucks
+fucker
+fuckers
+fucking
+fucked
+fuckin
+fuk
+fuking
+fck
+fcking
+phuck
+motherfucker
+motherfuckers
+motherfucking
+cunt
+cunts
+cocksucker
+nigger
+niggers
+nigga
+niggas
+faggot
+faggots
+fag
+kys
+kill yourself
+go kill yourself
+hang yourself
+go die
+blowjob
+handjob
+childporn
+
+[offensive]
+shit
+shits
+shitty
+shitting
+bullshit
+bullshits
+bitch
+bitches
+bitching
+asshole
+assholes
+arsehole
+bastard
+bastards
+dickhead
+dickheads
+pussy
+pussies
+whore
+whores
+slut
+sluts
+slutty
+retard
+retarded
+dumbass
+dipshit
+jackass
+douchebag
+scumbag
+wanker
+wankers
+twat
+twats
+stfu
+porn
+porno
+hentai
+dildo
+
+[weak acronym]
+mf
+wtf
+
+[weak]
+ass
+dick
+cock
+prick
+sex
+sexy
+nude
+nudes
+damn
+crap

@@ -63,6 +63,9 @@ class FE24_CommentOnPostTest {
 
     // ===== Mocks (dependencies) =====
     @Mock
+    private com.alumnect.alumnect_backend.service.moderation.ContentModerationService contentModerationService;
+
+    @Mock
     private PostRepository postRepository;
 
     @Mock
@@ -109,6 +112,9 @@ class FE24_CommentOnPostTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+                .when(contentModerationService.sanitizeContent(org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         Role studentRole = Role.builder().id(1L).name("STUDENT").build();
         Role alumniRole = Role.builder().id(2L).name("ALUMNI").build();
         Role adminRole = Role.builder().id(3L).name("ADMIN").build();

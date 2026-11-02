@@ -14,6 +14,9 @@ import { useAdminReports, useUpdateReportStatus, useTogglePostHidden } from '../
 import type { AdminReportDto } from '../api/adminApi'
 import { CATEGORY_MAP, getCategoryConfig } from './AdminPostsPage'
 import type { CategoryKey } from './AdminPostsPage'
+import { Client } from '@stomp/stompjs'
+import { useAuthStore } from '@/store/authStore'
+import { useQueryClient } from '@tanstack/react-query'
 
 const REASON_LABELS: Record<string, { label: string; tone: 'brand' | 'gold' | 'success' | 'danger' | 'neutral' }> = {
   SPAM: { label: 'Spam / Rác', tone: 'neutral' },
@@ -175,12 +178,29 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
   )
 }
 
+/** Các mức lọc rủi ro; việc lọc do backend thực hiện để phân trang và tổng số luôn đúng. */
+const RISK_TABS = [
+  { key: 'ALL', label: 'Tất cả' },
+  { key: 'HIGH', label: 'Nguy cơ cao (>=85%)' },
+  { key: 'MEDIUM', label: 'Nghi vấn (40-85%)' },
+  { key: 'LOW', label: 'An toàn (<40%)' },
+] as const
+
+type RiskFilter = (typeof RISK_TABS)[number]['key']
+
+/** Tên hiển thị của người gửi báo cáo; báo cáo tự động không có người gửi. */
+const reporterLabel = (report: AdminReportDto) => report.reporterName ?? 'Hệ thống kiểm duyệt'
+
+/** Dòng phụ của người gửi báo cáo. */
+const reporterDetail = (report: AdminReportDto) => report.reporterEmail ?? 'Tự động phát hiện'
+
 export function AdminReportsQueue() {
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | 'DISMISSED'>('PENDING')
   const [reasonFilter, setReasonFilter] = useState<string>('ALL')
   const [typeFilter, setTypeFilter] = useState<CategoryKey>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [authorQuery, setAuthorQuery] = useState<string>('')
+  const [riskFilter, setRiskFilter] = useState<RiskFilter>('ALL')
   const [page, setPage] = useState(0)
 
   // Fetch reports from backend
@@ -190,6 +210,7 @@ export function AdminReportsQueue() {
     type: typeFilter === 'ALL' ? undefined : typeFilter,
     query: searchQuery || undefined,
     author: authorQuery || undefined,
+    riskLevel: riskFilter === 'ALL' ? undefined : riskFilter,
     page,
     size: 10,
   })
@@ -273,7 +294,7 @@ export function AdminReportsQueue() {
         setSelectedReport(null)
         toast.success('Đã xử lý báo cáo thành công!')
       } else if (type === 'DISMISS') {
-        // Cập nhật trạng thái báo cáo sang DISMISSED (không thay đổi trạng thái bài viết)
+        // Bỏ qua báo cáo; nếu bài bị hệ thống tự ẩn nhầm, backend sẽ khôi phục và báo cho tác giả
         await updateStatusMutation.mutateAsync({ id, status: 'DISMISSED' })
         
         // Clean up map for this report
@@ -292,6 +313,44 @@ export function AdminReportsQueue() {
       setConfirmAction(null)
     }
   }
+
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const queryClient = useQueryClient()
+
+  // Real-time WebSocket listener cho kênh kiểm duyệt Admin
+  useEffect(() => {
+    if (!accessToken) return
+
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+    const wsUrl = apiBase.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '') + '/ws'
+
+    const client = new Client({
+      brokerURL: wsUrl,
+      connectHeaders: { Authorization: `Bearer ${accessToken}` },
+      reconnectDelay: 5000,
+      onConnect: () => {
+        client.subscribe('/topic/admin/moderation-alerts', (msg) => {
+          try {
+            const data = JSON.parse(msg.body)
+            if (data.type === 'CRITICAL_AUTO_HIDDEN') {
+              toast.error(`🚨 CẢNH BÁO: Bài viết #${data.postId || ''} vừa bị tự động ẩn do vi phạm nghiêm trọng (${(data.aiScore * 100).toFixed(0)}%)!`)
+            } else if (data.type === 'REVIEW_REQUIRED') {
+              toast.warning(`⚠️ Báo cáo mới cần duyệt: Báo cáo #${data.reportId} có dấu hiệu nghi vấn (${(data.aiScore * 100).toFixed(0)}%)`)
+            }
+            queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] })
+            queryClient.invalidateQueries({ queryKey: ['admin', 'overview'] })
+          } catch (e) {
+            console.error('Lỗi phân tích WebSocket moderation alert:', e)
+          }
+        })
+      },
+    })
+
+    client.activate()
+    return () => {
+      client.deactivate()
+    }
+  }, [accessToken, queryClient])
 
   const reports = reportsData?.content || []
   const totalPages = reportsData?.totalPages || 0
@@ -385,6 +444,30 @@ export function AdminReportsQueue() {
           ))}
         </div>
 
+        {/* Risk Level Filter Tabs (Lọc theo mức độ rủi ro) */}
+        <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-border bg-surface-2 p-1">
+          <span className="flex items-center gap-1 px-2.5 text-[11px] font-bold text-text-subtle">
+            <Sparkles size={12} className="text-gold-500" /> Mức rủi ro:
+          </span>
+          {RISK_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setRiskFilter(tab.key)
+                setPage(0)
+              }}
+              className={cn(
+                'rounded-full px-3 py-1 text-[11px] font-bold transition cursor-pointer select-none',
+                riskFilter === tab.key
+                  ? 'bg-primary-solid text-on-primary shadow-xs'
+                  : 'text-text-muted hover:text-text hover:bg-surface'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Custom Reason Dropdown & Tìm kiếm */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <CustomReasonDropdown
@@ -468,6 +551,7 @@ export function AdminReportsQueue() {
                     <th className="px-5 py-3.5 font-bold">Lý do</th>
                     <th className="px-5 py-3.5 font-bold">Loại bài</th>
                     <th className="px-5 py-3.5 font-bold">Tác giả & Nội dung bài viết</th>
+                    <th className="px-5 py-3.5 font-bold text-center">Đánh giá rủi ro</th>
                     <th className="px-5 py-3.5 font-bold text-center">Trạng thái bài</th>
                     <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
                   </tr>
@@ -491,13 +575,13 @@ export function AdminReportsQueue() {
                           <div className="flex items-center gap-3">
                             <Avatar
                               src={r.reporterAvatarUrl}
-                              name={r.reporterName}
+                              name={reporterLabel(r)}
                               size={36}
                               className="border border-primary-soft-border shrink-0 animate-breathe"
                             />
                             <div className="min-w-0">
-                              <p className="font-bold text-text truncate">{r.reporterName}</p>
-                              <p className="text-xs text-text-subtle truncate">{r.reporterEmail}</p>
+                              <p className="font-bold text-text truncate">{reporterLabel(r)}</p>
+                              <p className="text-xs text-text-subtle truncate">{reporterDetail(r)}</p>
                             </div>
                           </div>
                         </td>
@@ -540,6 +624,34 @@ export function AdminReportsQueue() {
                               {r.postContent}
                             </p>
                           </div>
+                        </td>
+
+                        {/* Đánh giá rủi ro */}
+                        <td className="px-5 py-4 text-center">
+                          {r.aiScore !== undefined && r.aiScore !== null ? (
+                            <div className="inline-flex flex-col items-center gap-1">
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs',
+                                  r.riskLevel === 'HIGH' || r.aiScore >= 0.85
+                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                    : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                )}
+                              >
+                                <Sparkles size={11} />
+                                {(r.aiScore * 100).toFixed(0)}% {r.riskLevel === 'HIGH' ? 'Cao' : r.riskLevel === 'MEDIUM' ? 'Nghi vấn' : 'Thấp'}
+                              </span>
+                              {r.autoModerated && (
+                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100/60 rounded px-1.5 py-0.5">
+                                  Tự động ẩn
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-text-subtle font-medium">—</span>
+                          )}
                         </td>
 
                         {/* Trạng thái bài viết */}
@@ -620,13 +732,13 @@ export function AdminReportsQueue() {
                 <div className="flex items-center gap-3">
                   <Avatar
                     src={selectedReport.reporterAvatarUrl}
-                    name={selectedReport.reporterName}
+                    name={reporterLabel(selectedReport)}
                     size={40}
                     className="border border-primary-soft-border"
                   />
                   <div>
                     <span className="text-xs text-text-subtle block font-medium">Người gửi báo cáo</span>
-                    <span className="font-bold text-text text-sm">{selectedReport.reporterName} ({selectedReport.reporterEmail})</span>
+                    <span className="font-bold text-text text-sm">{reporterLabel(selectedReport)} ({reporterDetail(selectedReport)})</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-xs mt-2 border-t border-brand-100/50 pt-2 font-medium">
@@ -693,6 +805,78 @@ export function AdminReportsQueue() {
                     {selectedReport.postContent}
                   </p>
                 </div>
+
+                {/* Khối phân tích kiểm duyệt tự động */}
+                {selectedReport.aiScore !== undefined && selectedReport.aiScore !== null && (
+                  <div className="rounded-2xl border border-border bg-surface-2/70 p-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={16} className="text-gold-500" />
+                        <h4 className="text-xs font-bold text-text uppercase tracking-wider">
+                          Phân tích Kiểm duyệt Tự động
+                        </h4>
+                      </div>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border',
+                          selectedReport.riskLevel === 'HIGH' || selectedReport.aiScore >= 0.85
+                            ? 'bg-rose-50 text-rose-700 border-rose-300'
+                            : selectedReport.riskLevel === 'MEDIUM' || selectedReport.aiScore >= 0.40
+                            ? 'bg-amber-50 text-amber-700 border-amber-300'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                        )}
+                      >
+                        Điểm rủi ro: {(selectedReport.aiScore * 100).toFixed(0)}% (
+                        {selectedReport.riskLevel === 'HIGH' ? 'Nguy cơ cao' : selectedReport.riskLevel === 'MEDIUM' ? 'Nghi vấn' : 'An toàn'}
+                        )
+                      </span>
+                    </div>
+
+                    {/* Thanh đo mức độ rủi ro Risk Meter */}
+                    <div className="w-full bg-border/60 rounded-full h-2 overflow-hidden">
+                      <div
+                        className={cn(
+                          'h-full transition-all duration-500',
+                          selectedReport.aiScore >= 0.85
+                            ? 'bg-rose-500'
+                            : selectedReport.aiScore >= 0.40
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500'
+                        )}
+                        style={{ width: `${Math.min(100, Math.max(5, selectedReport.aiScore * 100))}%` }}
+                      />
+                    </div>
+
+                    {/* Đánh giá và từ khóa vi phạm */}
+                    <div className="text-xs space-y-1.5 text-text-muted">
+                      {selectedReport.aiFlaggedReason && (
+                        <div>
+                          <span className="font-bold text-text">Đánh giá hệ thống: </span>
+                          <span>{selectedReport.aiFlaggedReason}</span>
+                        </div>
+                      )}
+                      {selectedReport.detectedKeywords && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className="font-bold text-text">Từ khóa vi phạm: </span>
+                          {selectedReport.detectedKeywords.split(',').map((kw, i) => (
+                            <span
+                              key={i}
+                              className="inline-block bg-rose-100 text-rose-800 text-[11px] font-bold px-2 py-0.5 rounded-md border border-rose-200"
+                            >
+                              {kw.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {selectedReport.autoModerated && (
+                        <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px] flex items-center gap-2">
+                          <ShieldAlert size={15} className="shrink-0 text-rose-600" />
+                          Hệ thống đã tự động tạm ẩn bài viết do vi phạm nghiêm trọng quy chuẩn cộng đồng (&gt;= 85%).
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-medium border-t border-brand-100/50 pt-2">
                   <div>
@@ -804,7 +988,7 @@ export function AdminReportsQueue() {
                       ? 'Bạn có chắc muốn ẩn bài viết vi phạm này không?' 
                       : 'Bạn có chắc muốn giữ công khai bài viết này không?'
                   )}
-                  {confirmAction.type === 'DISMISS' && 'Bạn có chắc muốn bỏ qua báo cáo này không?'}
+                  {confirmAction.type === 'DISMISS' && 'Bạn có chắc muốn bỏ qua báo cáo này không? Nếu bài viết bị hệ thống tự ẩn, bài sẽ được khôi phục.'}
                 </p>
               </div>
               <div className="flex gap-2 w-full pt-2">

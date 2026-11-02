@@ -105,13 +105,21 @@ export interface AdminReportDto {
   postAuthorName: string
   postAuthorEmail: string
   reporterId: number
-  reporterName: string
-  reporterEmail: string
+  /** Trống khi báo cáo do hệ thống kiểm duyệt tự động tạo */
+  reporterName?: string
+  reporterEmail?: string
   reporterAvatarUrl?: string
   reason: 'SPAM' | 'INAPPROPRIATE' | 'MISINFORMATION' | 'SCAM_OR_FRAUD' | 'OTHER'
   description?: string
   status: 'PENDING' | 'RESOLVED' | 'DISMISSED'
   createdAt: string
+  aiScore?: number
+  aiFlaggedReason?: string
+  autoModerated?: boolean
+  detectedKeywords?: string
+  riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW'
+  /** Báo cáo do hệ thống tự động tạo, không có người gửi */
+  systemGenerated?: boolean
 }
 
 export interface PageResponse<T> {
@@ -218,6 +226,7 @@ export const adminApi = {
     status?: string
     type?: string
     postId?: number
+    riskLevel?: string
     page: number
     size: number
   }) =>

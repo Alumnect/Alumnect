@@ -374,6 +374,43 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void sendContentModeratedNotification(Post post) {
+        sendModerationNotification(post, "Bài viết của bạn đang được xem xét",
+                "Bài viết của bạn đã tạm ẩn vì có thể vi phạm tiêu chuẩn cộng đồng. Quản trị viên sẽ xem xét và phản hồi.");
+    }
+
+    @Override
+    @Transactional
+    public void sendContentRestoredNotification(Post post) {
+        sendModerationNotification(post, "Bài viết của bạn đã được khôi phục",
+                "Quản trị viên đã xem xét và xác nhận bài viết của bạn không vi phạm tiêu chuẩn cộng đồng.");
+    }
+
+    /** Tạo và đẩy thông báo kiểm duyệt do hệ thống gửi cho tác giả bài viết. */
+    private void sendModerationNotification(Post post, String title, String content) {
+        if (post == null || post.getAuthor() == null) {
+            return;
+        }
+
+        User recipient = post.getAuthor();
+        Notification notification = Notification.builder()
+                .recipient(recipient)
+                .sender(null) // Hệ thống gửi
+                .type(NotificationType.CONTENT_MODERATED)
+                .title(title)
+                .content(content)
+                .targetType("POST")
+                .targetId(String.valueOf(post.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+
+        notification = notificationRepository.save(notification);
+        pushRealtimeNotification(recipient, notification);
+    }
+
+    @Override
+    @Transactional
     public void sendWelcomeNotification(User user) {
         if (user == null) {
             return;

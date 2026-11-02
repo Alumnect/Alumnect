@@ -33,6 +33,7 @@ import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringConversationService;
+import com.alumnect.alumnect_backend.service.moderation.ContentModerationService;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.message.MessageMapper;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,7 @@ public class ChatServiceImpl implements ChatService {
     private final MessageMapper messageMapper;
     private final SimpMessagingTemplate messagingTemplate;
     private final MentoringConversationService mentoringConversationService;
+    private final ContentModerationService contentModerationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -406,7 +408,7 @@ public class ChatServiceImpl implements ChatService {
         Message message = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
-                .content(request.getContent() != null ? request.getContent().trim() : null)
+                .content(moderateMessageContent(conversation, request.getContent()))
                 .type(msgType)
                 .isDeleted(false)
                 .createdAt(Instant.now())
@@ -1019,6 +1021,24 @@ public class ChatServiceImpl implements ChatService {
                         .isFollowing(Boolean.TRUE.equals(p.getIsFollowing()))
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Chuẩn hóa nội dung tin nhắn trước khi lưu, chỉ che từ cấm ở chat nhóm.
+     * Tin nhắn 1-1 và Chat for Task là trao đổi riêng tư nên hệ thống không quét nội dung.
+     *
+     * @param conversation Cuộc hội thoại nhận tin nhắn
+     * @param content      Nội dung gốc, có thể null khi chỉ gửi tệp đính kèm
+     * @return Nội dung đã xử lý, null nếu không có văn bản
+     */
+    private String moderateMessageContent(Conversation conversation, String content) {
+        if (content == null) {
+            return null;
+        }
+        String trimmed = content.trim();
+        return conversation.getType() == ConversationType.GROUP
+                ? contentModerationService.sanitizeContent(trimmed)
+                : trimmed;
     }
 
     private User getUserByEmail(String email) {

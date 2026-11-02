@@ -21,6 +21,7 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.forum.AnswerMapper;
+import com.alumnect.alumnect_backend.service.moderation.ContentModerationService;
 import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +69,9 @@ public class AnswerServiceImpl implements AnswerService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private ContentModerationService contentModerationService;
 
     /**
      * {@inheritDoc}
@@ -175,7 +179,7 @@ public class AnswerServiceImpl implements AnswerService {
                 .question(question)
                 .author(author)
                 .parent(parent)
-                .body(request.getBody().trim())
+                .body(contentModerationService.sanitizeContent(request.getBody().trim()))
                 .status(AnswerStatus.ACTIVE)
                 .voteCount(0)
                 .build();
@@ -222,7 +226,7 @@ public class AnswerServiceImpl implements AnswerService {
             throw new ForbiddenException("Chỉ tác giả mới được chỉnh sửa câu trả lời này");
         }
 
-        answer.setBody(request.getBody().trim());
+        answer.setBody(contentModerationService.sanitizeContent(request.getBody().trim()));
         Answer saved = answerRepository.save(answer);
         log.info("Cập nhật câu trả lời: id={}, questionId={}, tác giả={}", saved.getId(), questionId, email);
 

@@ -27,5 +27,11 @@ public interface AdminReportMapper {
     @Mapping(target = "description", source = "report.description")
     @Mapping(target = "status", source = "report.status")
     @Mapping(target = "createdAt", source = "report.createdAt")
+    @Mapping(target = "aiScore", source = "report.aiScore")
+    @Mapping(target = "aiFlaggedReason", source = "report.aiFlaggedReason")
+    @Mapping(target = "autoModerated", source = "report.autoModerated")
+    @Mapping(target = "detectedKeywords", source = "report.detectedKeywords")
+    @Mapping(target = "riskLevel", expression = "java(com.alumnect.alumnect_backend.common.enums.ModerationRiskLevel.fromScore(report.getAiScore()).name())")
+    @Mapping(target = "systemGenerated", expression = "java(report.getReporter() == null)")
     AdminReportResponse toDto(Report report);
 }

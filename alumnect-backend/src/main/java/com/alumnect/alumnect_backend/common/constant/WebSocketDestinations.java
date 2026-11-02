@@ -47,4 +47,13 @@ public final class WebSocketDestinations {
 
     /** Kênh cập nhật trạng thái hoạt động người dùng */
     public static final String TOPIC_ONLINE_STATUS = "/topic/online-users";
+
+    // ==========================================
+    // CÁC KÊNH QUẢN TRỊ (CHỈ TÀI KHOẢN ADMIN)
+    // ==========================================
+    /** Tiền tố các kênh chỉ dành cho Quản trị viên */
+    public static final String TOPIC_ADMIN_PREFIX = "/topic/admin/";
+
+    /** Kênh cảnh báo kiểm duyệt nội dung tự động (UC123) */
+    public static final String TOPIC_ADMIN_MODERATION = TOPIC_ADMIN_PREFIX + "moderation-alerts";
 }

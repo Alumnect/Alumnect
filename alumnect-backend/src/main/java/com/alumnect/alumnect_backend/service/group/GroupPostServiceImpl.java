@@ -30,6 +30,7 @@ import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.service.moderation.ContentModerationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -62,6 +63,7 @@ public class GroupPostServiceImpl implements GroupPostService {
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final ContentModerationService contentModerationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -225,7 +227,7 @@ public class GroupPostServiceImpl implements GroupPostService {
         GroupPost post = GroupPost.builder()
                 .group(group)
                 .author(author)
-                .content(request.getContent().trim())
+                .content(contentModerationService.sanitizeContent(request.getContent().trim()))
                 .topic(topic)
                 .imageUrls(cleanImages)
                 .videoUrls(cleanVideos)
@@ -273,7 +275,7 @@ public class GroupPostServiceImpl implements GroupPostService {
             throw new ForbiddenException("Bạn chỉ có thể chỉnh sửa bài viết do chính mình đăng.");
         }
 
-        post.setContent(request.getContent().trim());
+        post.setContent(contentModerationService.sanitizeContent(request.getContent().trim()));
         post.setTopic(resolveGroupTopic(group, request.getTopic()));
         List<String> cleanImages = sanitizeImages(request.getImageUrls());
         List<String> cleanVideos = sanitizeVideos(request.getVideoUrls());
@@ -506,7 +508,7 @@ public class GroupPostServiceImpl implements GroupPostService {
                 .post(post)
                 .author(author)
                 .parentComment(parent)
-                .content(request.getContent().trim())
+                .content(contentModerationService.sanitizeContent(request.getContent().trim()))
                 .build();
 
         GroupPostComment saved = groupPostCommentRepository.save(comment);
@@ -544,7 +546,7 @@ public class GroupPostServiceImpl implements GroupPostService {
             throw new ForbiddenException("Bạn chỉ có thể chỉnh sửa bình luận do chính mình đăng.");
         }
 
-        comment.setContent(request.getContent().trim());
+        comment.setContent(contentModerationService.sanitizeContent(request.getContent().trim()));
         GroupPostComment saved = groupPostCommentRepository.save(comment);
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
         GroupMember member = groupMemberRepository.findByGroupIdAndUserId(groupId, author.getId()).orElse(null);
