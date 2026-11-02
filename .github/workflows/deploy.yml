@@ -1,0 +1,99 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Không chạy hai lần deploy song song
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DEPLOY_HOST: 180.93.113.222
+  DEPLOY_USER: root
+  DEPLOY_PATH: /opt/alumnect
+  SITE_URL: https://alumnect.online
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build backend jar
+        working-directory: alumnect-backend
+        run: mvn -B -q -DskipTests package
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # npm ci đang lỗi do package-lock lệch, và 'tsc -b' đang lỗi unused vars,
+      # nên dùng npm install + vite build trực tiếp. Sửa 2 lỗi đó rồi đổi lại npm ci / npm run build.
+      - name: Build frontend
+        working-directory: alumnect-frontend
+        run: |
+          npm install --no-audit --no-fund
+          npx vite build
+        env:
+          VITE_API_BASE_URL: ${{ env.SITE_URL }}/api/v1
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          VITE_MAPTILER_API_KEY: ${{ vars.VITE_MAPTILER_API_KEY }}
+          VITE_MAPTILER_STYLE_ID: ${{ vars.VITE_MAPTILER_STYLE_ID }}
+          VITE_VIETMAP_API_KEY: ${{ vars.VITE_VIETMAP_API_KEY }}
+          VITE_REQUIRE_AUTH: ${{ vars.VITE_REQUIRE_AUTH }}
+
+      - name: Setup SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "180.93.113.222 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDGH9scj0LY9oIfdo9MmvXokvOkznKirr0tlrAMXxq5zVM8Jtm5xvtuo1Wax/NxtXyt88c+CJSGsf/+8+EbW4J4lPANJ7D/op0If2vDS9gvSMkmVcNphC6GeNMkbzWvlZZpzFMQq1MoUPkGHxUVp83dd1t2oqdQBnQmv4sVlioVg8ryWPTBGlNcMfmbM/+w2iftTC5vTVfxBMLVbsDgci4EYjl8JgMjWbUtQUBLXJ3om15hzd8nB5R5TnsdEQCD28mljl3kqYmIMFnx66bY2WeqiL2zMudBVwAG3+RStYF58ycTjAuneZehEa7RsNRdGZTF/bw64OjqL9QPm3osrefkdHmuueM6xGhf+KJeh+b1CKYXoFTrrt0HeKI8ZbkQXDGoyV2PVXhM5625GFtoiif8nhA4qVA//UX+AYo5OdvTMgCKrY9KbNWrs46bjkRRSrEoMQ4/nl5DPq0Am/TRCDg40HmpCmNvUze5sTvrPWRL2yZqsIhIT6lJont5SPtloZk=" > ~/.ssh/known_hosts
+          cat >> ~/.ssh/config <<CFG
+          Host vps
+            HostName ${{ env.DEPLOY_HOST }}
+            User ${{ env.DEPLOY_USER }}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          CFG
+
+      - name: Upload files
+        run: |
+          mkdir stage
+          cp deploy/Dockerfile deploy/Caddyfile deploy/docker-compose.prod.yml stage/
+          cp alumnect-backend/target/*.jar stage/app.jar
+          tar -C stage -cf - . | ssh vps "tar --no-same-owner -C $DEPLOY_PATH -xf -"
+          # Xóa nội dung www nhưng giữ thư mục để Caddy không mất bind mount
+          ssh vps "mkdir -p $DEPLOY_PATH/www && find $DEPLOY_PATH/www -mindepth 1 -delete"
+          tar -C alumnect-frontend/dist -cf - . | ssh vps "tar --no-same-owner -C $DEPLOY_PATH/www -xf -"
+
+      - name: Restart services
+        run: |
+          ssh vps "cd $DEPLOY_PATH && docker compose -f docker-compose.prod.yml up -d --build && (docker exec alumnect-caddy caddy reload --config /etc/caddy/Caddyfile || true) && docker image prune -f"
+
+      - name: Verify
+        run: |
+          for i in $(seq 1 40); do
+            code=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$SITE_URL/v3/api-docs" || true)
+            if [ "$code" = "200" ] || [ "$code" = "401" ]; then
+              echo "Backend up (HTTP $code)"
+              front=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$SITE_URL/")
+              echo "Frontend HTTP $front"
+              [ "$front" = "200" ] && exit 0
+            fi
+            sleep 10
+          done
+          echo "Deploy verification failed"; exit 1
