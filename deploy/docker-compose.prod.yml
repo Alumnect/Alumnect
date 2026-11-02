@@ -1,0 +1,86 @@
+services:
+  postgres-db:
+    image: postgres:18-alpine
+    container_name: alumnect-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data_v18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: alumnect-backend:prod
+    container_name: alumnect-backend
+    restart: unless-stopped
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xms256m -Xmx900m -XX:+UseSerialGC
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      # Tắt log nặng cho production
+      - SPRING_JPA_SHOW_SQL=false
+      - LOGGING_LEVEL_ORG_FLYWAYDB=INFO
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE=WARN
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=INFO
+      - SPRING_MAIL_HOST=${MAIL_HOST}
+      - SPRING_MAIL_PORT=${MAIL_PORT}
+      - SPRING_MAIL_USERNAME=${MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-AlumNect}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+      - R2_ENDPOINT=${R2_ENDPOINT:-}
+      - R2_ACCESS_KEY=${R2_ACCESS_KEY:-}
+      - R2_SECRET_KEY=${R2_SECRET_KEY:-}
+      - R2_BUCKET_NAME=${R2_BUCKET_NAME:-}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - PAYOS_CLIENT_ID=${PAYOS_CLIENT_ID:-}
+      - PAYOS_API_KEY=${PAYOS_API_KEY:-}
+      - PAYOS_CHECKSUM_KEY=${PAYOS_CHECKSUM_KEY:-}
+      - PAYOS_PAYOUT_CLIENT_ID=${PAYOS_PAYOUT_CLIENT_ID:-}
+      - PAYOS_PAYOUT_API_KEY=${PAYOS_PAYOUT_API_KEY:-}
+      - PAYOS_PAYOUT_CHECKSUM_KEY=${PAYOS_PAYOUT_CHECKSUM_KEY:-}
+      - PAYOS_PAYMENT_EXPIRATION_MINUTES=${PAYOS_PAYMENT_EXPIRATION_MINUTES:-15}
+      - PAYOS_RETURN_URL=${PAYOS_RETURN_URL:-}
+      - PAYOS_CANCEL_URL=${PAYOS_CANCEL_URL:-}
+      - PAYOS_TASK_RETURN_URL=${PAYOS_TASK_RETURN_URL:-}
+      - PAYOS_TASK_CANCEL_URL=${PAYOS_TASK_CANCEL_URL:-}
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: alumnect-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./www:/srv/www:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data_v18:
+  caddy_data:
+  caddy_config:
