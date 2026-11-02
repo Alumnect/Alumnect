@@ -162,7 +162,7 @@ Các bảng cơ sở dữ liệu liên quan:
 * Bảng `user_profiles`
 
 ##### 3.1.4 API Contract
-* **Đường dẫn**: `GET /api/v1/admin/users/2`
+* **Đường dẫn**: `GET /api/v1/admin/users/{id}`
 * **HTTP Status**: 200 OK
 * **Response Payload**:
   ```json

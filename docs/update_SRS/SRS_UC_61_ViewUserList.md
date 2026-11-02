@@ -17,9 +17,9 @@ stateDiagram-v2
 * **Bước 1 - Khởi đầu**: Admin điều hướng truy cập vào menu "Quản lý tài khoản" (đường dẫn `/admin/users`).
 * **Bước 2 - Các bước chuyển tiếp**:
   * Trình duyệt kích hoạt gọi API lấy toàn bộ danh sách tài khoản được sắp xếp theo ngày đăng ký mới nhất lên đầu.
-  * Admin có thể nhập từ khóa tìm kiếm (tên, email, mã số sinh viên) hoặc chọn các tab để lọc nhanh (Sinh viên, Cựu sinh viên, Chờ duyệt, Bị khóa).
-  * API backend nhận các tham số lọc động và thực hiện phân trang, sắp xếp và khớp chuỗi truy vấn động.
-* **Bước 3 - Kết thúc**: Hệ thống trả về danh sách tài khoản thỏa mãn kèm phân trang, hiển thị mượt mà trên giao diện dưới dạng bảng dữ liệu.
+  * Admin có thể nhập từ khóa tìm kiếm (tên, email, mã số sinh viên) hoặc chọn các tab để lọc nhanh (Tất cả, Cựu sinh viên, Sinh viên, Bị khóa). Tab "Chờ duyệt" đã được loại bỏ để tập trung riêng vào module Xác minh tài khoản Cựu sinh viên (UC64).
+  * API backend nhận các tham số lọc động và thực hiện sắp xếp và khớp chuỗi truy vấn động. Danh sách hiển thị trực tiếp và phản hồi tức thời theo tìm kiếm mà không cần chuyển trang thủ công.
+* **Bước 3 - Kết thúc**: Hệ thống trả về danh sách tài khoản thỏa mãn, hiển thị mượt mà trên giao diện dưới dạng bảng dữ liệu.
 
 ### 3.2 Module Quản Trị Hệ Thống (Admin Console)
 
@@ -30,19 +30,19 @@ stateDiagram-v2
 
 * **Function description**:
   * **Actors/Roles**: Admin
-  * **Purpose**: Cho phép Admin quản lý, tìm kiếm và kiểm soát tất cả người dùng trong hệ thống.
+  * **Purpose**: Cho phép Admin quản lý, tìm kiếm và kiểm soát tất cả người dùng trong hệ thống một cách trực quan, nhanh gọn.
   * **Interface**:
-    * Các tab lọc trạng thái: Tất cả, Cựu sinh viên, Sinh viên, Chờ duyệt, Bị khóa.
-    * Ô tìm kiếm đa năng.
+    * Các tab lọc trạng thái: Tất cả, Cựu sinh viên, Sinh viên, Bị khóa (bỏ tab chờ duyệt vì đã có module xác minh riêng).
+    * Ô tìm kiếm đa năng tức thời (Debounce tìm kiếm theo tên, email, mã SV).
     * Bảng dữ liệu hiển thị: Avatar, Họ tên, Email, Vai trò, Trạng thái (Badge), Mã số sinh viên, Ngày tạo.
-    * Phân trang điều hướng: Trang trước, Trang sau, Số trang hiện tại.
+    * Xem toàn bộ danh sách trực tiếp, không sử dụng phân trang rườm rà.
 
 * **Data processing**:
-  1. Frontend gửi yêu cầu `GET` kèm các tham số query (chứa từ khóa tìm kiếm, vai trò, trạng thái lọc nhanh, page và size).
+  1. Frontend gửi yêu cầu `GET` kèm các tham số query (chứa từ khóa tìm kiếm, vai trò, trạng thái lọc nhanh).
   2. Backend sử dụng `Specification<User>` để tạo câu lệnh SQL `WHERE` động:
      * Chuyển từ khóa tìm kiếm về chữ thường.
      * Thực hiện so khớp `LIKE %keyword%` không phân biệt hoa thường trên các trường: `email`, `fullName`, `studentCode`.
-  3. Thực hiện phân trang và trả kết quả JSON dạng `PageResponse`.
+  3. Trả kết quả JSON danh sách tài khoản cho Client.
 
 * **Screen layout**:
   * Figure 61.1: User Management Screen layout with search and filter tabs.
@@ -65,8 +65,8 @@ stateDiagram-v2
 | **BR-ADMIN-04** | API quản trị `/api/v1/admin/**` bắt buộc phải chặn truy cập từ người dùng có vai trò `STUDENT` hoặc `ALUMNI` (trả về HTTP 403 Forbidden). |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
-* Kết quả hiển thị phải được phân trang, mặc định 10 bản ghi mỗi trang.
-* Danh sách cập nhật tự động khi thay đổi bộ lọc mà không cần reload trang.
+* Danh sách cập nhật tự động tức thời khi nhập từ khóa tìm kiếm (Debounce) hoặc thay đổi tab bộ lọc mà không cần reload trang.
+* Bỏ nút phân trang số trang rườm rà, tải và lọc trực tiếp danh sách tài khoản theo bộ lọc tìm kiếm.
 
 #### 5.3 Application Messages List (Danh sách Thông điệp Ứng dụng)
 | # | Mã thông điệp (Message code) | Loại thông điệp (Message Type) | Ngữ cảnh (Context) | Nội dung hiển thị (Content) |

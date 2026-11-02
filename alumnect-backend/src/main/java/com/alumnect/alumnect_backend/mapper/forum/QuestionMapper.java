@@ -33,9 +33,10 @@ public class QuestionMapper {
      * @param question      Entity câu hỏi (đã JOIN FETCH sẵn {@code author} và {@code topic})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar) — có thể null nếu chưa tạo hồ sơ
      * @param imageUrls     Danh sách URL ảnh đính kèm của câu hỏi (đã sắp thứ tự) — có thể null/rỗng
+     * @param voted         true nếu người xem hiện tại đã bình chọn câu hỏi này (UC42), false với Guest
      * @return DTO phẳng khớp schema Zod {@code questionSchema} phía Frontend
      */
-    public QuestionResponse toResponse(Question question, UserProfile authorProfile, List<String> imageUrls) {
+    public QuestionResponse toResponse(Question question, UserProfile authorProfile, List<String> imageUrls, boolean voted) {
         User author = question.getAuthor();
 
         // Tên hiển thị & avatar: lấy từ UserProfile nếu có, fallback về email khi hồ sơ chưa được tạo.
@@ -66,6 +67,7 @@ public class QuestionMapper {
                 .avatar(avatarUrl)
                 .verified(author.isAccountVerified())
                 .votes(question.getVoteCount())
+                .voted(voted)
                 .answers(question.getAnswerCount())
                 .time(toRelativeTime(question.getCreatedAt()))
                 .build();
@@ -79,9 +81,10 @@ public class QuestionMapper {
      * @param question      Entity câu hỏi (đã JOIN FETCH sẵn {@code author} và {@code topic})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar, headline) — có thể null nếu chưa tạo hồ sơ
      * @param imageUrls     Danh sách URL ảnh đính kèm của câu hỏi (đã sắp thứ tự) — có thể null/rỗng
+     * @param voted         true nếu người xem hiện tại đã bình chọn câu hỏi này (UC42), false với Guest
      * @return DTO chi tiết phẳng khớp schema Zod {@code questionDetailSchema} phía Frontend
      */
-    public QuestionDetailResponse toDetailResponse(Question question, UserProfile authorProfile, List<String> imageUrls) {
+    public QuestionDetailResponse toDetailResponse(Question question, UserProfile authorProfile, List<String> imageUrls, boolean voted) {
         User author = question.getAuthor();
 
         // Tên hiển thị, avatar & headline: lấy từ UserProfile nếu có, fallback hợp lý khi hồ sơ chưa được tạo.
@@ -120,6 +123,7 @@ public class QuestionMapper {
                 .authorHeadline(headline)
                 .verified(author.isAccountVerified())
                 .votes(question.getVoteCount())
+                .voted(voted)
                 .answers(question.getAnswerCount())
                 .time(toRelativeTime(question.getCreatedAt()))
                 .createdAt(question.getCreatedAt() != null ? question.getCreatedAt().toString() : "")

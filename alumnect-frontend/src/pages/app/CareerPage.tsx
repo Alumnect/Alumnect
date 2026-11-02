@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import {
   Route as RouteIcon,
@@ -14,12 +15,17 @@ import {
   Star,
   ExternalLink,
   ChevronRight,
+  SlidersHorizontal,
+  RotateCcw,
+  GraduationCap,
+  BookOpen,
 } from 'lucide-react'
-import { PageHeader, Card, Avatar, Skeleton, EmptyState } from '@/components/ui'
+import { PageHeader, Card, Avatar, Skeleton, EmptyState, Pagination, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { useNavigate } from 'react-router-dom'
 import { useCareerPaths, useCareerPathDetail } from '@/features/careerpath/hooks/useCareerPath'
+import { useMajors } from '@/features/auth/hooks/useAuth'
 import type { CareerPathSummaryResponse, ExperienceTimelineResponse } from '@/features/careerpath/api/careerPathApi'
 import { formatPeriodDate } from '@/utils/date'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -36,16 +42,25 @@ const formatLocationCityOnly = (location?: string | null): string => {
 }
 
 export function CareerPage() {
-
+  const { t } = useTranslation()
+  const { data: majors = [] } = useMajors()
   const [search, setSearch] = useState('')
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
   const [location, setLocation] = useState('')
   const [cohort, setCohort] = useState<number | ''>('')
-  const [majorId] = useState<number | ''>('')
+  const [majorId, setMajorId] = useState<number | ''>('')
   const [page, setPage] = useState(0)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [mounted, setMounted] = useState(false)
+
+  const activeFilterCount =
+    (title ? 1 : 0) +
+    (company ? 1 : 0) +
+    (location ? 1 : 0) +
+    (cohort !== '' ? 1 : 0) +
+    (majorId !== '' ? 1 : 0)
 
   useEffect(() => {
     setMounted(true)
@@ -109,55 +124,152 @@ export function CareerPage() {
   }, [selectedAlumni, handleKeyDown])
 
   const handleClearFilters = () => {
-    setSearch(''); setTitle(''); setCompany(''); setLocation(''); setCohort(''); setPage(0)
+    setSearch(''); setTitle(''); setCompany(''); setLocation(''); setCohort(''); setMajorId(''); setPage(0)
   }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 text-left">
       <PageHeader
         icon={<RouteIcon size={20} />}
-        title="Lộ trình sự nghiệp"
-        subtitle="Khám phá hành trình thực tế các cựu sinh viên FPTU đã đi qua để đạt được vị trí hiện tại."
+        title={t('career.title')}
+        subtitle={t('career.subtitle')}
       />
 
-      {/* Filter */}
+      {/* Search & Filter */}
       <Reveal>
-        <Card hover={false} className="mb-6 p-5 border border-plum-900/10 shadow-soft bg-white rounded-3xl">
-          <div className="flex items-center gap-2 text-xs font-bold text-plum-400 uppercase tracking-wider mb-4">
-            <Search size={14} className="text-brand-500" />
-            <span>Bộ lọc nâng cao</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-            {[
-              { ph: 'Tìm tên, chức danh, công ty...', val: search, set: setSearch, type: 'text' },
-              { ph: 'Lọc chức danh công việc...', val: title, set: setTitle, type: 'text' },
-              { ph: 'Lọc công ty / tổ chức...', val: company, set: setCompany, type: 'text' },
-              { ph: 'Lọc thành phố / địa điểm...', val: location, set: setLocation, type: 'text' },
-            ].map(({ ph, val, set, type }) => (
+        <Card hover={false} className="mb-6 p-4 sm:p-5 border border-border shadow-soft bg-surface rounded-3xl">
+          {/* Main search bar + Filter toggle button */}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />
               <input
-                key={ph}
-                type={type}
-                placeholder={ph}
-                value={val}
-                onChange={(e) => set(e.target.value)}
-                className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3.5 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                aria-label={t('career.searchPlaceholder')}
+                type="text"
+                placeholder={t('career.searchPlaceholder')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full h-12 rounded-2xl border border-border bg-surface-2 pl-11 pr-10 text-sm text-text placeholder:text-text-subtle transition focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
-            ))}
-            <input
-              type="number"
-              placeholder="Lọc khóa học (VD: 14)..."
-              value={cohort}
-              onChange={(e) => setCohort(e.target.value ? Number(e.target.value) : '')}
-              className="w-full h-10 rounded-xl border border-plum-900/10 bg-white px-3.5 text-xs text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
-            <div className="flex justify-end items-center">
-              {!!(search || title || company || location || cohort) && (
-                <button onClick={handleClearFilters} className="text-xs font-semibold text-plum-500 hover:text-brand-600 transition-colors">
-                  Xóa tất cả bộ lọc
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-text-subtle hover:bg-surface-3 hover:text-text-muted transition-colors"
+                  title={t('career.clearSearchKeyword')}
+                >
+                  <X size={15} />
                 </button>
               )}
             </div>
+
+            <Button
+              type="button"
+              variant={showAdvanced || activeFilterCount > 0 ? 'primary' : 'secondary'}
+              size="md"
+              leftIcon={<SlidersHorizontal size={16} />}
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="h-12 px-5 rounded-2xl shrink-0 w-full sm:w-auto flex items-center justify-center gap-2 font-semibold"
+            >
+              <span>{t('career.advancedFilter')}</span>
+              {activeFilterCount > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary-solid shadow-sm">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
           </div>
+
+          {/* Advanced collapsible filter section */}
+          <AnimatePresence>
+            {showAdvanced && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <BookOpen size={12} className="text-info" /> {t('career.major')}
+                      </label>
+                      <SelectDropdown<string | number>
+                        value={majorId}
+                        onChange={(val) => setMajorId(val === '' ? '' : Number(val))}
+                        options={[{ value: '', label: t('career.allMajors') }, ...majors.map((m) => ({ value: m.id, label: m.name }))]}
+                        placeholder={t('career.allMajors')}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <Briefcase size={12} className="text-primary-solid" /> {t('career.titleField')}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={t('career.titlePlaceholder')}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <Building2 size={12} className="text-info" /> {t('career.company')}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={t('career.companyPlaceholder')}
+                        value={company}
+                        onChange={(e) => setCompany(e.target.value)}
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <MapPin size={12} className="text-success" /> {t('career.location')}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={t('career.cityPlaceholder')}
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                        <GraduationCap size={12} className="text-warning" /> {t('career.cohort')}
+                      </label>
+                      <input
+                        type="number"
+                        placeholder={t('career.cohortPlaceholder')}
+                        value={cohort}
+                        onChange={(e) => setCohort(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full h-10 rounded-xl border border-border bg-surface px-3 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-xs text-text-subtle">
+                      {t('career.filterCombineTip')}
+                    </p>
+                    {!!(search || title || company || location || cohort || majorId) && (
+                      <button
+                        type="button"
+                        onClick={handleClearFilters}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger transition-colors"
+                      >
+                        <RotateCcw size={12} /> {t('career.resetFilter')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Card>
       </Reveal>
 
@@ -167,13 +279,13 @@ export function CareerPage() {
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl w-full" />)}
         </div>
       ) : error ? (
-        <EmptyState icon={<RouteIcon size={22} />} title="Lỗi tải dữ liệu" description={error.message || 'Không thể kết nối đến máy chủ.'} />
+        <EmptyState icon={<RouteIcon size={22} />} title={t('common.error')} description={error.message || ''} />
       ) : !pageData || pageData.content.length === 0 ? (
         <EmptyState
           icon={<RouteIcon size={22} />}
-          title="Không tìm thấy lộ trình phù hợp"
-          description="Thử thay đổi từ khóa hoặc bộ lọc của bạn để có kết quả tốt hơn."
-          action={<Button variant="secondary" size="sm" onClick={handleClearFilters}>Đặt lại bộ lọc</Button>}
+          title={t('career.emptyTitle')}
+          description={t('career.emptyDesc')}
+          action={<Button variant="secondary" size="sm" onClick={handleClearFilters}>{t('career.resetFilter')}</Button>}
         />
       ) : (
         <div className="space-y-3">
@@ -189,8 +301,8 @@ export function CareerPage() {
                     transition={{ type: 'spring', stiffness: 420, damping: 30 }}
                     className={`cursor-pointer rounded-2xl border bg-white transition-shadow duration-200 select-none group ${
                       isActive
-                        ? 'border-brand-300 shadow-[0_0_0_2px_rgb(124_134_238/0.15),0_8px_32px_-12px_rgb(124_134_238/0.35)]'
-                        : 'border-plum-900/6 shadow-sm hover:border-brand-200/80 hover:shadow-[0_6px_28px_-10px_rgb(120_100_140/0.3)]'
+                        ? 'border-primary-soft-border shadow-[0_0_0_2px_rgb(124_134_238/0.15),0_8px_32px_-12px_rgb(124_134_238/0.35)]'
+                        : 'border-border shadow-sm hover:border-brand-200/80 hover:shadow-[0_6px_28px_-10px_rgb(120_100_140/0.3)]'
                     }`}
                   >
                     <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -204,18 +316,18 @@ export function CareerPage() {
                           className="rounded-xl shrink-0"
                         />
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-bold text-plum-900 truncate">{alumni.fullName}</h3>
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-plum-400 mt-0.5">
-                            <span className="font-medium text-plum-500">{alumni.major || 'Đại học FPT'}</span>
+                          <h3 className="text-sm font-bold text-text truncate">{alumni.fullName}</h3>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-subtle mt-0.5">
+                            <span className="font-medium text-text-subtle">{alumni.major || t('career.fptUniversity')}</span>
                             {alumni.cohort && (<><span className="opacity-40">·</span><span>K{alumni.cohort}</span></>)}
                           </div>
                           {(alumni.currentTitle || alumni.currentCompany) && (
-                            <p className="text-[11px] text-plum-500 mt-1.5 flex items-center gap-1.5 min-w-0">
+                            <p className="text-xs text-text-subtle mt-1.5 flex items-center gap-1.5 min-w-0">
                               <Briefcase size={11} className="text-brand-400 shrink-0" />
                               <span className="truncate">
-                                <span className="font-semibold text-plum-700">{alumni.currentTitle}</span>
-                                {alumni.currentCompany && <> tại <span className="font-semibold text-plum-800">{alumni.currentCompany}</span></>}
-                                {alumni.currentLocation && <span className="text-plum-400 font-normal"> · {formatLocationCityOnly(alumni.currentLocation)}</span>}
+                                <span className="font-semibold text-text-muted">{alumni.currentTitle}</span>
+                                {alumni.currentCompany && <> {t('career.at')} <span className="font-semibold text-text">{alumni.currentCompany}</span></>}
+                                {alumni.currentLocation && <span className="text-text-subtle font-normal"> · {formatLocationCityOnly(alumni.currentLocation)}</span>}
                               </span>
                             </p>
                           )}
@@ -229,8 +341,8 @@ export function CareerPage() {
                             {alumni.careerPreview.slice(0, 3).map((step, idx) => (
                               <React.Fragment key={step.experienceId}>
                                 <span
-                                  className={`px-2 py-0.5 rounded-md text-[10px] font-medium truncate max-w-[85px] ${
-                                    step.isCurrent ? 'bg-brand-100 text-brand-700 font-semibold' : 'bg-plum-50 text-plum-500'
+                                  className={`px-2 py-0.5 rounded-md text-xs font-medium truncate max-w-[96px] ${
+                                    step.isCurrent ? 'bg-primary-soft text-primary-solid font-semibold' : 'bg-surface-2 text-text-subtle'
                                   }`}
                                   title={`${step.title} @ ${step.company}`}
                                 >
@@ -242,14 +354,14 @@ export function CareerPage() {
                               </React.Fragment>
                             ))}
                             {alumni.careerPreview.length > 3 && (
-                              <span className="text-[10px] text-plum-400 font-medium">+{alumni.careerPreview.length - 3}</span>
+                              <span className="text-xs text-text-subtle font-medium">+{alumni.careerPreview.length - 3}</span>
                             )}
                           </div>
                         )}
-                        <div className={`flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide transition-colors ${
-                          isActive ? 'text-brand-600' : 'text-plum-400'
+                        <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wide transition-colors ${
+                          isActive ? 'text-primary-solid' : 'text-text-subtle'
                         }`}>
-                          <span>{alumni.totalExperiences} vai trò</span>
+                          <span>{t('career.rolesCount', { count: alumni.totalExperiences })}</span>
                           <ChevronRight size={13} className={`transition-transform duration-200 ${isActive ? 'rotate-90 text-brand-500' : 'group-hover:translate-x-0.5'}`} />
                         </div>
                       </div>
@@ -261,13 +373,12 @@ export function CareerPage() {
             })}
           </Stagger>
 
-          {pageData.totalPages > 1 && (
-            <div className="flex items-center justify-center gap-1.5 mt-8">
-              <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="rounded-xl font-bold">Trước</Button>
-              <span className="text-xs text-plum-500 font-bold px-3 py-1 bg-plum-100/50 rounded-xl">{page + 1} / {pageData.totalPages}</span>
-              <Button variant="secondary" size="sm" disabled={pageData.last} onClick={() => setPage((p) => p + 1)} className="rounded-xl font-bold">Sau</Button>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            totalPages={pageData.totalPages}
+            onPageChange={setPage}
+            className="mt-8"
+          />
         </div>
       )}
 
@@ -293,36 +404,34 @@ export function CareerPage() {
                 animate={{ x: 0, y: 0 }}
                 exit={isMobile ? { y: '100%', x: 0 } : { x: '100%', y: 0 }}
                 transition={{ type: 'spring', stiffness: 360, damping: 40, mass: 0.85 }}
-                className={`fixed z-[110] flex flex-col bg-white ${
+                className={`fixed z-[110] flex flex-col bg-white dark:bg-surface dark:border-border ${
                   isMobile
                     ? 'bottom-0 left-0 right-0 top-auto h-[85vh] w-full rounded-t-3xl border-t'
                     : 'top-0 right-0 bottom-0 h-full w-full max-w-[460px] rounded-l-3xl border-l'
                 }`}
                 style={{
                   boxShadow: isMobile
-                    ? '0 -10px 40px -12px rgb(50 44 63 / 0.16)'
-                    : '-20px 0 60px -16px rgb(50 44 63 / 0.22)',
-                  borderColor: 'rgb(50 44 63 / 0.07)'
+                    ? '0 -10px 40px -12px rgb(0 0 0 / 0.4)'
+                    : '-20px 0 60px -16px rgb(0 0 0 / 0.5)',
                 }}
               >
                 {isMobile && (
-                  <div className="shrink-0 flex justify-center py-2 bg-gradient-to-b from-[#f2f3ff] to-transparent">
-                    <div className="w-10 h-1 rounded-full bg-plum-300/40" />
+                  <div className="shrink-0 flex justify-center py-2 bg-gradient-to-b from-[#f2f3ff] to-transparent dark:from-surface">
+                    <div className="w-10 h-1 rounded-full bg-plum-300/40 dark:bg-slate-600" />
                   </div>
                 )}
                 {/* ── Gradient Header ── */}
                 <div
-                  className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden"
-                  style={{ background: 'linear-gradient(140deg, #f2f3ff 0%, #faf4ec 60%, #fff0f8 100%)', borderBottom: '1px solid rgb(50 44 63 / 0.06)' }}
+                  className="relative shrink-0 px-6 pt-6 pb-5 overflow-hidden border-b border-border bg-gradient-to-r from-[#f2f3ff] via-[#faf4ec] to-[#fff0f8] dark:bg-none dark:bg-surface"
                 >
-                  {/* Decorative glow blobs */}
-                  <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full opacity-25 pointer-events-none" style={{ background: 'radial-gradient(circle, #bcc0fb, transparent 70%)' }} />
-                  <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
+                  {/* Decorative glow blobs (light mode only) */}
+                  <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full opacity-25 dark:hidden pointer-events-none" style={{ background: 'radial-gradient(circle, #bcc0fb, transparent 70%)' }} />
+                  <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 dark:hidden pointer-events-none" style={{ background: 'radial-gradient(circle, #ffc8ba, transparent 70%)' }} />
 
                   {/* Close */}
-                  <button
+                  <button aria-label={t('common.close')}
                     onClick={() => setSelectedAlumni(null)}
-                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-plum-400 hover:text-plum-900 hover:bg-white/80 active:scale-90 transition-all duration-150 cursor-pointer"
+                    className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface/80 active:scale-90 transition duration-150 cursor-pointer"
                   >
                     <X size={16} strokeWidth={2.5} />
                   </button>
@@ -338,22 +447,22 @@ export function CareerPage() {
                       ring
                     />
                     <div className="min-w-0 flex-1 pt-0.5">
-                      <h2 className="text-lg font-extrabold text-plum-900 leading-tight">{selectedAlumni.fullName}</h2>
+                      <h2 className="text-lg font-extrabold text-text leading-tight">{selectedAlumni.fullName}</h2>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
-                        <span className="inline-block text-[11px] font-bold text-brand-700 bg-brand-100 border border-brand-200/50 px-2.5 py-0.5 rounded-full">
-                          {selectedAlumni.major || 'Đại học FPT'}
+                        <span className="inline-block text-xs font-bold text-primary-solid bg-primary-soft border border-brand-200/50 px-2.5 py-0.5 rounded-full dark:border-brand-500/30">
+                          {selectedAlumni.major || t('career.fptUniversity')}
                         </span>
                         {selectedAlumni.cohort && (
-                          <span className="text-[11px] text-plum-500 font-semibold">Khóa K{selectedAlumni.cohort}</span>
+                          <span className="text-xs text-text-subtle font-semibold">{t('career.cohortLabel', { cohort: selectedAlumni.cohort })}</span>
                         )}
                       </div>
                       {(selectedAlumni.currentTitle || selectedAlumni.currentCompany) && (
                         <div className="mt-2 flex items-start gap-1.5">
-                          <Briefcase size={11} className="text-brand-500 mt-0.5 shrink-0" />
-                          <p className="text-[11px] text-plum-600 leading-snug">
-                            <span className="font-bold text-plum-800">{selectedAlumni.currentTitle}</span>
+                          <Briefcase size={11} className="text-primary-solid mt-0.5 shrink-0" />
+                          <p className="text-xs text-text-muted leading-snug">
+                            <span className="font-bold text-text">{selectedAlumni.currentTitle}</span>
                             {selectedAlumni.currentCompany && <> · <span className="font-medium">{selectedAlumni.currentCompany}</span></>}
-                            {selectedAlumni.currentLocation && <span className="text-plum-400"> · {selectedAlumni.currentLocation}</span>}
+                            {selectedAlumni.currentLocation && <span className="text-text-subtle"> · {selectedAlumni.currentLocation}</span>}
                           </p>
                         </div>
                       )}
@@ -362,14 +471,14 @@ export function CareerPage() {
 
                   {/* Stat chips */}
                   <div className="flex items-center gap-2 mt-4">
-                    <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm">
-                      <Star size={11} className="text-gold-500" />
-                      <span className="text-[11px] font-bold text-plum-700">{selectedAlumni.totalExperiences} vai trò</span>
+                    <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-border px-3 py-1.5 shadow-sm dark:bg-surface-2">
+                      <Star size={11} className="text-warning" />
+                      <span className="text-xs font-bold text-text-muted">{t('career.rolesCount', { count: selectedAlumni.totalExperiences })}</span>
                     </div>
                     {selectedAlumni.cohort && (
-                      <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-plum-900/[0.07] px-3 py-1.5 shadow-sm">
+                      <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/75 border border-border px-3 py-1.5 shadow-sm dark:bg-surface-2">
                         <Calendar size={11} className="text-brand-400" />
-                        <span className="text-[11px] font-bold text-plum-700">Khóa K{selectedAlumni.cohort}</span>
+                        <span className="text-xs font-bold text-text-muted">{t('career.cohortLabel', { cohort: selectedAlumni.cohort })}</span>
                       </div>
                     )}
                   </div>
@@ -382,10 +491,9 @@ export function CareerPage() {
 
                 {/* ── Footer CTA ── */}
                 <div
-                  className="shrink-0 px-6 py-4 flex items-center justify-between gap-3"
-                  style={{ borderTop: '1px solid rgb(50 44 63 / 0.06)', background: 'linear-gradient(to top, #fff 70%, transparent)' }}
+                  className="shrink-0 px-6 py-4 flex items-center justify-between gap-3 border-t border-border bg-surface"
                 >
-                  <p className="text-[10px] text-plum-400 font-medium">Nhấn Esc để đóng</p>
+                  <p className="text-xs text-text-subtle font-medium">{t('career.pressEscToClose')}</p>
                   <ViewProfileButton userId={selectedAlumni.userId} />
                 </div>
               </motion.aside>
@@ -400,15 +508,16 @@ export function CareerPage() {
 
 /* -------------------------------------------------------------------------- */
 function ViewProfileButton({ userId }: { userId: number }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   return (
     <button
       onClick={() => navigate(`/app/profile?userId=${userId}`)}
-      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 active:scale-95 text-white text-xs font-bold px-4 py-2 transition-all duration-200 cursor-pointer"
+      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 active:scale-95 text-white text-xs font-bold px-4 py-2 transition duration-200 cursor-pointer"
       style={{ boxShadow: '0 4px 16px -4px rgb(124 134 238 / 0.5)' }}
     >
       <User size={12} />
-      Xem hồ sơ
+      {t('career.viewProfile')}
       <ExternalLink size={10} className="opacity-70" />
     </button>
   )
@@ -416,6 +525,7 @@ function ViewProfileButton({ userId }: { userId: number }) {
 
 /* -------------------------------------------------------------------------- */
 function CareerDetailTimeline({ userId }: { userId: number }) {
+  const { t } = useTranslation()
   const { data: detail, isLoading, error } = useCareerPathDetail(userId)
 
   if (isLoading) {
@@ -424,7 +534,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
         {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded-2xl w-full" />)}
         <div className="flex items-center justify-center gap-2 py-6">
           <Loader2 size={15} className="animate-spin text-brand-400" />
-          <span className="text-xs text-plum-400 font-medium">Đang tải lộ trình...</span>
+          <span className="text-xs text-text-subtle font-medium">{t('career.loadingCareerPath')}</span>
         </div>
       </div>
     )
@@ -433,11 +543,11 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
   if (error || !detail) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-coral-50 flex items-center justify-center mb-3">
-          <RouteIcon size={20} className="text-coral-400" />
+        <div className="w-12 h-12 rounded-2xl bg-danger-soft flex items-center justify-center mb-3">
+          <RouteIcon size={20} className="text-danger" />
         </div>
-        <p className="text-sm font-semibold text-plum-700">Không thể tải dữ liệu</p>
-        <p className="text-xs text-plum-400 mt-1">Lỗi khi tải chi tiết lộ trình.</p>
+        <p className="text-sm font-semibold text-text-muted">{t('career.cannotLoadData')}</p>
+        <p className="text-xs text-text-subtle mt-1">{t('career.errorLoadingDetail')}</p>
       </div>
     )
   }
@@ -449,7 +559,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
   detail.experiences.forEach((exp: ExperienceTimelineResponse) => {
     const lastGroup = groupedTimeline[groupedTimeline.length - 1]
     const start = exp.startDate ? formatPeriodDate(exp.startDate) : ''
-    const end = exp.isCurrent ? 'Hiện tại' : exp.endDate ? formatPeriodDate(exp.endDate) : ''
+    const end = exp.isCurrent ? t('career.present') : exp.endDate ? formatPeriodDate(exp.endDate) : ''
     const roleObj: GroupedRole = {
       id: exp.id, title: exp.title, period: `${start} – ${end}`,
       description: exp.description, isCurrent: exp.isCurrent, isPrimary: exp.isPrimary,
@@ -464,10 +574,13 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
   return (
     <div className="text-left">
       {/* Label divider */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-plum-900/[0.05]" />
-        <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-plum-300 px-1">Lộ trình sự nghiệp</span>
-        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-plum-900/[0.05]" />
+      <div className="flex items-center gap-3 my-5">
+        <div className="h-px flex-1 bg-surface-3" />
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary-solid px-3 py-1 rounded-full bg-primary-soft border border-primary-soft-border shadow-xs">
+          <RouteIcon size={13} />
+          {t('career.careerPathHeading')}
+        </span>
+        <div className="h-px flex-1 bg-surface-3" />
       </div>
 
       {/* Timeline */}
@@ -482,61 +595,58 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
               )}
 
               {/* Company node icon */}
-              <div className="absolute left-0 top-1 w-7 h-7 rounded-xl flex items-center justify-center shadow-sm border border-brand-200/60" style={{ background: 'linear-gradient(135deg, #e8e9ff, #f2f3ff)' }}>
-                <Building2 size={13} className="text-brand-500" />
+              <div className="absolute left-0 top-1 w-7 h-7 rounded-xl flex items-center justify-center shadow-sm border border-primary-soft-border bg-gradient-to-br from-[#e8e9ff] to-[#f2f3ff] dark:from-surface-2 dark:to-surface">
+                <Building2 size={13} className="text-primary-solid" />
               </div>
 
               <div className="mb-5">
                 {/* Company header */}
-                <p className="font-bold text-sm text-plum-900 leading-snug">{group.company}</p>
+                <p className="font-bold text-sm text-text leading-snug">{group.company}</p>
                 {group.location && (
-                  <span className="flex items-center gap-1 text-[10px] text-plum-400 mt-0.5">
+                  <span className="flex items-center gap-1 text-xs text-text-subtle mt-0.5">
                     <MapPin size={9} />{group.location}
                   </span>
                 )}
 
                 {/* Role cards */}
                 <div className="mt-2.5 space-y-2">
-                  {group.roles.map((role, rIdx) => (
-                    <motion.div
+                  {group.roles.map((role) => (
+                    <div
                       key={role.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: gIdx * 0.05 + rIdx * 0.03, duration: 0.3 }}
                       className={`relative rounded-xl px-3.5 py-2.5 border transition-colors ${
                         role.isCurrent
-                          ? 'bg-gradient-to-br from-brand-50/80 to-white border-brand-200/60'
-                          : 'bg-plum-50/25 border-plum-900/[0.05]'
+                          ? 'bg-gradient-to-br from-brand-50/80 to-white border-primary-soft-border dark:from-surface-2 dark:to-surface'
+                          : 'bg-plum-50/25 border-border dark:bg-surface-2/40'
                       }`}
                     >
                       {/* Pulsing dot for current role */}
                       {role.isCurrent && (
                         <span className="absolute top-3 right-3 flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-50" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-solid" />
                         </span>
                       )}
 
                       <div className="flex items-start justify-between gap-2 pr-5">
-                        <p className="text-xs font-bold text-plum-800 leading-snug">{role.title}</p>
+                        <p className="text-xs font-bold text-text leading-snug">{role.title}</p>
                         {role.isPrimary && (
-                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-gold-300/35 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-gold-700 border border-gold-300/50">
-                            <Star size={7} className="fill-gold-600 text-gold-600" />
-                            Chính
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-gold-300/35 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-gold-700 border border-gold-300/50">
+                            <Star size={7} className="fill-warning text-warning" />
+                            {t('career.primaryBadge')}
                           </span>
                         )}
                       </div>
 
-                      <p className="flex items-center gap-1 text-[10px] text-plum-400 mt-1">
+                      <p className="flex items-center gap-1 text-xs text-text-subtle mt-1">
                         <Calendar size={9} />{role.period}
                       </p>
 
                       {role.description && (
-                        <p className="mt-2 text-[11px] leading-relaxed text-plum-500 border-t border-plum-900/[0.05] pt-2 whitespace-pre-line">
+                        <p className="mt-2 text-xs leading-relaxed text-text-subtle border-t border-border pt-2 whitespace-pre-line">
                           {role.description}
                         </p>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -546,7 +656,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
       </ol>
 
       {groupedTimeline.length === 0 && (
-        <p className="text-xs text-plum-400 text-center py-10">Chưa có dữ liệu lộ trình.</p>
+        <p className="text-xs text-text-subtle text-center py-10">{t('career.noCareerData')}</p>
       )}
     </div>
   )

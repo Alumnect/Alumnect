@@ -1,103 +1,300 @@
-import { useState } from 'react'
-import { Search, Send, Phone, Video, MoreVertical, BadgeCheck } from 'lucide-react'
-import { Avatar, Card } from '@/components/ui'
-import { cn } from '@/lib/utils'
-import { ALUMNI } from '@/lib/constants'
-
-const CONVOS = ALUMNI.slice(0, 6).map((a, i) => ({
-  ...a,
-  last: ['Tuyệt vời, kết nối nhé!', 'Cảm ơn anh đã giới thiệu 🙏', 'Hẹn gặp bạn tại sự kiện', 'Mình đã gửi tài liệu qua email rồi', 'Chúc mừng bạn đã thăng chức nhé!', 'Để mình kiểm tra lại rồi báo bạn nhé'][i],
-  time: ['2 phút', '1 giờ', '3 giờ', '1 ngày', '2 ngày', '3 ngày'][i],
-  unread: i < 2,
-}))
-
-const THREAD = [
-  { me: false, text: 'Chào anh! Em thấy bài đăng anh mới thăng chức Senior — chúc mừng anh nhé! 🎉', time: '10:02' },
-  { me: true, text: 'Cảm ơn em nhiều nhé! Được tiền bối chúc mừng thấy vui lắm 🙏', time: '10:04' },
-  { me: false, text: 'Nếu cần thì hôm nào anh mock interview System Design giúp em nhé?', time: '10:05' },
-  { me: true, text: 'Dạ được vậy thì tốt quá ạ! Tuần này em rảnh các buổi tối.', time: '10:06' },
-  { me: false, text: 'Thế tối thứ Năm 8h nhé. Anh gửi link Google Meet qua lịch.', time: '10:08' },
-]
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
+import {
+  ConversationList,
+  ChatWindow,
+  useConversations,
+  useMessages,
+  useSendMessage,
+  useMarkAsRead,
+  chatApi,
+  isMentoringConversation,
+  type Conversation,
+  type SendMessagePayload,
+} from '@/features/message'
 
 export function MessagesPage() {
-  const [active, setActive] = useState(CONVOS[0])
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const targetUserIdParam = searchParams.get('userId')
+  const targetUserId = targetUserIdParam ? Number(targetUserIdParam) : null
+  const hasTargetUser = targetUserId !== null && !isNaN(targetUserId) && targetUserId > 0
+
+  const [currentTab, setCurrentTab] = useState<'primary' | 'requests'>('primary')
+  // Màn rộng: tự mở hội thoại đầu tiên; điện thoại: hiện danh sách trước để người dùng chọn
+  const isDesktop = useMediaQuery('(min-width: 768px)', true)
+
+  const { data: fetchedConversations = [], isLoading: isLoadingConversations } = useConversations(
+    currentTab,
+    'GENERAL'
+  )
+  const { data: fetchedRequestsData = [] } = useConversations('requests', 'GENERAL')
+
+  // Defense in depth: the general inbox must never expose Mentoring conversations,
+  // even while an older backend response is still cached in the browser.
+  const conversations = useMemo(
+    () => fetchedConversations.filter((conversation) => !isMentoringConversation(conversation)),
+    [fetchedConversations]
+  )
+  const requestsData = useMemo(
+    () => fetchedRequestsData.filter((conversation) => !isMentoringConversation(conversation)),
+    [fetchedRequestsData]
+  )
+
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null)
+  const activeGeneralConversation = isMentoringConversation(activeConversation)
+    ? null
+    : activeConversation
+
+  const sendMessageMutation = useSendMessage()
+  const markAsReadMutation = useMarkAsRead()
+
+  // Kiểm tra xem thành viên mục tiêu đã có trong danh sách hội thoại hiện tại chưa
+  const existingTargetConv = useMemo(() => {
+    if (!hasTargetUser) return null
+    return conversations.find((c) => c.recipientId === targetUserId) || null
+  }, [hasTargetUser, conversations, targetUserId])
+
+  // Nếu có targetUserId nhưng chưa có hội thoại trong DB, lấy thông tin hồ sơ để khởi tạo Draft
+  const {
+    data: directConvData,
+    isLoading: isLoadingDirect,
+  } = useQuery({
+    queryKey: ['direct-conversation', targetUserId],
+    queryFn: async () => {
+      const res = await chatApi.getOrCreateDirectConversation(targetUserId!)
+      return res.data
+    },
+    enabled: hasTargetUser && !existingTargetConv,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // Chọn cuộc hội thoại phù hợp:
+  // 1. Khi có ?userId=...: Ưu tiên hội thoại sẵn có, hoặc hội thoại Direct vừa nạp
+  // 2. Khi không có ?userId=...: Tự động chọn cuộc hội thoại đầu tiên trong danh sách
+  useEffect(() => {
+    if (hasTargetUser) {
+      // Nếu đã có cuộc hội thoại đang mở với đúng thành viên này và đã có ID thực tế, không ghi đè lại bằng Draft
+      if (activeConversation && activeConversation.recipientId === targetUserId && activeConversation.id) {
+        return
+      }
+      if (existingTargetConv) {
+        setActiveConversation(existingTargetConv)
+      } else if (directConvData) {
+        setActiveConversation(directConvData)
+      }
+    } else {
+      // Khi không có ?userId trên URL và chưa có cuộc hội thoại nào được chọn:
+      // Tự động chọn cuộc hội thoại đầu tiên khi danh sách đã nạp xong
+      if (!isLoadingConversations) {
+        if (!activeConversation) {
+          if (isDesktop && conversations.length > 0) {
+            setActiveConversation(conversations[0])
+          }
+        } else {
+          // Nếu danh sách rỗng (ví dụ tab không có hội thoại nào), bỏ chọn
+          if (conversations.length === 0 && !activeConversation.id) {
+            setActiveConversation(null)
+          }
+        }
+      }
+    }
+  }, [
+    hasTargetUser,
+    existingTargetConv,
+    directConvData,
+    conversations,
+    isLoadingConversations,
+    isDesktop,
+    activeConversation?.id,
+    activeConversation?.recipientId,
+    targetUserId,
+  ])
+
+  // Cập nhật lại thông tin mới nhất của active conversation khi cache conversations thay đổi
+  useEffect(() => {
+    if (activeConversation?.id) {
+      const updated = conversations.find((c) => c.id === activeConversation.id)
+      if (!updated) {
+        setActiveConversation(null)
+        return
+      }
+      if (
+        updated.title !== activeConversation.title ||
+          updated.avatarUrl !== activeConversation.avatarUrl ||
+          updated.recipientName !== activeConversation.recipientName ||
+          updated.recipientAvatar !== activeConversation.recipientAvatar ||
+          updated.memberCount !== activeConversation.memberCount ||
+          updated.unreadCount !== activeConversation.unreadCount ||
+          updated.lastMessage !== activeConversation.lastMessage ||
+          updated.isAccepted !== activeConversation.isAccepted
+      ) {
+        setActiveConversation(updated)
+      }
+    } else if (activeConversation && !activeConversation.id) {
+      // Nếu activeConversation đang là draft (chưa có id) nhưng danh sách vừa nạp về đã có hội thoại thực tế
+      const matched = conversations.find((c) => c.recipientId === activeConversation.recipientId)
+      if (matched) {
+        setActiveConversation(matched)
+      }
+    }
+  }, [
+    conversations,
+    activeConversation?.id,
+    activeConversation?.recipientId,
+    activeConversation?.title,
+    activeConversation?.avatarUrl,
+    activeConversation?.recipientName,
+    activeConversation?.recipientAvatar,
+    activeConversation?.memberCount,
+    activeConversation?.unreadCount,
+    activeConversation?.lastMessage,
+    activeConversation?.isAccepted,
+  ])
+
+  // Tự động đánh dấu đã đọc khi mở một cuộc trò chuyện hoặc khi có tin nhắn mới đến trong hội thoại đang xem
+  useEffect(() => {
+    if (
+      activeGeneralConversation &&
+      activeGeneralConversation.id &&
+      activeGeneralConversation.unreadCount > 0
+    ) {
+      markAsReadMutation.mutate(activeGeneralConversation.id)
+    }
+  }, [activeGeneralConversation?.id, activeGeneralConversation?.unreadCount])
+
+  // Nếu activeConversation là Draft (id = null), đưa lên đầu danh sách hiển thị để người dùng nhận biết
+  const displayedConversations = useMemo(() => {
+    if (
+      activeGeneralConversation &&
+      !activeGeneralConversation.id &&
+      !conversations.some((c) => c.recipientId === activeGeneralConversation.recipientId)
+    ) {
+      return [activeGeneralConversation, ...conversations]
+    }
+    return conversations
+  }, [conversations, activeGeneralConversation])
+
+  // Lấy lịch sử tin nhắn của cuộc trò chuyện hiện tại (cuộn vô hạn)
+  const {
+    data: messagesData,
+    isLoading: isLoadingMessages,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useMessages(activeGeneralConversation?.id ?? null)
+
+  // Ghép các trang và đảo thứ tự để hiển thị: từ cũ nhất (trên) tới mới nhất (dưới)
+  const messages = useMemo(() => {
+    if (!messagesData?.pages) return []
+    const allDesc = messagesData.pages.flatMap((page) => page.content || [])
+    return [...allDesc].reverse()
+  }, [messagesData])
+
+  // Đánh dấu đã đọc khi người dùng bấm chọn cuộc trò chuyện
+  const handleSelectConversation = (conv: Conversation) => {
+    // Chat for Task của Mentoring Request mở ở màn hình riêng (hiển thị Request, Deal Ticket, thanh toán, Task)
+    if (isMentoringConversation(conv) && conv.id) {
+      navigate(`/app/mentoring/chats/${conv.id}`)
+      return
+    }
+    setActiveConversation(conv)
+    if (conv.id && conv.unreadCount > 0) {
+      markAsReadMutation.mutate(conv.id)
+    }
+    // Xóa param ?userId trên URL nếu có
+    if (targetUserIdParam) {
+      setSearchParams({})
+    }
+  }
+
+  // Gửi tin nhắn mới
+  const handleSendMessage = async (
+    content: string,
+    attachments: NonNullable<SendMessagePayload['attachments']>
+  ) => {
+    if (!activeGeneralConversation) return
+
+    const res = await sendMessageMutation.mutateAsync({
+      conversationId: activeGeneralConversation.id ?? undefined,
+      recipientId: activeGeneralConversation.recipientId ?? undefined,
+      content,
+      attachments,
+    })
+
+    // Nếu gửi tin nhắn trong một cuộc hội thoại đang ở Tin nhắn chờ (isAccepted = false):
+    // Tự động chuyển sang Hộp thư chính (primary) và cập nhật isAccepted = true
+    if (activeGeneralConversation.isAccepted === false) {
+      setActiveConversation((prev) => (prev ? { ...prev, isAccepted: true } : null))
+      setCurrentTab('primary')
+    }
+
+    // Nếu vừa gửi tin nhắn đầu tiên cho một cuộc hội thoại Draft (id = null):
+    // Cập nhật activeConversation với ID hội thoại thực tế được backend khởi tạo
+    if (!activeGeneralConversation.id && res.data.conversationId) {
+      setActiveConversation((prev) =>
+        prev ? { ...prev, id: res.data.conversationId, isAccepted: true } : null
+      )
+      if (targetUserIdParam) {
+        setSearchParams({})
+      }
+    }
+  }
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <Card hover={false} className="grid h-[calc(100vh-8rem)] grid-cols-1 overflow-hidden md:grid-cols-[300px_1fr]">
-        {/* conversations */}
-        <div className="hidden flex-col border-r border-plum-900/8 md:flex">
-          <div className="border-b border-plum-900/8 p-4">
-            <h2 className="mb-3 text-lg font-extrabold text-plum-900">Tin nhắn</h2>
-            <label className="relative flex items-center">
-              <Search size={16} className="pointer-events-none absolute left-3 text-plum-400" />
-              <input placeholder="Tìm kiếm cuộc trò chuyện..." className="h-10 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-9 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none" />
-            </label>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {CONVOS.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setActive(c)}
-                className={cn('flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-plum-900/[0.04]', active.id === c.id && 'bg-plum-900/[0.05]')}
-              >
-                <Avatar src={c.avatar} name={c.name} size={44} verified={c.verified} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="truncate text-sm font-bold text-plum-900">{c.name}</p>
-                    <span className="text-[11px] text-plum-400">{c.time}</span>
-                  </div>
-                  <p className={cn('truncate text-xs', c.unread ? 'font-semibold text-plum-700' : 'text-plum-400')}>{c.last}</p>
-                </div>
-                {c.unread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-400" />}
-              </button>
-            ))}
-          </div>
+    <div className="mx-auto h-full max-w-6xl">
+      <div className="grid h-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-surface md:grid-cols-[340px_1fr]">
+        {/* Danh sách các cuộc trò chuyện bên trái */}
+        <div className={`${activeGeneralConversation ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col overflow-hidden`}>
+          <ConversationList
+            conversations={displayedConversations}
+            activeId={activeGeneralConversation?.id}
+            activeRecipientId={!activeGeneralConversation?.id ? activeGeneralConversation?.recipientId : undefined}
+            onSelect={handleSelectConversation}
+            isLoading={isLoadingConversations}
+            currentTab={currentTab}
+            onTabChange={(tab) => {
+              setCurrentTab(tab)
+              setActiveConversation(null)
+              if (targetUserIdParam) {
+                setSearchParams({})
+              }
+            }}
+            requestsCount={requestsData.length}
+            onGroupCreated={(group) => {
+              setActiveConversation(group)
+            }}
+          />
         </div>
 
-        {/* thread */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between border-b border-plum-900/8 p-4">
-            <div className="flex items-center gap-3">
-              <Avatar src={active.avatar} name={active.name} size={42} verified={active.verified} />
-              <div>
-                <p className="flex items-center gap-1 text-sm font-bold text-plum-900">{active.name} <BadgeCheck size={14} className="text-brand-400" /></p>
-                <p className="text-xs text-emerald-600">● Đang trực tuyến</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-plum-400">
-              {[
-                { Icon: Phone, label: 'Gọi thoại' },
-                { Icon: Video, label: 'Gọi video' },
-                { Icon: MoreVertical, label: 'Tùy chọn khác' },
-              ].map(({ Icon, label }) => (
-                <button key={label} aria-label={label} className="grid h-9 w-9 place-items-center rounded-lg hover:bg-plum-900/[0.05] hover:text-plum-900"><Icon size={17} /></button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-3 overflow-y-auto bg-ink-950/40 p-5">
-            {THREAD.map((m, i) => (
-              <div key={i} className={cn('flex', m.me ? 'justify-end' : 'justify-start')}>
-                <div className={cn(
-                  'max-w-[75%] rounded-2xl px-4 py-2.5 text-sm',
-                  m.me ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-slate-100 shadow-sm text-slate-800',
-                )}>
-                  <p>{m.text}</p>
-                  <p className={cn('mt-1 text-[10px]', m.me ? 'text-white/70' : 'text-plum-400')}>{m.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 border-t border-plum-900/8 p-4">
-            <input placeholder="Nhập tin nhắn…" className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
-            <button className="grid h-11 w-11 place-items-center rounded-xl bg-brand-600 text-white shadow-sm transition-transform hover:scale-105 hover:bg-brand-700">
-              <Send size={18} />
-            </button>
-          </div>
+        {/* Khung chat chính bên phải */}
+        <div className={`${!activeGeneralConversation ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col overflow-hidden`}>
+          <ChatWindow
+            conversation={activeGeneralConversation}
+            messages={activeGeneralConversation ? messages : []}
+            isLoading={isLoadingDirect}
+            isLoadingMessages={isLoadingMessages}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={fetchNextPage}
+            onSendMessage={handleSendMessage}
+            onConversationDeleted={() => {
+              setActiveConversation(null)
+            }}
+            onConversationAccepted={() => {
+              setActiveConversation((prev) => (prev ? { ...prev, isAccepted: true } : null))
+              setCurrentTab('primary')
+            }}
+            onConversationUpdated={setActiveConversation}
+            onBack={() => {
+              setActiveConversation(null)
+              if (targetUserIdParam) setSearchParams({})
+            }}
+          />
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

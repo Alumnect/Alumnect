@@ -30,6 +30,8 @@ public interface AuthMapper {
     @Mapping(target = "experiences", ignore = true)
     @Mapping(target = "skills", ignore = true)
     @Mapping(target = "campus", ignore = true)
+    @Mapping(target = "cohort", ignore = true)
+    @Mapping(target = "graduationYear", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     UserProfile toUserProfile(RegisterRequest request);

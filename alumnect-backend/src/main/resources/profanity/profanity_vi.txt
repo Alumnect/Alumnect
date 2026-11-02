@@ -1,0 +1,341 @@
+# Từ điển từ cấm tiếng Việt cho kiểm duyệt nội dung tự động (UC123).
+# Cú pháp nhóm: [mức cờ...]. Mức: severe (tục tĩu nặng, đe dọa), offensive (xúc phạm, thô tục), weak (tín hiệu yếu).
+# Cờ accented: dạng không dấu trùng từ bình thường nên gõ không dấu bị hạ mức ("lồn" với "lon", "bố mày" với "bộ máy").
+# Cờ acronym: viết tắt, bỏ qua khi viết hoa giữa câu thường hoặc đứng sau số ("CC trưởng phòng", "500 ml").
+# Cờ contextual: chỉ tính đủ mức khi văn bản được gõ có dấu ("ngu" trong văn bản không dấu có thể là "ngủ").
+# Cờ strict: cụm gõ không dấu trong văn bản không dấu chỉ là tín hiệu yếu ("nhu cac" là "như các", "tu tu di" là "từ từ đi").
+# Cú pháp {a|b} sinh ra mọi tổ hợp.
+# Không đưa từ chủ đề trung tính (tham nhũng, cờ bạc, ma túy, lừa đảo) vào đây vì đó không phải lời lẽ vi phạm.
+# Nguồn tham khảo: blue-eyes-vn/vietnamese-offensive-words (MIT), TheQuantumCrew/vn_badwords_filter (WTFPL),
+# thống kê từ ngữ độc hại thực tế trên bộ dữ liệu ViHOS và ViHSD.
+
+[severe accented]
+# Từ gốc tục tĩu, dạng không dấu trùng lớn, các, buổi, đi, đu
+lồn
+lìn
+cặc
+cặk
+kặc
+buồi
+địt
+đụ
+đĩ
+chịch
+đm
+# Cụm chửi tục
+{cái|mặt|xạo|xàm|hãm|vãi|vãi cả|thằng mặt|con mặt} lồn
+đụ {má|mẹ|mịa|mịe|mé|cha|con mẹ|mẹ mày|má mày}
+đù {má|mẹ|cha|mịa|mịe}
+đú {má|mẹ|cha}
+địt {mẹ|má|mịa|mịe|mé|cha|bà|bố|cụ|con mẹ|mẹ mày|con mẹ mày|mẹ nó|cụ mày|bà mày|mẹ m|bố mày}
+đéo {mẹ|má}
+đm {mày|nó|mẹ|thằng|con}
+đcm {mày|nó|thằng|con}
+mẹ {cha|tổ} mày
+# Đe dọa và kích động tự hại
+{tao|tau} {giết|đâm|chém|bắn|đập chết|chém chết|đâm chết|xử} {mày|bọn mày|chúng mày|cả nhà mày}
+{mày|bạn|m} {nên|hãy|đi} {chết|tự tử|tự sát} đi
+{cút|biến|chết|xéo} mẹ mày đi
+{bắc kỳ|bắc kì|nam kỳ|nam kì|trung kỳ|trung kì} {chó|cầy|súc vật}
+
+[severe accented strict]
+# Dạng không dấu trùng cụm thường gặp: như các, vài buổi, ăn lớn, cải cách, từ từ đi, bấm máy, số vụ
+{con|ăn|liếm|bú|sờ|ngu|óc|như|như cái|củ|mõm|mồm|rảnh|tuổi|nứng|máu|nhảm} lồn
+{cái|con|ăn|bú|mút|liếm|như|như cái|như con|vãi|vãi cả|nhảm|mặt|ngu} cặc
+{đầu|cái đầu|như cái đầu|ăn|bú|liếm|như|như cái|vãi|vãi cả} buồi
+lồn {mẹ|què|què gì}
+cặc {chó|ngựa}
+đụ bà
+{con|đồ|lũ|bọn|thằng|mấy con} đĩ
+đĩ {mẹ|điếm|đực|già|non|thõa|thỏa|thoả|miệng}
+bú {cu|cặc|lồn|buồi}
+sờ {cu|lồn|vú}
+{giết|đâm chết|chém chết|bắn chết|đập chết|xé xác|băm} {mày|cả nhà mày|cả lò nhà mày}
+{tự tử|tự sát|nhảy lầu|nhảy cầu|treo cổ|uống thuốc sâu|uống thuốc chuột|uống thuốc độc} đi
+
+[severe]
+# Viết tắt và biến thể không có từ đồng dạng trong tiếng Việt
+đcm
+dcm
+đcmm
+dcmm
+đkm
+dkm
+đkmm
+dkmm
+đmm
+dmm
+đmcs
+dmcs
+cmm
+clm
+clmm
+tml
+thml
+loz
+lozz
+djt
+đjt
+đyt
+dyt
+{đis|dis|diz|đjt|djt} {me|mẹ|ma|má|mia|mịa|mie|mịe}
+dis con me
+ditmemay
+ditconme
+ditconmemay
+conmemay
+daubuoi
+caidaubuoi
+nhucaidaubuoi
+caiconcac
+caiconcak
+concak
+nungcak
+bucak
+condi
+condime
+condicho
+xaolol
+xaoloz
+xamlol
+xamloz
+sapmatlon
+sapmatlol
+{xạo|xàm|hãm|nhảm|máu|mặt|cái|con|ngu|như cái|ăn} {lol|loz|lz}
+{vãi|vl} {loz|lon}
+thằng mặt {lol|loz}
+con mặt {lol|loz}
+
+[offensive accented]
+# Chửi thề, văng tục
+đậu {má|mẹ}
+đờ mờ
+đê ca mờ
+đê mờ
+đéo
+éo
+đếch
+đết
+đệch
+đệt
+đách
+cứt
+cức
+cứk
+nứng
+phò
+xoạc
+dái
+giái
+cút
+sủa
+tởm
+đéo {có|biết|cần|thèm|ra gì|quan tâm|hiểu|phải|được|ai|gì|sao|có não|biết điều}
+{ăn|như|mặt|óc|não|mồm|đầu|thối như|cục|bãi|đồ|hôi như} {cứt|cức}
+{chả|chẳng} ra cái {đéo|lồn|cặc|buồi} gì
+{như|như cái|như con|cái} {cc|cl}
+{nói|cười|ăn} {cc|cl}
+vãi {cứt|đái|cả đái|cả cứt}
+nứng {cặc|lol|loz}
+{con|đồ} phò
+phò {non|già}
+{đồ|con|gái} điếm
+điếm {thúi|nhục}
+cút {đi|mẹ|xéo|ngay|khỏi đây|đi cho khuất mắt|con mẹ mày đi}
+sủa {bậy|càn|tiếp|đi|nữa}
+{đừng|thôi|im|ngừng} sủa
+tởm lợm
+óc {lợn|bò|heo|trâu|khỉ|bã đậu|quả nho|cứt|cức}
+não {chó|lợn|bò|tàn|phẳng|cứt}
+# Lời lăng mạ theo mẫu xưng hô, dạng không dấu trùng "đồ ngủ", "đồ điện", "con ngủ", "tháng ngủ"
+{thằng|con|đồ|lũ|bọn|tụi|đám|mấy thằng|mấy con|cái thằng|cái con} {ngu|điên|khùng|mất dạy|vô học|khốn|khốn nạn|khốn kiếp|súc vật|súc sinh|óc chó|óc lợn|não tàn|thần kinh|tâm thần|biến thái|bệnh hoạn|mặt dày|hèn|đểu|ăn hại|ăn bám|cặn bã|rác rưởi|phế vật|mặt chó|mặt lợn|mặt lờ|mặt l|mặt heo|chó đẻ|chó chết|bê đê|thiểu năng|bại não|lươn lẹo|dốt|ngáo|hãm}
+{thằng|đồ|lũ|bọn|tụi|đám|mấy thằng|cái thằng} chó
+{thằng|đồ|lũ|bọn|tụi|đám} {chó má|chó săn|cẩu}
+{lũ|bọn|đàn|bầy} {súc vật|súc sinh|ngu|khốn nạn|mất dạy|chó đẻ|rận|rận chủ}
+mày là chó
+bố mày
+tao là bố mày
+{bỏ|kệ|chết|mả|tiên sư|tổ sư} mẹ
+mẹ kiếp
+mả cha
+mồ tổ cha mày
+tổ cha
+tổ sư
+tiên sư
+tiên sư bố
+{tiên sư|tổ sư} {nhà|bố|cha} mày
+cha mày
+bà nội mày
+ông nội mày
+mẹ m
+con mẹ m
+chết cha mày
+chó chết
+chó đẻ
+chó má
+chó hùa
+{nói láo|láo} chó
+{hèn|ngu|nhục} như chó
+{như|không bằng|thua cả} con chó
+mặt chó
+mặt lờ
+quần què
+mất dạy
+bố láo
+bố đời
+bỉ ổi
+đê tiện
+đê hèn
+vô lại
+bò đỏ
+ba que
+3 que
+đu càng
+rận chủ
+khựa
+tàu khựa
+{bọn|lũ} {khỉ|mọi}
+bắc cầy
+nam cầy
+trung cầy
+parky
+pakỳ
+
+[offensive contextual]
+# Chỉ tính đủ mức khi người viết gõ có dấu; trong văn bản không dấu có thể là từ khác
+ngu
+lon
+
+[offensive]
+# Lăng mạ không có từ đồng dạng khi bỏ dấu
+vcl
+vkl
+vcc
+vlol
+vloz
+vlon
+vãi lol
+vãi loz
+cmn
+cmnr
+cmnl
+clg
+clgt
+óc chó
+có não không
+không có não
+súc vật
+súc sinh
+cầm thú
+khốn nạn
+khốn kiếp
+vô học
+vô giáo dục
+vô văn hóa
+vô liêm sỉ
+láo toét
+láo lếu
+láo xược
+hỗn xược
+cặn bã
+rác rưởi xã hội
+thứ rác rưởi
+đồ rác rưởi
+ngu {vcl|vl|vkl|vc|lol|loz|như chó|như bò|như lợn|như heo|như l|như cc|như cl|si|dốt|xuẩn|đần|lâu|học|hết phần thiên hạ|không lối thoát}
+đần độn
+ngu xuẩn
+ngu si
+ngu dốt
+ngu muội
+{dốt|ngu} như {bò|chó|lợn|heo}
+câm {mồm|mõm|họng|miệng|mẹ|mẹ mồm|cái mồm|cái mõm|mồm lại}
+im {mồm|mõm|mẹ|mẹ mồm|cái mồm|cái mõm|mồm lại}
+ngậm {mồm|mõm|cái mồm|cái mõm|mồm lại}
+khóa mõm
+bịt mõm
+mẹ mày
+con mẹ mày
+con mẹ nó
+mẹ cha nhà mày
+xạo chó
+hãm {vcl|vl|lol|loz|l|lìn|cành cạch}
+nhục {vcl|vl}
+nhọ {vcl|vl}
+xấu {vcl|vkl}
+hèn {vcl|vl}
+bựa vcl
+biến thái {vcl|vl}
+mặt {phụ khoa|thớt|hãm|hãm tài}
+trời đánh thánh vật
+đồ trời đánh
+đồ chết tiệt
+{thằng|con} chết tiệt
+chết tiệt
+quỷ tha ma bắt
+trời tru đất diệt
+chết không toàn thây
+chết không có đất chôn
+chết rũ xương
+chết bờ chết bụi
+sống chật đất
+chết đi
+đi chết đi
+# Quảng cáo khiêu dâm và cờ bạc
+link sex
+web sex
+phim sex
+clip sex
+phim heo
+chat sex
+chát sex
+gạ tình
+gạ đụ
+gạ xoạc
+massage kích dục
+bắn cá đổi thưởng
+nhà cái uy tín
+
+[offensive acronym]
+cc
+cl
+dm
+ml
+
+[weak acronym]
+vl
+vc
+sml
+xl
+qq
+đb
+dlv
+
+[weak]
+# Chỉ gợi ý cho Admin khi đọc báo cáo, tự chúng không kích hoạt hành động
+chó
+lol
+nhục
+láo
+khùng
+xàm
+xạo
+trẻ trâu
+trẩu
+hãm
+ỉa
+đái
+đít
+dell
+đel
+đell
+dek
+đếk
+mẹ nó
+má nó
+bố m
+bê đê
+bede
+bắc kỳ
+bắc kì
+tàu cộng
+trung cộng

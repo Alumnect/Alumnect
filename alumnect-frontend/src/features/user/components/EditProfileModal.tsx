@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, User, GraduationCap, MapPin, Plus, Trash2, AlertTriangle, Loader2, Link as LinkIcon, Sparkles, Upload, Image as ImageIcon } from 'lucide-react'
 import axios from 'axios'
 import { Button } from '@/components/ui/Button'
-import { Avatar, SmartImage } from '@/components/ui'
+import { Avatar, SmartImage, toast, SelectDropdown, DialogFrame, FadeSwitch } from '@/components/ui'
 import { useMajors, usePresignedUrl } from '@/features/auth/hooks/useAuth'
 import { useUpdateOwnProfile } from '../hooks/useUserMutations'
+import { CampusSelect } from './CampusSelect'
 import type { UserProfileResponse, UpdateProfileRequest, UserSkillRequest } from '../model/userTypes'
 
 interface EditProfileModalProps {
@@ -14,6 +16,7 @@ interface EditProfileModalProps {
 }
 
 export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalProps) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'basic' | 'academic' | 'contact' | 'skills'>('basic')
 
   // Form states
@@ -34,7 +37,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
   const [newSocialLink, setNewSocialLink] = useState('')
 
   const [skills, setSkills] = useState<UserSkillRequest[]>([])
-  const [newGroupName, setNewGroupName] = useState('Khác')
+  const [newGroupName, setNewGroupName] = useState('')
   const [newSkillName, setNewSkillName] = useState('')
 
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -108,7 +111,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
       setAvatarUrl(publicUrl)
     } catch (err: any) {
       console.error('Lỗi upload avatar:', err)
-      setValidationError(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi tải ảnh đại diện lên Cloudflare R2')
+      setValidationError(err.response?.data?.message || err.message || t('profile.updateAvatarError', 'Có lỗi xảy ra khi tải ảnh đại diện lên Cloudflare R2'))
     } finally {
       setIsUploadingAvatar(false)
     }
@@ -140,7 +143,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
       setCoverUrl(publicUrl)
     } catch (err: any) {
       console.error('Lỗi upload cover:', err)
-      setValidationError(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi tải ảnh bìa lên Cloudflare R2')
+      setValidationError(err.response?.data?.message || err.message || t('profile.updateCoverError', 'Có lỗi xảy ra khi tải ảnh bìa lên Cloudflare R2'))
     } finally {
       setIsUploadingCover(false)
     }
@@ -159,7 +162,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
 
   const handleAddSkill = () => {
     if (!newSkillName.trim()) return
-    const group = newGroupName.trim() || 'Khác'
+    const group = newGroupName.trim() || t('common.other', 'Khác')
     const skill = newSkillName.trim()
     if (skills.some((s) => s.groupName === group && s.skillName === skill)) return
     setSkills([
@@ -182,7 +185,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
     setValidationError(null)
 
     if (!fullName.trim()) {
-      setValidationError('Họ và tên không được để trống')
+      setValidationError(t('profile.fullNameRequired', 'Họ và tên không được để trống'))
       return
     }
 
@@ -204,34 +207,32 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
 
     try {
       await updateProfileMutation.mutateAsync(payload)
+      toast.success(t('profile.updateProfileSuccess', 'Đã cập nhật hồ sơ cá nhân thành công!'))
       onClose()
     } catch (err: any) {
-      setValidationError(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi cập nhật hồ sơ')
+      setValidationError(err.response?.data?.message || err.message || t('common.errorOccurred', 'Có lỗi xảy ra khi cập nhật hồ sơ'))
     }
   }
 
-  const campusOptions = [
-    'FPT University Đà Nẵng',
-    'FPT University Hà Nội (Hòa Lạc)',
-    'FPT University TP. Hồ Chí Minh',
-    'FPT University Cần Thơ',
-    'FPT University Quy Nhơn',
-  ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/40 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-2xl bg-white rounded-3xl border border-plum-900/5 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-50"
+      maxWidthClassName="max-w-2xl"
+      className="overflow-hidden flex flex-col"
+    >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4.5 border-b border-plum-900/5 bg-cream-50/50">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-border bg-cream-50/50">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
+            <span className="p-1.5 rounded-lg bg-primary-soft text-primary-solid">
               <User size={18} />
             </span>
-            <h3 className="text-lg font-bold text-plum-900">Chỉnh sửa hồ sơ cá nhân</h3>
+            <h3 className="text-lg font-bold text-text">{t('profile.editProfileTitle', 'Chỉnh sửa hồ sơ cá nhân')}</h3>
           </div>
-          <button
+          <button aria-label={t('common.close', 'Đóng')}
             onClick={onClose}
-            className="p-1.5 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.04] transition-all"
+            className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition"
             disabled={loading}
           >
             <X size={18} />
@@ -239,20 +240,20 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-plum-900/5 px-6 gap-2 bg-white">
+        <div className="flex border-b border-border px-6 gap-2 bg-surface">
           {[
-            { id: 'basic', label: 'Cơ bản', icon: <User size={14} /> },
-            { id: 'academic', label: 'Học tập FPTU', icon: <GraduationCap size={14} /> },
-            { id: 'contact', label: 'Liên hệ', icon: <MapPin size={14} /> },
-            { id: 'skills', label: 'Kỹ năng', icon: <Sparkles size={14} /> },
+            { id: 'basic', label: t('profile.tabBasic', 'Cơ bản'), icon: <User size={14} /> },
+            { id: 'academic', label: t('profile.tabAcademic', 'Học tập FPTU'), icon: <GraduationCap size={14} /> },
+            { id: 'contact', label: t('profile.tabContact', 'Liên hệ'), icon: <MapPin size={14} /> },
+            { id: 'skills', label: t('profile.tabSkills', 'Kỹ năng'), icon: <Sparkles size={14} /> },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-1.5 py-3 px-3 text-xs font-bold border-b-2 transition-all ${
+              className={`flex items-center gap-1.5 py-3 px-3 text-xs font-bold border-b-2 transition ${
                 activeTab === tab.id
-                  ? 'border-brand-500 text-brand-600'
-                  : 'border-transparent text-plum-400 hover:text-plum-600'
+                  ? 'border-primary text-primary-solid'
+                  : 'border-transparent text-text-subtle hover:text-text-muted'
               }`}
             >
               {tab.icon}
@@ -264,35 +265,36 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-left">
           {validationError && (
-            <div className="flex items-start gap-2.5 rounded-2xl bg-coral-50 border border-coral-200/40 p-3.5 text-xs font-semibold text-coral-700">
+            <div className="flex items-start gap-2.5 rounded-2xl bg-danger-soft border border-danger-border p-3.5 text-xs font-semibold text-danger">
               <AlertTriangle size={16} className="shrink-0 mt-0.5" />
               <span>{validationError}</span>
             </div>
           )}
 
           {/* Tab 1: Basic Info */}
-          {activeTab === 'basic' && (
+          <FadeSwitch id={activeTab}>
+{activeTab === 'basic' && (
             <div className="space-y-4">
               {/* Họ tên */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Họ và tên <span className="text-coral-500">*</span>
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.title', 'Họ và tên')} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Nhập họ và tên..."
+                  placeholder={t('auth.namePlaceholder', 'Nhập họ và tên...')}
                   required
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               {/* Headline */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Dòng giới thiệu ngắn (Headline)
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.headline', 'Dòng giới thiệu ngắn')}
                 </label>
                 <input
                   type="text"
@@ -301,16 +303,16 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                   placeholder="VD: Software Engineer Intern | Frontend Developer..."
                   disabled={loading}
                   maxLength={160}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               {/* Avatar Upload / URL */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Ảnh đại diện (Avatar)
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.avatar', 'Ảnh đại diện')}
                 </label>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl bg-plum-50/50 border border-plum-900/5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl bg-surface-2 border border-border">
                   <Avatar
                     src={avatarUrl}
                     name={fullName || 'Avatar'}
@@ -323,17 +325,17 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                         type="url"
                         value={avatarUrl}
                         onChange={(e) => setAvatarUrl(e.target.value)}
-                        placeholder="Dán link ảnh URL..."
+                        placeholder={t('profile.avatarUrlPlaceholder', 'Dán link ảnh URL...')}
                         disabled={loading}
-                        className="flex-1 rounded-xl border border-plum-900/10 bg-white py-2 px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none"
+                        className="flex-1 rounded-xl border border-border bg-surface py-2 px-3 text-xs text-text focus:border-primary focus:outline-none"
                       />
-                      <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-xl cursor-pointer transition-all shrink-0">
+                      <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition shrink-0">
                         {isUploadingAvatar ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
                           <Upload size={14} />
                         )}
-                        <span>{isUploadingAvatar ? 'Đang tải...' : 'Tải từ máy'}</span>
+                        <span>{isUploadingAvatar ? t('profile.uploading', 'Đang tải...') : t('profile.uploadFromDevice', 'Tải từ máy')}</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -343,26 +345,26 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                         />
                       </label>
                     </div>
-                    <p className="text-[11px] text-plum-400">Tải ảnh từ thiết bị lên Cloudflare R2 hoặc dán URL trực tiếp.</p>
+                    <p className="text-xs text-text-subtle">{t('profile.avatarHint', 'Tải ảnh từ thiết bị lên Cloudflare R2 hoặc dán URL trực tiếp.')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Cover Upload / URL */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Ảnh bìa hồ sơ (Cover Photo)
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.coverPhoto', 'Ảnh bìa hồ sơ')}
                 </label>
-                <div className="p-4 rounded-2xl bg-plum-50/50 border border-plum-900/5 space-y-3">
+                <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-3">
                   {coverUrl ? (
                     <SmartImage
                       src={coverUrl}
                       alt="Cover preview"
-                      className="h-24 w-full rounded-xl object-cover border border-plum-900/5"
+                      className="h-24 w-full rounded-xl object-cover border border-border"
                     />
                   ) : (
-                    <div className="h-20 w-full rounded-xl bg-plum-100/50 flex items-center justify-center text-plum-400 text-xs font-medium">
-                      <ImageIcon size={18} className="mr-1.5" /> Chưa cài đặt ảnh bìa
+                    <div className="h-20 w-full rounded-xl bg-plum-100/50 flex items-center justify-center text-text-subtle text-xs font-medium">
+                      <ImageIcon size={18} className="mr-1.5" /> {t('profile.noCoverYet', 'Chưa cài đặt ảnh bìa')}
                     </div>
                   )}
 
@@ -371,17 +373,17 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                       type="url"
                       value={coverUrl}
                       onChange={(e) => setCoverUrl(e.target.value)}
-                      placeholder="Dán link ảnh bìa URL..."
+                      placeholder={t('profile.coverUrlPlaceholder', 'Dán link ảnh bìa URL...')}
                       disabled={loading}
-                      className="flex-1 rounded-xl border border-plum-900/10 bg-white py-2 px-3 text-xs text-plum-900 focus:border-brand-500 focus:outline-none"
+                      className="flex-1 rounded-xl border border-border bg-surface py-2 px-3 text-xs text-text focus:border-primary focus:outline-none"
                     />
-                    <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-xl cursor-pointer transition-all shrink-0">
+                    <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-primary-solid bg-primary-soft hover:bg-primary-soft rounded-xl cursor-pointer transition shrink-0">
                       {isUploadingCover ? (
                         <Loader2 size={14} className="animate-spin" />
                       ) : (
                         <Upload size={14} />
                       )}
-                      <span>{isUploadingCover ? 'Đang tải...' : 'Tải từ máy'}</span>
+                      <span>{isUploadingCover ? t('profile.uploading', 'Đang tải...') : t('profile.uploadFromDevice', 'Tải từ máy')}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -396,16 +398,16 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
 
               {/* Tiểu sử */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Tiểu sử / Giới thiệu bản thân
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.bio', 'Tiểu sử / Giới thiệu bản thân')}
                 </label>
                 <textarea
                   value={biography}
                   onChange={(e) => setBiography(e.target.value)}
-                  placeholder="Mô tả bản thân, định hướng nghề nghiệp..."
+                  placeholder={t('profile.bioPlaceholder', 'Mô tả bản thân, định hướng nghề nghiệp...')}
                   rows={4}
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
@@ -415,47 +417,34 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
           {activeTab === 'academic' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Cơ sở đào tạo (Campus)
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.campus', 'Cơ sở đào tạo')}
                 </label>
-                <select
+                <CampusSelect
                   value={campus}
-                  onChange={(e) => setCampus(e.target.value)}
+                  onChange={setCampus}
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                >
-                  <option value="">-- Chọn Cơ sở FPT University --</option>
-                  {campusOptions.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Chuyên ngành học (Major)
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.major', 'Chuyên ngành học')}
                 </label>
-                <select
-                  value={majorId || ''}
-                  onChange={(e) => setMajorId(e.target.value ? Number(e.target.value) : undefined)}
+                <SelectDropdown<string | number>
+                  value={majorId ?? ''}
+                  onChange={(val) => setMajorId(val === '' ? undefined : Number(val))}
+                  options={[{ value: '', label: t('profile.selectMajor', '-- Chọn Chuyên ngành --') }, ...(majors ?? []).map((m) => ({ value: m.id, label: `${m.name} (${m.code})` }))]}
+                  placeholder={t('profile.selectMajor', '-- Chọn Chuyên ngành --')}
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                >
-                  <option value="">-- Chọn Chuyên ngành --</option>
-                  {majors?.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.code})
-                    </option>
-                  ))}
-                </select>
+                  buttonClassName="h-12 text-sm"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                    Khóa học (Cohort)
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                    {t('profile.cohort', 'Khóa học')}
                   </label>
                   <input
                     type="number"
@@ -463,13 +452,13 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                     onChange={(e) => setCohort(e.target.value ? Number(e.target.value) : undefined)}
                     placeholder="VD: 15, 16, 17..."
                     disabled={loading}
-                    className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                    Năm tốt nghiệp / Dự kiến tốt nghiệp
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                    {t('profile.graduationYear', 'Năm tốt nghiệp / Dự kiến tốt nghiệp')}
                   </label>
                   <input
                     type="number"
@@ -477,7 +466,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                     onChange={(e) => setGraduationYear(e.target.value ? Number(e.target.value) : undefined)}
                     placeholder="VD: 2024, 2025..."
                     disabled={loading}
-                    className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -488,8 +477,8 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
           {activeTab === 'contact' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Số điện thoại liên hệ
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.phone', 'Số điện thoại liên hệ')}
                 </label>
                 <input
                   type="text"
@@ -497,27 +486,27 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="VD: 0905123456"
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Tỉnh / Thành phố hiện tại
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.city', 'Tỉnh / Thành phố hiện tại')}
                 </label>
                 <input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="VD: Đà Nẵng, Hà Nội..."
+                  placeholder={t('profile.cityPlaceholder', 'VD: Đà Nẵng, Hà Nội...')}
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Liên kết cá nhân (LinkedIn, GitHub, Website...)
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.socialLinks', 'Liên kết cá nhân (LinkedIn, GitHub, Website...)')}
                 </label>
                 <div className="flex gap-2 mb-3">
                   <input
@@ -526,7 +515,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                     onChange={(e) => setNewSocialLink(e.target.value)}
                     placeholder="https://linkedin.com/in/..."
                     disabled={loading}
-                    className="flex-1 rounded-2xl border border-plum-900/10 bg-white py-2.5 px-4 text-sm text-plum-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="flex-1 rounded-2xl border border-border bg-surface py-2.5 px-4 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <Button
                     type="button"
@@ -536,21 +525,21 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                     disabled={loading}
                     className="rounded-xl px-4 flex items-center gap-1 shrink-0"
                   >
-                    <Plus size={15} /> Thêm
+                    <Plus size={15} /> {t('common.add', 'Thêm')}
                   </Button>
                 </div>
 
                 <div className="space-y-2">
                   {socialLinks.map((link, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-plum-50/50 border border-plum-900/5 text-xs text-plum-700">
+                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-surface-2 border border-border text-xs text-text-muted">
                       <span className="truncate flex-1 mr-2 flex items-center gap-1.5">
-                        <LinkIcon size={14} className="text-plum-400 shrink-0" />
+                        <LinkIcon size={14} className="text-text-subtle shrink-0" />
                         {link}
                       </span>
-                      <button
+                      <button aria-label={t('common.delete', 'Xóa')}
                         type="button"
                         onClick={() => handleRemoveSocialLink(idx)}
-                        className="text-coral-500 hover:text-coral-700 p-1"
+                        className="text-danger hover:text-danger p-1"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -566,8 +555,8 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-1">
-                    Nhóm kỹ năng
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
+                    {t('profile.skillGroup', 'Nhóm kỹ năng')}
                   </label>
                   <input
                     type="text"
@@ -575,12 +564,12 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                     onChange={(e) => setNewGroupName(e.target.value)}
                     placeholder="VD: Programming"
                     disabled={loading}
-                    className="w-full rounded-2xl border border-plum-900/10 bg-white py-2.5 px-3 text-xs text-plum-900"
+                    className="w-full rounded-2xl border border-border bg-surface py-2.5 px-3 text-xs text-text"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-1">
-                    Tên kỹ năng
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
+                    {t('profile.skillName', 'Tên kỹ năng')}
                   </label>
                   <input
                     type="text"
@@ -588,7 +577,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                     onChange={(e) => setNewSkillName(e.target.value)}
                     placeholder="VD: ReactJS, Java"
                     disabled={loading}
-                    className="w-full rounded-2xl border border-plum-900/10 bg-white py-2.5 px-3 text-xs text-plum-900"
+                    className="w-full rounded-2xl border border-border bg-surface py-2.5 px-3 text-xs text-text"
                   />
                 </div>
                 <div className="flex items-end">
@@ -600,26 +589,26 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
                     disabled={loading}
                     className="w-full rounded-xl py-2.5 flex items-center justify-center gap-1"
                   >
-                    <Plus size={14} /> Thêm kỹ năng
+                    <Plus size={14} /> {t('profile.addSkill', 'Thêm kỹ năng')}
                   </Button>
                 </div>
               </div>
 
               <div className="pt-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-plum-400 mb-2">
-                  Danh sách kỹ năng hiện tại
+                <p className="text-xs font-bold uppercase tracking-wider text-text-subtle mb-2">
+                  {t('profile.currentSkills', 'Danh sách kỹ năng hiện tại')}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {skills.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-plum-50 px-3 py-1 text-xs font-semibold text-plum-700 border border-plum-900/5"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-1 text-xs font-semibold text-text-muted border border-border"
                     >
-                      <span className="text-plum-400 font-normal">[{skill.groupName}]</span> {skill.skillName}
-                      <button
+                      <span className="text-text-subtle font-normal">[{skill.groupName}]</span> {skill.skillName}
+                      <button aria-label={t('common.close', 'Đóng')}
                         type="button"
                         onClick={() => handleRemoveSkill(idx)}
-                        className="text-plum-400 hover:text-coral-500 ml-1"
+                        className="text-text-subtle hover:text-danger ml-1"
                       >
                         <X size={12} />
                       </button>
@@ -629,32 +618,32 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
               </div>
             </div>
           )}
+</FadeSwitch>
 
           {/* Footer Buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-plum-900/5 mt-6">
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-border mt-6">
             <Button
               type="button"
               variant="secondary"
               size="md"
               onClick={onClose}
               disabled={loading}
-              className="rounded-xl border border-plum-900/10 text-plum-700 font-semibold"
+              className="rounded-xl border border-border text-text-muted font-semibold"
             >
-              Hủy
+              {t('common.cancel', 'Hủy')}
             </Button>
             <Button
               type="submit"
               variant="primary"
               size="md"
               disabled={loading}
-              className="rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold px-6 flex items-center gap-1.5"
+              className="rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary shadow-sm font-semibold px-6 flex items-center gap-1.5"
             >
               {loading && <Loader2 size={14} className="animate-spin" />}
-              <span>Lưu thay đổi</span>
+              <span>{t('common.saveChanges', 'Lưu thay đổi')}</span>
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogFrame>
   )
 }

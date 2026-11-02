@@ -48,23 +48,12 @@ public class RegisterRequest {
     @NotNull(message = "Chuyên ngành không được để trống")
     private Long majorId;
 
-    /** Khóa học (năm nhập học) */
-    @NotNull(message = "Khóa học không được để trống")
-    private Integer cohort;
-
     /** Mã số sinh viên (bắt buộc đối với tất cả người dùng) */
     @NotBlank(message = "Mã số sinh viên không được để trống")
     @Size(max = 20, message = "Mã số sinh viên không được vượt quá 20 ký tự")
     private String studentCode;
 
-    /** Năm tốt nghiệp (chỉ áp dụng cho ALUMNI) */
-    private Integer graduationYear;
-
     /** Đường dẫn minh chứng tốt nghiệp (chỉ áp dụng cho ALUMNI) */
     @Size(max = 500, message = "URL minh chứng không được vượt quá 500 ký tự")
     private String proofUrl;
-
-    /** Ghi chú gửi kèm khi đăng ký (chỉ áp dụng cho ALUMNI) */
-    @Size(max = 500, message = "Ghi chú không được vượt quá 500 ký tự")
-    private String note;
 }

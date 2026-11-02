@@ -44,6 +44,10 @@ public class Event {
     @Builder.Default
     private int attendeeCount = 0;
 
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private String status = "ACTIVE";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

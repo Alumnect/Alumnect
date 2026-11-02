@@ -7,24 +7,18 @@
  *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / rỗng / lỗi (retry) / phân quyền / thành công.
  *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
  */
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Link, useNavigate } from 'react-router-dom'
 import {
+  Search,
   Image as ImageIcon,
   CalendarPlus,
   Briefcase,
   Award,
-  Trophy,
-  Sparkles,
-  Heart,
-  MessageCircle,
-  Repeat2,
-  Bookmark,
-  MoreHorizontal,
-  Pencil,
-  TrendingUp,
-  Flag,
+  Send,
   Loader2,
   AlertTriangle,
   Inbox,
@@ -32,34 +26,37 @@ import {
   ExternalLink,
   Clock,
   Users,
+  Ban,
+  Coins,
+  Heart,
+  MessageCircle,
+  Bookmark,
+  Flag,
 } from 'lucide-react'
-import { Avatar, Badge, Card, ImageCarousel } from '@/components/ui'
+import { TRANSITION } from '@/lib/motion'
+import { Avatar, FadeSwitch, toast, ImageViewerModal } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { Reveal, Stagger, StaggerItem } from '@/components/motion'
-import { ALUMNI, EVENTS, QUESTIONS } from '@/lib/constants'
+import { UpcomingEventsWidget, CancelEventModal, useCancelEvent, EventRsvpButton } from '@/features/event'
+
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/store/authStore'
+import { useSearchStore } from '@/store/searchStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
-import { useFeed, useToggleLike, CreatePostModal } from '@/features/feed'
+import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, PostActionMenu, InlineComments } from '@/features/feed'
+import { ReportPostModal } from '@/features/report'
+import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
+
 import type { PostType } from '@/features/feed/model/post'
 
 /** Nhãn + tông màu badge cho từng loại bài viết. */
-const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
-  achievement: { label: 'Thành tựu', tone: 'gold' },
-  recruitment: { label: 'Tuyển dụng', tone: 'aqua' },
-  event: { label: 'Sự kiện', tone: 'violet' },
-  normal: { label: 'Bài viết', tone: 'brand' },
+const TYPE_META: Record<string, { labelKey: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
+  achievement: { labelKey: 'feed.achievement', tone: 'gold' },
+  recruitment: { labelKey: 'feed.recruitment', tone: 'aqua' },
+  event: { labelKey: 'feed.event', tone: 'violet' },
+  normal: { labelKey: 'feed.normal', tone: 'brand' },
 }
-
-/** Các tab lọc bảng tin theo loại bài viết (UC15: lọc theo loại). */
-const FILTERS: { key: FeedFilter; label: string }[] = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'achievement', label: 'Thành tựu' },
-  { key: 'recruitment', label: 'Tuyển dụng' },
-  { key: 'event', label: 'Sự kiện' },
-]
 
 /**
  * Ô soạn bài viết ở đầu bảng tin — chỉ hiển thị cho thành viên đã đăng nhập
@@ -68,38 +65,45 @@ const FILTERS: { key: FeedFilter; label: string }[] = [
  * @param viewer Người dùng hiện tại dùng để hiển thị avatar/tên
  */
 function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostType) => void }) {
+  const { t } = useTranslation()
+  const firstName = viewer.name ? viewer.name.trim().split(' ').slice(-1)[0] : t('common.you', 'bạn')
+  const quick: { type: PostType; label: string; icon: ReactNode }[] = [
+    { type: 'normal', label: t('feed.photoVideo'), icon: <ImageIcon size={18} /> },
+    { type: 'recruitment', label: t('feed.recruitment'), icon: <Briefcase size={18} /> },
+    { type: 'event', label: t('feed.event'), icon: <CalendarPlus size={18} /> },
+    { type: 'achievement', label: t('feed.achievement'), icon: <Award size={18} /> },
+  ]
   return (
-    <Card hover={false} className="p-4">
-      <div className="flex gap-3">
-        <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={44} verified={viewer.verified} />
+    <div className="rounded-2xl border border-border bg-surface px-4 py-3.5 sm:px-5">
+      <div className="flex items-center gap-3">
+        <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={40} verified={viewer.verified} />
         <button
           type="button"
           onClick={() => onOpen()}
-          className="h-11 flex-1 rounded-xl border border-plum-900/10 bg-plum-900/[0.04] px-4 text-left text-sm text-plum-400 transition-colors hover:bg-plum-900/[0.05]"
+          className="h-10 min-w-0 flex-1 truncate text-left text-[15px] text-text-subtle transition-colors hover:text-text-muted"
         >
-          Bạn muốn chia sẻ thành tựu, đặt câu hỏi hay đăng tin tuyển dụng?…
+          {t('feed.createPostPrompt', { name: firstName })}
         </button>
+        <Button type="button" size="sm" variant="primary" className="shrink-0 rounded-full px-5" onClick={() => onOpen()}>
+          {t('feed.post')}
+        </Button>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-plum-900/8 pt-3">
-        {[
-          { icon: Award, label: 'Thành tựu', tone: 'text-gold-600', type: 'achievement' },
-          { icon: ImageIcon, label: 'Hình ảnh', tone: 'text-aqua-500', type: 'normal' },
-          { icon: Briefcase, label: 'Tuyển dụng', tone: 'text-brand-600', type: 'recruitment' },
-          { icon: CalendarPlus, label: 'Sự kiện', tone: 'text-violet-600', type: 'event' },
-        ].map((a) => (
+      <div className="mt-1 flex items-center gap-1 pl-[52px]">
+        {quick.map((q) => (
           <button
-            key={a.label}
+            key={q.type}
             type="button"
-            onClick={() => onOpen(a.type as PostType)}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors hover:bg-plum-900/[0.04]"
+            onClick={() => onOpen(q.type)}
+            aria-label={q.label}
+            title={q.label}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-text-subtle transition-colors hover:bg-surface-2 hover:text-text"
           >
-            <a.icon size={17} className={a.tone} />
-            <span className="hidden sm:inline">{a.label}</span>
+            {q.icon}
+            <span className="hidden sm:inline">{q.label}</span>
           </button>
         ))}
-        <Button size="sm" className="ml-auto" onClick={() => onOpen()}>Đăng bài</Button>
       </div>
-    </Card>
+    </div>
   )
 }
 
@@ -108,25 +112,71 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
  * @param post Dữ liệu bài viết
  * @param canInteract Người dùng có quyền tương tác (like/comment) hay không
  */
-function PostCard({
+export function PostCard({
   post,
   canInteract,
+  currentUserId,
   currentUserName,
   onEdit,
+  onDelete,
+  canReport,
+  onReport,
+  onShare,
+  onCancelEvent,
+  variant = 'card',
 }: {
   post: Post
+  /** 'row': một hàng trong danh sách có đường kẻ mảnh (Bảng tin); 'card': thẻ riêng có viền (trang cá nhân…) */
+  variant?: 'row' | 'card'
   canInteract: boolean
+  currentUserId?: string
   currentUserName?: string
   onEdit?: (post: Post) => void
+  onDelete?: (post: Post) => void
+  canReport: boolean
+  onReport?: (post: Post) => void
+  onShare?: (post: Post) => void
+  onCancelEvent?: (post: Post) => void
 }) {
+  const { t } = useTranslation()
   // Trạng thái thích cục bộ (nguồn sự thật cho UI sau khi tương tác) — khởi tạo từ dữ liệu bài viết.
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState<number>(post.likes)
+  // Trạng thái lưu bài viết cục bộ (UC20 - Save Post)
+  const [saved, setSaved] = useState(post.saved ?? false)
+  // Trạng thái mở khung bình luận trực tiếp (Inline Comments)
+  const [showComments, setShowComments] = useState(false)
+  const [commentCount, setCommentCount] = useState(post.comments)
+  // Trạng thái xem ảnh phóng to toàn màn hình (Lightbox)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+  const viewer = useAuthStore((s) => s.user)
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
+  const typeLabel = post.type === 'normal'
+    ? t('feed.normal')
+    : post.type === 'achievement'
+    ? t('feed.achievement')
+    : post.type === 'recruitment'
+    ? t('feed.recruitment')
+    : post.type === 'event'
+    ? t('feed.event')
+    : t(meta.labelKey)
+
+  // Bài dài chỉ hiện ~6 dòng + "Xem thêm" để các thẻ trong bảng tin có chiều cao gần nhau, dễ quét mắt
+  const isLongText = (post.text?.length ?? 0) > 320 || (post.text?.split('\n').length ?? 0) > 6
+
+  // Đồng bộ lại state khi post props thay đổi (ví dụ sau khi refetch hoặc đổi tab)
+  useEffect(() => {
+    setLiked(post.liked)
+    setLikeCount(post.likes)
+    setSaved(post.saved ?? false)
+    setCommentCount(post.comments)
+  }, [post.liked, post.likes, post.saved, post.comments])
 
   // Guest bấm tương tác sẽ mở popup mời đăng nhập (kiểu Facebook) thay vì nút bị vô hiệu hóa.
   const promptLogin = useLoginPrompt((s) => s.open)
   const toggleLike = useToggleLike()
+  const toggleSave = useToggleSavePost()
 
   /**
    * Xử lý bấm nút Thích (UC17): cập nhật lạc quan (đổi UI ngay), đồng bộ theo phản hồi
@@ -134,7 +184,7 @@ function PostCard({
    */
   const handleLike = () => {
     if (!canInteract) {
-      promptLogin('Đăng nhập để thích và tương tác với bài viết.')
+      promptLogin(t('feed.loginToInteract'))
       return
     }
     const next = !liked
@@ -155,349 +205,482 @@ function PostCard({
     )
   }
 
-  const isAuthor = !!currentUserName && post.author === currentUserName
+  /**
+   * Xử lý bấm nút Lưu / Bỏ lưu bài viết (UC20): cập nhật lạc quan,
+   * rollback khi lỗi, hiển thị popup đăng nhập với Guest.
+   */
+  const handleSave = () => {
+    if (!canInteract) {
+      promptLogin(t('feed.loginToSave'))
+      return
+    }
+    const next = !saved
+    setSaved(next)
+    toggleSave.mutate(
+      { postId: post.id, save: next },
+      {
+        onSuccess: (data) => {
+          setSaved(data.saved)
+        },
+        onError: () => {
+          setSaved(!next)
+        },
+      },
+    )
+  }
+
+  const isAuthor = post.authorId != null
+    ? !!currentUserId && post.authorId === currentUserId
+    : !!currentUserName && post.author === currentUserName
+
+  const navigate = useNavigate()
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, textarea, select, [role="button"], .interactive, [data-interactive]')) {
+      return
+    }
+    navigate(`/app/posts/${post.id}`)
+  }
 
   return (
-    <Card hover={false} className={cn("overflow-hidden relative transition-all duration-300", post.type === 'achievement' && "border-amber-200 shadow-[0_4px_20px_rgba(251,191,36,0.12)] bg-gradient-to-br from-amber-50/80 via-white to-white")}>
-      {post.type === 'achievement' && (
-        <div className="absolute -top-4 -right-4 p-6 opacity-[0.04] pointer-events-none -rotate-12">
-          <Trophy size={160} className="text-amber-600" />
-        </div>
+    <article
+      onClick={handleCardClick}
+      className={cn(
+        'relative cursor-pointer transition-colors [contain-intrinsic-size:auto_260px] [content-visibility:auto]',
+        variant === 'row'
+          ? 'border-b border-border last:border-b-0 hover:bg-surface-2/50'
+          : 'overflow-hidden rounded-2xl border border-border bg-surface hover:border-border-strong',
       )}
-      <div className="p-5 relative z-10">
-        {/* --- Phần 1: Header — avatar, tên tác giả, badge loại bài, thời gian, menu "..." --- */}
-        <div className="flex items-center gap-3">
+    >
+      <div className="relative z-10 px-4 pt-4 sm:px-5">
+        {/* --- Header: avatar, tên, loại bài, vai trò · thời gian, menu "..." --- */}
+        <div className="flex items-start gap-3">
           <Link
             to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
-            className="shrink-0 transition-transform duration-200 hover:scale-105"
-            title={`Xem hồ sơ của ${post.author}`}
+            className="shrink-0"
+            title={t('feed.viewProfile', { name: post.author })}
           >
-            <Avatar src={post.avatar} name={post.author} size={46} verified={post.verified} />
+            <Avatar src={post.avatar} name={post.author} size={44} verified={post.verified} />
           </Link>
-          {/* Tên tác giả chuyển qua Profile, Badge và Thời gian chuyển qua chi tiết bài viết */}
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 font-bold text-plum-900">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
-                className="truncate hover:underline hover:text-brand-600 transition-colors"
-                title={`Xem hồ sơ của ${post.author}`}
+                className="truncate text-[15px] font-bold text-text hover:underline"
+                title={t('feed.viewProfile', { name: post.author })}
               >
                 {post.author}
               </Link>
-              <Link to={`/app/posts/${post.id}`}>
-                {post.type === 'achievement' ? (
-                  <Badge tone={meta.tone} className="px-2.5 py-0.5 text-[10px] cursor-pointer hover:opacity-85 shadow-sm shadow-amber-200/50 border border-amber-300/50 flex items-center gap-1 font-extrabold uppercase tracking-wide">
-                    <Sparkles size={10} className="text-amber-600" /> {meta.label}
-                  </Badge>
-                ) : (
-                  <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px] cursor-pointer hover:opacity-85">{meta.label}</Badge>
-                )}
-              </Link>
-            </p>
-            <Link to={`/app/posts/${post.id}`} className="block truncate text-xs text-plum-400 hover:text-plum-600 transition-colors">
-              {post.role ? `${post.role} · ` : ''}{post.time}
+              {post.type !== 'normal' && (
+                <Link to={`/app/posts/${post.id}`} className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold text-text-muted hover:text-text">
+                  {post.type === 'achievement' && <Award size={12} className="text-warning" />}
+                  {typeLabel}
+                </Link>
+              )}
+            </div>
+            <Link to={`/app/posts/${post.id}`} className="mt-0.5 block truncate text-[13px] text-text-subtle hover:text-text-muted">
+              {post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}
             </Link>
           </div>
-          {/* Nút Chỉnh sửa (UC22) chỉ hiển thị cho chính tác giả bài viết */}
-          {isAuthor && onEdit ? (
-            <button
-              type="button"
-              onClick={() => onEdit(post)}
-              aria-label="Chỉnh sửa bài viết"
-              title="Chỉnh sửa bài viết"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-2.5 py-1 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-            >
-              <Pencil size={13} /> Sửa
-            </button>
-          ) : (
-            <button aria-label="Tùy chọn khác" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900">
-              <MoreHorizontal size={18} />
-            </button>
-          )}
+          <PostActionMenu
+            post={post}
+            isAuthor={isAuthor}
+            canInteract={canInteract}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onCancelEvent={onCancelEvent}
+            onReport={onReport}
+          />
         </div>
 
-        {/* --- Phần 2: Nội dung văn bản (Ẩn đi nếu là bài event hoặc recruitment, vì văn bản đã được gom vào khung riêng) --- */}
-        {post.type !== 'event' && post.type !== 'recruitment' && (
-          <Link to={`/app/posts/${post.id}`} className="mt-4 block">
-            <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">{post.text}</p>
-          </Link>
+        {/* --- Nội dung văn bản --- */}
+        {post.text && (
+          <>
+            <p className={cn('mt-3 whitespace-pre-line text-[15px] leading-relaxed text-text', isLongText && 'line-clamp-6')}>{post.text}</p>
+            {isLongText && (
+              <Link to={`/app/posts/${post.id}`} className="mt-1 inline-block text-sm font-semibold text-text-subtle hover:text-text">
+                {t('common.viewMore')}
+              </Link>
+            )}
+          </>
         )}
       </div>
 
-      {/* --- Phần 3: Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
+      {/* --- Phần 3: Khối thông tin Tuyển dụng (nếu là bài recruitment) — Thiết kế phẳng, tinh gọn --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all hover:shadow-md">
-          {/* Header Tuyển dụng */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-5 py-3.5">
-            <h3 className="flex items-center gap-2 font-bold text-brand-900">
-              <Briefcase size={18} className="text-brand-600" />
-              <span>Tuyển dụng: <span className="text-plum-900">{post.job.title}</span></span>
-            </h3>
+        <div className="mx-4 mb-1 mt-3 rounded-2xl border border-border p-4 sm:mx-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
+                  <Briefcase size={12} /> {t('feed.recruitment')}
+                </span>
+                <span className="text-xs text-text-muted font-semibold truncate">{post.job.company}</span>
+              </div>
+              <h4 className="mt-1.5 text-base font-bold text-text truncate">
+                {post.job.title}
+              </h4>
+            </div>
             {post.job.applyUrl && (
               <a
                 href={post.job.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#F27024] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#d96010] transition-colors"
+                className="shrink-0 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-solid px-4 text-sm font-bold text-on-primary hover:bg-primary-hover transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                Ứng tuyển <ExternalLink size={12} />
+                {t('feed.applyNow')} <ExternalLink size={12} />
               </a>
             )}
           </div>
 
-          <div className="p-5">
-            <div className="mb-5 rounded-xl border border-slate-100 bg-slate-50 p-4">
-              <p className="text-base font-bold text-plum-900 mb-3">
-                Công ty: {post.job.company}
-              </p>
-              
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                 <div>
-                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
-                   <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
-                     {post.job.location && (
-                       <span className="inline-flex items-center gap-1">
-                         <MapPin size={14} className="text-brand-500" /> {post.job.location}
-                       </span>
-                     )}
-                   </div>
-                 </div>
-                 <div>
-                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
-                   <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
-                     {(post.job.salaryMin || post.job.salaryMax) ? (
-                       <span className="inline-flex items-center gap-1">
-                          <span className="font-semibold text-emerald-600">
-                            {post.job.salaryMin && post.job.salaryMax
-                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
-                              : post.job.salaryMin
-                              ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
-                              : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
-                          </span>
-                       </span>
-                     ) : (
-                       <span className="text-slate-400 font-normal">Thỏa thuận</span>
-                     )}
-                     {post.job.contactEmail && (
-                       <span className="inline-flex items-center gap-1 text-xs">
-                         <Inbox size={12} className="text-plum-400" /> {post.job.contactEmail}
-                       </span>
-                     )}
-                   </div>
-                 </div>
-              </div>
-            </div>
-
-            {/* Mô tả tuyển dụng */}
-            {post.text && (
-              <div className="mb-5">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-600">Mô tả công việc:</p>
-                <Link to={`/app/posts/${post.id}`} className="block">
-                  <p className="whitespace-pre-line text-[14px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900 line-clamp-4">
-                    {post.text}
-                  </p>
-                </Link>
-              </div>
+          <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 border-t border-border pt-2.5 text-sm text-text-muted">
+            {post.job.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={13} className="text-primary-solid" /> {post.job.location}
+              </span>
             )}
-
-            {/* Ảnh tuyển dụng (nếu có) */}
-            {(() => {
-              const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
-              if (imgs.length === 0) return null
-              return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
-                  <ImageCarousel images={imgs} height={380} altPrefix="Ảnh tuyển dụng" />
-                </div>
-              )
-            })()}
+            {(post.job.salaryMin || post.job.salaryMax) ? (
+              <span className="inline-flex items-center gap-1 font-semibold text-success">
+                <Coins size={13} />
+                {post.job.salaryMin && post.job.salaryMax
+                  ? t('feed.salaryRange', {
+                      min: post.job.salaryMin.toLocaleString('vi-VN'),
+                      max: post.job.salaryMax.toLocaleString('vi-VN'),
+                    })
+                  : post.job.salaryMin
+                  ? t('feed.salaryFrom', { amount: post.job.salaryMin.toLocaleString('vi-VN') })
+                  : t('feed.salaryUpTo', { amount: post.job.salaryMax?.toLocaleString('vi-VN') })}
+              </span>
+            ) : (
+              <span className="text-text-subtle">{t('feed.salaryNegotiable')}</span>
+            )}
+            {post.job.contactEmail && (
+              <span className="inline-flex items-center gap-1 text-text-subtle">
+                <Inbox size={13} className="text-text-subtle" /> {post.job.contactEmail}
+              </span>
+            )}
           </div>
         </div>
       )}
 
-      {/* --- Phần 3b: Thẻ thông tin Sự kiện (nếu là bài event) --- */}
+      {/* --- Phần 3b: Khối thông tin Sự kiện (nếu là bài event) — Thiết kế phẳng, tinh gọn --- */}
       {post.type === 'event' && post.event && (
-        <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all hover:shadow-md">
-          {/* Header Sự kiện */}
-          <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-5 py-3.5">
-            <h3 className="flex items-center gap-2 font-bold text-violet-900">
-              <CalendarPlus size={18} className="text-violet-600" />
-              <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
-            </h3>
+        <div className="mx-4 mb-1 mt-3 rounded-2xl border border-border p-4 sm:mx-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-info-soft px-2 py-0.5 text-xs font-bold text-info">
+                  <CalendarPlus size={12} /> {t('feed.event')}
+                </span>
+                {post.event.status === 'CANCELLED' && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2 py-0.5 text-xs font-bold text-danger">
+                    <Ban size={12} /> {t('feed.eventCancelled')}
+                  </span>
+                )}
+              </div>
+              <h4 className="mt-1.5 text-base font-bold text-text truncate">
+                {post.event.title}
+              </h4>
+            </div>
+            {post.event.status !== 'CANCELLED' && (
+              <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                <EventRsvpButton
+                  eventId={post.event.id ?? post.eventId}
+                  eventTitle={post.event.title}
+                  initialRegistered={post.event.isRegistered ?? false}
+                  initialAttendeeCount={post.event.attendeeCount ?? 0}
+                  capacity={post.event.capacity}
+                  startTime={post.event.startTime}
+                  endTime={post.event.endTime}
+                  status={post.event.status}
+                  size="sm"
+                  showCount={false}
+                />
+              </div>
+            )}
           </div>
 
-          <div className="p-5">
-            {/* Thời gian & Địa điểm */}
-            <div className="mb-5 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2">
-              {post.event.startTime && (
-                <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
-                    <Clock size={14} className="text-violet-500" />
-                    {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
-                    {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+          <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 border-t border-border pt-2.5 text-sm text-text-muted">
+            {post.event.startTime && (
+              <span className="inline-flex items-center gap-1 font-medium text-text-muted">
+                <Clock size={14} className="text-info" />
+                {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'short' })}{' '}
+                · {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            {post.event.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={14} className="text-info" /> {post.event.location}
+              </span>
+            )}
+            {post.event.capacity && (
+              <span className="inline-flex items-center gap-1 text-text-subtle">
+                <Users size={13} className="text-text-subtle" /> {t('feed.maxAttendees', { count: post.event.capacity })}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* --- Phần 4: Ảnh đính kèm (Lưới ảnh thông minh kiểu Facebook/Cộng đồng hiện đại) --- */}
+      {(() => {
+        const imgs = post.images && post.images.length > 0
+          ? post.images
+          : post.image ? [post.image] : []
+        if (imgs.length === 0) return null
+        return (
+          <div className="px-4 pb-1 pt-3 sm:px-5">
+            <div className="overflow-hidden rounded-2xl border border-border">
+              {imgs.length === 1 && (
+                <img
+                  src={imgs[0]}
+                  alt={t('feed.postImage', 'Ảnh bài viết')}
+                  loading="lazy"
+                  decoding="async"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPreviewImage(imgs[0])
+                  }}
+                  className="max-h-[460px] w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                />
+              )}
+
+              {imgs.length === 2 && (
+                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
+                  {imgs.map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
+                      loading="lazy"
+                      decoding="async"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewImage(url)
+                      }}
+                      className="h-64 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                    />
+                  ))}
                 </div>
               )}
-              {post.event.endTime ? (
-                <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
-                    <Clock size={14} className="text-coral-500" />
-                    {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
-                    {new Date(post.event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                  <p className="text-sm font-semibold text-slate-400">—</p>
+
+              {imgs.length === 3 && (
+                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
+                  <img
+                    src={imgs[0]}
+                    alt={t('feed.postImage', 'Ảnh bài viết')}
+                    loading="lazy"
+                    decoding="async"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPreviewImage(imgs[0])
+                    }}
+                    className="col-span-2 h-64 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                  />
+                  {imgs.slice(1).map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
+                      loading="lazy"
+                      decoding="async"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewImage(url)
+                      }}
+                      className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                    />
+                  ))}
                 </div>
               )}
-              {(post.event.location || post.event.capacity) && (
-                <div className="col-span-1 sm:col-span-2 mt-1 border-t border-slate-200/60 pt-3">
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm & Sức chứa</p>
-                  <div className="flex flex-wrap items-center gap-4">
-                    {post.event.location && (
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
-                        <MapPin size={14} className="text-brand-500" /> {post.event.location}
-                      </p>
-                    )}
-                    {post.event.capacity && (
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
-                        <Users size={14} className="text-aqua-600" /> Tối đa {post.event.capacity} người
-                      </p>
+
+              {imgs.length >= 4 && (
+                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
+                  {imgs.slice(0, 3).map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
+                      loading="lazy"
+                      decoding="async"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewImage(url)
+                      }}
+                      className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                    />
+                  ))}
+                  <div
+                    className="relative h-44 cursor-pointer overflow-hidden"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPreviewImage(imgs[3])
+                    }}
+                  >
+                    <img
+                      src={imgs[3]}
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-opacity hover:opacity-95"
+                    />
+                    {imgs.length > 4 && (
+                      <div className="absolute inset-0 grid place-items-center bg-black/50 text-xl font-black text-white">
+                        +{imgs.length - 3}
+                      </div>
                     )}
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Mô tả sự kiện */}
-            {post.text && (
-              <div className="mb-5">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-violet-600">Mô tả sự kiện:</p>
-                <Link to={`/app/posts/${post.id}`} className="block">
-                  <p className="whitespace-pre-line text-[14px] leading-relaxed text-plum-800 transition-colors hover:text-plum-900">
-                    {post.text}
-                  </p>
-                </Link>
-              </div>
-            )}
-
-            {/* Ảnh sự kiện */}
-            {(() => {
-              const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
-              if (imgs.length === 0) return null
-              return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
-                  <ImageCarousel images={imgs} height={380} altPrefix="Ảnh sự kiện" />
-                </div>
-              )
-            })()}
           </div>
-        </div>
-      )}
-
-      {/* --- Phần 4: Ảnh đính kèm (Ẩn nếu là Sự kiện hoặc Tuyển dụng, vì ảnh đã ở trong khung riêng) --- */}
-      {post.type !== 'event' && post.type !== 'recruitment' && (() => {
-        const imgs = post.images && post.images.length > 0
-          ? post.images
-          : post.image ? [post.image] : []
-        if (imgs.length === 0) return null
-        return <ImageCarousel images={imgs} height={480} altPrefix="Ảnh bài viết" />
+        )
       })()}
 
-      {/* --- Phần 4: Thanh hành động — Thích / Bình luận / Đăng lại / Báo cáo / Lưu.
-          Guest bấm bất kỳ nút nào sẽ mở popup mời đăng nhập (kiểu Facebook) theo BR-12 --- */}
-      <div className="flex items-center gap-1 p-3 border-t border-slate-100">
-        {/* Nút Thích: người đã đăng nhập cập nhật lạc quan tại chỗ; Guest → popup đăng nhập */}
+      {/* --- Thanh hành động: icon + số, nền chỉ hiện khi rê chuột --- */}
+      <div className="flex items-center gap-0.5 px-2.5 pb-2 pt-1 text-text-muted sm:px-3.5">
         <button
-          onClick={handleLike}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleLike()
+          }}
           aria-pressed={liked}
+          aria-label={liked ? t('feed.unlike') : t('feed.likeAction')}
           className={cn(
-            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-slate-100',
-            liked ? 'text-rose-500 bg-rose-50' : 'text-slate-600 hover:text-slate-900',
+            'inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-semibold transition-colors hover:bg-surface-2',
+            liked ? 'text-danger' : 'hover:text-danger',
           )}
         >
-          {liked ? (
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: [1.3, 1], opacity: 1 }}
-              transition={{ duration: 0.4, type: 'spring', bounce: 0.6 }}
-            >
-              <Heart size={18} className="fill-rose-500 text-rose-500" />
-            </motion.div>
-          ) : (
-            <Heart size={18} />
-          )}
-          {compact(likeCount)}
+          <motion.span key={liked ? 'liked' : 'unliked'} className="inline-flex" initial={{ scale: liked ? 0.8 : 1 }} animate={{ scale: 1 }} transition={TRANSITION.bounce}>
+            <Heart size={20} className={cn(liked && 'fill-current')} />
+          </motion.span>
+          {likeCount > 0 && <span className="tabular-nums">{compact(likeCount)}</span>}
         </button>
-        {canInteract ? (
-          <Link
-            to={`/app/posts/${post.id}#comments`}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-[#F27024]/10 hover:text-[#F27024]"
-            title="Xem và viết bình luận"
-          >
-            <MessageCircle size={18} /> {compact(post.comments)}
-          </Link>
-        ) : (
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            if (!canInteract) {
+              promptLogin(t('feed.loginToComment'))
+              return
+            }
+            setShowComments((prev) => !prev)
+          }}
+          aria-expanded={showComments}
+          aria-label={t('feed.comment')}
+          className={cn(
+            'inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-semibold transition-colors hover:bg-surface-2',
+            showComments ? 'text-primary-solid' : 'hover:text-text',
+          )}
+        >
+          <MessageCircle size={20} />
+          {commentCount > 0 && <span className="tabular-nums">{compact(commentCount)}</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!canInteract) {
+              promptLogin(t('feed.loginToShare'))
+            } else if (onShare) {
+              onShare(post)
+            }
+          }}
+          aria-label={t('feed.sharePost')}
+          className="inline-flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 transition-colors hover:bg-surface-2 hover:text-text"
+        >
+          <Send size={19} />
+        </button>
+
+        <div className="ml-auto flex items-center">
           <button
-            onClick={() => promptLogin('Đăng nhập để bình luận về bài viết.')}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            type="button"
+            aria-label={saved ? t('feed.unsave') : t('feed.save')}
+            aria-pressed={saved}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleSave()
+            }}
+            className={cn('inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-surface-2', saved ? 'text-primary-solid' : 'hover:text-text')}
           >
-            <MessageCircle size={18} /> {compact(post.comments)}
+            <Bookmark size={20} className={cn(saved && 'fill-current')} />
           </button>
-        )}
-        <button
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để đăng lại bài viết.') }}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-        >
-          <Repeat2 size={18} /> {compact(post.reposts)}
-        </button>
-        <button
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để báo cáo bài viết.') }}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
-        >
-          <Flag size={17} />
-        </button>
-        <button
-          aria-label="Lưu bài viết"
-          onClick={() => { if (!canInteract) promptLogin('Đăng nhập để lưu bài viết.') }}
-          className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
-        >
-          <Bookmark size={18} />
-        </button>
+          {!isAuthor && (canReport || !canInteract) && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                if (canReport) onReport?.(post)
+                else promptLogin(t('feed.loginToReport'))
+              }}
+              aria-label={t('feed.report')}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-danger-soft hover:text-danger"
+            >
+              <Flag size={19} />
+            </button>
+          )}
+        </div>
       </div>
-    </Card>
+
+      {/* --- Phần 6: Khung bình luận trực tiếp trên bài viết (Inline Quick Comments) --- */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <InlineComments
+              postId={post.id}
+              totalComments={commentCount}
+              viewer={viewer}
+              canInteract={canInteract}
+              onCommentAdded={() => setCommentCount((c) => c + 1)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- Phần 7: Lightbox xem ảnh toàn màn hình với zoom/pan/rotate --- */}
+      <ImageViewerModal
+        isOpen={!!previewImage}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage || ''}
+        alt={post.text?.slice(0, 50) || t('feed.postImage', 'Ảnh bài viết')}
+        senderName={post.author}
+        senderAvatar={post.avatar}
+        time={post.time}
+      />
+    </article>
   )
 }
 
 /** Khung xương (skeleton) hiển thị trong lúc tải bảng tin lần đầu. */
 function PostSkeleton() {
+  const { t } = useTranslation()
   return (
-    <Card hover={false} className="p-5 relative overflow-hidden">
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-10 w-10 border-4 border-brand-200 border-t-brand-600 rounded-full"
-        />
-      </div>
-      <div className="flex items-center gap-3 opacity-30">
-        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-plum-900/[0.07]" />
+    <div className="rounded-2xl border border-border bg-surface px-4 py-4 sm:px-5" role="status" aria-label={t('feed.loadingPosts', 'Đang tải bài viết')}>
+      <div className="flex items-center gap-3">
+        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-surface-3" />
         <div className="flex-1 space-y-2">
-          <div className="h-3.5 w-40 animate-pulse rounded bg-plum-900/[0.07]" />
-          <div className="h-3 w-24 animate-pulse rounded bg-plum-900/[0.06]" />
+          <div className="h-3.5 w-40 animate-pulse rounded bg-surface-3" />
+          <div className="h-3 w-24 animate-pulse rounded bg-surface-3" />
         </div>
       </div>
       <div className="mt-4 space-y-2">
-        <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.06]" />
-        <div className="h-3.5 w-11/12 animate-pulse rounded bg-plum-900/[0.06]" />
-        <div className="h-3.5 w-2/3 animate-pulse rounded bg-plum-900/[0.06]" />
+        <div className="h-3.5 w-full animate-pulse rounded bg-surface-3" />
+        <div className="h-3.5 w-11/12 animate-pulse rounded bg-surface-3" />
+        <div className="h-3.5 w-2/3 animate-pulse rounded bg-surface-3" />
       </div>
-      <div className="mt-4 h-40 w-full animate-pulse rounded-xl bg-plum-900/[0.05]" />
-    </Card>
+    </div>
   )
 }
 
@@ -507,53 +690,28 @@ function PostSkeleton() {
  * @param onRetry Hàm gọi lại API
  */
 function FeedError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
   return (
-    <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
-        <AlertTriangle size={24} />
-      </span>
+    <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+      <AlertTriangle size={32} className="text-danger" aria-hidden />
       <div>
-        <p className="font-bold text-plum-900">Không tải được bảng tin</p>
-        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">{t('feed.loadError')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('feed.loadErrorDesc')}</p>
       </div>
-      <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
-    </Card>
+      <Button variant="secondary" size="sm" onClick={onRetry}>{t('common.tryAgain')}</Button>
+    </div>
   )
 }
 
 /** Trạng thái rỗng khi cộng đồng chưa có bài viết nào ("No posts yet"). */
 function FeedEmpty() {
+  const { t } = useTranslation()
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-plum-900/10 bg-white/50 p-12 text-center">
-      <motion.div
-        initial={{ y: 0 }}
-        animate={{ y: [-5, 5, -5] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="mb-4 text-brand-300 drop-shadow-sm"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
-      </motion.div>
-      <h3 className="mb-1 text-lg font-bold text-plum-900">Chưa có bài viết nào</h3>
-      <p className="text-sm text-plum-500">Hãy là người đầu tiên chia sẻ với cộng đồng cựu sinh viên.</p>
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+      <Inbox size={40} className="mb-3 text-text-subtle" aria-hidden />
+      <h3 className="mb-1 text-lg font-bold text-text">{t('feed.emptyFeed')}</h3>
+      <p className="text-sm text-text-subtle">{t('feed.emptyFeedDesc')}</p>
     </div>
-  )
-}
-
-/**
- * Thẻ khung cho các mục ở cột phải (gợi ý theo dõi, sự kiện, Q&A nổi bật).
- * @param title Tiêu đề của mục
- * @param action Nhãn liên kết hành động phụ (tùy chọn, vd "See all")
- * @param children Nội dung bên trong thẻ
- */
-function SidebarCard({ title, action, children }: { title: string; action?: string; children: React.ReactNode }) {
-  return (
-    <Card hover={false} className="p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-bold text-plum-900">{title}</h3>
-        {action && <Link to="#" className="text-xs font-semibold text-brand-600 hover:text-brand-600">{action}</Link>}
-      </div>
-      {children}
-    </Card>
   )
 }
 
@@ -564,19 +722,54 @@ function SidebarCard({ title, action, children }: { title: string; action?: stri
  * trạng thái loading / empty / error / permission.
  */
 export function FeedPage() {
+  const { t } = useTranslation()
   // === Bước 1: State cục bộ — bộ lọc loại bài viết, mở/đóng modal & bài viết đang sửa (UC14/UC22) ===
   const [filter, setFilter] = useState<FeedFilter>('all')
   const [composerOpen, setComposerOpen] = useState(false)
   const [composerDefaultType, setComposerDefaultType] = useState<PostType>('normal')
   const [editingPost, setEditingPost] = useState<Post | null>(null)
+  const [deletingPost, setDeletingPost] = useState<Post | null>(null)
+  const [reportingPost, setReportingPost] = useState<Post | null>(null)
+  const [sharingPost, setSharingPost] = useState<Post | null>(null)
+  const [cancellingEventPost, setCancellingEventPost] = useState<Post | null>(null)
+
+  const cancelEventMutation = useCancelEvent()
+
+  const filters: { key: FeedFilter; label: string }[] = [
+    { key: 'all', label: t('feed.all') },
+    { key: 'achievement', label: t('feed.achievement') },
+    { key: 'recruitment', label: t('feed.recruitment') },
+    { key: 'event', label: t('feed.event') },
+  ]
+
+  // Danh sách các bài viết người dùng vừa đăng trong phiên làm việc hiện tại
+  // (Kiểu Facebook: hiển thị ngay tức thì ở đầu bảng tin trên máy người đăng;
+  //  khi bấm F5 / refresh trang, state này tự động biến mất và bảng tin trở về đúng thứ tự thuật toán tự nhiên)
+  const [sessionCreatedPosts, setSessionCreatedPosts] = useState<Post[]>([])
+
+  const handlePostCreated = (newPost: Post) => {
+    setSessionCreatedPosts((prev) => [newPost, ...prev.filter((p) => p.id !== newPost.id)])
+  }
+
+  const globalKeyword = useSearchStore((s) => s.keyword)
+  const [debouncedKeyword, setDebouncedKeyword] = useState(globalKeyword)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedKeyword(globalKeyword)
+    }, 400)
+    return () => clearTimeout(handler)
+  }, [globalKeyword])
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
+
   // Người xem hiện tại: phiên đăng nhập thật hoặc null (Guest).
   const viewer: AuthUser | null = user ?? null
   const isGuest = !viewer
   // Chỉ Student/Alumni mới được đăng bài & tương tác (Admin không phải người đăng).
   const canPost = !!viewer && (viewer.role === 'STUDENT' || viewer.role === 'ALUMNI')
+  const canReport = canPost
 
   const handleStartEdit = (p: Post) => {
     setEditingPost(p)
@@ -593,7 +786,7 @@ export function FeedPage() {
     setEditingPost(null)
   }
 
-  // === Bước 3: Gọi dữ liệu bảng tin qua hook infinite-query ===
+  // === Bước 3: Gọi dữ liệu bảng tin qua hook infinite-query với thuật toán thông minh tích hợp ===
   const {
     data,
     isLoading,          // đang tải trang đầu tiên
@@ -603,165 +796,203 @@ export function FeedPage() {
     fetchNextPage,      // tải trang kế tiếp
     hasNextPage,        // còn trang để tải không
     isFetchingNextPage, // đang tải trang kế tiếp
-  } = useFeed(filter)
+  } = useFeed(filter, debouncedKeyword)
 
   // === Bước 4: Gộp tất cả trang đã tải thành một danh sách bài viết phẳng ===
-  const posts = data?.pages.flatMap((p) => p.items) ?? []
+  const serverPosts = data?.pages.flatMap((p) => p.items) ?? []
+  const sessionFilteredServerPosts = serverPosts.filter(
+    (sp) => !sessionCreatedPosts.some((cp) => String(cp.id) === String(sp.id))
+  )
+  const posts = filter === 'all'
+    ? [...sessionCreatedPosts, ...sessionFilteredServerPosts]
+    : [...sessionCreatedPosts.filter((p) => p.type === filter), ...sessionFilteredServerPosts]
+
+  // Tự động tải thêm bài viết (Infinite Scroll kiểu Facebook) khi người dùng cuộn tới cuối trang
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage()
+        }
+      },
+      { rootMargin: '300px', threshold: 0.1 }
+    )
+
+    const currentTarget = loadMoreRef.current
+    if (currentTarget) {
+      observer.observe(currentTarget)
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget)
+      }
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   // === Bước 5: Render — cột trái (feed) + cột phải (gợi ý) ===
   return (
-    <div className="mx-auto flex max-w-6xl items-start justify-center gap-8">
+    <div className="mx-auto grid max-w-[1216px] grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,0.8fr)_620px_minmax(0,1.2fr)]">
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
-      <div className="w-full max-w-[640px] shrink-0 space-y-5">
-        {/* Khối A: Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy gì ở đây —
-            Guest khi tương tác sẽ được mời đăng nhập qua popup (kiểu Facebook). */}
-        {canPost && viewer && (
-          <>
-            <Reveal>
+      <div className="mx-auto w-full min-w-0 max-w-[620px] xl:col-start-2">
+        <div className="space-y-4">
+          {/* Ô soạn bài chỉ hiện cho Student/Alumni. Guest/Admin không thấy — Guest tương tác sẽ được mời đăng nhập qua popup. */}
+          {canPost && viewer && (
+            <>
               <Composer viewer={viewer} onOpen={handleOpenComposer} />
-            </Reveal>
-            {/* Modal soạn & đăng / chỉnh sửa bài viết (UC14 / UC22) */}
-            <CreatePostModal
-              open={composerOpen}
-              onClose={handleCloseComposer}
-              viewer={viewer}
-              editPost={editingPost ?? undefined}
-              defaultType={composerDefaultType}
-            />
-          </>
-        )}
+              {/* Modal soạn & đăng / chỉnh sửa bài viết (UC14 / UC22) */}
+              <CreatePostModal
+                open={composerOpen}
+                onClose={handleCloseComposer}
+                viewer={viewer}
+                editPost={editingPost ?? undefined}
+                defaultType={composerDefaultType}
+                onPostCreated={handlePostCreated}
+              />
+            </>
+          )}
 
-        {/* Khối B: Tabs lọc theo loại bài viết (All / Achievements / Hiring / Events) */}
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={cn(
-                'rounded-full px-4 py-1.5 text-sm font-semibold transition-colors',
-                filter === f.key
-                  ? 'bg-gradient-to-r from-[#F27024] to-[#FF8C38] text-white shadow-xs font-bold'
-                  : 'bg-slate-200/60 text-slate-600 hover:bg-slate-200 hover:text-slate-900',
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
+          {/* Bộ lọc theo loại bài viết: tab gạch chân chia đều (kiểu Threads) */}
+          <div role="tablist" aria-label={t('feed.filterByType', 'Lọc bài viết theo loại')} className="flex border-b border-border-strong/60">
+            {filters.map((f) => {
+              const isActive = filter === f.key
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setFilter(f.key)}
+                  className={cn(
+                    'relative h-12 min-w-0 flex-1 truncate px-0.5 text-sm font-semibold transition-colors',
+                    isActive ? 'text-text' : 'text-text-subtle hover:text-text-muted',
+                  )}
+                >
+                  {f.label}
+                  {isActive && <motion.span layoutId="feed-tab-underline" transition={TRANSITION.indicator} className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary-solid" />}
+                </button>
+              )
+            })}
+          </div>
+
+          <FadeSwitch id={`${filter}-${isLoading ? "loading" : isError ? "error" : posts.length === 0 ? "empty" : "list"}`}>
+          {isLoading ? (
+            <div className="space-y-4">
+              <PostSkeleton />
+              <PostSkeleton />
+              <PostSkeleton />
+            </div>
+          ) : isError ? (
+            <div className="rounded-2xl border border-border bg-surface">
+              <FeedError message={(error as Error)?.message} onRetry={() => refetch()} />
+            </div>
+          ) : posts.length === 0 ? (
+            debouncedKeyword ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-6 py-16 text-center">
+                <Search size={36} className="mb-3 text-text-subtle" aria-hidden />
+                <h3 className="mb-1 text-lg font-bold text-text">{t('feed.searchNoResults')}</h3>
+                <p className="text-sm text-text-subtle">
+                  {t('feed.searchNoResultsDesc', { keyword: debouncedKeyword })}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-border bg-surface">
+                <FeedEmpty />
+              </div>
+            )
+          ) : (
+            <>
+              <div className="space-y-4">
+              {posts.map((p) => (
+                <PostCard
+                  key={p.id}
+                  variant="card"
+                  post={p}
+                  canInteract={!isGuest}
+                  canReport={canReport}
+                  currentUserId={viewer?.id}
+                  currentUserName={viewer?.name}
+                  onEdit={handleStartEdit}
+                  onDelete={setDeletingPost}
+                  onReport={setReportingPost}
+                  onShare={setSharingPost}
+                  onCancelEvent={setCancellingEventPost}
+                />
+              ))}
+              </div>
+              {/* Vùng tự động tải thêm trang (Infinite scroll sentinel) */}
+              <div ref={loadMoreRef} className="py-5 text-center">
+                {isFetchingNextPage && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
+                    <Loader2 size={18} className="animate-spin text-primary-solid" />
+                    <span>{t('feed.loadingMore')}</span>
+                  </div>
+                )}
+                {!hasNextPage && posts.length > 0 && <p className="text-sm text-text-subtle">{t('feed.endOfFeed')}</p>}
+              </div>
+            </>
+          )}
+          </FadeSwitch>
         </div>
 
-        {/* Khối C: Vùng nội dung theo trạng thái, xét lần lượt:
-            1) loading  → khung xương skeleton
-            2) error    → thẻ lỗi + nút Thử lại (MSG05)
-            3) rỗng     → thông báo "Chưa có bài viết nào"
-            4) có dữ liệu → danh sách bài viết + nút tải thêm */}
-        {isLoading ? (
-          // (1) Đang tải trang đầu: hiển thị 3 skeleton
-          <div className="space-y-5">
-            <PostSkeleton />
-            <PostSkeleton />
-            <PostSkeleton />
-          </div>
-        ) : isError ? (
-          // (2) Lỗi tải: cho phép người dùng thử lại
-          <FeedError message={(error as Error)?.message} onRetry={() => refetch()} />
-        ) : posts.length === 0 ? (
-          // (3) Không có bài viết nào
-          <FeedEmpty />
-        ) : (
-          // (4) Có dữ liệu: render danh sách + điều khiển phân trang
-          <>
-            <Stagger key={`${filter}-${posts[0]?.id}`} className="space-y-5" gap={0.08}>
-              {posts.map((p) => (
-                <StaggerItem key={p.id}>
-                  <PostCard
-                    post={p}
-                    canInteract={!isGuest}
-                    currentUserName={viewer?.name}
-                    onEdit={handleStartEdit}
-                  />
-                </StaggerItem>
-              ))}
-            </Stagger>
-
-            {/* Điều khiển tải thêm trang (infinite/paged loading) */}
-            <div className="pt-1 text-center">
-              {hasNextPage ? (
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  leftIcon={isFetchingNextPage ? <Loader2 size={16} className="animate-spin" /> : undefined}
-                >
-                  {isFetchingNextPage ? 'Đang tải…' : 'Tải thêm bài viết'}
-                </Button>
-              ) : (
-                <p className="text-sm text-plum-400">Bạn đã xem hết bảng tin 🎉</p>
-              )}
-            </div>
-          </>
+        {/* Các hộp thoại của bài viết */}
+        {deletingPost && (
+          <DeletePostModal
+            open={!!deletingPost}
+            onClose={() => setDeletingPost(null)}
+            post={deletingPost}
+            onDeleted={() => {
+              if (deletingPost) {
+                setSessionCreatedPosts((prev) => prev.filter((p) => String(p.id) !== String(deletingPost.id)))
+              }
+              setDeletingPost(null)
+              refetch()
+            }}
+          />
+        )}
+        {reportingPost && <ReportPostModal open={!!reportingPost} postId={reportingPost.id} onClose={() => setReportingPost(null)} />}
+        {sharingPost && <ShareModal isOpen={!!sharingPost} onClose={() => setSharingPost(null)} post={sharingPost} />}
+        {cancellingEventPost && (
+          <CancelEventModal
+            isOpen={!!cancellingEventPost}
+            onClose={() => setCancellingEventPost(null)}
+            onConfirm={() => {
+              const eventId = cancellingEventPost.event?.id ?? cancellingEventPost.eventId ?? cancellingEventPost.id
+              if (!eventId) return
+              cancelEventMutation.mutate(
+                { eventId },
+                {
+                  onSuccess: (res) => {
+                    toast.success(res.message || t('event.cancelEventSuccess', 'Đã hủy sự kiện thành công!'))
+                    setCancellingEventPost(null)
+                    refetch()
+                  },
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onError: (err: any) => {
+                    toast.error(err.response?.data?.message || err.message || t('event.cancelEventError', 'Không thể hủy sự kiện. Vui lòng thử lại.'))
+                  },
+                },
+              )
+            }}
+            isPending={cancelEventMutation.isPending}
+            eventTitle={cancellingEventPost.event?.title}
+          />
         )}
       </div>
 
       {/* ============ CỘT PHẢI: GỢI Ý (ẩn trên mobile) ============
           Gồm 4 mục: gợi ý theo dõi, sự kiện sắp tới, Q&A nổi bật, CTA xác thực.
           Các mục này dùng dữ liệu tĩnh (mock) thuộc UC khác, chỉ hỗ trợ hiển thị. */}
-      <aside className="hidden w-[320px] shrink-0 space-y-5 lg:block">
-        {/* Mục 1: Gợi ý người để theo dõi */}
-        <Reveal direction="left">
-          <SidebarCard title="Gợi ý kết nối" action="Xem tất cả">
-            <ul className="space-y-4">
-              {ALUMNI.slice(0, 3).map((a) => (
-                <li key={a.id} className="flex items-center gap-3">
-                  <Avatar src={a.avatar} name={a.name} size={40} verified={a.verified} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-plum-900">{a.name}</p>
-                    <p className="truncate text-xs text-plum-400">{a.cohort}</p>
-                  </div>
-                  <Button size="sm" variant="secondary">Theo dõi</Button>
-                </li>
-              ))}
-            </ul>
-          </SidebarCard>
-        </Reveal>
+      <aside className="sticky top-24 hidden w-full space-y-4 xl:col-start-3 xl:block xl:max-w-[300px]">
+        {/* Mục 1: Gợi ý kết nối (UC10 - View Connection Suggestions) */}
+        <ConnectionSuggestionsWidget limit={4} />
 
-        {/* Mục 2: Sự kiện sắp tới */}
-        <Reveal direction="left" delay={0.1}>
-          <SidebarCard title="Sự kiện sắp diễn ra" action="Tất cả">
-            <ul className="space-y-3">
-              {EVENTS.slice(0, 2).map((e) => (
-                <li key={e.id} className="flex items-center gap-3">
-                  <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-plum-900/[0.04] py-1.5 text-center ring-1 ring-inset ring-plum-900/10">
-                    <span className="text-[9px] font-bold uppercase text-brand-600">{e.month}</span>
-                    <span className="text-base font-extrabold text-plum-900">{e.day}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-plum-900">{e.title}</p>
-                    <p className="truncate text-xs text-plum-400">{compact(e.attendees)} người tham gia</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </SidebarCard>
-        </Reveal>
-
-        {/* Mục 3: Câu hỏi Q&A đang nổi bật */}
-        <Reveal direction="left" delay={0.2}>
-          <SidebarCard title="Hỏi đáp nổi bật" action="Diễn đàn">
-            <ul className="space-y-3">
-              {QUESTIONS.slice(0, 3).map((q) => (
-                <li key={q.id}>
-                  <Link to="/app/forum" className="group block">
-                    <p className="line-clamp-2 text-sm font-semibold text-plum-800 group-hover:text-brand-600">{q.title}</p>
-                    <p className="mt-1 flex items-center gap-2 text-xs text-plum-400">
-                      <TrendingUp size={12} /> {q.votes} bình chọn · {q.answers} câu trả lời
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </SidebarCard>
-        </Reveal>
+        {/* Mục 2: Gợi ý sự kiện sắp tới */}
+        <UpcomingEventsWidget limit={3} />
       </aside>
     </div>
   )

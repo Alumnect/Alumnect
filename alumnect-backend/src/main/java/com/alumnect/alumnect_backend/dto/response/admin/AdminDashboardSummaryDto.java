@@ -38,4 +38,10 @@ public class AdminDashboardSummaryDto {
 
     /** Biểu đồ số lượng đăng ký tài khoản mới trong 7 ngày gần nhất */
     private List<DayRegistrationStatDto> registrationsLast7Days;
+
+    /** Biểu đồ số lượng đăng ký tài khoản mới theo 12 tháng trong năm */
+    private List<DayRegistrationStatDto> registrationsByMonth;
+
+    /** Biểu đồ số lượng đăng ký tài khoản mới theo các năm */
+    private List<DayRegistrationStatDto> registrationsByYear;
 }

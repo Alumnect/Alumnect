@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Users, Loader2, UserPlus, UserMinus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/Button'
 import { Avatar, Skeleton, EmptyState, Modal } from '@/components/ui'
 import { useUserFollowers, useUserFollowing } from '../hooks/useUserQueries'
@@ -21,6 +22,7 @@ interface FollowListModalProps {
  * Sử dụng phân trang vô hạn (Infinite Scroll) thông qua IntersectionObserver và useInfiniteQuery.
  */
 export function FollowListModal({ isOpen, onClose, userId, type }: FollowListModalProps) {
+  const { t } = useTranslation()
   const pageSize = 10
 
   // Lấy trạng thái đăng nhập
@@ -113,7 +115,7 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
 
   const handleFollowAction = async (targetUserId: number, isCurrentlyFollowing: boolean) => {
     if (!isAuthenticated) {
-      triggerLoginPrompt('Đăng nhập để theo dõi thành viên này.')
+      triggerLoginPrompt(t('profile.promptLoginFollow', 'Đăng nhập để theo dõi thành viên này.'))
       return
     }
 
@@ -126,12 +128,12 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
       }
     } catch (err: any) {
       // [MSG_FOLLOW_04] Lưu lại lỗi inline tương ứng cho từng thành viên
-      const msg = err?.message || err?.response?.data?.message || 'Có lỗi xảy ra.'
+      const msg = err?.message || err?.response?.data?.message || t('common.errorOccurred', 'Có lỗi xảy ra.')
       setFollowErrors((prev) => ({ ...prev, [targetUserId]: msg }))
     }
   }
 
-  const titleText = type === 'followers' ? 'Người theo dõi' : 'Đang theo dõi'
+  const titleText = type === 'followers' ? t('profile.followers') : t('profile.following')
 
   return (
     <Modal
@@ -146,7 +148,7 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
         {isLoading ? (
           // Skeletal Loading
           Array.from({ length: 4 }).map((_, idx) => (
-            <div key={idx} className="flex items-center gap-3 p-2 bg-white/40 rounded-2xl border border-plum-900/[0.02]">
+            <div key={idx} className="flex items-center gap-3 p-2 bg-white/40 rounded-2xl border border-border">
               <Skeleton className="h-11 w-11 rounded-full shrink-0" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-32" />
@@ -157,14 +159,14 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
         ) : error ? (
           <EmptyState
             icon={<Users size={22} />}
-            title="Đã xảy ra lỗi"
-            description={error instanceof Error ? error.message : 'Không thể tải danh sách.'}
+            title={t('common.error', 'Đã xảy ra lỗi')}
+            description={error instanceof Error ? error.message : t('common.cannotLoad', 'Không thể tải danh sách.')}
           />
         ) : allItems.length === 0 ? (
           <EmptyState
             icon={<Users size={22} />}
-            title="Danh sách trống"
-            description={type === 'followers' ? 'Chưa có ai theo dõi thành viên này.' : 'Thành viên này chưa theo dõi ai.'}
+            title={t('common.emptyList', 'Danh sách trống')}
+            description={type === 'followers' ? t('profile.emptyFollowers', 'Chưa có ai theo dõi thành viên này.') : t('profile.emptyFollowing', 'Thành viên này chưa theo dõi ai.')}
           />
         ) : (
           <div className="space-y-3">
@@ -178,7 +180,7 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
               return (
                 <div
                   key={item.userId}
-                  className="flex flex-col gap-1.5 p-3 bg-white hover:bg-cream-100/30 rounded-2xl border border-plum-900/[0.04] transition-all shadow-sm group"
+                  className="flex flex-col gap-1.5 p-3 bg-surface hover:bg-cream-100/30 rounded-2xl border border-border transition shadow-sm group"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <Link
@@ -193,16 +195,16 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
                       />
                       <div className="text-left min-w-0">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <h4 className="text-sm font-bold text-plum-900 group-hover:text-brand-600 transition-colors truncate">
+                          <h4 className="text-sm font-bold text-text group-hover:text-primary-solid transition-colors truncate">
                             {item.fullName}
                           </h4>
                           {item.studentCode && (
-                            <span className="text-[11px] font-medium text-plum-400 shrink-0">
+                            <span className="text-xs font-medium text-text-subtle shrink-0">
                               ({item.studentCode})
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-plum-400 truncate leading-normal">
+                        <p className="text-xs text-text-subtle truncate leading-normal">
                           {item.headline || (item.email ? `@${item.email.split('@')[0]}` : '')}
                         </p>
                       </div>
@@ -215,7 +217,7 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
                         variant={item.isFollowing ? 'secondary' : 'primary'}
                         onClick={() => handleFollowAction(item.userId, item.isFollowing)}
                         disabled={mutationPending}
-                        className="shrink-0 w-[118px] h-8 text-[11px] px-2 rounded-xl justify-center font-bold"
+                        className="shrink-0 w-[118px] h-8 text-xs px-2 rounded-xl justify-center font-bold"
                         leftIcon={
                           mutationPending ? (
                             <Loader2 size={12} className="animate-spin" />
@@ -226,13 +228,13 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
                           )
                         }
                       >
-                        {item.isFollowing ? 'Hủy theo dõi' : 'Theo dõi'}
+                        {item.isFollowing ? t('profile.unfollow') : t('profile.follow')}
                       </Button>
                     )}
                   </div>
                   {/* [MSG_FOLLOW_04] Hiển thị lỗi inline tương ứng dưới mỗi user */}
                   {userError && (
-                    <p className="text-[10px] text-rose-500 font-medium pl-14 text-left leading-normal">
+                    <p className="text-xs text-danger font-medium pl-14 text-left leading-normal">
                       {userError}
                     </p>
                   )}
@@ -246,7 +248,7 @@ export function FollowListModal({ isOpen, onClose, userId, type }: FollowListMod
             {/* Spinner tải trang tiếp theo */}
             {isFetchingNextPage && (
               <div className="flex justify-center py-2">
-                <Loader2 size={20} className="animate-spin text-brand-600" />
+                <Loader2 size={20} className="animate-spin text-primary-solid" />
               </div>
             )}
           </div>

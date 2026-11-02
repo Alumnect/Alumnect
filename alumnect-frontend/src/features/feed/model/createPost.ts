@@ -67,6 +67,11 @@ export const createPostSchema = z.object({
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Ngày kết thúc phải sau ngày bắt đầu', path: ['event', 'endTime'] })
       }
     }
+    if (data.event?.capacity !== undefined && data.event?.capacity !== null && !isNaN(data.event.capacity)) {
+      if (data.event.capacity < 1) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Sức chứa tối thiểu là 1 người', path: ['event', 'capacity'] })
+      }
+    }
   }
   if (data.type === 'normal' && data.content.length === 0) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Nội dung bài viết không được để trống', path: ['content'] })

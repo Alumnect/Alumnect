@@ -1,0 +1,202 @@
+/**
+ * GroupManagePanel — Bảng "Quản lý hội nhóm" cho Owner/Admin, gồm 2 tab:
+ *  - "Yêu cầu tham gia": duyệt / từ chối yêu cầu (kèm số yêu cầu đang chờ).
+ *  - "Cài đặt": chỉnh sửa thông tin (Owner/Admin); đóng/mở lại và xóa hội nhóm (chỉ Owner, có xác nhận).
+ * Quản lý thành viên (xóa, phân quyền Admin) nằm ngay trong danh sách thành viên của trang chi tiết.
+ */
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Inbox, PauseCircle, PencilLine, PlayCircle, Settings2, Trash2 } from 'lucide-react'
+import { useTranslation, Trans } from 'react-i18next'
+import { Card, toast } from '@/components/ui'
+import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
+import { useDeleteGroup, useSetGroupStatus } from '../hooks/useGroupActions'
+import type { GroupDetail } from '../model/group'
+import { ConfirmDialog } from './ConfirmDialog'
+import { GroupFormModal } from './GroupFormModal'
+import { JoinRequestsList } from './JoinRequestsList'
+
+type Tab = 'requests' | 'settings'
+
+export function GroupManagePanel({ group }: { group: GroupDetail }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const isOwner = group.viewerRole === 'OWNER'
+  const [tab, setTab] = useState<Tab>('requests')
+  const [editOpen, setEditOpen] = useState(false)
+  const [closeOpen, setCloseOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const statusMut = useSetGroupStatus(group.id)
+  const deleteMut = useDeleteGroup(group.id)
+
+  const isInactive = group.status === 'INACTIVE'
+  const pending = group.pendingRequestCount ?? 0
+
+  const changeStatus = (next: 'ACTIVE' | 'INACTIVE') => {
+    statusMut.mutate(next, {
+      onSuccess: (res) => {
+        toast.success(res.message || t('groups.statusUpdateSuccess'))
+        setCloseOpen(false)
+      },
+      onError: (err) => toast.error((err as Error).message || t('groups.statusUpdateError')),
+    })
+  }
+
+  const confirmDelete = () => {
+    deleteMut.mutate(undefined, {
+      onSuccess: () => {
+        toast.success(t('groups.deleteGroupSuccess'))
+        setDeleteOpen(false)
+        navigate('/app/groups')
+      },
+      onError: (err) => toast.error((err as Error).message || t('groups.deleteGroupError')),
+    })
+  }
+
+  const tabs: { key: Tab; label: string; icon: typeof Inbox; badge?: number }[] = [
+    { key: 'requests', label: t('groups.pendingRequestsTitle'), icon: Inbox, badge: pending },
+    { key: 'settings', label: t('groups.settingsAndStatus'), icon: Settings2 },
+  ]
+
+  return (
+    <Card hover={false} className="rounded-3xl border border-border p-6 shadow-card dark:bg-surface">
+      <div className="mb-6 flex gap-1.5 rounded-2xl bg-surface-2 p-1.5">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={cn(
+              'inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
+              tab === t.key
+                ? 'bg-surface text-text shadow-sm'
+                : 'text-text-subtle hover:text-text',
+            )}
+          >
+            <t.icon size={16} /> {t.label}
+            {!!t.badge && (
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary-solid px-1 text-xs font-black text-on-primary">
+                {t.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'requests' ? (
+        <JoinRequestsList groupId={group.id} />
+      ) : (
+        <div className="space-y-3.5">
+          <SettingRow
+            title={t('groups.editGroupInfoTitle')}
+            description={t('groups.editGroupInfoDesc')}
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<PencilLine size={14} />}
+              onClick={() => setEditOpen(true)}
+              disabled={isInactive}
+              className="w-[136px] rounded-xl font-bold"
+            >
+              {t('common.edit')}
+            </Button>
+          </SettingRow>
+
+          {isOwner && (
+            <>
+              <SettingRow
+                title={isInactive ? t('groups.reopenGroupTitle') : t('groups.pauseGroupTitle')}
+                description={
+                  isInactive
+                    ? t('groups.reopenGroupDesc')
+                    : t('groups.pauseGroupDesc')
+                }
+              >
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={isInactive ? <PlayCircle size={14} /> : <PauseCircle size={14} />}
+                  disabled={statusMut.isPending}
+                  onClick={() => (isInactive ? changeStatus('ACTIVE') : setCloseOpen(true))}
+                  className="w-[136px] rounded-xl font-bold"
+                >
+                  {isInactive ? t('groups.reopenGroupAction') : t('groups.pauseGroupAction')}
+                </Button>
+              </SettingRow>
+
+              <SettingRow
+                title={t('groups.deleteGroupTitle')}
+                description={t('groups.deleteGroupDesc')}
+                danger
+              >
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<Trash2 size={14} />}
+                  className="w-[136px] rounded-xl from-rose-600 to-rose-500 font-bold shadow-none hover:from-rose-700 hover:to-rose-600"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  {t('groups.deleteGroupConfirm')}
+                </Button>
+              </SettingRow>
+            </>
+          )}
+        </div>
+      )}
+
+      {editOpen && <GroupFormModal editGroup={group} onClose={() => setEditOpen(false)} />}
+
+      <ConfirmDialog
+        open={closeOpen}
+        title={t('groups.pauseGroupTitle')}
+        message={t('groups.pauseGroupConfirm')}
+        confirmLabel={t('groups.pauseGroupAction')}
+        loading={statusMut.isPending}
+        onConfirm={() => changeStatus('INACTIVE')}
+        onClose={() => setCloseOpen(false)}
+      />
+      <ConfirmDialog
+        open={deleteOpen}
+        title={t('groups.deleteGroupTitle')}
+        message={<Trans i18nKey="groups.deleteGroupConfirmMsg" values={{ name: group.name }} components={{ b: <b /> }} />}
+        confirmLabel={t('groups.deleteGroupConfirm')}
+        danger
+        loading={deleteMut.isPending}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteOpen(false)}
+      />
+    </Card>
+  )
+}
+
+function SettingRow({
+  title,
+  description,
+  danger,
+  children,
+}: {
+  title: string
+  description: string
+  danger?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4.5 transition',
+        danger
+          ? 'border-danger bg-danger-soft'
+          : 'border-border bg-surface',
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <p className={cn('text-sm font-extrabold', danger ? 'text-danger' : 'text-text')}>
+          {title}
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-text-subtle">{description}</p>
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  )
+}

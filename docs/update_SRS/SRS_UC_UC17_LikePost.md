@@ -13,11 +13,11 @@ stateDiagram-v2
     ChanGuest --> [*] : Popup / moi dang nhap (KHONG goi API)
 
     ChuaThich --> DangGoiLike : Thanh vien bam Thich (optimistic +1)
-    DangGoiLike --> DaThich : POST /like 200 { liked:true, likeCount }
+    DangGoiLike --> DaThich : POST /api/v1/posts/{postId}/like 200 { liked:true, likeCount }
     DangGoiLike --> ChuaThich : Loi -> hoan tac (rollback)
 
     DaThich --> DangGoiUnlike : Thanh vien bam Thich lai (optimistic -1)
-    DangGoiUnlike --> ChuaThich : DELETE /like 200 { liked:false, likeCount }
+    DangGoiUnlike --> ChuaThich : DELETE /api/v1/posts/{postId}/like 200 { liked:false, likeCount }
     DangGoiUnlike --> DaThich : Loi -> hoan tac (rollback)
 
     DangGoiLike --> TuChoi403 : Vai tro khong phai STUDENT/ALUMNI
@@ -40,16 +40,18 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect. UC17 
 #### 3.2.1 Thích bài viết (Like a post)
 
 **Function trigger**:
-- **Navigation path**: Nút Thích (Heart) trên thẻ bài viết ở `/app` (bảng tin) và `/app/posts/{id}` (chi tiết).
+- **Navigation path**: Nút Thích trên thẻ bài viết ở `/app` (bảng tin) và `/app/posts/{id}` (chi tiết bài viết).
 - **Timing Frequency**: On-demand — mỗi lần người dùng bấm nút Thích/Bỏ thích.
 
 **Function description**:
-- **Actors/Roles**: Student, Alumni (đã đăng nhập). Admin và Guest **không** được thích (Admin → 403; Guest bị chặn ở Frontend/401).
-- **Purpose**: Cho phép thành viên bày tỏ yêu thích một bài viết; số lượt thích được tổng hợp và hiển thị cho mọi người xem.
+- **Actors/Roles**: Student, Alumni (đã đăng nhập). Admin và Guest **không** được thích (Admin nhận mã 403; Guest được hiển thị modal mời đăng nhập).
+- **Purpose**: Cho phép thành viên bày tỏ yêu thích một bài viết; số lượt thích được tổng hợp và hiển thị đồng bộ cho mọi người dùng.
 - **Interface**:
-  - Nút Thích (biểu tượng trái tim) kèm số lượt thích. Trạng thái đã thích: tim tô đầy (fill) + màu hồng (`rose`); chưa thích: viền xám.
-  - Cập nhật lạc quan: bấm là đổi ngay, không chờ mạng.
-  - Guest ở bảng tin: bấm → popup "Đăng nhập để thích và tương tác với bài viết."; ở chi tiết: nút `disabled`.
+  - Nút Thích: Cho phép tương tác thích hoặc bỏ thích bài viết, hiển thị kèm số lượng `{số} thích`.
+  - Trạng thái đã thích: Nút chuyển sang trạng thái đã kích hoạt và tăng số lượt thích lên 1.
+  - Trạng thái chưa thích: Trạng thái mặc định khi người dùng chưa thích bài viết.
+  - Cơ chế cập nhật: Áp dụng Optimistic UI (phản hồi tức thì trên giao diện, tự động hoàn tác trạng thái nếu yêu cầu mạng thất bại).
+  - Phân quyền giao diện: Khách vãng lai (Guest) bấm vào nút Thích sẽ hiển thị modal yêu cầu đăng nhập.
 
 **Data processing**:
 1. Frontend gọi `POST /api/v1/posts/{id}/like` (thích) hoặc `DELETE /api/v1/posts/{id}/like` (bỏ thích) — token Bearer do interceptor `http` tự đính kèm.
@@ -86,7 +88,7 @@ Module chứa các tính năng tương tác cộng đồng của AlumNect. UC17 
 | BR-08 | Bài viết đã bị Admin ẩn (`is_hidden = true`) không thể thích — trả về "không còn khả dụng" (404). |
 | BR-11 | Việc ẩn bài viết là xóa mềm (soft-hide) — dữ liệu vẫn giữ trong DB. Xóa bài (nếu có) sẽ CASCADE xóa các bản ghi `post_likes` liên quan (FK `ON DELETE CASCADE`). |
 | BR-12 | Guest (chưa đăng nhập) không được thích: ở Frontend nút Thích mời đăng nhập/`disabled`; ở Backend endpoint yêu cầu JWT nên Guest bị chặn 401. |
-| BR-14 | **UC17 thay thế BR-14 của UC16**: cờ `liked` trong `GET /posts` và `GET /posts/{id}` nay được tính theo người xem hiện tại (batch `findLikedPostIds`, tránh N+1). Guest luôn nhận `liked = false`. |
+| BR-14 | Cờ `liked` trong kết quả lấy bài viết được tính theo người xem hiện tại thông qua truy vấn theo lô để tối ưu hiệu năng. Khách vãng lai luôn nhận giá trị chưa thích. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
 - Cập nhật lạc quan (optimistic UI) có hoàn tác (rollback) khi lỗi để phản hồi tức thì mà vẫn đảm bảo nhất quán với server.

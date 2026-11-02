@@ -4,9 +4,11 @@ import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
+import com.alumnect.alumnect_backend.dto.response.post.SavePostResponse;
 
 /**
  * Interface định nghĩa các dịch vụ liên quan tới bài viết cộng đồng
@@ -30,16 +32,20 @@ public interface PostService {
      * Lấy một trang bài viết cho bảng tin cộng đồng, áp dụng phân quyền theo vai trò người xem:
      * Guest (chưa đăng nhập) chỉ thấy bài viết PUBLIC, thành viên đã đăng nhập thấy toàn bộ
      * bài viết chưa bị ẩn (BR-12). Cờ {@code liked} của mỗi bài được tính theo người xem hiện tại (UC17).
+     * Hỗ trợ tìm kiếm theo từ khóa.
      *
      * @param page            Số thứ tự trang cần lấy (0-based)
      * @param size            Kích thước trang (số bài viết mỗi trang)
      * @param type            Loại bài viết cần lọc ("normal"/"achievement"/"recruitment"/"event"),
      *                        hoặc null/rỗng nếu không lọc theo loại
+     * @param keyword         Từ khóa tìm kiếm trên nội dung bài viết và tên tác giả
      * @param isAuthenticated true nếu người xem đã đăng nhập, false nếu là Guest
      * @param viewerEmail     Email người xem đã đăng nhập (để tính cờ liked); null nếu là Guest
      * @return Trang kết quả bài viết đã được chuẩn hóa, sẵn sàng trả về Client
      */
-    PageResponse<PostResponse> getFeed(int page, int size, String type, boolean isAuthenticated, String viewerEmail);
+    PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, boolean isAuthenticated, String viewerEmail);
+
+    PageResponse<PostResponse> getFeed(int page, int size, String type, String keyword, String eventFilter, boolean isAuthenticated, String viewerEmail);
 
     /**
      * Lấy chi tiết một bài viết theo ID (UC16 - View Post Detail), áp dụng quy tắc quyền xem:
@@ -79,6 +85,29 @@ public interface PostService {
     CommentResponse createComment(String email, Long postId, CreateCommentRequest request);
 
     /**
+     * Chỉnh sửa nội dung một bình luận đã đăng (UC19 - Edit a comment).
+     * Chỉ tác giả có vai trò STUDENT hoặc ALUMNI được chỉnh sửa bình luận ACTIVE của chính mình.
+     *
+     * @param email     Email người dùng đang đăng nhập, lấy từ JWT
+     * @param postId    ID bài viết chứa bình luận
+     * @param commentId ID bình luận cần chỉnh sửa
+     * @param request   Nội dung mới đã được Controller xác thực dữ liệu
+     * @return Bình luận sau khi cập nhật, chuẩn hóa thành {@link CommentResponse}
+     */
+    CommentResponse updateComment(String email, Long postId, Long commentId, UpdateCommentRequest request);
+
+    /**
+     * Xóa cứng một bình luận đã đăng (UC20 - Delete a comment).
+     * Nếu là bình luận cha, các reply con bị xóa theo ràng buộc cascade của cơ sở dữ liệu.
+     * Chỉ tác giả có vai trò STUDENT hoặc ALUMNI được xóa bình luận ACTIVE của chính mình.
+     *
+     * @param email     Email người dùng đang đăng nhập, lấy từ JWT
+     * @param postId    ID bài viết chứa bình luận
+     * @param commentId ID bình luận cần xóa
+     */
+    void deleteComment(String email, Long postId, Long commentId);
+
+    /**
      * Thích một bài viết (UC17 - Like a post). Chỉ STUDENT/ALUMNI đã đăng nhập được thích;
      * thao tác có tính lũy đẳng (đã thích rồi thì không thay đổi). Bài đã ẩn/không tồn tại → 404.
      *
@@ -109,4 +138,54 @@ public interface PostService {
      * @return Bài viết đã được cập nhật, chuẩn hóa thành {@link PostResponse}
      */
     PostResponse editPost(String email, Long postId, EditPostRequest request);
+
+    /**
+     * Xóa một bài viết (UC23 - Delete a post).
+     * Chỉ tác giả (STUDENT/ALUMNI) mới được xóa bài viết của chính mình;
+     * người khác hoặc Admin → 403. Bài đã xóa/không tồn tại → 404.
+     * Cập nhật trạng thái thành DELETED để ẩn khỏi bảng tin.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT) — phải là tác giả bài viết
+     * @param postId ID bài viết cần xóa
+     */
+    void deletePost(String email, Long postId);
+
+    /**
+     * Lưu/đánh dấu (bookmark) một bài viết (UC20 - Save Post).
+     * Chỉ STUDENT/ALUMNI đã đăng nhập được lưu; thao tác có tính lũy đẳng (đã lưu rồi thì không thay đổi).
+     * Bài viết đã ẩn/xóa/không tồn tại → 404.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần lưu
+     * @return Trạng thái lưu mới ({@code saved=true})
+     */
+    SavePostResponse savePost(String email, Long postId);
+
+    /**
+     * Bỏ lưu/bỏ đánh dấu một bài viết (UC20 - Save Post).
+     * Chỉ STUDENT/ALUMNI đã đăng nhập được bỏ lưu; thao tác có tính lũy đẳng (chưa lưu thì không thay đổi).
+     * Bài viết đã ẩn/xóa/không tồn tại → 404.
+     *
+     * @param email  Email người dùng đang đăng nhập (từ JWT)
+     * @param postId ID bài viết cần bỏ lưu
+     * @return Trạng thái lưu mới ({@code saved=false})
+     */
+    SavePostResponse unsavePost(String email, Long postId);
+
+    /**
+     * Lấy danh sách các bài viết đã lưu của người dùng hiện tại (UC20 - View Saved Posts).
+     * Yêu cầu người dùng đăng nhập với vai trò STUDENT hoặc ALUMNI.
+     * Danh sách được phân trang và sắp xếp theo thời gian lưu mới nhất trước.
+     *
+     * @param email Email người dùng đang đăng nhập (từ JWT)
+     * @param page  Số thứ tự trang cần lấy (0-based)
+     * @param size  Kích thước trang (số bài viết mỗi trang)
+     * @return Trang kết quả các bài viết đã lưu
+     */
+    PageResponse<PostResponse> getSavedPosts(String email, int page, int size);
+
+    /**
+     * Lấy danh sách bài viết của một user theo ID.
+     */
+    PageResponse<PostResponse> getUserPosts(Long userId, String category, int page, int size, String viewerEmail);
 }

@@ -60,7 +60,7 @@ Module 4 (Q&A Forum): UC38 xem danh sách, UC39 chi tiết, UC40 đặt câu h�
 
 **Function description**:
 *   **Actors/Roles**: Sinh viên (STUDENT), Cựu sinh viên (ALUMNI). **Sửa**: chỉ tác giả của câu trả lời. **Reply**: mọi STUDENT/ALUMNI đã đăng nhập. Guest/Admin không có nút; Guest bị chặn 401, Admin bị 403 khi reply.
-*   **Purpose**: Cho tác giả sửa lại câu trả lời của mình (UC48) và cho thành viên trao đổi qua lại bằng cách reply trực tiếp một câu trả lời.
+*   **Purpose**: Cho tác giả sửa lại câu trả lời của bản thân (UC48) và cho thành viên trao đổi qua lại bằng cách reply trực tiếp một câu trả lời.
 *   **Interface**:
     *   Mỗi bong bóng câu trả lời có hàng hành động: **Trả lời** (icon mũi tên) — chỉ ở câu trả lời gốc; **Chỉnh sửa** (icon bút chì) — chỉ tác giả.
     *   **Sửa tại chỗ**: bong bóng chuyển thành ô nhập điền sẵn + nút Hủy/Lưu.
@@ -124,7 +124,7 @@ Module 4 (Q&A Forum): UC38 xem danh sách, UC39 chi tiết, UC40 đặt câu h�
 | 5 | MSG-EA-05 | Banner | parentId không tồn tại | Câu trả lời cha không tồn tại | 400 |
 | 6 | MSG-EA-06 | Banner | parent khác câu hỏi | Câu trả lời cha không thuộc câu hỏi này | 400 |
 | 7 | MSG-EA-07 | Banner | reply cho reply | Chỉ được trả lời trực tiếp một câu trả lời gốc | 400 |
-| 8 | MSG-EA-08 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 8 | MSG-EA-08 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 9 | MSG-EA-09 | Banner | Admin/vai trò khác reply | Chỉ sinh viên và cựu sinh viên mới được trả lời câu hỏi | 403 |
 | 10 | MSG-EA-10 | API response (200) | Sửa thành công (cập nhật tại chỗ) | Cập nhật câu trả lời thành công | 200 |
 | 11 | MSG-EA-11 | API response (201) | Reply thành công (hiện lồng) | Trả lời câu hỏi thành công | 201 |

@@ -41,5 +41,7 @@ public interface AdminMapper {
     @Mapping(target = "biography", source = "profile.biography")
     @Mapping(target = "city", source = "profile.city")
     @Mapping(target = "socialLinks", source = "profile.socialLinks")
+    @Mapping(target = "hasMentorProfile", ignore = true)
+    @Mapping(target = "mentorProfileId", ignore = true)
     AdminUserDto toDto(User user, UserProfile profile);
 }

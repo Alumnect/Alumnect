@@ -2,16 +2,19 @@ package com.alumnect.alumnect_backend.service.user;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.AccountStatus;
+import com.alumnect.alumnect_backend.dao.user.ExperienceRepository;
 import com.alumnect.alumnect_backend.dao.user.FollowRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dto.response.user.FollowUserResponse;
+import com.alumnect.alumnect_backend.entity.user.Experience;
 import com.alumnect.alumnect_backend.entity.user.Follow;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +42,8 @@ public class FollowServiceImpl implements FollowService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final UserProfileRepository userProfileRepository;
+    private final ExperienceRepository experienceRepository;
+    private final NotificationService notificationService;
 
     /**
      * Thực hiện theo dõi một người dùng.
@@ -90,6 +96,7 @@ public class FollowServiceImpl implements FollowService {
 
         try {
             followRepository.saveAndFlush(follow);
+            notificationService.sendFollowNotification(follower, following);
         } catch (DataIntegrityViolationException e) {
             log.warn("Xảy ra xung đột dữ liệu khi follow (DataIntegrityViolationException): followerId={}, followingId={}", follower.getId(), following.getId());
             throw new ConflictException("Bạn đã theo dõi người dùng này từ trước.");
@@ -165,6 +172,9 @@ public class FollowServiceImpl implements FollowService {
         Map<Long, UserProfile> profilesMap = userProfileRepository.findAllById(followerIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, p -> p));
 
+        // Nạp thông tin kinh nghiệm làm việc đại diện của follower để suy ra headline
+        Map<Long, Experience> expMap = getExperiencesMap(followerIds);
+
         // Lấy thông tin người xem hiện tại nếu đã đăng nhập và nạp danh sách đã follow theo lô để tối ưu N+1
         Set<Long> followedUserIds = new HashSet<>();
         if (currentViewer != null && !followerIds.isEmpty()) {
@@ -180,8 +190,9 @@ public class FollowServiceImpl implements FollowService {
                     UserProfile profile = profilesMap.get(followerUser.getId());
                     String fullName = profile != null ? profile.getFullName() : "Thành viên AlumNect";
                     String avatarUrl = profile != null ? profile.getAvatarUrl() : null;
-                    String headline = profile != null ? profile.getHeadline() : null;
+                    String headline = resolveHeadline(profile, expMap.get(followerUser.getId()));
 
+                    String role = followerUser.getRole() != null ? followerUser.getRole().getName() : "ALUMNI";
                     boolean isFollowing = finalFollowedUserIds.contains(followerUser.getId());
 
                     return FollowUserResponse.builder()
@@ -192,6 +203,7 @@ public class FollowServiceImpl implements FollowService {
                             .headline(headline)
                             .isAccountVerified(followerUser.isAccountVerified())
                             .isFollowing(isFollowing)
+                            .role(role)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -238,6 +250,9 @@ public class FollowServiceImpl implements FollowService {
         Map<Long, UserProfile> profilesMap = userProfileRepository.findAllById(followingIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, p -> p));
 
+        // Nạp thông tin kinh nghiệm làm việc đại diện của following để suy ra headline
+        Map<Long, Experience> expMap = getExperiencesMap(followingIds);
+
         // Lấy thông tin người xem hiện tại nếu đã đăng nhập và nạp danh sách đã follow theo lô để tối ưu N+1
         Set<Long> followedUserIds = new HashSet<>();
         if (currentViewer != null && !followingIds.isEmpty()) {
@@ -253,8 +268,9 @@ public class FollowServiceImpl implements FollowService {
                     UserProfile profile = profilesMap.get(followingUser.getId());
                     String fullName = profile != null ? profile.getFullName() : "Thành viên AlumNect";
                     String avatarUrl = profile != null ? profile.getAvatarUrl() : null;
-                    String headline = profile != null ? profile.getHeadline() : null;
+                    String headline = resolveHeadline(profile, expMap.get(followingUser.getId()));
 
+                    String role = followingUser.getRole() != null ? followingUser.getRole().getName() : "ALUMNI";
                     boolean isFollowing = finalFollowedUserIds.contains(followingUser.getId());
 
                     return FollowUserResponse.builder()
@@ -265,6 +281,7 @@ public class FollowServiceImpl implements FollowService {
                             .headline(headline)
                             .isAccountVerified(followingUser.isAccountVerified())
                             .isFollowing(isFollowing)
+                            .role(role)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -277,5 +294,64 @@ public class FollowServiceImpl implements FollowService {
                 .totalPages(followsPage.getTotalPages())
                 .last(followsPage.isLast())
                 .build();
+    }
+
+    /**
+     * Nạp kinh nghiệm làm việc đại diện (ưu tiên kinh nghiệm chính hoặc kinh nghiệm mới nhất).
+     */
+    private Map<Long, Experience> getExperiencesMap(List<Long> userIds) {
+        Map<Long, Experience> expMap = new HashMap<>();
+        if (userIds == null || userIds.isEmpty()) {
+            return expMap;
+        }
+        List<Experience> primaryExps = experienceRepository.findByUserIdInAndIsPrimaryTrue(userIds);
+        for (Experience e : primaryExps) {
+            if (e.getUser() != null) {
+                expMap.put(e.getUser().getId(), e);
+            }
+        }
+        List<Long> remainingIds = userIds.stream().filter(id -> !expMap.containsKey(id)).toList();
+        if (!remainingIds.isEmpty()) {
+            List<Experience> allExps = experienceRepository.findByUserIdsSortedChronologically(remainingIds);
+            for (Experience e : allExps) {
+                if (e.getUser() != null) {
+                    expMap.put(e.getUser().getId(), e);
+                }
+            }
+        }
+        return expMap;
+    }
+
+    /**
+     * Tự động suy ra dòng tiêu đề (Headline):
+     * 1. Lấy headline đã tự khai báo.
+     * 2. Nếu chưa có, lấy Vị trí @ Công ty từ kinh nghiệm làm việc.
+     * 3. Nếu chưa có, lấy Chuyên ngành & Cơ sở đào tạo.
+     * 4. Mặc định là 'Cựu sinh viên FPTU'.
+     */
+    private String resolveHeadline(UserProfile profile, Experience exp) {
+        if (profile != null && profile.getHeadline() != null && !profile.getHeadline().trim().isEmpty()
+                && !"Thành viên AlumNect".equalsIgnoreCase(profile.getHeadline().trim())) {
+            return profile.getHeadline().trim();
+        }
+        if (exp != null) {
+            String title = exp.getTitle() != null ? exp.getTitle().trim() : "";
+            String company = exp.getCompany() != null ? exp.getCompany().trim() : "";
+            if (!title.isEmpty() && !company.isEmpty()) {
+                return title + " @ " + company;
+            } else if (!company.isEmpty()) {
+                return company;
+            } else if (!title.isEmpty()) {
+                return title;
+            }
+        }
+        if (profile != null && profile.getMajor() != null && profile.getMajor().getName() != null) {
+            String majorName = profile.getMajor().getName().trim();
+            if (profile.getCampus() != null && !profile.getCampus().trim().isEmpty()) {
+                return majorName + " • " + profile.getCampus().trim();
+            }
+            return majorName + " • FPT University";
+        }
+        return "Cựu sinh viên FPTU";
     }
 }

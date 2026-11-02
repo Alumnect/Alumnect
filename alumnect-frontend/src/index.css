@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================================================
    AlumNect — Warm Pastel Design System (Tailwind CSS v4, CSS-first @theme)
    Direction: a soft, human, premium community — warm ivory canvas, pillowy
@@ -14,6 +16,11 @@
   --font-display: 'Sora', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* Cỡ chữ nhỏ hơn text-xs: trước đây text-2xs/text-3xs được dùng nhưng chưa định nghĩa */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
 
   /* ---- Clean Slate canvas (replacing old yellowish cream) ---- */
   --color-ink-950: #f8fafc;
@@ -22,6 +29,15 @@
   --color-ink-800: #ffffff;
   --color-ink-700: #e2e8f0;
   --color-ink-600: #cbd5e1;
+
+  /* ---- Semantic UI surface & text tokens ---- */
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-border: #e2e8f0;
 
   --color-cream-50: #ffffff;
   --color-cream-100: #f8fafc;
@@ -47,6 +63,18 @@
   --color-brand-600: #f27024;
   --color-brand-700: #d45105;
 
+  /* ---- Primary alias mapped to Brand FPT Orange ---- */
+  --color-primary-50: #fff4ec;
+  --color-primary-100: #ffe6d5;
+  --color-primary-200: #fec7a8;
+  --color-primary-300: #fd9f6e;
+  --color-primary-400: #fb7c3d;
+  --color-primary-500: #f75512;
+  --color-primary-600: #f27024;
+  --color-primary-700: #d45105;
+  --color-primary-800: #b33e02;
+  --color-primary-900: #8c3002;
+
   /* ---- Secondary Brand: FPT Corporate Navy (#004F9E & #0B2545) ---- */
   --color-fpt-navy: #004f9e;
   --color-violet-300: #93c5fd;
@@ -55,17 +83,30 @@
   --color-violet-600: #0b2545;
 
   /* ---- Coral / Warmth ---- */
-  --color-coral-300: #ffc8ba;
-  --color-coral-400: #ffa48f;
-  --color-coral-500: #f27024;
-  --color-coral-600: #d45105;
-  --color-coral-700: #993500;
+  --color-coral-50: #fff1f2;
+  --color-coral-100: #ffe4e6;
+  --color-coral-200: #fecdd3;
+  --color-coral-300: #fda4af;
+  --color-coral-400: #fb7185;
+  --color-coral-500: #f43f5e;
+  --color-coral-600: #e11d48;
+  --color-coral-700: #be123c;
+  --color-coral-800: #9f1239;
+  --color-coral-900: #881337;
+  --color-coral-950: #4c0519;
 
   /* ---- Mint / FPT Green accent (#009A3E) ---- */
-  --color-mint-300: #a7f3d0;
+  --color-mint-50: #f0fdf4;
+  --color-mint-100: #dcfce7;
+  --color-mint-200: #bbf7d0;
+  --color-mint-300: #86efac;
   --color-mint-400: #4ade80;
   --color-mint-500: #009a3e;
+  --color-mint-600: #059669;
   --color-mint-700: #047857;
+  --color-mint-800: #065f46;
+  --color-mint-900: #064e3b;
+  --color-mint-950: #022c22;
 
   /* ---- Sky ---- */
   --color-sky-300: #bae6fd;
@@ -112,6 +153,158 @@
   --animate-breathe: breathe 6s ease-in-out infinite;
   --animate-sheen: sheen 1.1s ease forwards;
   --animate-pop: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-fade-in: soft-fade-in 0.3s cubic-bezier(0.33, 1, 0.68, 1) both;
+
+  /* ---- Chuyển động mềm mại (đồng bộ với src/lib/motion.ts) ----
+     Mặc định của mọi tiện ích transition-*: 200ms + easeOutCubic (trước đây 150ms + đường cong chuẩn — nhanh và "cứng"). */
+  --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --default-transition-duration: 200ms;
+  --default-transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* ============================================================================
+   Design tokens ngữ nghĩa (docs/design-system.md, mục 2)
+   Lớp 1: giá trị theo chế độ sáng/tối (--c-*) — nơi DUY NHẤT chứa mã màu của UI mới.
+   Lớp 2: ánh xạ sang Tailwind (@theme inline) để dùng bg-surface, text-text-muted...
+   Component dùng token này KHÔNG cần viết dark:. Token cũ (ink/cream/plum/brand...) giữ nguyên.
+   ========================================================================== */
+:root {
+  --c-bg: #f8fafc;
+  --c-surface: #ffffff;
+  --c-surface-2: #f1f5f9;
+  --c-surface-3: #e2e8f0;
+  --c-overlay: rgb(15 23 42 / 0.45);
+
+  --c-border: #e2e8f0;
+  --c-border-strong: #cbd5e1;
+  /* viền ô nhập: >= 3:1 trên nền trắng/xám nhạt (WCAG 1.4.11) */
+  --c-border-input: #7c8aa0;
+
+  --c-text: #0f172a;
+  --c-text-muted: #475569;
+  --c-text-subtle: #566579;
+  --c-text-disabled: #94a3b8;
+  --c-text-inverse: #ffffff;
+
+  --c-primary: #f27024;
+  --c-primary-solid: #c2410c;
+  --c-primary-hover: #9a3412;
+  --c-primary-soft: #fff4ec;
+  --c-primary-soft-border: #fec7a8;
+  --c-on-primary: #ffffff;
+
+  --c-info: #004f9e;
+  --c-info-soft: #e8f0fa;
+  --c-info-border: #b9d0ec;
+
+  --c-success: #047857;
+  --c-success-soft: #ecfdf5;
+  --c-success-border: #a7f3d0;
+
+  --c-warning: #b45309;
+  --c-warning-soft: #fffbeb;
+  --c-warning-border: #fde68a;
+
+  --c-danger: #be123c;
+  --c-danger-soft: #fff1f2;
+  --c-danger-border: #fecdd3;
+
+  --c-focus: #f27024;
+
+  --c-shadow-raised: 0 6px 16px -4px rgb(15 23 42 / 0.12), 0 2px 4px rgb(15 23 42 / 0.06);
+  --c-shadow-overlay: 0 20px 48px -12px rgb(15 23 42 / 0.28);
+
+  /* z-index theo tầng (thay cho z-[100], z-[9999]...) */
+  --z-sticky: 20;
+  --z-nav: 30;
+  --z-dropdown: 40;
+  --z-overlay: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+}
+
+html.dark {
+  --c-bg: #18191a;
+  --c-surface: #242526;
+  --c-surface-2: #3a3b3c;
+  --c-surface-3: #4e4f50;
+  --c-overlay: rgb(0 0 0 / 0.65);
+
+  --c-border: #393a3b;
+  --c-border-strong: #4e4f50;
+  --c-border-input: #75787d;
+
+  --c-text: #e4e6eb;
+  --c-text-muted: #c2c5ca;
+  --c-text-subtle: #a8abb0;
+  --c-text-disabled: #65676b;
+  --c-text-inverse: #18191a;
+
+  --c-primary: #ff8c38;
+  --c-primary-solid: #ff8c38;
+  --c-primary-hover: #ffa05c;
+  --c-primary-soft: #2d2621;
+  --c-primary-soft-border: #4a382b;
+  --c-on-primary: #18191a;
+
+  --c-info: #7cb7ff;
+  --c-info-soft: #1f2a3a;
+  --c-info-border: #2d4466;
+
+  --c-success: #4ade80;
+  --c-success-soft: #14261c;
+  --c-success-border: #1f4a30;
+
+  --c-warning: #fbbf24;
+  --c-warning-soft: #2a2417;
+  --c-warning-border: #4d3f17;
+
+  --c-danger: #fb7185;
+  --c-danger-soft: #2d1a1f;
+  --c-danger-border: #55252f;
+
+  --c-focus: #ff8c38;
+
+  --c-shadow-raised: 0 8px 20px rgb(0 0 0 / 0.55);
+  --c-shadow-overlay: 0 24px 56px rgb(0 0 0 / 0.7);
+}
+
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-surface-3: var(--c-surface-3);
+  --color-overlay: var(--c-overlay);
+  --color-border: var(--c-border);
+  --color-border-strong: var(--c-border-strong);
+  --color-border-input: var(--c-border-input);
+  --color-text: var(--c-text);
+  --color-text-muted: var(--c-text-muted);
+  --color-text-subtle: var(--c-text-subtle);
+  --color-text-disabled: var(--c-text-disabled);
+  --color-text-inverse: var(--c-text-inverse);
+  --color-primary: var(--c-primary);
+  --color-primary-solid: var(--c-primary-solid);
+  --color-primary-hover: var(--c-primary-hover);
+  --color-primary-soft: var(--c-primary-soft);
+  --color-primary-soft-border: var(--c-primary-soft-border);
+  --color-on-primary: var(--c-on-primary);
+  --color-info: var(--c-info);
+  --color-info-soft: var(--c-info-soft);
+  --color-info-border: var(--c-info-border);
+  --color-success: var(--c-success);
+  --color-success-soft: var(--c-success-soft);
+  --color-success-border: var(--c-success-border);
+  --color-warning: var(--c-warning);
+  --color-warning-soft: var(--c-warning-soft);
+  --color-warning-border: var(--c-warning-border);
+  --color-danger: var(--c-danger);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-danger-border: var(--c-danger-border);
+  --color-focus: var(--c-focus);
+
+  --shadow-raised: var(--c-shadow-raised);
+  --shadow-overlay: var(--c-shadow-overlay);
 }
 
 /* ---- Keyframes ---- */
@@ -172,6 +365,17 @@
   0% { transform: scale(0.9); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+@keyframes soft-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Vào từ trạng thái khởi đầu do các tiện ích fade-in-* / zoom-in-* đặt qua biến; kết thúc ở trạng thái tự nhiên của phần tử. */
+@keyframes soft-enter {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: scale(var(--tw-enter-scale, 1));
+  }
+}
 
 /* ============================================================================
    Base layer
@@ -182,7 +386,7 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -195,7 +399,6 @@
       radial-gradient(900px circle at 12% -8%, rgba(242, 112, 36, 0.08), transparent 45%),
       radial-gradient(800px circle at 92% 4%, rgba(0, 79, 158, 0.07), transparent 45%),
       radial-gradient(900px circle at 78% 98%, rgba(0, 154, 62, 0.06), transparent 45%);
-    background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
@@ -226,6 +429,105 @@
     outline-offset: 2px;
     border-radius: 8px;
   }
+
+  html.dark {
+    color-scheme: dark;
+
+    /* Facebook / Instagram Dark Theme Color Tokens */
+    --color-ink-950: #18191a;
+    --color-ink-900: #18191a;
+    --color-ink-850: #242526;
+    --color-ink-800: #242526;
+    --color-ink-700: #393a3b;
+    --color-ink-600: #3a3b3c;
+
+    --color-background: #18191a;
+    --color-foreground: #f0f2f5;
+    --color-card: #242526;
+    --color-card-foreground: #f0f2f5;
+    --color-muted: #3a3b3c;
+    --color-muted-foreground: #b0b3b8;
+    --color-border: #393a3b;
+
+    --color-cream-50: #242526;
+    --color-cream-100: #18191a;
+    --color-cream-200: #242526;
+    --color-cream-300: #393a3b;
+
+    --color-brand-50: #2d2621;
+    --color-brand-100: #3a2e26;
+    --color-brand-200: #4a382b;
+    --color-orange-50: #2d2621;
+    --color-amber-50: #2d2a21;
+    --color-indigo-50: #252838;
+    --color-violet-50: #292636;
+
+    --color-plum-300: #393a3b;
+    --color-plum-400: #b0b3b8;
+    --color-plum-500: #b0b3b8;
+    --color-plum-600: #e4e6eb;
+    --color-plum-700: #f0f2f5;
+    --color-plum-800: #ffffff;
+    --color-plum-900: #ffffff;
+
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  html.dark * {
+    border-color: #393a3b;
+  }
+
+  html.dark body {
+    color: #e4e6eb;
+    background-color: #18191a;
+    background-image: none;
+  }
+
+  html.dark h1,
+  html.dark h2,
+  html.dark h3,
+  html.dark h4,
+  html.dark h5 {
+    color: #ffffff;
+  }
+
+  html.dark ::-webkit-scrollbar-track {
+    background: #18191a;
+  }
+  html.dark ::-webkit-scrollbar-thumb {
+    background: #4e4f50;
+    border: 3px solid #18191a;
+  }
+}
+
+/* Ẩn thanh cuộn nhưng vẫn cuộn được bình thường */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Thanh cuộn tinh tế dành riêng cho ô tin nhắn */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(120, 100, 115, 0.25);
+  border-radius: 9999px;
+  border: none;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 100, 115, 0.45);
+}
+.chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 100, 115, 0.25) transparent;
 }
 
 /* ============================================================================
@@ -234,10 +536,13 @@
 
 /* Gradient text — FPT Orange & Navy */
 .text-gradient {
-  background-image: linear-gradient(110deg, #f27024 0%, #ff8c38 45%, #004f9e 100%);
+  background-image: linear-gradient(110deg, #c2410c 0%, #ea580c 45%, #004f9e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+html.dark .text-gradient {
+  background-image: linear-gradient(110deg, #ff8c38 0%, #ffb27a 45%, #7cb7ff 100%);
 }
 .text-gradient-cool {
   background-image: linear-gradient(110deg, #004f9e, #0284c7 55%, #f27024);
@@ -277,6 +582,86 @@
   box-shadow: var(--shadow-card);
 }
 
+/* Mentoring visual system: restrained surfaces, consistent radii and readable text. */
+.mentoring-shell {
+  --mentor-border: rgb(50 44 63 / 0.09);
+  --mentor-surface: #ffffff;
+  --mentor-muted: #6f6878;
+}
+
+.mentoring-shell .rounded-3xl {
+  border-radius: 1.25rem;
+}
+
+.mentoring-shell .mentor-page-header {
+  background-image: linear-gradient(135deg, rgb(242 112 36 / 0.055), transparent 42%);
+}
+
+.mentoring-shell button,
+.mentoring-shell a {
+  text-underline-offset: 3px;
+}
+
+.mentoring-shell .bg-brand-600,
+.mentoring-shell .bg-brand-500 {
+  color: #27180e;
+}
+
+.mentoring-shell .bg-brand-600 .text-white,
+.mentoring-shell .bg-brand-500 .text-white {
+  color: #27180e !important;
+}
+
+/* Outgoing Mentoring messages keep accessible contrast on the orange bubble. */
+.mentoring-shell .mentoring-chat-outgoing,
+.mentoring-shell .mentoring-chat-outgoing * {
+  color: #ffffff !important;
+}
+
+html.dark .mentoring-shell {
+  --mentor-border: rgb(255 255 255 / 0.1);
+  --mentor-surface: #242526;
+  --mentor-muted: #c7c9cc;
+}
+
+html.dark .mentoring-shell .mentor-page-header {
+  background: #242526 !important;
+  border-color: rgb(255 255 255 / 0.1) !important;
+}
+
+html.dark .mentoring-shell .bg-brand-50,
+html.dark .mentoring-shell [class*="bg-brand-50/"] {
+  background-color: rgb(251 146 60 / 0.14) !important;
+}
+
+html.dark .mentoring-shell .text-brand-600,
+html.dark .mentoring-shell .text-brand-700 {
+  color: #fdba74 !important;
+}
+
+html.dark .mentoring-shell .bg-brand-600,
+html.dark .mentoring-shell .bg-brand-500 {
+  background-color: #fb923c !important;
+  background-image: none !important;
+  color: #27180e !important;
+}
+
+html.dark .mentoring-shell .bg-brand-600 .text-white,
+html.dark .mentoring-shell .bg-brand-500 .text-white {
+  color: #27180e !important;
+}
+
+html.dark .mentoring-shell .mentoring-chat-outgoing,
+html.dark .mentoring-shell .mentoring-chat-outgoing * {
+  color: #ffffff !important;
+}
+
+@media (max-width: 639px) {
+  .mentoring-shell .mentor-page-header {
+    padding: 1rem;
+  }
+}
+
 /* Decorative backgrounds */
 .bg-grid {
   background-image:
@@ -314,11 +699,16 @@
   pointer-events: none;
 }
 
-/* Shimmer skeleton (light) */
+/* Shimmer skeleton (light & dark) */
 .shimmer {
-  background: linear-gradient(100deg, rgb(50 44 63 / 0.04) 30%, rgb(50 44 63 / 0.09) 50%, rgb(50 44 63 / 0.04) 70%);
+  background: linear-gradient(90deg, rgba(50, 44, 63, 0.04) 25%, rgba(50, 44, 63, 0.09) 50%, rgba(50, 44, 63, 0.04) 75%);
   background-size: 200% 100%;
-  animation: shimmer 2.6s linear infinite;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+:is(.dark) .shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0.04) 75%);
+  background-size: 200% 100%;
 }
 
 /* Spotlight hover glow (driven by --mx / --my CSS vars set in JS) */
@@ -346,14 +736,27 @@
 
 /* ---- Interaction helpers ---- */
 .hover-lift {
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 .hover-lift:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 26px 54px -26px rgb(120 100 140 / 0.45);
+  border-color: var(--c-border-strong);
 }
 .press { transition: transform 0.12s ease; }
 .press:active { transform: scale(0.97); }
+
+/* Bộ tiện ích vào màn hình (tương thích cú pháp: animate-in fade-in zoom-in-95 duration-200).
+   Trước đây các class này được dùng trong nhiều dropdown / modal / form nhưng không có định nghĩa nên phần tử bật ra tức thì. */
+@utility animate-in {
+  animation-name: soft-enter;
+  animation-duration: var(--tw-duration, 0.25s);
+  animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  animation-fill-mode: backwards;
+}
+@utility fade-in { --tw-enter-opacity: 0; }
+@utility fade-in-50 { --tw-enter-opacity: 0.5; }
+@utility fade-in-80 { --tw-enter-opacity: 0.8; }
+@utility zoom-in-75 { --tw-enter-scale: 0.75; }
+@utility zoom-in-95 { --tw-enter-scale: 0.95; }
 
 /* Animated sheen sweep on hover (add to a `group`) */
 .sheen { position: relative; overflow: hidden; }
@@ -407,3 +810,471 @@
   border-bottom-color: white !important;
 }
 
+/* react-datepicker: bám theo token của hệ thống (sáng/tối) */
+.react-datepicker-popper {
+  z-index: 10001 !important;
+}
+.react-datepicker {
+  font-family: inherit !important;
+  font-size: 0.8125rem !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 1.125rem !important;
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.18), 0 10px 15px -5px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden !important;
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+.react-datepicker__triangle {
+  display: none !important;
+}
+.react-datepicker__header {
+  background-color: var(--color-surface-2) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding-top: 0.75rem !important;
+}
+.react-datepicker__current-month,
+.react-datepicker-time__header {
+  font-weight: 700 !important;
+  color: var(--color-text) !important;
+  font-size: 0.875rem !important;
+}
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0.5rem !important;
+  padding: 0.125rem 0.375rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+}
+.react-datepicker__navigation-icon::before {
+  border-color: var(--color-text-subtle) !important;
+}
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: var(--color-primary-600) !important;
+}
+.react-datepicker__day-name {
+  color: var(--color-text-subtle) !important;
+  font-weight: 600 !important;
+}
+.react-datepicker__day {
+  color: var(--color-text) !important;
+  border-radius: 0.5rem !important;
+  transition: background-color 0.15s, color 0.15s;
+}
+.react-datepicker__day--outside-month {
+  color: var(--color-text-disabled) !important;
+}
+.react-datepicker__day--disabled,
+.react-datepicker__time-list-item--disabled {
+  color: var(--color-text-disabled) !important;
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+.react-datepicker__day--today {
+  font-weight: 800 !important;
+  color: var(--color-primary-600) !important;
+}
+.react-datepicker__day:hover:not(.react-datepicker__day--disabled),
+.react-datepicker__time-list-item:hover:not(.react-datepicker__time-list-item--disabled) {
+  background-color: color-mix(in srgb, var(--color-primary-600) 14%, transparent) !important;
+  color: var(--color-primary-600) !important;
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected.react-datepicker__day--selected,
+.react-datepicker__time-list-item--selected {
+  background-color: var(--color-primary-600) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.react-datepicker__day--keyboard-selected:not(.react-datepicker__day--selected) {
+  background-color: transparent !important;
+  outline: 1px solid var(--color-primary-400);
+}
+.react-datepicker__time-container {
+  border-left: 1px solid var(--color-border) !important;
+  width: 92px !important;
+}
+.react-datepicker__time-container .react-datepicker__time {
+  background-color: var(--color-surface) !important;
+}
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+  width: 100% !important;
+}
+.react-datepicker__time-list-item {
+  color: var(--color-text) !important;
+  height: auto !important;
+  padding: 0.4rem 0.5rem !important;
+}
+.react-datepicker__close-icon::after {
+  background-color: var(--color-surface-3) !important;
+  color: var(--color-text-muted) !important;
+}
+
+/* Ẩn các nút tăng giảm số (spinner arrows) mặc định của trình duyệt cho input type=number */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ============================================================================
+   Facebook & Instagram Dark Mode: ĐEN NGOÀI (#18191a), XÁM LÀ COMPONENT (#242526)
+   ========================================================================== */
+
+/* 1. ĐEN NGOÀI: Toàn bộ nền canvas, body, wrapper trang ngoài cùng */
+html.dark,
+html.dark body,
+html.dark #root,
+html.dark .min-h-screen,
+html.dark div.min-h-screen {
+  background-color: #18191a !important;
+  color: #e4e6eb;
+}
+
+/* 2. XÁM LÀ CÁC COMPONENT: Header, Card bài viết, Khung lớn */
+html.dark header,
+html.dark .card-surface,
+html.dark [class*="card-surface"],
+html.dark .bg-white,
+html.dark [class*="bg-white"],
+html.dark [class*="bg-white/"] {
+  background: #242526 !important;
+  background-image: none !important;
+  border-color: #393a3b !important;
+}
+
+html.dark .card-surface {
+  background: #242526 !important;
+  background-image: none !important;
+  border-color: #393a3b !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+html.dark .glass {
+  background: rgba(36, 37, 38, 0.88) !important;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-color: #393a3b !important;
+  box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.7) !important;
+}
+
+html.dark .glass-strong {
+  background: rgba(36, 37, 38, 0.96) !important;
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  border-color: #4e4f50 !important;
+  box-shadow: 0 16px 44px -22px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3. Ô CON BÊN TRONG COMPONENT: Ô mô tả, Ô tìm kiếm, Pills badge (Xám #3a3b3c) */
+html.dark .bg-slate-50:not(.min-h-screen),
+html.dark [class*="bg-slate-50/"]:not(.min-h-screen),
+html.dark .bg-slate-100,
+html.dark [class*="bg-slate-100/"],
+html.dark .bg-slate-200,
+html.dark [class*="bg-slate-200/"],
+html.dark .bg-gray-50,
+html.dark [class*="bg-gray-50/"],
+html.dark .bg-gray-100,
+html.dark [class*="bg-gray-100/"],
+html.dark .bg-cream-100,
+html.dark .bg-cream-200,
+html.dark .bg-cream-300,
+html.dark .bg-brand-50,
+html.dark [class*="bg-brand-50/"],
+html.dark .bg-brand-100,
+html.dark .bg-amber-50,
+html.dark [class*="bg-amber-50/"],
+html.dark .bg-violet-50,
+html.dark [class*="bg-violet-50/"],
+html.dark .bg-indigo-50,
+html.dark [class*="bg-indigo-50/"] {
+  background-color: #3a3b3c !important;
+}
+
+/* Translucent tinted chip backgrounds in dark mode */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark ::selection {
+  background-color: rgba(242, 112, 36, 0.35);
+  color: #ffffff;
+}
+
+/* Custom Sleek Dark Scrollbars */
+html.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: #18191a;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3a3b3c;
+  border-radius: 9999px;
+  border: 2px solid #18191a;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4e4f50;
+}
+
+html.dark .bg-rose-50,
+html.dark [class*="bg-rose-50/"],
+html.dark .bg-coral-50,
+html.dark [class*="bg-coral-50/"],
+html.dark [class*="bg-coral-300"],
+html.dark .bg-coral-500\/10 {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+}
+
+html.dark .text-coral-500,
+html.dark .text-coral-600,
+html.dark .text-coral-700,
+html.dark .text-coral-800,
+html.dark .text-rose-600,
+html.dark .text-rose-700,
+html.dark .text-rose-800 {
+  color: #fecdd3 !important;
+}
+
+html.dark .border-coral-200,
+html.dark [class*="border-coral-200"],
+html.dark .border-rose-200,
+html.dark [class*="border-rose-200"] {
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+html.dark .bg-orange-50,
+html.dark [class*="bg-orange-50/"] {
+  background-color: rgba(242, 112, 36, 0.15) !important;
+}
+
+/* Gradients that use light pastel tints: replace with sleek dark gradients */
+html.dark .from-brand-50,
+html.dark [class*="from-brand-50/"],
+html.dark .from-brand-100,
+html.dark [class*="from-brand-100/"],
+html.dark .from-orange-50,
+html.dark [class*="from-orange-50/"],
+html.dark .from-amber-50,
+html.dark [class*="from-amber-50/"],
+html.dark .from-violet-50,
+html.dark [class*="from-violet-50/"],
+html.dark .from-indigo-50,
+html.dark [class*="from-indigo-50/"],
+html.dark .to-brand-50,
+html.dark [class*="to-brand-50/"],
+html.dark .to-brand-100,
+html.dark [class*="to-brand-100/"],
+html.dark .to-amber-50,
+html.dark [class*="to-amber-50/"],
+html.dark .to-violet-50,
+html.dark [class*="to-violet-50/"],
+html.dark .via-brand-50,
+html.dark [class*="via-brand-50/"],
+html.dark .via-violet-50,
+html.dark [class*="via-violet-50/"] {
+  --tw-gradient-from: #2a2b2c !important;
+  --tw-gradient-to: #242526 !important;
+  --tw-gradient-stops: #2a2b2c, #242526 !important;
+}
+
+html.dark .text-emerald-950,
+html.dark .text-rose-950,
+html.dark .text-amber-950,
+html.dark .text-plum-950 {
+  color: #f0f2f5 !important;
+}
+
+/* High Contrast Facebook Dark Mode Text (Pure White & Bright Light Gray) */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark [class*="text-slate-900"],
+html.dark [class*="text-slate-800"],
+html.dark [class*="text-slate-700"],
+html.dark .text-brand-900,
+html.dark .text-violet-900,
+html.dark .text-indigo-900 {
+  color: #f0f2f5 !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark [class*="text-slate-600"],
+html.dark [class*="text-slate-500"] {
+  color: #e4e6eb !important;
+}
+
+html.dark .text-slate-400,
+html.dark [class*="text-slate-400"] {
+  color: #b0b3b8 !important;
+}
+
+/* Borders */
+html.dark .border-slate-200,
+html.dark [class*="border-slate-200"],
+html.dark .border-slate-100,
+html.dark [class*="border-slate-100"],
+html.dark .border-slate-300,
+html.dark [class*="border-slate-300"],
+html.dark .border-brand-100,
+html.dark .border-brand-200,
+html.dark .border-violet-100,
+html.dark .border-violet-200,
+html.dark .border-orange-100,
+html.dark .border-orange-200,
+html.dark [class*="border-brand-100"],
+html.dark [class*="border-brand-200"],
+html.dark [class*="border-violet-100"],
+html.dark [class*="border-violet-200"],
+html.dark [class*="border-orange-200"] {
+  border-color: #393a3b !important;
+}
+
+/* Hover States (Facebook #4e4f50) */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-200:hover,
+html.dark .hover\:bg-plum-900\/\[0\.05\]:hover,
+html.dark .hover\:bg-plum-900\/\[0\.04\]:hover {
+  background-color: #4e4f50 !important;
+}
+
+/* Action button hover states in dark mode */
+html.dark .hover\:bg-rose-50:hover {
+  background-color: rgba(244, 63, 94, 0.2) !important;
+  color: #fda4af !important;
+}
+html.dark .hover\:bg-amber-50:hover {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  color: #fcd34d !important;
+}
+html.dark .hover\:bg-plum-50:hover {
+  background-color: #3a3b3c !important;
+  color: #f0f2f5 !important;
+}
+
+/* Inputs, Textareas & Search Bars: High contrast borders and distinct surface */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select {
+  background-color: #242526 !important;
+  color: #f0f2f5 !important;
+  border: 1px solid var(--c-border-input) !important;
+}
+html.dark input:not([type="checkbox"]):not([type="radio"]):focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: #f27024 !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(242, 112, 36, 0.25) !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Light: placeholder + viền ô nhập đạt WCAG (chữ >= 4.5:1, viền >= 3:1) cho mọi ô nhập, kể cả ô viết class riêng */
+input::placeholder,
+textarea::placeholder {
+  color: var(--c-text-subtle);
+  opacity: 1;
+}
+input[class~='border-border']:not([type='checkbox']):not([type='radio']),
+input[class~='border-border-strong']:not([type='checkbox']):not([type='radio']),
+textarea[class~='border-border'],
+textarea[class~='border-border-strong'],
+select[class~='border-border'],
+select[class~='border-border-strong'] {
+  border-color: var(--c-border-input);
+}
+input[class~='border-border']:focus,
+input[class~='border-border-strong']:focus,
+textarea[class~='border-border']:focus,
+textarea[class~='border-border-strong']:focus,
+select[class~='border-border']:focus,
+select[class~='border-border-strong']:focus {
+  border-color: var(--c-primary);
+}
+
+/* Avatar Offset in Dark Mode */
+html.dark .ring-offset-cream-50 {
+  --tw-ring-offset-color: #242526 !important;
+}
+
+/* Datepicker dark theme */
+html.dark .react-datepicker {
+  background-color: #242526 !important;
+  border-color: #393a3b !important;
+}
+html.dark .react-datepicker__header {
+  background-color: #18191a !important;
+  border-bottom-color: #393a3b !important;
+}
+html.dark .react-datepicker__current-month,
+html.dark .react-datepicker-time__header {
+  color: #ffffff !important;
+}
+html.dark .react-datepicker__day {
+  color: #e4e6eb !important;
+}
+html.dark .react-datepicker__day:hover {
+  background-color: #3a3b3c !important;
+  color: #f27024 !important;
+}
+
+/* Floating Form Labels: When input is empty (placeholder-shown), label inside MUST be transparent without dark boxes */
+html.dark .peer:placeholder-shown ~ label,
+html.dark label.peer-placeholder-shown {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Select option elements in dark mode */
+html.dark option {
+  background-color: #242526 !important;
+  color: #f0f2f5 !important;
+}
+
+/* DOCX Preview Custom Styling */
+.docx-viewer-wrapper .docx-wrapper {
+  background: transparent !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 20px !important;
+}
+
+.docx-viewer-wrapper .docx-wrapper > section.docx {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  border-radius: 12px !important;
+  margin-bottom: 24px !important;
+  padding: 40px !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+
+.docx-viewer-wrapper .docx-wrapper > section.docx table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 12px 0 !important;
+}
+
+.docx-viewer-wrapper .docx-wrapper > section.docx table td,
+.docx-viewer-wrapper .docx-wrapper > section.docx table th {
+  border: 1px solid #cbd5e1 !important;
+  padding: 6px 10px !important;
+}

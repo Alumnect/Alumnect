@@ -54,7 +54,7 @@ Module 4 (Q&A Forum) gồm: xem danh sách câu hỏi (UC38), xem chi tiết (UC
 #### 3.4.1 Trả lời câu hỏi trên diễn đàn (Answer a question)
 
 **Function trigger**:
-*   **Navigation path**: `/app/forum/{id}` (chi tiết câu hỏi) → khu vực "Câu trả lời" → bấm ô "Viết câu trả lời của bạn…" để mở form.
+*   **Navigation path**: `/app/forum/{id}` (chi tiết câu hỏi) → khu vực "Câu trả lời" → bấm ô "Viết câu trả lời…" để mở form.
 *   **Timing Frequency**: On demand (khi thành viên muốn giải đáp một câu hỏi).
 
 **Function description**:
@@ -62,7 +62,7 @@ Module 4 (Q&A Forum) gồm: xem danh sách câu hỏi (UC38), xem chi tiết (UC
 *   **Purpose**: Cho phép thành viên đăng câu trả lời cho một câu hỏi ACTIVE, xây dựng kho tri thức hỏi–đáp cho cộng đồng.
 *   **Interface**:
     *   **Khu vực "Câu trả lời"** nằm CHUNG card với câu hỏi (như bài viết + bình luận): tiêu đề "Câu trả lời" + huy hiệu số câu trả lời thực tế.
-    *   **Ô soạn thu gọn** (chỉ STUDENT/ALUMNI): avatar + "Viết câu trả lời của bạn…"; bấm vào bung form (textarea + đếm ký tự + nút Hủy/Gửi). Gửi thành công hoặc Hủy thì thu lại.
+    *   **Ô soạn thu gọn** (chỉ STUDENT/ALUMNI): avatar + "Viết câu trả lời…"; bấm vào sẽ mở rộng biểu mẫu (textarea + đếm ký tự + nút Hủy/Gửi). Gửi thành công hoặc Hủy thì thu gọn lại.
     *   **Danh sách câu trả lời**: mỗi câu trả lời dạng bong bóng (avatar + tên + headline + thời gian + nội dung), phân trang "Tải thêm".
     *   **Trạng thái**: loading (skeleton) / rỗng ("Chưa có câu trả lời nào…") / lỗi (Thử lại) / thành công; nút "Gửi" khóa khi đang gửi hoặc trống.
 
@@ -124,7 +124,7 @@ Module 4 (Q&A Forum) gồm: xem danh sách câu hỏi (UC38), xem chi tiết (UC
 | 2 | MSG-AN-02 | Inline (dưới ô) | Nội dung vượt quá độ dài | Nội dung câu trả lời không được vượt quá 10000 ký tự | 400 |
 | 3 | MSG-AN-03 | Banner (Alert error) | Câu hỏi không tồn tại/không ACTIVE | Không tìm thấy câu hỏi với id: {id} | 404 |
 | 4 | MSG-AN-04 | Banner (Alert error) | Vai trò không được phép trả lời | Chỉ sinh viên và cựu sinh viên mới được trả lời câu hỏi | 403 |
-| 5 | MSG-AN-05 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 5 | MSG-AN-05 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 6 | MSG-AN-06 | Banner (Alert error) | Token hợp lệ nhưng tài khoản không tồn tại | Không tìm thấy tài khoản người dùng | 404 |
 | 7 | MSG-AN-07 | API response (201) | Trả lời thành công (FE thu gọn form + hiện câu trả lời) | Trả lời câu hỏi thành công | 201 |
 

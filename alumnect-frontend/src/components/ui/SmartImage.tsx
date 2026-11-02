@@ -24,12 +24,13 @@ export function SmartImage({
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
 
   return (
-    <div className={cn('relative overflow-hidden bg-gradient-to-br from-brand-200 via-violet-300 to-coral-300', className)}>
+    <div className={cn('relative overflow-hidden bg-gradient-to-br from-primary-soft via-surface-2 to-info-soft', className)}>
       {status !== 'error' && (
         <img
           src={src}
           alt={alt}
           loading="lazy"
+          decoding="async"
           onLoad={() => setStatus('loaded')}
           onError={() => setStatus('error')}
           className={cn(
@@ -41,7 +42,7 @@ export function SmartImage({
       )}
       {status === 'loading' && <div className="absolute inset-0 shimmer" />}
       {status === 'error' && (
-        <div className="absolute inset-0 grid place-items-center text-white/70">
+        <div className="absolute inset-0 grid place-items-center text-text-subtle">
           {fallback ?? <ImageOff size={28} strokeWidth={1.6} />}
         </div>
       )}

@@ -1,10 +1,13 @@
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 import type { ReactNode, InputHTMLAttributes } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import loginBg from '@/assets/login-bg.jpg'
 
 export function AuthScaffold({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
+
   return (
     <div className="relative min-h-screen flex items-center justify-center lg:justify-between p-6 lg:p-24 overflow-hidden">
       {/* Background Image */}
@@ -19,8 +22,8 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
 
       <div className="relative z-10 hidden lg:flex flex-col max-w-lg mt-[-10vh]">
         {/* Logo */}
-        <Link to="/" className="mb-10 inline-flex items-center gap-4 transition-transform duration-200 hover:scale-105 cursor-pointer group" title="Về trang chủ AlumNect">
-          <div className="rounded bg-white px-3 py-2 flex items-center transition-shadow group-hover:shadow-md">
+        <Link to="/" className="mb-10 inline-flex items-center gap-4 transition-transform duration-200 hover:scale-105 cursor-pointer group" title={t('auth.backToHome')}>
+          <div className="rounded bg-surface px-3 py-2 flex items-center transition-shadow group-hover:shadow-md">
             <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/FPT_logo_2010.svg" alt="FPT" className="h-6" />
           </div>
           <style>
@@ -41,15 +44,15 @@ export function AuthScaffold({ children }: { children: ReactNode }) {
           <span className="brand-logo border-l-2 border-white/50 pl-4 transition-colors group-hover:text-white/90">AlumNect</span>
         </Link>
 
-        <h1 className="text-4xl font-extrabold text-white drop-shadow-md leading-tight">
-          Cộng đồng Cựu sinh viên <br /> Trường Đại học FPT
-        </h1>
+        <p className="text-4xl font-extrabold text-white drop-shadow-md leading-tight">
+          {t('auth.communityTitlePart1')} <br /> {t('auth.communityTitlePart2')}
+        </p>
         <p className="mt-5 text-sm leading-relaxed text-white/90 drop-shadow">
-          Tham gia cộng đồng bạn sẽ có cơ hội kết nối, tìm kiếm và giao lưu với hàng chục nghìn cựu sinh viên FPTU trên khắp thế giới. Tìm kiếm những người có cùng sở thích, kinh nghiệm, hoặc đơn giản là muốn kết nối để chia sẻ những câu chuyện thú vị.
+          {t('auth.communitySubtitle')}
         </p>
       </div>
 
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl sm:p-10">
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-surface p-8 shadow-2xl sm:p-10">
         {children}
       </div>
     </div>
@@ -67,32 +70,49 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   { label, icon, trailing, error, className, ...rest },
   ref,
 ) {
+  const autoId = useId()
+  const inputId = rest.id ?? autoId
   return (
     <div className="relative">
-      {icon && <span className="absolute top-3.5 left-3 text-gray-400 z-10 pointer-events-none">{icon}</span>}
+      {icon && (
+        <div className="pointer-events-none absolute inset-y-0 left-3 flex w-6 items-center justify-center text-text-subtle z-10">
+          {icon}
+        </div>
+      )}
       <input
         ref={ref}
         {...rest}
+        id={inputId}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? inputId + '-error' : undefined}
         placeholder=" "
         className={cn(
-          'peer block w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 pb-2.5 pt-4 text-sm text-gray-900 focus:border-[#F27024] focus:outline-none focus:ring-0 [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white]',
-          icon && 'pl-10',
-          error && 'border-red-500 focus:border-red-500',
-          trailing && 'pr-10',
+          'peer block w-full appearance-none rounded-xl border border-border-strong bg-surface px-4 pb-2.5 pt-4 text-base text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_var(--c-surface)]',
+          icon && 'pl-11',
+          error && 'border-danger focus:border-danger focus:ring-danger/25',
+          trailing && 'pr-11',
           className,
         )}
       />
       <label
+        htmlFor={inputId}
         className={cn(
-          'absolute top-2 left-4 z-10 origin-[0] -translate-y-4 scale-75 transform bg-white px-1 text-xs font-medium text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-[#F27024]',
-          icon && 'left-9',
-          error && 'peer-focus:text-red-500'
+          'pointer-events-none absolute top-2 left-4 z-10 origin-[0] -translate-y-4 scale-75 transform px-1 text-xs font-medium text-text-muted duration-300',
+          'bg-surface',
+          'peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:!bg-transparent',
+          'peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:bg-surface peer-focus:text-primary-solid',
+          icon && 'left-10',
+          error && 'peer-focus:text-danger'
         )}
       >
         {label}
       </label>
-      {trailing && <span className="absolute top-3.5 right-3 text-gray-500">{trailing}</span>}
-      {error && <span className="mt-1 block text-xs text-red-500">{error}</span>}
+      {trailing && (
+        <div className="absolute inset-y-0 right-3 flex w-6 items-center justify-center text-text-muted">
+          {trailing}
+        </div>
+      )}
+      {error && <span id={inputId + '-error'} role="alert" className="mt-1 block text-sm text-danger">{error}</span>}
     </div>
   )
 })

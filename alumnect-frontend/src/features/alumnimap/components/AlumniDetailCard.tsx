@@ -2,7 +2,6 @@
  * AlumniDetailCard – Thẻ thông tin tóm tắt Alumni khi click Marker bản đồ.
  * Sử dụng interface AlumniCardData chuẩn hóa cho MapLibre.
  */
-import { motion } from 'framer-motion'
 import { X, MapPin, Briefcase, User, GraduationCap } from 'lucide-react'
 import { Card, Avatar, Button } from '@/components/ui'
 import { useNavigate } from 'react-router-dom'
@@ -44,18 +43,14 @@ export function AlumniDetailCard({ alumni, onClose }: AlumniDetailCardProps) {
   if (!alumni) return null
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 50, scale: 0.95 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+    <div
       className="w-full"
     >
-      <Card hover={false} className="relative overflow-hidden p-5 border border-plum-900/10 shadow-soft bg-white rounded-3xl">
+      <Card hover={false} className="relative overflow-hidden p-5 border border-border shadow-soft bg-surface rounded-3xl">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.04] transition-all"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition"
           aria-label="Đóng"
         >
           <X size={16} />
@@ -74,24 +69,24 @@ export function AlumniDetailCard({ alumni, onClose }: AlumniDetailCardProps) {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-plum-900 truncate">
+            <h3 className="text-lg font-bold text-text truncate">
               {alumni.fullName}
             </h3>
 
             {/* Current Position & Company */}
-            <div className="mt-1.5 flex items-start gap-1.5 text-sm text-plum-600">
-              <Briefcase size={14} className="text-brand-500 shrink-0 mt-0.5" />
-              <span className="text-plum-600">
+            <div className="mt-1.5 flex items-start gap-1.5 text-sm text-text-muted">
+              <Briefcase size={14} className="text-primary-solid shrink-0 mt-0.5" />
+              <span className="text-text-muted">
                 {alumni.currentPosition || 'Chưa cập nhật vị trí'} tại{' '}
-                <strong className="font-semibold text-plum-800">
+                <strong className="font-semibold text-text">
                   {alumni.currentCompany || 'Chưa cập nhật công ty'}
                 </strong>
               </span>
             </div>
 
             {/* City */}
-            <div className="mt-1 flex items-center gap-1.5 text-xs text-plum-400">
-              <MapPin size={13} className="text-coral-500 shrink-0" />
+            <div className="mt-1 flex items-center gap-1.5 text-xs text-text-subtle">
+              <MapPin size={13} className="text-danger shrink-0" />
               <span className="truncate">{alumni.city || 'Việt Nam'}</span>
             </div>
           </div>
@@ -103,7 +98,7 @@ export function AlumniDetailCard({ alumni, onClose }: AlumniDetailCardProps) {
             onClick={() => navigate('/app/profile?userId=' + alumni.userId)}
             variant="primary"
             size="sm"
-            className="flex-1 justify-center rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold"
+            className="flex-1 justify-center rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary shadow-sm font-semibold"
             leftIcon={<User size={14} />}
           >
             Xem hồ sơ
@@ -112,14 +107,14 @@ export function AlumniDetailCard({ alumni, onClose }: AlumniDetailCardProps) {
             onClick={() => navigate('/app/career')}
             variant="secondary"
             size="sm"
-            className="flex-1 justify-center rounded-xl border border-plum-900/10 text-plum-700 hover:bg-plum-900/[0.04] font-semibold"
+            className="flex-1 justify-center rounded-xl border border-border text-text-muted hover:bg-surface-2 font-semibold"
             leftIcon={<GraduationCap size={14} />}
           >
             Lộ trình sự nghiệp
           </Button>
         </div>
       </Card>
-    </motion.div>
+    </div>
   )
 }
 

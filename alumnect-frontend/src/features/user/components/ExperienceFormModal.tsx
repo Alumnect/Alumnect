@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { X, Briefcase, Info, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { toast, DialogFrame } from '@/components/ui'
 import { PlaceAutocomplete } from './PlaceAutocomplete'
 import { MonthYearPicker } from './MonthYearPicker'
 
@@ -17,6 +18,8 @@ interface ExperienceFormModalProps {
   onClose: () => void
   mode: 'create' | 'edit' | 'promote' | 'rejoin'
   experience?: ExperienceResponse | null // Used for edit or promote source
+  defaultPrimary?: boolean
+  onSuccess?: () => void
 }
 
 /**
@@ -28,7 +31,10 @@ export function ExperienceFormModal({
   onClose,
   mode,
   experience,
+  defaultPrimary = false,
+  onSuccess,
 }: ExperienceFormModalProps) {
+  const { t } = useTranslation()
   // Input fields state
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
@@ -166,7 +172,7 @@ export function ExperienceFormModal({
         setEndMonth('')
         setEndYear('')
         setIsCurrent(true)
-        setIsPrimary(false)
+        setIsPrimary(defaultPrimary)
         setDescription('')
         setLatitude(undefined)
         setLongitude(undefined)
@@ -177,7 +183,7 @@ export function ExperienceFormModal({
         setGeocodingProvider(undefined)
       }
     }
-  }, [isOpen, mode, experience])
+  }, [isOpen, mode, experience, defaultPrimary])
 
   const handlePlaceSelect = (data: any) => {
     if (!data) {
@@ -210,38 +216,38 @@ export function ExperienceFormModal({
 
     // Validations
     if (!title.trim()) {
-      setValidationError('Vui lòng nhập chức danh / vai trò')
+      setValidationError(t('profile.enterRoleError', 'Vui lòng nhập chức danh / vai trò'))
       return
     }
     if (!company.trim()) {
-      setValidationError('Vui lòng nhập tên công ty / tổ chức')
+      setValidationError(t('profile.enterCompanyError', 'Vui lòng nhập tên công ty / tổ chức'))
       return
     }
     if (!startMonth || !startYear) {
-      setValidationError('Vui lòng chọn cả Tháng và Năm bắt đầu')
+      setValidationError(t('profile.enterStartMonthYear', 'Vui lòng chọn cả Tháng và Năm bắt đầu'))
       return
     }
     if (formattedStartDate > currentISOStr) {
-      setValidationError(`Tháng/năm bắt đầu không được vượt quá thời gian hiện tại (sau tháng ${currentMonthStr}/${currentYear})`)
+      setValidationError(`${t('profile.startMonthFutureError', 'Tháng/năm bắt đầu không được vượt quá thời gian hiện tại')}${t('profile.afterMonthPrefix', { month: `${currentMonthStr}/${currentYear}` })}`)
       return
     }
     if (!isCurrent && (!endMonth || !endYear)) {
-      setValidationError('Vui lòng chọn cả Tháng và Năm kết thúc khi đã kết thúc công việc')
+      setValidationError(t('profile.enterEndMonthYear', 'Vui lòng chọn cả Tháng và Năm kết thúc khi đã kết thúc công việc'))
       return
     }
     if (!isCurrent && formattedEndDate && formattedEndDate > currentISOStr) {
-      setValidationError(`Tháng/năm kết thúc không được vượt quá thời gian hiện tại (sau tháng ${currentMonthStr}/${currentYear})`)
+      setValidationError(`${t('profile.endMonthFutureError', 'Tháng/năm kết thúc không được vượt quá thời gian hiện tại')}${t('profile.afterMonthPrefix', { month: `${currentMonthStr}/${currentYear}` })}`)
       return
     }
     if (!isCurrent && formattedEndDate && formattedStartDate && formattedEndDate < formattedStartDate) {
-      setValidationError('Tháng/Năm kết thúc không được trước tháng/năm bắt đầu')
+      setValidationError(t('profile.endMonthBeforeStartError', 'Tháng/Năm kết thúc không được trước tháng/năm bắt đầu'))
       return
     }
 
     if (mode === 'promote' && experience) {
       const oldStartDate = experience.startDate
       if (formattedStartDate <= oldStartDate) {
-        setValidationError(`Tháng bắt đầu vai trò mới phải sau tháng bắt đầu vai trò cũ (${oldStartDate.slice(0, 7)})`)
+        setValidationError(`${t('profile.promoteAfterOldRoleError', 'Tháng bắt đầu vai trò mới phải sau tháng bắt đầu vai trò cũ')} (${oldStartDate.slice(0, 7)})`)
         return
       }
     }
@@ -279,32 +285,37 @@ export function ExperienceFormModal({
           },
         })
       }
+      toast.success(mode === 'create' || mode === 'rejoin' ? t('profile.addExpSuccess', 'Đã thêm kinh nghiệm làm việc thành công!') : t('profile.updateExpSuccess', 'Đã cập nhật kinh nghiệm làm việc!'))
+      onSuccess?.()
       onClose()
     } catch (err: any) {
       console.error('Lỗi khi lưu kinh nghiệm:', err)
       setValidationError(
-        err.response?.data?.message || err.message || 'Có lỗi xảy ra khi lưu thông tin kinh nghiệm'
+        err.response?.data?.message || err.message || t('profile.saveExpError', 'Có lỗi xảy ra khi lưu thông tin kinh nghiệm')
       )
     }
   }
 
   if (!isOpen) return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-plum-950/50 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl border border-plum-900/10 shadow-2xl overflow-hidden flex flex-col min-h-[580px] max-h-[90vh] animate-scale-up">
+  return <DialogFrame
+      onClose={onClose}
+      zIndexClassName="z-[9999]"
+      maxWidthClassName="max-w-2xl"
+      className="overflow-hidden flex flex-col min-h-[580px]"
+    >
         {/* Header (Fixed) */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-plum-900/5 bg-plum-50/50 shrink-0">
-          <h2 className="text-base font-extrabold text-plum-900 flex items-center gap-2">
-            <Briefcase size={18} className="text-brand-500" />
-            {mode === 'create' && 'Thêm kinh nghiệm làm việc'}
-            {mode === 'edit' && 'Chỉnh sửa kinh nghiệm'}
-            {mode === 'promote' && 'Thăng chức / Vai trò mới'}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface-2 shrink-0">
+          <h2 className="text-base font-extrabold text-text flex items-center gap-2">
+            <Briefcase size={18} className="text-primary-solid" />
+            {mode === 'create' && t('profile.addExpTitle', 'Thêm kinh nghiệm làm việc')}
+            {mode === 'edit' && t('profile.editExpTitle', 'Chỉnh sửa kinh nghiệm')}
+            {mode === 'promote' && t('profile.promoteExpTitle', 'Thăng chức / Vai trò mới')}
           </h2>
-          <button
+          <button aria-label={t('common.close', 'Đóng')}
             onClick={onClose}
             disabled={loading}
-            className="p-1.5 rounded-full text-plum-400 hover:text-plum-700 hover:bg-plum-900/[0.04] transition-colors"
+            className="p-1.5 rounded-full text-text-subtle hover:text-text-muted hover:bg-surface-2 transition-colors"
           >
             <X size={18} />
           </button>
@@ -315,30 +326,34 @@ export function ExperienceFormModal({
           {/* Form Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4 text-left">
             {validationError && (
-              <div className="flex items-start gap-2.5 rounded-2xl bg-coral-50 border border-coral-200/40 p-3.5 text-xs text-coral-700 font-semibold">
+              <div className="flex items-start gap-2.5 rounded-2xl bg-danger-soft border border-danger-border p-3.5 text-xs text-danger font-semibold">
                 <AlertTriangle size={16} className="shrink-0 mt-0.5" />
                 <span>{validationError}</span>
               </div>
             )}
 
             {mode === 'promote' && experience && (
-              <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
-                <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
+              <div className="flex items-start gap-2.5 rounded-2xl bg-primary-soft border border-brand-200/20 p-3.5 text-xs text-primary-solid">
+                <Info size={16} className="shrink-0 mt-0.5 text-primary-solid" />
                 <span>
-                  Thăng chức tại <strong>{experience.company}</strong>. Vai trò cũ{' '}
-                  <strong>{experience.title}</strong> sẽ được kết thúc vào ngày trước tháng bắt đầu vai trò mới.
+                  {t('profile.promoteCompanyNotice', {
+                    company: experience.company,
+                    title: experience.title,
+                  })}
                 </span>
               </div>
             )}
 
             {mode === 'rejoin' && experience && (
-              <div className="flex items-start gap-2.5 rounded-2xl bg-brand-50/50 border border-brand-200/20 p-3.5 text-xs text-brand-700">
-                <Info size={16} className="shrink-0 mt-0.5 text-brand-500" />
+              <div className="flex items-start gap-2.5 rounded-2xl bg-primary-soft border border-brand-200/20 p-3.5 text-xs text-primary-solid">
+                <Info size={16} className="shrink-0 mt-0.5 text-primary-solid" />
                 <div className="space-y-1">
-                  <p>Đang thêm một vị trí khác tại <strong>{experience.company}</strong>.</p>
+                  <p>{t('profile.addingPositionNotice', {
+                    company: experience.company,
+                  })}</p>
                   <ul className="list-disc pl-4 space-y-0.5 text-brand-700/90">
-                    <li><strong>Để quay lại làm việc tại đây:</strong> Cứ giữ nguyên dấu tích ở ô <em>Công việc hiện tại</em>.</li>
-                    <li><strong>Để bổ sung công việc cũ:</strong> Hãy bỏ tích ô <em>Công việc hiện tại</em> để nhập ngày kết thúc nhé.</li>
+                    <li>{t('profile.returnWorkNotice', 'Để quay lại làm việc tại đây: Cứ giữ nguyên dấu tích ở ô Công việc hiện tại.')}</li>
+                    <li>{t('profile.addPastWorkNotice', 'Để bổ sung công việc cũ: Hãy bỏ tích ô Công việc hiện tại để nhập ngày kết thúc nhé.')}</li>
                   </ul>
                 </div>
               </div>
@@ -348,8 +363,8 @@ export function ExperienceFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Title */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Chức danh / Vai trò <span className="text-coral-500">*</span>
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.expRole', 'Chức danh / Vai trò')} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -358,14 +373,14 @@ export function ExperienceFormModal({
                   placeholder="VD: Senior Frontend Developer..."
                   required
                   disabled={loading}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-white py-2.5 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-surface py-2.5 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               {/* Company */}
               <div>
-                <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                  Công ty / Tổ chức / CLB <span className="text-coral-500">*</span>
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                  {t('profile.expCompany', 'Công ty / Tổ chức / CLB')} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -374,29 +389,29 @@ export function ExperienceFormModal({
                   placeholder="VD: FPT Software..."
                   required
                   disabled={loading || mode === 'promote' || mode === 'rejoin'}
-                  className="w-full rounded-2xl border border-plum-900/10 bg-plum-50/30 disabled:bg-plum-900/[0.03] disabled:text-plum-400 py-2.5 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-2xl border border-border bg-plum-50/30 disabled:bg-surface-2 disabled:text-text-subtle py-2.5 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
 
             {/* Row 2: Location Autocomplete */}
             <div>
-              <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-2">
-                Vị trí / Địa điểm
+              <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                {t('profile.expLocation', 'Vị trí / Địa điểm')}
               </label>
               {mode === 'promote' || mode === 'rejoin' ? (
                 <input
                   type="text"
                   value={location}
                   disabled
-                  className="w-full rounded-2xl border border-plum-900/10 bg-plum-900/[0.03] py-2.5 px-4 text-sm text-plum-400"
+                  className="w-full rounded-2xl border border-border bg-surface-2 py-2.5 px-4 text-sm text-text-subtle"
                 />
               ) : (
                 <PlaceAutocomplete
                   value={location}
                   onChange={setLocation}
                   onSelect={handlePlaceSelect}
-                  placeholder="Tìm thành phố, quốc gia..."
+                  placeholder={t('profile.searchLocationPlaceholder', 'Tìm thành phố, quốc gia...')}
                 />
               )}
             </div>
@@ -405,7 +420,7 @@ export function ExperienceFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Start Date */}
               <MonthYearPicker
-                label="Tháng / Năm bắt đầu"
+                label={t('profile.startMonthYear', 'Tháng / Năm bắt đầu')}
                 required
                 disabled={loading}
                 monthValue={startMonth}
@@ -419,7 +434,7 @@ export function ExperienceFormModal({
               {/* End Date */}
               {!isCurrent && (
                 <MonthYearPicker
-                  label="Tháng / Năm kết thúc"
+                  label={t('profile.endMonthYear', 'Tháng / Năm kết thúc')}
                   required
                   disabled={loading}
                   monthValue={endMonth}
@@ -446,9 +461,9 @@ export function ExperienceFormModal({
                       }
                     }}
                     disabled={loading}
-                    className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+                    className="h-4.5 w-4.5 rounded border-border text-primary-solid focus:ring-primary"
                   />
-                  <span className="text-sm font-semibold text-plum-700">Công việc hiện tại</span>
+                  <span className="text-sm font-semibold text-text-muted">{t('profile.currentJob', 'Công việc hiện tại')}</span>
                 </label>
               )}
 
@@ -459,58 +474,55 @@ export function ExperienceFormModal({
                     checked={isPrimary}
                     onChange={(e) => setIsPrimary(e.target.checked)}
                     disabled={loading}
-                    className="h-4.5 w-4.5 rounded border-plum-900/10 text-brand-600 focus:ring-brand-500"
+                    className="h-4.5 w-4.5 rounded border-border text-primary-solid focus:ring-primary"
                   />
-                  <span className="text-sm font-semibold text-plum-700">Công việc chính (Primary)</span>
+                  <span className="text-sm font-semibold text-text-muted">{t('profile.primaryJob', 'Công việc chính')}</span>
                 </label>
               )}
             </div>
 
             {/* Row 5: Description */}
             <div>
-              <label className="block text-xs font-bold text-plum-700 uppercase tracking-wider mb-1.5">
-                Mô tả chi tiết
+              <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
+                {t('profile.jobDesc', 'Mô tả chi tiết')}
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Mô tả công việc, dự án đã tham gia..."
+                placeholder={t('profile.jobDescPlaceholder', 'Mô tả công việc, dự án đã tham gia...')}
                 rows={5}
                 disabled={loading}
-                className="w-full rounded-2xl border border-plum-900/10 bg-white py-3 px-4 text-sm text-plum-900 placeholder-plum-400 transition-all focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 min-h-[120px]"
+                className="w-full rounded-2xl border border-border bg-surface py-3 px-4 text-sm text-text placeholder-plum-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
               />
             </div>
           </div>
 
 
           {/* Footer Actions (Fixed at bottom) */}
-          <div className="px-6 py-4 border-t border-plum-900/5 bg-plum-50/30 flex items-center justify-end gap-3 shrink-0">
+          <div className="px-6 py-4 border-t border-border bg-plum-50/30 flex items-center justify-end gap-3 shrink-0">
             <Button
               type="button"
               variant="secondary"
               size="md"
               onClick={onClose}
               disabled={loading}
-              className="rounded-xl border border-plum-900/10 text-plum-700 font-semibold"
+              className="rounded-xl border border-border text-text-muted font-semibold"
             >
-              Hủy
+              {t('common.cancel', 'Hủy')}
             </Button>
             <Button
               type="submit"
               variant="primary"
               size="md"
               disabled={loading}
-              className="rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 hover:from-brand-600 hover:to-violet-600 text-white shadow-sm font-semibold px-6 flex items-center gap-1.5"
+              className="rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary shadow-sm font-semibold px-6 flex items-center gap-1.5"
             >
               {loading && <Loader2 size={14} className="animate-spin" />}
-              <span>Lưu lại</span>
+              <span>{t('common.save', 'Lưu lại')}</span>
             </Button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
-  )
+      </DialogFrame>
 }
 
 

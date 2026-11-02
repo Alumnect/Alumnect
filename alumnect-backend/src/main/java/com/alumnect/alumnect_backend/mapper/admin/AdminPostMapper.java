@@ -1,6 +1,8 @@
 package com.alumnect.alumnect_backend.mapper.admin;
 
 import com.alumnect.alumnect_backend.dto.response.admin.AdminPostResponse;
+import com.alumnect.alumnect_backend.dto.response.post.EventDTO;
+import com.alumnect.alumnect_backend.dto.response.post.JobDTO;
 import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.job.JobPosting;
 import com.alumnect.alumnect_backend.entity.event.Event;
@@ -29,6 +31,7 @@ public interface AdminPostMapper {
     @Mapping(target = "commentCount", source = "post.commentCount")
     @Mapping(target = "repostCount", source = "post.repostCount")
     @Mapping(target = "hidden", expression = "java(post.getStatus() == com.alumnect.alumnect_backend.common.enums.PostStatus.HIDDEN)")
+    @Mapping(target = "deleted", expression = "java(post.getStatus() == com.alumnect.alumnect_backend.common.enums.PostStatus.DELETED)")
     @Mapping(target = "createdAt", source = "post.createdAt")
     @Mapping(target = "event", source = "event")
     @Mapping(target = "job", source = "job")
@@ -39,20 +42,23 @@ public interface AdminPostMapper {
         return toDto(post, null, null);
     }
 
-    default com.alumnect.alumnect_backend.dto.response.post.EventDTO mapEvent(Event event) {
+    default EventDTO mapEvent(Event event) {
         if (event == null) return null;
-        return com.alumnect.alumnect_backend.dto.response.post.EventDTO.builder()
+        return EventDTO.builder()
+                .id(event.getId())
                 .title(event.getTitle())
                 .location(event.getLocation())
                 .startTime(event.getStartTime())
                 .endTime(event.getEndTime())
                 .capacity(event.getCapacity())
+                .attendeeCount(event.getAttendeeCount())
+                .status(event.getStatus() != null ? event.getStatus() : "ACTIVE")
                 .build();
     }
 
-    default com.alumnect.alumnect_backend.dto.response.post.JobDTO mapJob(JobPosting job) {
+    default JobDTO mapJob(JobPosting job) {
         if (job == null) return null;
-        return com.alumnect.alumnect_backend.dto.response.post.JobDTO.builder()
+        return JobDTO.builder()
                 .title(job.getTitle())
                 .company(job.getCompany())
                 .location(job.getLocation())

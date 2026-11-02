@@ -1,18 +1,25 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { MotionConfig } from 'framer-motion'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from '@/lib/queryClient'
 import './index.css'
-import '../node_modules/@vietmap/vietmap-gl-js/dist/vietmap-gl.css'
+import '@/store/themeStore'
+import i18n from '@/i18n'
+import { installAutoLabel } from '@/lib/autoLabel'
 import App from './App.tsx'
+
+installAutoLabel()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {/* Cung cấp TanStack Query cho toàn app: cache dữ liệu feed, auth mutations, v.v. */}
     <QueryClientProvider client={queryClient}>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
-        <App />
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''} locale={i18n.language}>
+        <MotionConfig reducedMotion="user">
+          <App />
+        </MotionConfig>
       </GoogleOAuthProvider>
     </QueryClientProvider>
   </StrictMode>,

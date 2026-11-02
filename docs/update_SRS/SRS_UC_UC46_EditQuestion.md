@@ -6,7 +6,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Xem_Chi_Tiet_Cau_Hoi : Tác giả mở trang chi tiết câu hỏi của mình
+    [*] --> Xem_Chi_Tiet_Cau_Hoi : Tác giả mở trang chi tiết câu hỏi của bản thân
     Xem_Chi_Tiet_Cau_Hoi --> Hien_Nut_Sua : FE so khớp authorId == người đăng nhập (STUDENT/ALUMNI)
     Hien_Nut_Sua --> Mo_Form_Sua : Bấm "Chỉnh sửa" → mở modal điền sẵn dữ liệu cũ
 
@@ -56,7 +56,7 @@ stateDiagram-v2
 ---
 
 ### 3.4 Module Diễn đàn Q&A: Chỉnh sửa câu hỏi
-Module 4 (Q&A Forum) gồm: xem danh sách (UC38), xem chi tiết (UC39), đặt câu hỏi (UC40), trả lời (UC41) và **chỉnh sửa câu hỏi (UC46)**. UC46 mở rộng luồng đặt câu hỏi để hỗ trợ **đính kèm nhiều ảnh** (bảng `question_images`) và cho phép **chính tác giả** sửa lại câu hỏi của mình.
+Module 4 (Q&A Forum) gồm: xem danh sách (UC38), xem chi tiết (UC39), đặt câu hỏi (UC40), trả lời (UC41) và **chỉnh sửa câu hỏi (UC46)**. UC46 mở rộng luồng đặt câu hỏi để hỗ trợ **đính kèm nhiều ảnh** (bảng `question_images`) và cho phép **chính tác giả** sửa lại câu hỏi của bản thân.
 
 #### 3.4.1 Chỉnh sửa câu hỏi trên diễn đàn (Edit a question)
 
@@ -135,7 +135,7 @@ Module 4 (Q&A Forum) gồm: xem danh sách (UC38), xem chi tiết (UC39), đặt
 | 5 | MSG-ED-05 | Inline (khu vực ảnh) | Đính kèm quá 5 ảnh | Chỉ được đính kèm tối đa 5 ảnh | 400 |
 | 6 | MSG-ED-06 | Banner (Alert error) | Câu hỏi không tồn tại/không ACTIVE | Không tìm thấy câu hỏi với id: {id} | 404 |
 | 7 | MSG-ED-07 | Banner (Alert error) | Không phải tác giả | Chỉ tác giả mới được chỉnh sửa câu hỏi này | 403 |
-| 8 | MSG-ED-08 | Chặn bởi Spring Security | Guest chưa đăng nhập | Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
+| 8 | MSG-ED-08 | Chặn bởi Spring Security | Guest chưa đăng nhập | Người dùng chưa đăng nhập hoặc phiên làm việc đã hết hạn. | 401 |
 | 9 | MSG-ED-09 | Banner (Alert error) | Thể loại không tồn tại | Thể loại không tồn tại | 400 |
 | 10 | MSG-ED-10 | Banner (Alert error) | Ngành không tồn tại | Ngành không tồn tại | 400 |
 | 11 | MSG-ED-11 | Inline (khu vực ảnh) | Upload ảnh thất bại | Tải ảnh lên thất bại. Vui lòng thử lại. | — |

@@ -1,125 +1,510 @@
-import { useState } from 'react'
-import { Search, Users, MapPin, SlidersHorizontal } from 'lucide-react'
-import { PageHeader, Avatar, Badge, Card, EmptyState } from '@/components/ui'
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import {
+  Users,
+  Target,
+  UserPlus,
+  Compass,
+  Search,
+  HeartHandshake,
+  UserX,
+} from 'lucide-react'
+import { PageHeader, EmptyState, Skeleton, Pagination, Avatar, Card, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { Stagger, StaggerItem, TiltCard } from '@/components/motion'
-import type { AlumniProfile } from '@/lib/constants'
-import { compact, cn } from '@/lib/utils'
+import {
+  UserSearchFilterBar,
+  UserDirectoryCard,
+  useSearchUsers,
+  useConnectionSuggestions,
+  useUserFollowers,
+  useUserFollowing,
+  useFollowUser,
+  useUnfollowUser,
+  type FilterState,
+  type UserDirectoryResponse,
+} from '@/features/user'
+import { useAuthStore } from '@/store/authStore'
+import { cn } from '@/lib/utils'
 
-const FILTERS = ['Tất cả', 'Phần mềm', 'Sản phẩm', 'Thiết kế', 'Dữ liệu', 'Kinh doanh']
+const INITIAL_FILTERS: FilterState = {
+  query: '',
+  category: 'ALL',
+  role: 'ALL',
+  majorId: null,
+  cohort: null,
+  city: '',
+  skill: '',
+  company: '',
+  sortBy: 'createdAt',
+  sortDirection: 'DESC',
+}
 
-// TODO(team): chưa có API Alumni Directory — thay ALUMNI bằng dữ liệu thật khi backend sẵn sàng.
-const ALUMNI: AlumniProfile[] = []
+const PAGE_SIZE = 12
 
 export function AlumniDirectoryPage() {
-  const [active, setActive] = useState('Tất cả')
-  const [query, setQuery] = useState('')
+  const { t } = useTranslation()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const [activeTab, setActiveTab] = useState<'directory' | 'suggestions' | 'network'>('directory')
+  const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS)
+  const [page, setPage] = useState(0)
 
-  // Lọc theo danh mục đã chọn + từ khóa tìm kiếm (tên, vai trò, kỹ năng, cohort).
-  const q = query.trim().toLowerCase()
-  const filtered = ALUMNI.filter((a) => {
-    const matchesCategory = active === 'Tất cả' || a.category === active
-    const matchesQuery =
-      !q ||
-      a.name.toLowerCase().includes(q) ||
-      a.role.toLowerCase().includes(q) ||
-      a.cohort.toLowerCase().includes(q) ||
-      a.skills.some((s) => s.toLowerCase().includes(q))
-    return matchesCategory && matchesQuery
+  const currentUserId = useAuthStore((s) => s.user?.id)
+
+  // Khách chưa đăng nhập thì không có gợi ý kết nối hay mạng lưới cá nhân
+  useEffect(() => {
+    if (!isAuthenticated && activeTab !== 'directory') {
+      setActiveTab('directory')
+    }
+  }, [isAuthenticated, activeTab])
+
+  // 1. Dữ liệu Danh bạ thành viên (Tab 1)
+  const searchParams = {
+    query: filters.query.trim() || undefined,
+    role: filters.role !== 'ALL' ? filters.role : undefined,
+    majorId: filters.majorId || undefined,
+    cohort: filters.cohort || undefined,
+    city: filters.city || undefined,
+    skill: filters.skill || undefined,
+    company: filters.company || undefined,
+    page,
+    size: PAGE_SIZE,
+    sortBy: filters.sortBy,
+    sortDirection: filters.sortDirection,
+  }
+
+  const { data, isLoading, isError, error, refetch } = useSearchUsers(searchParams, {
+    enabled: activeTab === 'directory',
   })
 
+  const users = data?.content || []
+  const totalPages = data?.totalPages || 0
+
+  // Loại trừ tài khoản của chính mình để không tạo ô trống hoặc mất thẩm mỹ trong danh bạ
+  const displayedUsers = currentUserId
+    ? users.filter((u) => Number(u.userId) !== Number(currentUserId))
+    : users
+
+  // 2. Dữ liệu Gợi ý kết nối (Tab 2) - Chỉ tải khi đã đăng nhập
+  const {
+    data: suggestions = [],
+    isLoading: isSuggestionsLoading,
+    isError: isSuggestionsError,
+    refetch: refetchSuggestions,
+  } = useConnectionSuggestions(24, {
+    enabled: activeTab === 'suggestions' && isAuthenticated,
+  })
+
+  // Loại trừ tài khoản của chính mình khỏi danh sách gợi ý
+  const displayedSuggestions = currentUserId
+    ? suggestions.filter((s) => Number(s.userId) !== Number(currentUserId))
+    : suggestions
+
+  // 3. Dữ liệu Mạng lưới cá nhân (Tab 3)
+  const [networkSubTab, setNetworkSubTab] = useState<'following' | 'followers'>('following')
+  const [networkSearch, setNetworkSearch] = useState('')
+
+  const {
+    data: followingData,
+    isLoading: isFollowingLoading,
+  } = useUserFollowing(Number(currentUserId) || 0, 50, {
+    enabled: activeTab === 'network' && !!currentUserId,
+  })
+
+  const {
+    data: followersData,
+    isLoading: isFollowersLoading,
+  } = useUserFollowers(Number(currentUserId) || 0, 50, {
+    enabled: activeTab === 'network' && !!currentUserId,
+  })
+
+  const followingUsers = followingData?.pages.flatMap((p) => p.content) || []
+  const followersUsers = followersData?.pages.flatMap((p) => p.content) || []
+  const followingCount = followingData?.pages[0]?.totalElements ?? followingUsers.length
+  const followersCount = followersData?.pages[0]?.totalElements ?? followersUsers.length
+
+  const activeNetworkUsers = networkSubTab === 'following' ? followingUsers : followersUsers
+  const filteredNetworkUsers = activeNetworkUsers.filter((u) => {
+    if (!networkSearch.trim()) return true
+    const q = networkSearch.toLowerCase()
+    return (
+      u.fullName.toLowerCase().includes(q) ||
+      (u.headline && u.headline.toLowerCase().includes(q)) ||
+      (u.studentCode && u.studentCode.toLowerCase().includes(q))
+    )
+  })
+
+  const followMutation = useFollowUser()
+  const unfollowMutation = useUnfollowUser()
+
+  const handleFilterChange = (newFilters: FilterState) => {
+    setFilters(newFilters)
+    setPage(0)
+  }
+
+  const handleResetFilters = () => {
+    setFilters(INITIAL_FILTERS)
+    setPage(0)
+  }
+
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-6xl pb-12">
+      {/* Page Header */}
       <PageHeader
-        icon={<Users size={20} />}
-        title="Danh bạ cựu sinh viên"
-        subtitle="Tìm kiếm và kết nối với các cựu sinh viên và sinh viên FPTU."
-        actions={<Button variant="secondary" size="sm" leftIcon={<SlidersHorizontal size={15} />}>Bộ lọc</Button>}
+        icon={<Users size={22} className="text-primary-solid" />}
+        title={t('directory.title')}
+        subtitle={t('directory.subtitle')}
       />
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <label className="relative flex flex-1 items-center">
-          <Search size={17} className="pointer-events-none absolute left-3.5 text-plum-400" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tìm theo tên, kỹ năng, công ty hoặc khóa học…"
-            className="h-12 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-10 pr-4 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-          />
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setActive(f)}
-              className={cn(
-                'rounded-full px-4 py-2 text-sm font-semibold transition-all',
-                active === f ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]',
-              )}
-            >
-              {f}
-            </button>
-          ))}
+      {/* Main Tabs Navigation - Chỉ hiển thị khi người dùng đã đăng nhập */}
+      {isAuthenticated && (
+        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-border pb-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab('directory')}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
+              activeTab === 'directory'
+                ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
+                : 'bg-surface/70 text-text-muted hover:bg-surface-2',
+            )}
+          >
+            <Compass size={17} />
+            <span>{t('directory.membersTab')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('suggestions')}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
+              activeTab === 'suggestions'
+                ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
+                : 'bg-surface/70 text-text-muted hover:bg-surface-2',
+            )}
+          >
+            <Target size={17} className={activeTab === 'suggestions' ? 'text-on-primary' : 'text-primary-solid'} />
+            <span>{t('directory.suggestionsTab')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('network')}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition',
+              activeTab === 'network'
+                ? 'bg-primary-solid text-on-primary shadow-sm shadow-brand-500/30'
+                : 'bg-surface/70 text-text-muted hover:bg-surface-2',
+            )}
+          >
+            <HeartHandshake size={17} />
+            <span>{t('directory.myNetworkTab')}</span>
+          </button>
         </div>
-      </div>
+      )}
 
-      {filtered.length === 0 ? (
-        <EmptyState
-          icon={<Users size={24} />}
-          title="Không tìm thấy cựu sinh viên phù hợp"
-          description="Hãy thử tìm kiếm với từ khóa hoặc danh mục khác."
-          action={
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                setActive('Tất cả')
-                setQuery('')
-              }}
-            >
-              Xóa bộ lọc
-            </Button>
-          }
-        />
-      ) : (
+      {/* ===================== TAB 1: DANH BẠ THÀNH VIÊN ===================== */}
+      <FadeSwitch id={activeTab}>
+{activeTab === 'directory' && (
         <>
-          <Stagger className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" gap={0.06}>
-            {filtered.map((a) => (
-              <StaggerItem key={a.id}>
-                <TiltCard className="group h-full" max={7}>
-                  <Card hover={false} className="h-full p-5 text-center">
-                    <Avatar src={a.avatar} name={a.name} size={76} verified={a.verified} ring className="mx-auto" />
-                    <h2 className="mt-4 font-bold text-plum-900">{a.name}</h2>
-                    <p className="text-sm text-plum-500">{a.role}</p>
-                    <div className="mt-2 flex items-center justify-center gap-1 text-xs text-plum-400">
-                      <MapPin size={12} /> {a.cohort}
-                    </div>
-                    <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-                      {a.skills.map((s) => (
-                        <span key={s} className="rounded-md bg-plum-900/[0.04] px-2 py-1 text-[11px] font-medium text-plum-500">{s}</span>
-                      ))}
-                    </div>
-                    <div className="mt-5 flex items-center gap-2">
-                      <Button size="sm" variant="primary" className="flex-1">Theo dõi</Button>
-                      <Button size="sm" variant="secondary" className="flex-1">Nhắn tin</Button>
-                    </div>
-                    <p className="mt-3 text-xs text-plum-400">{compact(a.followers)} người theo dõi</p>
-                  </Card>
-                </TiltCard>
-              </StaggerItem>
-            ))}
-          </Stagger>
+          {/* Filter & Search Bar */}
+          <UserSearchFilterBar
+            filters={filters}
+            onChange={handleFilterChange}
+            onReset={handleResetFilters}
+          />
 
-          <div className="mt-8 flex justify-center">
-            <Button variant="outline" size="md">Tải thêm cựu sinh viên</Button>
-          </div>
+          {/* Loading Skeletons */}
+          {isLoading && (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5-xs"
+                >
+                  <div className="flex w-full flex-col items-center">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <Skeleton className="mt-4 h-5 w-32 rounded-lg" />
+                    <Skeleton className="mt-2 h-4 w-48 rounded-lg" />
+                    <div className="mt-3 flex gap-2">
+                      <Skeleton className="h-5 w-16 rounded-md" />
+                      <Skeleton className="h-5 w-20 rounded-md" />
+                    </div>
+                  </div>
+                  <div className="mt-6 flex w-full gap-2">
+                    <Skeleton className="h-8 flex-1 rounded-xl" />
+                    <Skeleton className="h-8 w-10 rounded-xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <Badge tone="brand">Mẹo</Badge>
-            <span className="text-xs text-plum-400">Gợi ý kết nối được tự động cá nhân hóa theo chuyên ngành và khóa học của bạn.</span>
-          </div>
+          {/* Error State */}
+          {!isLoading && isError && (
+            <EmptyState
+              icon={<Users size={28} className="text-danger" />}
+              title={t('directory.loadError')}
+              description={error instanceof Error ? error.message : t('common.error')}
+              action={
+                <Button size="sm" variant="secondary" onClick={() => refetch()}>
+                  {t('common.tryAgain')}
+                </Button>
+              }
+            />
+          )}
+
+          {/* Zero Result State */}
+          {!isLoading && !isError && displayedUsers.length === 0 && (
+            <EmptyState
+              icon={<Users size={28} className="text-primary-solid" />}
+              title={t('directory.emptyTitle')}
+              description={t('directory.emptyDesc')}
+              action={
+                <Button size="sm" variant="secondary" onClick={handleResetFilters}>
+                  {t('common.clearFilter')}
+                </Button>
+              }
+            />
+          )}
+
+          {/* User Directory Grid */}
+          {!isLoading && !isError && displayedUsers.length > 0 && (
+            <>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {displayedUsers.map((user) => (
+                  <div key={user.userId} className="h-full animate-in fade-in-50 duration-300">
+                    <UserDirectoryCard user={user} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </>
+          )}
         </>
       )}
+
+      {/* ===================== TAB 2: GỢI Ý KẾT NỐI ===================== */}
+      {activeTab === 'suggestions' && (
+        <div>
+          {/* Loading Skeletons */}
+          {isSuggestionsLoading && (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex h-[360px] flex-col items-center justify-between rounded-3xl border border-border bg-surface/60 p-5-xs"
+                >
+                  <div className="flex w-full flex-col items-center">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <Skeleton className="mt-4 h-5 w-32 rounded-lg" />
+                    <Skeleton className="mt-2 h-4 w-48 rounded-lg" />
+                  </div>
+                  <div className="mt-6 flex w-full gap-2">
+                    <Skeleton className="h-8 flex-1 rounded-xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Error State */}
+          {!isSuggestionsLoading && isSuggestionsError && (
+            <EmptyState
+              icon={<Users size={28} className="text-danger" />}
+              title={t('directory.suggestionsLoadError')}
+              description={t('directory.suggestionsLoadErrorDesc')}
+              action={
+                <Button size="sm" variant="secondary" onClick={() => refetchSuggestions()}>
+                  {t('common.tryAgain')}
+                </Button>
+              }
+            />
+          )}
+
+          {/* Zero Suggestions */}
+          {!isSuggestionsLoading && !isSuggestionsError && displayedSuggestions.length === 0 && (
+            <EmptyState
+              icon={<Compass size={28} className="text-primary-solid" />}
+              title={t('directory.noSuggestionsTitle')}
+              description={t('directory.noSuggestionsDesc')}
+              action={
+                <Link to="/app/profile">
+                  <Button size="sm" variant="primary">
+                    {t('directory.updateProfile')}
+                  </Button>
+                </Link>
+              }
+            />
+          )}
+
+          {/* Suggestions Grid */}
+          {!isSuggestionsLoading && !isSuggestionsError && displayedSuggestions.length > 0 && (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {displayedSuggestions.map((suggestion) => (
+                <div key={suggestion.userId} className="h-full animate-in fade-in-50 duration-300">
+                  <UserDirectoryCard user={suggestion as unknown as UserDirectoryResponse} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ===================== TAB 3: MẠNG LƯỚI CỦA TÔI ===================== */}
+      {activeTab === 'network' && (
+        <div>
+          {/* Network Header & Sub Tabs */}
+          <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setNetworkSubTab('following')}
+                className={cn(
+                  'rounded-xl px-4 py-2 text-xs font-bold transition',
+                  networkSubTab === 'following'
+                    ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
+                    : 'bg-surface-2 text-text-muted hover:bg-surface-3',
+                )}
+              >
+                {t('directory.followingTab', { count: followingCount })}
+              </button>
+              <button
+                type="button"
+                onClick={() => setNetworkSubTab('followers')}
+                className={cn(
+                  'rounded-xl px-4 py-2 text-xs font-bold transition',
+                  networkSubTab === 'followers'
+                    ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
+                    : 'bg-surface-2 text-text-muted hover:bg-surface-3',
+                )}
+              >
+                {t('directory.followersTab', { count: followersCount })}
+              </button>
+            </div>
+
+            {/* Quick Network Search Bar */}
+            <div className="relative w-full sm:w-72">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle" />
+              <input
+                aria-label={t('directory.networkSearchPlaceholder')}
+                type="text"
+                value={networkSearch}
+                onChange={(e) => setNetworkSearch(e.target.value)}
+                placeholder={t('directory.networkSearchPlaceholder')}
+                className="h-9 w-full rounded-xl border border-border-strong bg-surface pl-8 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Network Content List */}
+          {(isFollowingLoading || isFollowersLoading) && (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-2xl bg-surface/70 p-4 border border-border">
+                  <Skeleton className="h-12 w-12 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-64" />
+                  </div>
+                  <Skeleton className="h-8 w-24 rounded-xl" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!(isFollowingLoading || isFollowersLoading) && filteredNetworkUsers.length === 0 && (
+            <EmptyState
+              icon={<HeartHandshake size={28} className="text-primary-solid" />}
+              title={
+                networkSearch
+                  ? t('directory.noNetworkResults')
+                  : networkSubTab === 'following'
+                  ? t('directory.emptyFollowing')
+                  : t('directory.emptyFollowers')
+              }
+              description={
+                networkSearch
+                  ? t('directory.emptyDesc')
+                  : t('directory.subtitle')
+              }
+              action={
+                !networkSearch ? (
+                  <Button size="sm" variant="primary" onClick={() => setActiveTab('suggestions')}>
+                    {t('directory.suggestionsTab')}
+                  </Button>
+                ) : undefined
+              }
+            />
+          )}
+
+          {!(isFollowingLoading || isFollowersLoading) && filteredNetworkUsers.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {filteredNetworkUsers.map((member) => (
+                <Card
+                  key={member.userId}
+                  hover={false}
+                  className="flex items-center justify-between p-4 border border-border bg-surface/80"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-3">
+                    <Link to={`/app/profile?userId=${member.userId}`}>
+                      <Avatar
+                        src={member.avatarUrl || undefined}
+                        name={member.fullName}
+                        size={48}
+                      />
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        to={`/app/profile?userId=${member.userId}`}
+                        className="block truncate text-sm font-bold text-text hover:text-primary-solid transition-colors"
+                      >
+                        {member.fullName}
+                      </Link>
+                      <p className="truncate text-xs text-text-subtle mt-0.5">
+                        {member.headline || t('common.alumni')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0">
+                    {member.isFollowing ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="text-xs text-text-muted hover:text-danger hover:border-danger-border"
+                        disabled={unfollowMutation.isPending}
+                        onClick={() => unfollowMutation.mutate(member.userId)}
+                        leftIcon={<UserX size={13} />}
+                      >
+                        {t('profile.unfollow')}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        className="text-xs"
+                        disabled={followMutation.isPending}
+                        onClick={() => followMutation.mutate(member.userId)}
+                        leftIcon={<UserPlus size={13} />}
+                      >
+                        {t('profile.followBack')}
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+</FadeSwitch>
     </div>
   )
 }

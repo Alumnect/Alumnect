@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.dao.post;
 
 import com.alumnect.alumnect_backend.entity.post.Comment;
+import com.alumnect.alumnect_backend.common.enums.CommentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,4 +29,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             "AND c.status = com.alumnect.alumnect_backend.common.enums.CommentStatus.ACTIVE " +
             "ORDER BY c.createdAt ASC")
     Page<Comment> findActiveByPostId(@Param("postId") Long postId, Pageable pageable);
+
+    /**
+     * Đếm các reply đang hiển thị trực tiếp của một bình luận cha để đồng bộ bộ đếm
+     * khi UC20 xóa cứng cả nhánh bình luận.
+     */
+    long countByParentComment_IdAndStatus(Long parentCommentId, CommentStatus status);
 }

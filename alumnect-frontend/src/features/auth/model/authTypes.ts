@@ -14,11 +14,8 @@ export interface RegisterPayload {
   password: string
   role: 'STUDENT' | 'ALUMNI'
   majorId: number
-  cohort: number
   studentCode: string
-  graduationYear?: number
   proofUrl?: string
-  note?: string
 }
 
 export interface PresignedUrlResponse {
@@ -31,11 +28,8 @@ export interface GoogleRegisterPayload {
   fullName: string
   role: 'STUDENT' | 'ALUMNI'
   majorId: number
-  cohort: number
   studentCode: string
-  graduationYear?: number
   proofUrl?: string
-  note?: string
 }
 
 export interface ResetPasswordPayload {

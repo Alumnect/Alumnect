@@ -30,9 +30,6 @@ public class AdminVerificationRequestDto {
     /** Ảnh đại diện của cựu sinh viên */
     private String avatarUrl;
 
-    /** Năm tốt nghiệp */
-    private Integer graduationYear;
-
     /** Mã chuyên ngành (VD: SE) */
     private String majorCode;
 
@@ -41,9 +38,6 @@ public class AdminVerificationRequestDto {
 
     /** URL tài liệu ảnh minh chứng (VD: bằng tốt nghiệp, học bạ...) */
     private String proofUrl;
-
-    /** Ghi chú bổ sung từ cựu sinh viên */
-    private String note;
 
     /** Trạng thái duyệt hiện tại (PENDING, APPROVED, REJECTED) */
     private String status;

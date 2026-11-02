@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
-import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
-/** Consistent page title block for app & admin screens. */
+/**
+ * Khối tiêu đề trang cho màn app & admin: tên trang luôn nhìn thấy (người dùng biết mình đang ở đâu),
+ * kèm một dòng mô tả ngắn và các nút hành động bên phải (Tạo bài, Đặt câu hỏi…).
+ */
 export function PageHeader({
   title,
   subtitle,
@@ -17,24 +19,15 @@ export function PageHeader({
   className?: string
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className={cn('mb-7 flex flex-wrap items-end justify-between gap-4', className)}
-    >
-      <div className="flex items-center gap-3">
-        {icon && (
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-600/30 to-violet-600/20 text-brand-600 ring-1 ring-inset ring-plum-900/10">
-            {icon}
-          </span>
-        )}
-        <div>
-          <h1 className="text-2xl font-extrabold text-plum-900 sm:text-3xl">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-plum-500">{subtitle}</p>}
+    <div className={cn('mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2', className)}>
+      <div className="flex min-w-[min(100%,14rem)] flex-1 items-center gap-3">
+        {icon && <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary-solid">{icon}</span>}
+        <div className="min-w-0">
+          <h1 className="text-xl font-extrabold leading-tight tracking-tight text-text sm:text-2xl">{title}</h1>
+          {subtitle && <p className="mt-0.5 text-sm leading-snug text-text-muted">{subtitle}</p>}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
-    </motion.div>
+      {actions && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{actions}</div>}
+    </div>
   )
 }

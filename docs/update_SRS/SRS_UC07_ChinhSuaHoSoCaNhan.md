@@ -102,7 +102,7 @@ Module Quản lý Hồ sơ Cá nhân cho phép người dùng duy trì thông ti
 | BR-UC07-06 | Thông tin Role, Email, và Trạng thái xác thực không được phép thay đổi thông qua API chỉnh sửa hồ sơ cá nhân. |
 
 #### 5.2 Common Requirements (Yêu cầu Chung)
-* Giao diện sử dụng hệ thống màu Pastel Premium (nền kem ấm `#faf4ec`, surface trắng `#ffffff`, chữ mực mận `#322c3f`).
+* Giao diện bố cục trực quan, hỗ trợ đầy đủ trên máy tính để bàn và thiết bị di động.
 * Sử dụng React Query quản lý state và tự động làm mới cache sau mỗi thao tác ghi dữ liệu.
 * Hiển thị thông điệp lỗi nghiệp vụ tiếng Việt trả về từ Backend trực tiếp lên giao diện người dùng.
 

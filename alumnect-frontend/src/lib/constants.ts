@@ -1,25 +1,30 @@
-import type { LucideIcon } from 'lucide-react'
+import type { ComponentType } from 'react'
+import type { IconProps } from '@/components/icons'
 import {
-  Home,
+  House,
   Users,
   Briefcase,
-  CalendarDays,
-  MessagesSquare,
-  HelpCircle,
-  LineChart,
-  Map as MapIcon,
-  Route,
+  CalendarBlank,
+  Question,
+  UsersThree,
+  ChartLineUp,
+  Compass,
+  GitFork,
+  Chats,
   Bell,
   CreditCard,
+  User,
+  LockKey,
   ShieldCheck,
-  LayoutDashboard,
-  Flag,
-  BadgeCheck,
-  Megaphone,
-  UserCog,
-  Lock,
+  SquaresFour,
   FileText,
-} from 'lucide-react'
+  Flag,
+  SealCheck,
+  UserGear,
+  Megaphone,
+  GraduationCap,
+  Coins,
+} from '@/components/icons'
 
 export const BRAND = {
   name: 'AlumNect',
@@ -30,8 +35,12 @@ export const BRAND = {
 
 export type NavItem = {
   label: string
+  /** Nhãn ngắn cho thanh điều hướng trên (desktop) */
+  shortLabel?: string
+  /** Nhãn ngắn cho thanh tab dưới (điện thoại) để không bị cắt chữ */
+  tabLabel?: string
   to: string
-  icon?: LucideIcon
+  icon?: ComponentType<IconProps>
   badge?: string
 }
 
@@ -40,48 +49,52 @@ export type NavItem = {
  * and as the mobile bottom tab bar.
  */
 export const APP_PRIMARY_NAV: NavItem[] = [
-  { label: 'Bảng tin', to: '/app', icon: Home },
-  { label: 'Cựu sinh viên', to: '/app/alumni', icon: Users },
-  { label: 'Tuyển dụng', to: '/app/jobs', icon: Briefcase },
-  { label: 'Sự kiện', to: '/app/events', icon: CalendarDays },
-  { label: 'Diễn đàn hỏi đáp', to: '/app/forum', icon: HelpCircle },
+  { label: 'Bảng tin', to: '/app', icon: House },
+  { label: 'Thành viên', to: '/app/alumni', icon: Users },
+  { label: 'Tuyển dụng', tabLabel: 'Việc làm', to: '/app/jobs', icon: Briefcase },
+  { label: 'Sự kiện', to: '/app/events', icon: CalendarBlank },
+  { label: 'Diễn đàn hỏi đáp', shortLabel: 'Diễn đàn', tabLabel: 'Diễn đàn', to: '/app/forum', icon: Question },
 ]
 
 /** Secondary features — tucked into the "More" apps menu (used less often). */
 export const APP_MORE_NAV: NavItem[] = [
-  { label: 'Bảng lương', to: '/app/salary', icon: LineChart },
-  { label: 'Bản đồ cựu SV', to: '/app/map', icon: MapIcon },
-  { label: 'Lộ trình nghề nghiệp', to: '/app/career', icon: Route },
+  { label: 'Hội nhóm', to: '/app/groups', icon: UsersThree },
+  { label: 'Hướng dẫn & Hỗ trợ', to: '/app/mentoring', icon: GraduationCap },
+  { label: 'Bảng lương', to: '/app/salary', icon: ChartLineUp },
+  { label: 'Bản đồ cựu SV', to: '/app/map', icon: Compass },
+  { label: 'Lộ trình nghề nghiệp', to: '/app/career', icon: GitFork },
 ]
 
 /** Items inside the avatar / account dropdown. */
 export const APP_ACCOUNT_NAV: NavItem[] = [
-  { label: 'Trang cá nhân', to: '/app/profile', icon: Users },
-  { label: 'Đổi mật khẩu', to: '/app/change-password', icon: Lock },
-  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
+  { label: 'Trang cá nhân', to: '/app/profile', icon: User },
+  { label: 'Đổi mật khẩu', to: '/app/change-password', icon: LockKey },
   { label: 'Bảng quản trị', to: '/admin', icon: ShieldCheck },
 ]
+
 
 /** Full flat list (kept for any "all features" surfaces). */
 export const APP_NAV: NavItem[] = [
   ...APP_PRIMARY_NAV,
   ...APP_MORE_NAV,
-  { label: 'Tin nhắn', to: '/app/messages', icon: MessagesSquare, badge: '3' },
+  { label: 'Tin nhắn', to: '/app/messages', icon: Chats },
   { label: 'Thông báo', to: '/app/notifications', icon: Bell },
-  { label: 'Gói thành viên', to: '/app/subscription', icon: CreditCard },
 ]
 
 /** Admin dashboard navigation. */
 export const ADMIN_NAV: NavItem[] = [
-  { label: 'Tổng quan', to: '/admin', icon: LayoutDashboard },
-  { label: 'Người dùng', to: '/admin/users', icon: UserCog },
+  { label: 'Tổng quan', to: '/admin', icon: SquaresFour },
+  { label: 'Quản lý Cố vấn', to: '/admin/mentor-packages', icon: Compass },
+  { label: 'Tranh chấp & Ticket', to: '/admin/mentoring-tickets', icon: ShieldCheck },
+  { label: 'Sổ quỹ Mentoring', to: '/admin/mentoring-finances', icon: Coins },
   { label: 'Bài viết', to: '/admin/posts', icon: FileText },
-  { label: 'Xác minh', to: '/admin/verifications', icon: BadgeCheck },
   { label: 'Báo cáo', to: '/admin/reports', icon: Flag },
   { label: 'Doanh thu', to: '/admin/revenue', icon: CreditCard },
+  { label: 'Xác minh', to: '/admin/verifications', icon: SealCheck },
+  { label: 'Người dùng', to: '/admin/users', icon: UserGear },
   { label: 'Thông báo chung', to: '/admin/broadcast', icon: Megaphone },
-  { label: 'Kiểm duyệt', to: '/admin/moderation', icon: ShieldCheck },
 ]
+
 
 /** Mock feed posts. */
 export const FEED_POSTS = [
@@ -133,7 +146,7 @@ export const FEED_POSTS = [
 export const JOBS = [
   { id: 'j1', title: 'Senior Frontend Engineer', company: 'FPT Software', location: 'Đà Nẵng · Hybrid', type: 'Toàn thời gian', salary: '$1,800 – $2,800', tags: ['React', 'TypeScript', 'Tailwind'], featured: true, logo: '🟧' },
   { id: 'j2', title: 'Product Designer', company: 'Momo', location: 'TP.HCM · Trực tiếp', type: 'Toàn thời gian', salary: '$1,500 – $2,400', tags: ['Figma', 'Design System'], featured: true, logo: '🟣' },
-  { id: 'j3', title: 'Data Analyst Intern', company: 'Shopee', location: 'Từ xa (Remote)', type: 'Thực tập', salary: '$500 – $800', tags: ['SQL', 'Python', 'Tableau'], featured: false, logo: '🟠' },
+  { id: 'j3', title: 'Data Analyst Intern', company: 'Shopee', location: 'Từ xa', type: 'Thực tập', salary: '$500 – $800', tags: ['SQL', 'Python', 'Tableau'], featured: false, logo: '🟠' },
   { id: 'j4', title: 'Backend Engineer (Java)', company: 'Techcombank', location: 'Hà Nội · Hybrid', type: 'Toàn thời gian', salary: '$2,000 – $3,200', tags: ['Spring Boot', 'PostgreSQL', 'AWS'], featured: false, logo: '🔵' },
   { id: 'j5', title: 'Mobile Engineer (Flutter)', company: 'VNG', location: 'TP.HCM · Trực tiếp', type: 'Toàn thời gian', salary: '$1,600 – $2,600', tags: ['Flutter', 'Dart'], featured: false, logo: '🟢' },
   { id: 'j6', title: 'AI Research Engineer', company: 'Viettel AI', location: 'Hà Nội · Trực tiếp', type: 'Toàn thời gian', salary: '$2,400 – $4,000', tags: ['PyTorch', 'NLP', 'LLM'], featured: true, logo: '🔴' },
@@ -177,7 +190,7 @@ export const SALARY = [
   { role: 'Software Engineer', level: 'Senior', region: 'TP.HCM', median: 42, p25: 34, p75: 58, samples: 96 },
   { role: 'Product Manager', level: 'Mid', region: 'TP.HCM', median: 38, p25: 30, p75: 50, samples: 54 },
   { role: 'Data Analyst', level: 'Mid', region: 'Hà Nội', median: 28, p25: 22, p75: 36, samples: 71 },
-  { role: 'UX Designer', level: 'Mid', region: 'Từ xa (Remote)', median: 26, p25: 20, p75: 34, samples: 48 },
+  { role: 'UX Designer', level: 'Mid', region: 'Từ xa', median: 26, p25: 20, p75: 34, samples: 48 },
   { role: 'DevOps Engineer', level: 'Senior', region: 'TP.HCM', median: 50, p25: 40, p75: 66, samples: 39 },
 ]
 export type SalaryRow = (typeof SALARY)[number]
@@ -202,34 +215,6 @@ export const MAP_MARKERS = [
   { id: 'm8', city: 'Berlin', count: 230, x: 47, y: 24 },
 ]
 export type MapMarker = (typeof MAP_MARKERS)[number]
-
-/** Pricing / posting packages. */
-export const PACKAGES = [
-  {
-    name: 'Cơ bản (Starter)',
-    price: 0,
-    period: 'miễn phí',
-    highlight: false,
-    features: ['1 tin tuyển dụng đang chạy', 'Hồ sơ cơ bản', 'Bảng tin cộng đồng', 'Đăng ký sự kiện'],
-    cta: 'Gói hiện tại',
-  },
-  {
-    name: 'Nhà tuyển dụng (Recruiter)',
-    price: 990000,
-    period: '/ tháng',
-    highlight: true,
-    features: ['10 tin tuyển dụng đang chạy', 'Ghim bài nổi bật', 'Thống kê ứng viên', 'Hỗ trợ ưu tiên', 'Huy hiệu nhà tuyển dụng uy tín'],
-    cta: 'Nâng cấp ngay',
-  },
-  {
-    name: 'Doanh nghiệp (Enterprise)',
-    price: 4900000,
-    period: '/ tháng',
-    highlight: false,
-    features: ['Không giới hạn tin tuyển dụng', 'Trang thương hiệu doanh nghiệp', 'Phân tích nhân tài nâng cao', 'Chuyên viên hỗ trợ riêng', 'Tài trợ sự kiện'],
-    cta: 'Liên hệ tư vấn',
-  },
-]
 
 /** Admin KPI cards. */
 export const ADMIN_KPIS = [

@@ -80,12 +80,12 @@ stateDiagram-v2
 *   **Actors/Roles**: Khách viếng thăm (Guest).
 *   **Purpose**: Cho phép người dùng đăng ký tài khoản mới với tư cách là Sinh viên (STUDENT) hoặc Cựu sinh viên (ALUMNI) của Đại học FPT.
 *   **Interface**:
-    *   **Màn hình form nhập liệu:** Chứa thanh chọn vai trò (STUDENT/ALUMNI). Các trường nhập liệu: Họ tên, Email FPT, Mật khẩu (có icon ẩn/hiện), Dropdown chọn Chuyên ngành (danh sách lấy từ API `/majors`), Mã số sinh viên (bắt buộc với mọi vai trò), Khóa học (số nguyên).
-    *   **Vùng thông tin thêm cho ALUMNI:** Năm tốt nghiệp, Nút tải ảnh minh chứng (hiển thị trạng thái Loading khi đang tải lên R2, ảnh Thumbnail preview khi tải lên thành công), Ô nhập ghi chú gửi Admin.
-    *   **Màn hình xác thực OTP:** Ô nhập mã OTP 6 chữ số (mặt nạ monospace), Nút "Xác thực tài khoản", dòng text đếm ngược thời gian chờ gửi lại OTP (cooldown 5 phút), nút "Gửi lại mã OTP mới" kích hoạt khi hết cooldown.
+    *   **Màn hình form nhập liệu:** Chứa thanh chọn vai trò (STUDENT/ALUMNI). Các trường nhập liệu: Họ tên, Email, Mật khẩu (hỗ trợ chuyển đổi ẩn/hiện mật khẩu), Dropdown chọn Chuyên ngành (danh sách lấy từ API `/majors`), Mã số sinh viên (bắt buộc với mọi vai trò, ví dụ: `HE180000`).
+    *   **Vùng thông tin cho ALUMNI:** Nút tải ảnh minh chứng bằng tốt nghiệp (hiển thị trạng thái Loading khi đang tải lên R2, ảnh Thumbnail preview khi tải lên thành công).
+    *   **Màn hình xác thực OTP:** Ô nhập mã OTP 6 chữ số (mặt nạ monospace), Nút "Xác thực tài khoản", dòng text đếm ngược thời gian chờ gửi lại OTP (cooldown 5 phút), nút "Gửi lại mã OTP mới" kích hoạt khi hết cooldown. Email OTP gửi về hòm thư người dùng mang tên hiển thị **AlumNect**.
 
 **Data processing**:
-1.  **Lấy chuyên ngành:** Gọi `GET /api/v1/majors` để lấy dữ liệu đổ vào thẻ chọn chuyên ngành.
+1.  **Lấy chuyên ngành:** Gọi `GET /api/v1/majors` để lấy dữ liệu đổ vào thẻ chọn chuyên ngành (theo danh mục chuẩn FPTU gồm các ngành: SE, IA, CS, AI, ECE, BA, IB, MKT, MC, TDM, HM, GRA, GD, IC, LOG, ASE, E, J, K, C).
 2.  **Đăng ký tài khoản:** Client gọi `POST /api/v1/auth/register` gửi dữ liệu dạng JSON. Backend thực thi mã hóa mật khẩu bằng BCrypt, lưu tài khoản tạm thời vào DB ở trạng thái `PENDING`.
 3.  **Upload file minh chứng (ALUMNI):** Client gửi request lên `GET /api/v1/files/presigned-url` để nhận link upload PUT tạm thời từ Cloudflare R2, sau đó client tự thực hiện PUT tệp lên R2 và lưu link public trả về.
 4.  **Xác thực Email:** Gọi `GET /api/v1/auth/verify-email?email=...&token=...`. Hệ thống cập nhật trạng thái trong database và chuyển tiếp người dùng sang trang `/login`.
@@ -103,13 +103,10 @@ stateDiagram-v2
     *   `password` (String, 8-100 ký tự, chứa ít nhất 1 chữ cái và 1 chữ số)
     *   `role` (String, giá trị: STUDENT hoặc ALUMNI)
     *   `majorId` (Long, ID chuyên ngành)
-    *   `cohort` (Integer, Khóa học)
     *   `studentCode` (String, tối đa 20 ký tự, bắt buộc nhập với mọi vai trò, không trùng lặp)
-    *   `graduationYear` (Integer, bắt buộc với ALUMNI, không lớn hơn năm hiện tại)
     *   `proofUrl` (String, tối đa 500 ký tự, chứa URL ảnh minh chứng tốt nghiệp, bắt buộc với ALUMNI)
-    *   `note` (String, tối đa 500 ký tự, tùy chọn cho ALUMNI)
 *   **Validation**: 
-    *   Phía Client: Zod schema kiểm tra bắt buộc các trường, định dạng email hợp lệ, độ phức tạp mật khẩu, các trường ALUMNI khi vai trò là ALUMNI được chọn. Đồng thời kiểm tra dung lượng tệp tin minh chứng tối đa 100MB trước khi upload lên Cloudflare R2 (phục vụ BR-REG-06).
+    *   Phía Client: Zod schema kiểm tra bắt buộc các trường, định dạng email hợp lệ, độ phức tạp mật khẩu, ảnh minh chứng khi vai trò là ALUMNI được chọn. Đồng thời kiểm tra dung lượng tệp tin minh chứng tối đa 100MB trước khi upload lên Cloudflare R2 (phục vụ BR-REG-06).
     *   Phía Server: Sử dụng JSR-380 (`@NotBlank`, `@Email`, `@Size`, `@Pattern`) trên `RegisterRequest` DTO.
 *   **Business rules**:
     *   **Quy tắc trùng lặp:** Không cho phép trùng email với các tài khoản đang hoạt động (`ACTIVE`), đang chờ duyệt (`WAITING_APPROVAL`), hoặc bị khóa (`LOCKED`). Cho phép ghi đè và gửi lại OTP nếu email trùng ở trạng thái `PENDING`.
@@ -117,7 +114,7 @@ stateDiagram-v2
     *   **Quy tắc Phân quyền kích hoạt:** Sinh viên tự kích hoạt thành công tài khoản. Cựu sinh viên xác thực email xong phải nằm ở trạng thái chờ Admin duyệt ảnh tốt nghiệp để kích hoạt tài khoản.
 *   **Error Handling**:
     *   Mã lỗi validation (400 Bad Request) kèm theo thông báo chi tiết lỗi từng trường.
-    *   Mã lỗi conflict (409 Conflict) khi trùng lặp email.
+    *   Mã lỗi conflict (409 Conflict) khi trùng lặp email hoặc mã số sinh viên.
     *   Mã lỗi nghiệp vụ (400 Bad Request) khi nhập sai mã OTP, OTP hết hạn, token bị khóa.
 *   **Normal case**: Người dùng điền thông tin hợp lệ, nhận mã OTP qua email, nhập chính xác OTP, tài khoản được kích hoạt (STUDENT) hoặc chờ duyệt (ALUMNI), điều hướng về trang đăng nhập.
 *   **Abnormal case**:
@@ -139,8 +136,7 @@ stateDiagram-v2
 | BR-REG-05 | Giới hạn thời gian tối thiểu giữa 2 lần yêu cầu gửi lại OTP là 5 phút. Bỏ qua giới hạn này nếu token trước đó đã bị khóa do nhập sai quá 5 lần. |
 | BR-REG-06 | Cho phép tải lên các tệp tin minh chứng ở nhiều định dạng khác nhau (ảnh, tài liệu PDF, tài liệu Word doc/docx, text, markdown, video...) với dung lượng tối đa 100MB. |
 | BR-REG-07 | Mã số sinh viên (studentCode) là trường bắt buộc đối với tất cả người dùng (Sinh viên và Cựu sinh viên) và phải là duy nhất trên toàn hệ thống (không trùng lặp). |
-| BR-REG-08 | Năm tốt nghiệp (graduationYear) của Cựu sinh viên không được lớn hơn năm hiện tại. |
-| BR-REG-09 | Khi tài khoản PENDING đổi vai trò từ ALUMNI sang STUDENT khi đăng ký lại, phiếu yêu cầu xác minh (`VerificationRequest`) cũ (nếu có) sẽ tự động bị xóa. |
+| BR-REG-08 | Khi tài khoản PENDING đổi vai trò từ ALUMNI sang STUDENT khi đăng ký lại, phiếu yêu cầu xác minh (`VerificationRequest`) cũ (nếu có) sẽ tự động bị xóa. |
 
 #### 5.2 Yêu cầu Chung (Common Requirements)
 *   Mọi thông điệp báo lỗi dữ liệu đầu vào hoặc lỗi nghiệp vụ hiển thị cho người dùng phải bằng **Tiếng Việt**.
@@ -163,7 +159,6 @@ stateDiagram-v2
 | 9 | MSG-REG-09 | Toast/Alert error | Gửi lại OTP trước 5 phút | Vui lòng đợi {X} phút {Y} giây trước khi yêu cầu gửi lại mã OTP mới. |
 | 10 | MSG-REG-10 | Toast/Alert error | Token đã được sử dụng trước đó | Mã xác thực này đã được sử dụng trước đó |
 | 11 | MSG-REG-11 | Toast/Alert error | Trùng mã số sinh viên | Mã số sinh viên này đã được đăng ký trong hệ thống. |
-| 12 | MSG-REG-12 | Inline error | Năm tốt nghiệp tương lai | Năm tốt nghiệp không được lớn hơn năm hiện tại |
 
 ---
 
@@ -203,11 +198,8 @@ classDiagram
         +String password
         +String role
         +Long majorId
-        +Integer cohort
         +String studentCode
-        +Integer graduationYear
         +String proofUrl
-        +String note
     }
 
     class MajorResponse {
@@ -328,10 +320,8 @@ classDiagram
     class VerificationRequest {
         +Long id
         +User user
-        +Integer graduationYear
         +Major major
         +String proofUrl
-        +String note
         +VerificationStatus status
     }
 
@@ -431,9 +421,9 @@ sequenceDiagram
                 Ctrl-->>Client: HTTP 409 Conflict (ApiResponse báo lỗi trùng mã sinh viên)
             else Mã số sinh viên hợp lệ
                 opt Nếu vai trò chọn đăng ký là ALUMNI
-                    Note over Service: Kiểm tra graduationYear và proofUrl trước khi ghi DB
-                    alt Luồng lỗi 2c: Năm tốt nghiệp thuộc tương lai hoặc thiếu proofUrl
-                        Service-->>Ctrl: Throw BadRequestException("Năm tốt nghiệp / proofUrl không hợp lệ")
+                    Note over Service: Kiểm tra proofUrl không rỗng trước khi ghi DB
+                    alt Luồng lỗi 2c: Thiếu proofUrl minh chứng tốt nghiệp
+                        Service-->>Ctrl: Throw BadRequestException("Ảnh minh chứng là bắt buộc khi đăng ký...")
                         Ctrl-->>Client: HTTP 400 Bad Request (ApiResponse báo lỗi ALUMNI)
                     end
                 end
@@ -538,9 +528,9 @@ sequenceDiagram
     *   **Kiểm tra ràng buộc:** Spring Boot tự động thực hiện validate DTO (nếu sai trả ngay lỗi 400 Bad Request).
     *   **Kiểm tra trùng Email:** `AuthServiceImpl` tìm kiếm trong bảng `users`. Nếu phát hiện email đã tồn tại với các trạng thái hoạt động -> ném lỗi `ConflictException` (GlobalExceptionHandler dịch thành 409 Conflict).
     *   **Kiểm tra trùng Mã sinh viên:** `AuthServiceImpl` gọi `UserProfileRepository` để kiểm tra sự tồn tại của `studentCode`. Nếu bị trùng ở tài khoản khác -> ném lỗi `ConflictException` (trả về 409 Conflict).
-    *   **Kiểm tra đặc thù ALUMNI (trước khi lưu):** Nếu vai trò là `ALUMNI`, kiểm tra toàn bộ các trường bắt buộc *trước khi ghi bất kỳ dữ liệu nào vào CSDL*: năm tốt nghiệp không được lớn hơn năm hiện tại, `proofUrl` không được để trống. Nếu vi phạm -> ném lỗi `BadRequestException` (trả về 400 Bad Request).
+    *   **Kiểm tra đặc thù ALUMNI (trước khi lưu):** Nếu vai trò là `ALUMNI`, kiểm tra `proofUrl` không được để trống *trước khi ghi bất kỳ dữ liệu nào vào CSDL*. Nếu thiếu -> ném lỗi `BadRequestException` (trả về 400 Bad Request).
     *   **Ghi đè hoặc Lưu mới:** Sau khi tất cả kiểm tra hợp lệ, mã hóa password bằng BCrypt, lưu/cập nhật bản ghi `User`, `UserProfile` vào CSDL. Nếu user mới, tạo thêm bản ghi `UserSettings` mặc định (theme: SYSTEM, language: vi). Nếu vai trò là `ALUMNI`, tạo/cập nhật bản ghi yêu cầu xác minh `VerificationRequest` ở trạng thái `PENDING`. Nếu user PENDING cũ đổi từ ALUMNI sang STUDENT, xóa `VerificationRequest` cũ nếu có.
-    *   **Sinh & Gửi OTP:** Vô hiệu hóa các OTP cũ của user đó bằng cách set `used = true`. Sinh OTP 6 chữ số mới có hạn 5 phút lưu vào bảng `verification_tokens`, sau đó gọi dịch vụ gửi email để bắn email OTP đến hòm thư người dùng. Trả về HTTP 200 OK.
+    *   **Sinh & Gửi OTP:** Vô hiệu hóa các OTP cũ của user đó bằng cách set `used = true`. Sinh OTP 6 chữ số mới có hạn 5 phút lưu vào bảng `verification_tokens`, sau đó gọi dịch vụ gửi email để gửi mã xác thực OTP đến hòm thư người dùng (tên người gửi hiển thị là **AlumNect** theo cấu hình `MAIL_FROM_NAME`). Trả về HTTP 200 OK.
 
 2.  **TIẾN TRÌNH 2: XÁC THỰC EMAIL BẰNG OTP**
     *   **Gửi Request:** Người dùng nhập mã OTP 6 số trên màn hình. Client gửi HTTP GET tới `/api/v1/auth/verify-email` kèm tham số email và token.

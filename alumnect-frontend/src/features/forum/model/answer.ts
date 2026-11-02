@@ -20,6 +20,7 @@ const answerBaseSchema = z.object({
   authorHeadline: z.string().default(''),
   verified: z.boolean().default(false),
   votes: z.number().default(0),
+  voted: z.boolean().default(false),
   time: z.string().default(''),
   createdAt: z.string().default(''),
   edited: z.boolean().default(false),

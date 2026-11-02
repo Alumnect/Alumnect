@@ -1,0 +1,93 @@
+import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useMentoringTermsStatus } from '../hooks/useMentoringTerms'
+import { MentoringTermsConsentModal } from './MentoringTermsConsentModal'
+import type { MentoringEntrySource } from '../model/mentoringTermsTypes'
+import { Card, Skeleton } from '@/components/ui/primitives'
+import { Button } from '@/components/ui/Button'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
+
+interface MentoringTermsGateProps {
+  children: ReactNode
+  source?: MentoringEntrySource
+}
+
+/**
+ * Route Guard / Gate kiểm soát quyền truy cập module Mentoring (UC90).
+ */
+export function MentoringTermsGate({
+  children,
+  source = 'MENTORING_HOME',
+}: MentoringTermsGateProps) {
+  const { t } = useTranslation()
+  const { data, isLoading, isError, error, refetch, isFetching } = useMentoringTermsStatus()
+
+  // 1. Trạng thái Loading: Hiển thị Shimmer Skeleton chuẩn Pastel
+  if (isLoading) {
+    return (
+      <div className="w-full py-4">
+        <Card hover={false} className="mx-auto max-w-4xl space-y-6 border border-border bg-surface p-8">
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-48 rounded-full" />
+            <Skeleton className="h-9 w-80 rounded-xl" />
+            <Skeleton className="h-4 w-96 rounded-lg" />
+          </div>
+          <div className="space-y-4 rounded-2xl border border-border p-6">
+            <Skeleton className="h-5 w-full rounded-md" />
+            <Skeleton className="h-4 w-5/6 rounded-md" />
+            <Skeleton className="h-4 w-4/6 rounded-md" />
+            <Skeleton className="h-28 w-full rounded-xl" />
+          </div>
+          <div className="flex justify-between pt-4">
+            <Skeleton className="h-10 w-28 rounded-xl" />
+            <Skeleton className="h-10 w-44 rounded-xl" />
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // 2. Trạng thái Lỗi kết nối / Server Error: Không tự ý mở gate
+  if (isError) {
+    return (
+      <div className="w-full py-8">
+        <Card hover={false} className="mx-auto max-w-md border border-danger-border bg-surface p-8 text-center shadow-soft">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-soft text-danger">
+            <AlertTriangle className="h-7 w-7" />
+          </div>
+          <h2 className="font-display text-lg font-bold text-text">
+            {t('mentoring.termsCheckErrorTitle')}
+          </h2>
+          <p className="mt-2 text-sm text-text-muted">
+            {error?.message || t('mentoring.termsCheckErrorDesc')}
+          </p>
+          <div className="mt-6 flex justify-center">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              leftIcon={<RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />}
+            >
+              {isFetching ? t('mentoring.retryingNow') : t('mentoring.retryNow')}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // 3. Nếu người dùng ĐÃ chấp nhận phiên bản điều khoản hiện tại: Cho phép truy cập
+  if (data?.accepted) {
+    return <div className="h-full min-h-0 w-full">{children}</div>
+  }
+
+  // 4. Chưa chấp nhận: khóa chức năng và yêu cầu xác nhận bằng popup bắt buộc.
+  return (
+    <div className="w-full">
+      <MentoringTermsConsentModal
+        source={source}
+      />
+    </div>
+  )
+}

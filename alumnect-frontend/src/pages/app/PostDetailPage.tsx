@@ -8,14 +8,10 @@
  *    / lỗi hệ thống (retry) / thành công.
  *  - Thành viên (Student/Alumni) đăng bình luận qua ô soạn (UC18); Guest được mời đăng nhập.
  */
-import { useState, useEffect, useRef, type FormEvent } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import {
-  Heart,
-  MessageCircle,
-  Repeat2,
-  Bookmark,
-  Flag,
   ArrowLeft,
   ArrowRight,
   Pencil,
@@ -29,34 +25,52 @@ import {
   MapPin,
   Users,
   ExternalLink,
-  CalendarPlus,
   Briefcase,
+  Trash2,
+  CalendarPlus,
+  Ban,
+  Building2,
+  Coins,
+  Mail,
+  Heart,
+  MessageCircle,
+  Repeat,
+  Bookmark,
+  Flag,
 } from 'lucide-react'
-import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel } from '@/components/ui'
+import { motion, AnimatePresence } from 'framer-motion'
+import { TRANSITION } from '@/lib/motion'
+import { Avatar, Badge, Card, Skeleton, EmptyState, ImageCarousel, toast } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { compact, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { usePostDetail, useComments, useCreateComment } from '@/features/post'
+import { useLoginPrompt } from '@/store/loginPrompt'
+import { DeleteCommentModal, usePostDetail, useComments, useCreateComment, useUpdateComment } from '@/features/post'
 import type { Comment } from '@/features/post'
-import { useToggleLike, CreatePostModal } from '@/features/feed'
+import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, ShareModal, PostActionMenu, type Post } from '@/features/feed'
+import { ReportPostModal } from '@/features/report'
+import { EventRsvpButton, CancelEventModal, useCancelEvent } from '@/features/event'
+import { useNavigate } from 'react-router-dom'
+
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
-const TYPE_META: Record<string, { label: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
-  achievement: { label: 'Thành tựu', tone: 'gold' },
-  recruitment: { label: 'Tuyển dụng', tone: 'aqua' },
-  event: { label: 'Sự kiện', tone: 'violet' },
-  normal: { label: 'Bài viết', tone: 'brand' },
+const TYPE_META: Record<string, { labelKey: string; tone: 'brand' | 'gold' | 'aqua' | 'violet' }> = {
+  achievement: { labelKey: 'feed.achievement', tone: 'gold' },
+  recruitment: { labelKey: 'feed.recruitment', tone: 'aqua' },
+  event: { labelKey: 'feed.event', tone: 'violet' },
+  normal: { labelKey: 'feed.normal', tone: 'brand' },
 }
 
 /** Nút quay lại bảng tin, hiển thị ở đầu mọi trạng thái của trang. */
 function BackToFeed() {
+  const { t } = useTranslation()
   return (
     <Link
       to="/app"
-      className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-plum-500 transition-colors hover:text-plum-900"
+      className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-text"
     >
-      <ArrowLeft size={16} /> Quay lại bảng tin
+      <ArrowLeft size={16} /> {t('common.back')} {t('nav.feed')}
     </Link>
   )
 }
@@ -88,30 +102,32 @@ function PostDetailSkeleton() {
  * @param onRetry Hàm gọi lại API
  */
 function PostError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-coral-300/40 text-coral-600">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tải được bài viết</p>
-        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">{t('feed.loadPostError', 'Không tải được bài viết')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('feed.systemError', 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.')}</p>
       </div>
-      <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
+      <Button variant="secondary" size="sm" onClick={onRetry}>{t('common.tryAgain', 'Thử lại')}</Button>
     </Card>
   )
 }
 
 /** Trạng thái bài viết không tồn tại hoặc đã bị ẩn/gỡ (404 — MSG-POST-02, BR-08/BR-11). */
 function PostNotAvailable() {
+  const { t } = useTranslation()
   return (
     <EmptyState
       icon={<Inbox size={24} />}
-      title="Bài viết này không còn khả dụng"
-      description="Bài viết có thể đã bị gỡ hoặc không tồn tại."
+      title={t('feed.postUnavailableTitle', 'Bài viết này không còn khả dụng')}
+      description={t('feed.postUnavailableDesc', 'Bài viết có thể đã bị gỡ hoặc không tồn tại.')}
       action={
         <ButtonLink to="/app" variant="secondary" size="sm">
-          Về bảng tin
+          {t('common.backToFeed', 'Về bảng tin')}
         </ButtonLink>
       }
     />
@@ -120,20 +136,21 @@ function PostNotAvailable() {
 
 /** Trạng thái Guest cố xem bài MEMBERS (403 — MSG-POST-04, BR-12): mời đăng nhập. */
 function PostForbidden() {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-500/10 text-brand-600">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-soft text-primary-solid">
         <Lock size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Bài viết dành cho thành viên</p>
-        <p className="mt-1 text-sm text-plum-500">Đăng nhập để xem nội dung bài viết này.</p>
+        <p className="font-bold text-text">{t('auth.membersOnlyPost')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{t('auth.membersOnlyPostDesc')}</p>
       </div>
       <Link
         to="/login"
-        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary-solid px-4 text-sm font-semibold text-on-primary shadow-sm transition-transform hover:bg-primary-hover"
       >
-        Đăng nhập <ArrowRight size={15} />
+        {t('common.login')} <ArrowRight size={15} />
       </Link>
     </Card>
   )
@@ -147,29 +164,73 @@ function PostForbidden() {
 function PostDetailCard({
   post,
   canInteract,
+  currentUserId,
   currentUserName,
   onEdit,
+  onDelete,
+  canReport,
+  onReport,
+  onShare,
+  onCancelEvent,
 }: {
-  post: import('@/features/feed').Post
+  post: Post
   canInteract: boolean
+  currentUserId?: string
   currentUserName?: string
   onEdit?: () => void
+  onDelete?: () => void
+  canReport: boolean
+  onReport?: () => void
+  onShare?: () => void
+  onCancelEvent?: () => void
 }) {
+
+  const { t } = useTranslation()
   const meta = TYPE_META[post.type] ?? TYPE_META.normal
-  const guardTitle = canInteract ? undefined : 'Đăng nhập để tương tác'
-  const isAuthor = !!currentUserName && post.author === currentUserName
+  const typeLabel = post.type === 'normal'
+    ? t('feed.normal')
+    : post.type === 'achievement'
+    ? t('feed.achievement')
+    : post.type === 'recruitment'
+    ? t('feed.recruitment')
+    : post.type === 'event'
+    ? t('feed.event')
+    : t(meta.labelKey)
+
+  const isAuthor = post.authorId != null
+    ? !!currentUserId && post.authorId === currentUserId
+    : !!currentUserName && post.author === currentUserName
+
+  const isEventEnded = post.type === 'event' && post.event != null && Boolean(
+    (post.event.endTime && new Date(post.event.endTime).getTime() < Date.now()) ||
+    (!post.event.endTime && post.event.startTime && new Date(post.event.startTime).getTime() < Date.now())
+  )
 
   // Trạng thái thích cục bộ (UC17) — khởi tạo từ dữ liệu bài viết đã tải.
   const [liked, setLiked] = useState(post.liked)
   const [likeCount, setLikeCount] = useState(post.likes)
+  // Trạng thái lưu bài viết cục bộ (UC20)
+  const [saved, setSaved] = useState(post.saved ?? false)
   const toggleLike = useToggleLike()
+  const toggleSave = useToggleSavePost()
+  const promptLogin = useLoginPrompt((s) => s.open)
+
+  // Đồng bộ lại state khi post props thay đổi
+  useEffect(() => {
+    setLiked(post.liked)
+    setLikeCount(post.likes)
+    setSaved(post.saved ?? false)
+  }, [post.liked, post.likes, post.saved])
 
   /**
    * Thích/bỏ thích bài viết (UC17): cập nhật lạc quan, đồng bộ theo phản hồi backend,
-   * hoàn tác khi lỗi. Guest đã bị chặn ở lớp `disabled` nên chỉ chạy khi có quyền.
+   * hoàn tác khi lỗi. Guest được mời đăng nhập.
    */
   const handleLike = () => {
-    if (!canInteract) return
+    if (!canInteract) {
+      promptLogin(t('feed.loginToInteract'))
+      return
+    }
     const next = !liked
     setLiked(next)
     setLikeCount((c) => c + (next ? 1 : -1))
@@ -188,6 +249,29 @@ function PostDetailCard({
     )
   }
 
+  /**
+   * Lưu / Bỏ lưu bài viết (UC20): cập nhật lạc quan, hoàn tác khi lỗi.
+   */
+  const handleSave = () => {
+    if (!canInteract) {
+      promptLogin(t('feed.loginToSave'))
+      return
+    }
+    const next = !saved
+    setSaved(next)
+    toggleSave.mutate(
+      { postId: post.id, save: next },
+      {
+        onSuccess: (data) => {
+          setSaved(data.saved)
+        },
+        onError: () => {
+          setSaved(!next)
+        },
+      },
+    )
+  }
+
   return (
     <Card hover={false} className="overflow-hidden">
       <div className="p-6">
@@ -196,109 +280,160 @@ function PostDetailCard({
           <Link
             to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
             className="shrink-0 transition-transform duration-200 hover:scale-105"
-            title={`Xem hồ sơ của ${post.author}`}
+            title={t('feed.viewProfile', { name: post.author })}
           >
             <Avatar src={post.avatar} name={post.author} size={52} verified={post.verified} />
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 font-bold text-plum-900">
+            <p className="flex items-center gap-2 font-bold text-text">
               <Link
                 to={post.authorId ? `/app/profile?userId=${post.authorId}` : '/app/profile'}
-                className="truncate hover:underline hover:text-brand-600 transition-colors"
-                title={`Xem hồ sơ của ${post.author}`}
+                className="truncate hover:underline hover:text-primary-solid transition-colors"
+                title={t('feed.viewProfile', { name: post.author })}
               >
                 {post.author}
               </Link>
-              <Badge tone={meta.tone} className="px-2 py-0.5 text-[10px]">{meta.label}</Badge>
+              <Badge tone={meta.tone} className="px-2 py-0.5 text-xs">{typeLabel}</Badge>
             </p>
-            <p className="truncate text-xs text-plum-400">{post.role ? `${post.role} · ` : ''}{post.time}</p>
+            <p className="truncate text-xs text-text-subtle">{post.role ? `${post.role.replace(/\s*\|\s*FPTU Alumni/gi, '').replace(/FPTU Alumni/gi, '').trim()} · ` : ''}{post.time}</p>
           </div>
-          {isAuthor && onEdit && (
-            <button
-              type="button"
-              onClick={onEdit}
-              aria-label="Chỉnh sửa bài viết"
-              title="Chỉnh sửa bài viết"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-plum-900/10 px-3 py-1.5 text-xs font-semibold text-plum-600 transition-colors hover:bg-plum-900/[0.05] hover:text-plum-900"
-            >
-              <Pencil size={14} /> Chỉnh sửa
-            </button>
-          )}
+          <PostActionMenu
+            post={post}
+            isAuthor={isAuthor}
+            canInteract={canInteract}
+            onEdit={onEdit ? () => onEdit() : undefined}
+            onDelete={onDelete ? () => onDelete() : undefined}
+            onCancelEvent={onCancelEvent ? () => onCancelEvent() : undefined}
+            onReport={onReport ? () => onReport() : undefined}
+          />
         </div>
 
         {/* Nội dung đầy đủ (không cắt dòng như thẻ ở bảng tin) */}
         {post.type !== 'event' && post.type !== 'recruitment' && (
-          <p className="mt-5 whitespace-pre-line text-[15px] leading-relaxed text-plum-800">{post.text}</p>
+          <p className="mt-5 whitespace-pre-line text-[15px] leading-relaxed text-text">{post.text}</p>
         )}
       </div>
 
       {/* --- Thẻ thông tin Tuyển dụng (nếu là bài recruitment) --- */}
       {post.type === 'recruitment' && post.job && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-sm ring-1 ring-brand-50 transition-all">
-          {/* Header Tuyển dụng */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-gradient-to-r from-brand-50/80 to-brand-100/30 px-6 py-4">
-            <h3 className="flex items-center gap-2 font-bold text-brand-900 text-lg">
-              <Briefcase size={20} className="text-brand-600" />
-              <span>Tuyển dụng: <span className="text-plum-900">{post.job.title}</span></span>
-            </h3>
-            {post.job.applyUrl && (
-              <a
-                href={post.job.applyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#F27024] px-4 py-2 text-sm font-bold text-white hover:bg-[#d96010] transition-colors"
-              >
-                Ứng tuyển <ExternalLink size={14} />
-              </a>
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-orange-200 bg-surface shadow-sm ring-1 ring-orange-50 transition dark:border-border dark:ring-0">
+          {/* Header Tuyển dụng - Thiết kế trang trọng, nổi bật */}
+          <div className="bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 px-6 py-4 dark:border-border">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-orange-100 text-primary-solid shadow-2xs dark:bg-orange-500/20 dark:text-orange-400">
+                <Briefcase size={22} />
+              </span>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">
+                  {t('feed.jobOpportunity', 'Cơ hội việc làm')}
+                </span>
+                <h3 className="text-lg font-bold text-text leading-snug">
+                  {post.job.title}
+                </h3>
+              </div>
+            </div>
+
+            {post.job.company && (
+              <div className="flex items-center gap-1.5 rounded-xl bg-surface px-3.5 py-1.5 border border-orange-200/80 text-sm font-bold text-text shadow-2xs dark:border-border-strong">
+                <Building2 size={16} className="text-primary-solid" />
+                <span>{post.job.company}</span>
+              </div>
             )}
           </div>
 
           <div className="p-6">
-            <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50 p-5">
-              <p className="text-base font-bold text-plum-900 mb-3">Công ty: {post.job.company}</p>
-              
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                 <div>
-                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm</p>
-                   <div className="flex flex-wrap gap-2 text-sm text-plum-800 font-medium">
-                     {post.job.location && (
-                       <span className="inline-flex items-center gap-1">
-                         <MapPin size={15} className="text-brand-500" /> {post.job.location}
-                       </span>
-                     )}
-                   </div>
-                 </div>
-                 <div>
-                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mức lương & Liên hệ</p>
-                   <div className="flex flex-col gap-1.5 text-sm font-medium text-plum-800">
-                     {(post.job.salaryMin || post.job.salaryMax) ? (
-                       <span className="inline-flex items-center gap-1">
-                          <span className="font-semibold text-emerald-600">
-                             {post.job.salaryMin && post.job.salaryMax
-                               ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND đến ${post.job.salaryMax.toLocaleString('vi-VN')} VND`
-                               : post.job.salaryMin
-                               ? `Từ ${post.job.salaryMin.toLocaleString('vi-VN')} VND`
-                               : `Lên đến ${post.job.salaryMax?.toLocaleString('vi-VN')} VND`}
-                          </span>
-                       </span>
-                     ) : (
-                       <span className="text-slate-400 font-normal">Thỏa thuận</span>
-                     )}
-                     {post.job.contactEmail && (
-                       <span className="inline-flex items-center gap-1.5 text-sm">
-                         <Inbox size={15} className="text-plum-400" /> {post.job.contactEmail}
-                       </span>
-                     )}
-                   </div>
-                 </div>
+            {/* Box Kêu gọi Ứng tuyển (tương tự RSVP của Sự kiện) */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-100 p-4 shadow-xs dark:border-border dark:bg-surface-2">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-text">{t('feed.applyThisJob', 'Ứng tuyển vị trí này')}</p>
+                <p className="text-xs text-text-subtle mt-0.5">
+                  {post.job.applyUrl
+                    ? t('feed.applyViaDirectLink', 'Gửi hồ sơ trực tiếp qua liên kết tuyển dụng của doanh nghiệp')
+                    : post.job.contactEmail
+                    ? t('feed.applyViaEmail', { email: post.job.contactEmail })
+                    : t('feed.applyContactPoster', 'Liên hệ người đăng bài để biết thêm thông tin ứng tuyển')}
+                </p>
               </div>
+
+              <div className="flex items-center gap-2">
+                {post.job.contactEmail && (
+                  <a
+                    href={`mailto:${post.job.contactEmail}?subject=${encodeURIComponent(`Ứng tuyển vị trí ${post.job.title} - ${post.job.company}`)}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-bold text-text-muted hover:bg-surface-2 hover:text-text transition-colors shadow-2xs dark:hover:bg-[#323334]"
+                    title={t('feed.sendEmailToEmployer', 'Gửi email cho nhà tuyển dụng')}
+                  >
+                    <Mail size={14} className="text-text-subtle" />
+                    <span>{t('feed.sendCv', 'Gửi CV')}</span>
+                  </a>
+                )}
+                {post.job.applyUrl && (
+                  <a
+                    href={post.job.applyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary-solid px-4 py-2 text-xs font-bold text-on-primary shadow-sm hover:bg-primary-hover transition cursor-pointer"
+                  >
+                    <span>{t('feed.applyNow', 'Ứng tuyển ngay')}</span>
+                    <ExternalLink size={13} />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Thông tin chi tiết: Mức lương, Email, Địa điểm (Grid trực quan tương tự Sự kiện) */}
+            <div className="mb-6 grid gap-4 rounded-xl border border-border bg-surface-2 p-5 sm:grid-cols-2">
+              <div>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.salaryLabel', 'Mức lương')}</p>
+                <div className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Coins size={16} className="text-success shrink-0" />
+                  {(post.job.salaryMin || post.job.salaryMax) ? (
+                    <span className="text-success font-bold">
+                      {post.job.salaryMin && post.job.salaryMax
+                        ? t('feed.salaryRange', { min: post.job.salaryMin.toLocaleString(), max: post.job.salaryMax.toLocaleString() })
+                        : post.job.salaryMin
+                        ? t('feed.salaryFrom', { amount: post.job.salaryMin.toLocaleString() })
+                        : t('feed.salaryUpTo', { amount: post.job.salaryMax?.toLocaleString() })}
+                    </span>
+                  ) : (
+                    <span className="text-text-subtle font-medium">{t('feed.salaryNegotiable', 'Thỏa thuận')}</span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.recruitmentContact', 'Liên hệ tuyển dụng')}</p>
+                <div className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Mail size={16} className="text-info shrink-0" />
+                  {post.job.contactEmail ? (
+                    <a
+                      href={`mailto:${post.job.contactEmail}`}
+                      className="text-info hover:underline truncate"
+                      title={post.job.contactEmail}
+                    >
+                      {post.job.contactEmail}
+                    </a>
+                  ) : (
+                    <span className="text-text-subtle font-normal">—</span>
+                  )}
+                </div>
+              </div>
+
+              {post.job.location && (
+                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-border pt-4">
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.workLocation', 'Địa điểm làm việc')}</p>
+                  <p className="flex items-start gap-1.5 text-sm font-medium text-text">
+                    <MapPin size={16} className="text-primary-solid shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{post.job.location}</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Mô tả tuyển dụng */}
             {post.text && (
               <div className="mb-6">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-brand-600">Mô tả công việc:</p>
-                <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">{t('feed.jobDescription', 'Mô tả công việc:')}</p>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-text">
                   {post.text}
                 </p>
               </div>
@@ -309,8 +444,8 @@ function PostDetailCard({
               const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
               if (imgs.length === 0) return null
               return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
-                  <ImageCarousel images={imgs} height={420} altPrefix="Ảnh tuyển dụng" />
+                <div className="overflow-hidden rounded-xl border border-border shadow-sm">
+                  <ImageCarousel images={imgs} height={420} altPrefix={t('feed.recruitmentImage', 'Ảnh tuyển dụng')} />
                 </div>
               )
             })()}
@@ -320,23 +455,58 @@ function PostDetailCard({
 
       {/* --- Thẻ thông tin Sự kiện (nếu là bài event) --- */}
       {post.type === 'event' && post.event && (
-        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm ring-1 ring-violet-50 transition-all">
+        <div className="mx-6 mb-4 mt-4 overflow-hidden rounded-2xl border border-info-border bg-surface shadow-sm ring-1 ring-info-border transition dark:border-border dark:ring-0">
           {/* Header Sự kiện */}
-          <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50/80 to-violet-100/30 px-6 py-4">
-            <h3 className="flex items-center gap-2 font-bold text-violet-900 text-lg">
-              <CalendarPlus size={20} className="text-violet-600" />
-              <span>Sự kiện: <span className="text-plum-900">{post.event.title}</span></span>
+          <div className="bg-surface-2 flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 px-6 py-4 dark:border-border">
+            <h3 className="flex items-center gap-2 font-bold text-info text-lg dark:text-text">
+              <CalendarPlus size={20} className="text-info" />
+              <span>{t('feed.event')}: <span className="text-text">{post.event.title}</span></span>
             </h3>
+            {post.event.status === 'CANCELLED' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-3 py-1 text-xs font-bold text-danger">
+                <Ban size={13} /> {t('feed.eventCancelled', 'Đã hủy')}
+              </span>
+            ) : isAuthor && !isEventEnded && onCancelEvent ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={onCancelEvent}
+                className="border-danger-border text-danger hover:bg-danger-soft text-xs px-3 h-8 font-semibold"
+                title={t('event.cancelEventTooltip', 'Hủy tổ chức sự kiện này')}
+              >
+                <Ban size={13} className="mr-1" /> {t('event.cancelEventAction', 'Hủy sự kiện')}
+              </Button>
+            ) : null}
           </div>
 
           <div className="p-6">
+            {/* Đăng ký tham gia sự kiện (UC25 - RSVP) */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-violet-100 p-4 shadow-xs dark:border-border dark:bg-surface-2">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-text">{t('event.registerEvent', 'Đăng ký tham gia sự kiện')}</p>
+              </div>
+              <EventRsvpButton
+                eventId={post.event.id ?? post.eventId}
+                eventTitle={post.event.title}
+                initialRegistered={post.event.isRegistered ?? false}
+                initialAttendeeCount={post.event.attendeeCount ?? 0}
+                capacity={post.event.capacity}
+                startTime={post.event.startTime}
+                endTime={post.event.endTime}
+                status={post.event.status}
+                size="md"
+                showCount={true}
+              />
+            </div>
+
             {/* Thời gian & Địa điểm */}
-            <div className="mb-6 grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-5 sm:grid-cols-2">
+            <div className="mb-6 grid gap-4 rounded-xl border border-border bg-surface-2 p-5 sm:grid-cols-2">
               {post.event.startTime && (
                 <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Bắt đầu</p>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
-                    <Clock size={15} className="text-violet-500" />
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.startTime', 'Bắt đầu')}</p>
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-text">
+                    <Clock size={15} className="text-info" />
                     {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
                     {new Date(post.event.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -344,31 +514,31 @@ function PostDetailCard({
               )}
               {post.event.endTime ? (
                 <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-plum-900">
-                    <Clock size={15} className="text-coral-500" />
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.endTime', 'Kết thúc')}</p>
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-text">
+                    <Clock size={15} className="text-danger" />
                     {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
                     {new Date(post.event.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               ) : (
                 <div>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Kết thúc</p>
-                  <p className="text-sm font-semibold text-slate-400">—</p>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.endTime', 'Kết thúc')}</p>
+                  <p className="text-sm font-semibold text-text-subtle">—</p>
                 </div>
               )}
               {(post.event.location || post.event.capacity) && (
-                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-slate-200/60 pt-4">
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Địa điểm & Sức chứa</p>
+                <div className="col-span-1 sm:col-span-2 mt-2 border-t border-border pt-4">
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('feed.locationAndCapacity', 'Địa điểm & Sức chứa')}</p>
                   <div className="flex flex-wrap items-center gap-5">
                     {post.event.location && (
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
-                        <MapPin size={15} className="text-brand-500" /> {post.event.location}
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-text">
+                        <MapPin size={15} className="text-primary-solid" /> {post.event.location}
                       </p>
                     )}
                     {post.event.capacity && (
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-plum-800">
-                        <Users size={15} className="text-aqua-600" /> Tối đa {post.event.capacity} người
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-text">
+                        <Users size={15} className="text-aqua-600" /> {t('feed.maxAttendees', { count: post.event.capacity })}
                       </p>
                     )}
                   </div>
@@ -379,8 +549,8 @@ function PostDetailCard({
             {/* Mô tả sự kiện */}
             {post.text && (
               <div className="mb-6">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-violet-600">Mô tả sự kiện:</p>
-                <p className="whitespace-pre-line text-[15px] leading-relaxed text-plum-800">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-info">{t('feed.eventDescription', 'Mô tả sự kiện:')}</p>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-text">
                   {post.text}
                 </p>
               </div>
@@ -391,8 +561,8 @@ function PostDetailCard({
               const imgs = post.images && post.images.length > 0 ? post.images : post.image ? [post.image] : []
               if (imgs.length === 0) return null
               return (
-                <div className="overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
-                  <ImageCarousel images={imgs} height={420} altPrefix="Ảnh sự kiện" />
+                <div className="overflow-hidden rounded-xl border border-border shadow-sm">
+                  <ImageCarousel images={imgs} height={420} altPrefix={t('feed.eventPhotos', 'Ảnh sự kiện')} />
                 </div>
               )
             })()}
@@ -402,59 +572,92 @@ function PostDetailCard({
 
       {/* Danh sách ảnh đính kèm (nếu có) — dùng ImageCarousel */}
       {post.type !== 'event' && post.type !== 'recruitment' && post.images && post.images.length > 0 && (
-        <ImageCarousel 
-          images={post.images} 
-          altPrefix={`Ảnh đính kèm bài viết của ${post.author}`}
+        <ImageCarousel
+          images={post.images}
+          altPrefix={t('feed.postAttachedImagesOf', { name: post.author })}
         />
       )}
 
       {/* Thanh hành động — số liệu tương tác. Đăng like/comment/repost thuộc UC17/18/21,
           ở UC16 chỉ hiển thị số đếm (nút vô hiệu hóa với Guest theo BR-12). */}
-      <div className="flex items-center gap-1 border-t border-plum-900/[0.06] px-6 py-3">
+      <div className="flex items-center gap-1.5 border-t border-border px-6 py-3">
         <button
           disabled={!canInteract}
           onClick={handleLike}
           aria-pressed={liked}
-          title={guardTitle}
           className={cn(
-            'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors enabled:hover:bg-plum-900/[0.04] disabled:cursor-not-allowed disabled:opacity-60',
-            liked ? 'text-rose-500 enabled:hover:text-rose-600' : 'text-plum-500 enabled:hover:text-plum-900',
+            'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition duration-200 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
+            liked
+              ? 'text-danger font-extrabold'
+              : 'text-text-muted enabled:hover:text-rose-500 dark:enabled:hover:text-rose-400',
           )}
         >
-          <Heart size={18} className={liked ? 'fill-rose-400' : ''} /> {compact(likeCount)}
+          <AnimatePresence initial={false}>
+            <motion.span
+              key={liked ? 'liked' : 'unliked'}
+              className="inline-flex"
+              initial={{ scale: 0.55, opacity: 0.4 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={TRANSITION.bounce}
+            >
+              <Heart size={16} className={cn(liked && 'fill-danger text-danger')} />
+            </motion.span>
+          </AnimatePresence>
+          <span>{compact(likeCount)} {t('feed.likeAction', 'thích')}</span>
         </button>
         <button
           disabled={!canInteract}
-          title={guardTitle}
           onClick={() => {
             window.location.hash = 'comments'
             document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
           }}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-brand-500/[0.08] enabled:hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition duration-200 enabled:hover:text-[#F27024] dark:enabled:hover:text-[#FF8C38] disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
-          <MessageCircle size={18} /> {compact(post.comments)}
+          <MessageCircle size={16} /> <span>{compact(post.comments)} {t('feed.comment', 'bình luận')}</span>
         </button>
         <button
           disabled={!canInteract}
-          title={guardTitle}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-500 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={onShare}
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-text-muted transition duration-200 enabled:hover:text-violet-500 dark:enabled:hover:text-violet-400 disabled:cursor-not-allowed disabled:opacity-60 enabled:cursor-pointer"
         >
-          <Repeat2 size={18} /> {compact(post.reposts)}
+          <Repeat size={16} />
+          <span>{t('feed.share', 'Chia sẻ')}</span>
         </button>
+        {!isAuthor && (canReport ? (
+          <button
+            type="button"
+            onClick={onReport}
+            aria-label={t('feed.reportPostTitle', 'Báo cáo bài viết')}
+            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-text-subtle transition duration-200 hover:bg-danger-soft hover:text-danger cursor-pointer"
+          >
+            <Flag size={16} />
+          </button>
+        ) : !canInteract ? (
+          <button
+            disabled
+            aria-label={t('feed.loginToReport', 'Đăng nhập để báo cáo bài viết')}
+            className="ml-auto inline-flex items-center justify-center rounded-xl p-2 text-text-subtle dark:text-text-subtle disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Flag size={16} />
+          </button>
+        ) : null)}
         <button
-          disabled={!canInteract}
-          title={guardTitle}
-          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-plum-400 transition-colors enabled:hover:bg-plum-900/[0.04] enabled:hover:text-plum-900 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-label={saved ? t('feed.unsavePost', 'Bỏ lưu bài viết') : t('feed.save', 'Lưu bài viết')}
+          onClick={handleSave}
+          className={cn(
+            'inline-flex items-center justify-center rounded-xl p-2 transition duration-200 cursor-pointer',
+            isAuthor ? 'ml-auto' : '',
+            saved
+              ? 'text-primary-solid dark:text-primary bg-primary-soft dark:bg-[#F27024]/15 hover:bg-[#F27024]/20'
+              : 'text-text-subtle dark:text-text-subtle hover:bg-surface-2 hover:text-primary-solid dark:hover:text-primary',
+          )}
         >
-          <Flag size={17} />
-        </button>
-        <button aria-label="Lưu bài viết" className="grid h-9 w-9 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.04] hover:text-plum-900">
-          <Bookmark size={18} />
+          <Bookmark size={16} className={cn(saved && 'fill-[#F27024] text-primary-solid dark:fill-[#FF8C38] dark:text-primary')} />
         </button>
       </div>
 
       {/* Khu bình luận */}
-      <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">
+      <div className="border-t border-border bg-surface-2 p-6 sm:p-8">
         <CommentsSection postId={post.id} commentCount={post.comments} isGuest={!canInteract} />
       </div>
     </Card>
@@ -462,40 +665,163 @@ function PostDetailCard({
 }
 
 /**
- * Một mục bình luận trong luồng bình luận.
+ * Một mục bình luận trong luồng bình luận — áp dụng phong cách hội nhóm (bubble bo tròn, nhánh cây cho reply, sửa inline tại chỗ).
  * @param comment Dữ liệu bình luận đã chuẩn hóa
  */
-function CommentItem({ comment, onReply }: { comment: Comment; onReply?: (id: string, name: string) => void }) {
-  // Bình luận trả lời (có parentId) được thụt lề để thể hiện 1 cấp phân cấp.
+function CommentItem({
+  comment,
+  parentAuthor,
+  postId,
+  canEdit,
+  onReply,
+  onDelete,
+}: {
+  comment: Comment
+  parentAuthor?: string
+  postId: string
+  canEdit?: boolean
+  onReply?: (id: string, name: string) => void
+  onDelete?: (comment: Comment) => void
+}) {
+  const { t } = useTranslation()
   const isReply = !!comment.parentId
+  const [isEditing, setIsEditing] = useState(false)
+  const [editText, setEditText] = useState(comment.text)
+  const updateComment = useUpdateComment(postId)
+
+  const handleStartEdit = () => {
+    setEditText(comment.text)
+    setIsEditing(true)
+  }
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = editText.trim()
+    if (!trimmed || updateComment.isPending) return
+    updateComment.mutate(
+      { commentId: comment.id, content: trimmed },
+      {
+        onSuccess: () => {
+          setIsEditing(false)
+          toast.success(t('feed.editCommentSuccess', 'Đã cập nhật bình luận!'))
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || err.message || t('feed.editCommentError', 'Không thể cập nhật bình luận.'))
+        },
+      }
+    )
+  }
+
   return (
-    <div className={cn('flex gap-3', isReply && 'ml-10')}>
-      <Link to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'} className="shrink-0">
-        <Avatar src={comment.avatar} name={comment.author} size={isReply ? 32 : 40} verified={comment.verified} />
+    <div
+      id={`comment-${comment.id}`}
+      className={cn(
+        'group flex items-start gap-2.5 transition duration-300',
+        isReply &&
+          'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
+      )}
+    >
+      <Link
+        to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
+        className="shrink-0 hover:opacity-85 transition-opacity"
+      >
+        <Avatar src={comment.avatar} name={comment.author} size={isReply ? 28 : 32} verified={comment.verified} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="rounded-2xl rounded-tl-md bg-plum-900/[0.04] px-4 py-3">
-          <div className="flex items-baseline justify-between gap-2">
-            <Link
-              to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
-              className="hover:underline"
-            >
-              <p className="truncate text-sm font-bold text-plum-900 hover:text-brand-600">
+        <div className="rounded-2xl bg-surface-2 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Link
+                to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
+                className="text-xs font-bold text-text hover:underline transition-colors"
+              >
                 {comment.author}
-              </p>
-            </Link>
-            <span className="shrink-0 text-xs text-plum-400">{comment.time}</span>
+              </Link>
+              {comment.role && (
+                <span className="text-xs font-medium text-primary-solid bg-primary-soft px-1.5 py-0.5 rounded-md">
+                  {comment.role}
+                </span>
+              )}
+              <span className="shrink-0 text-xs text-text-subtle dark:text-text-subtle">
+                • {comment.time}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {canEdit && !isEditing && (
+                <button
+                  type="button"
+                  onClick={handleStartEdit}
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
+                  aria-label={t('feed.editComment', 'Chỉnh sửa bình luận')}
+                >
+                  <Pencil size={13} />
+                </button>
+              )}
+              {onDelete && !isEditing && (
+                <button
+                  type="button"
+                  onClick={() => onDelete(comment)}
+                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
+                  aria-label={t('feed.deleteCommentTitle', 'Xóa bình luận')}
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </div>
           </div>
-          {comment.role && <p className="truncate text-xs text-plum-500">{comment.role}</p>}
-          <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-800">{comment.text}</p>
-        </div>
-        <div className="mt-1 flex items-center pl-1">
-          {onReply && (
+
+          {isEditing ? (
+            <form onSubmit={handleSaveEdit} className="mt-2 space-y-2">
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                maxLength={1000}
+                rows={3}
+                autoFocus
+                className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={updateComment.isPending}
+                  className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
+                >
+                  {t('common.cancel', 'Hủy')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editText.trim() || updateComment.isPending}
+                  className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  {updateComment.isPending ? <Loader2 size={13} className="animate-spin" /> : null}
+                  <span>{updateComment.isPending ? t('common.saving', 'Đang lưu...') : t('common.saveChanges', 'Lưu thay đổi')}</span>
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="mt-1 text-xs text-text leading-relaxed">
+              {parentAuthor && (
+                <span className="mr-1.5 font-semibold text-primary-solid">
+                  @{parentAuthor}
+                </span>
+              )}
+              <span className="whitespace-pre-wrap break-words">
+                {parentAuthor
+                  ? comment.text.replace(new RegExp(`^(@${parentAuthor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*)+`, 'i'), '').trim()
+                  : comment.text}
+              </span>
+            </div>
+          )}
+
+          {!isEditing && onReply && (
             <button
+              type="button"
               onClick={() => onReply(comment.parentId || comment.id, comment.author)}
-              className="text-xs font-bold text-plum-500 hover:text-plum-900 transition-colors"
+              className="mt-1.5 inline-block text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
             >
-              Trả lời
+              {t('forum.reply', 'Trả lời')}
             </button>
           )}
         </div>
@@ -507,163 +833,170 @@ function CommentItem({ comment, onReply }: { comment: Comment; onReply?: (id: st
 /** Khung xương một mục bình luận trong lúc tải. */
 function CommentSkeleton() {
   return (
-    <div className="flex gap-3">
-      <Skeleton className="h-9 w-9 rounded-full" />
-      <div className="flex-1 space-y-2">
+    <div className="flex items-start gap-2.5">
+      <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+      <div className="flex-1 space-y-1.5">
         <Skeleton className="h-14 w-full rounded-2xl" />
-        <Skeleton className="h-2.5 w-16" />
       </div>
     </div>
   )
 }
 
-/** Giới hạn ký tự nội dung bình luận (đồng bộ ràng buộc @Size backend UC18). */
-const COMMENT_MAX = 2000
-
 /**
- * Ô soạn bình luận ở cuối trang chi tiết (UC18 - Comment on a post).
- *  - Guest: mời đăng nhập (không hiển thị form).
- *  - Thành viên (Student/Alumni): hiển thị form soạn & gửi bình luận.
- * @param isGuest Người xem hiện tại có phải Guest hay không
- * @param postId  ID bài viết đang được bình luận
+ * Form nhập phản hồi dạng nhánh lồng trực tiếp bên dưới bình luận gốc.
  */
-function CommentBox({ isGuest, postId, replyingTo, setReplyingTo }: { isGuest: boolean; postId: string; replyingTo: { id: string; name: string } | null; setReplyingTo: (val: { id: string; name: string } | null) => void }) {
-  if (isGuest) {
-    return (
-      <Card hover={false} className="flex items-center justify-between gap-3 p-4">
-        <p className="text-sm text-plum-500">Đăng nhập để tham gia bình luận.</p>
-        <Link
-          to="/login"
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-brand-700 hover:-translate-y-0.5"
-        >
-          Đăng nhập <ArrowRight size={14} />
-        </Link>
-      </Card>
-    )
-  }
-  return <CommentComposer postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
-}
-
-/**
- * Form soạn & gửi bình luận cho thành viên đã đăng nhập (UC18 - Comment on a post).
- * Tách riêng khỏi {@link CommentBox} để các hook luôn được gọi vô điều kiện (rules-of-hooks).
- * Validate phía client (không rỗng, tối đa {@link COMMENT_MAX} ký tự), hiển thị trạng thái
- * gửi và thông điệp lỗi nghiệp vụ từ Backend; khi thành công dọn ô nhập (hook tự chèn vào luồng).
- * @param postId ID bài viết đang được bình luận
- */
-function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string; replyingTo: { id: string; name: string } | null; setReplyingTo: (val: { id: string; name: string } | null) => void }) {
+function InlineReplyForm({
+  postId,
+  replyingTo,
+  onCancel,
+  onSuccess,
+}: {
+  postId: string
+  replyingTo: { id: string; name: string }
+  onCancel: () => void
+  onSuccess: () => void
+}) {
+  const { t } = useTranslation()
   const viewer = useAuthStore((s) => s.user)
-  const [content, setContent] = useState('')
-  const [expanded, setExpanded] = useState(false)
+  const [text, setText] = useState('')
   const createComment = useCreateComment(postId)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  useEffect(() => {
-    if (replyingTo) {
-      setExpanded(true)
-    }
-  }, [replyingTo])
-
-  useEffect(() => {
-    if (expanded && textareaRef.current) {
-      textareaRef.current.focus()
-    }
-  }, [expanded, replyingTo])
-
-  const trimmed = content.trim()
-  const disabled = trimmed.length === 0 || createComment.isPending
-
-  const collapse = () => {
-    setContent('')
-    setExpanded(false)
-    setReplyingTo(null)
-  }
-
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (disabled) return
-    createComment.mutate({ content: trimmed, parentId: replyingTo?.id }, { 
-      onSuccess: () => {
-        collapse()
-      } 
-    })
-  }
+    const trimmed = text.trim()
+    if (!trimmed || createComment.isPending) return
 
-  if (!expanded && !replyingTo) {
-    return (
-      <button
-        type="button"
-        onClick={() => setExpanded(true)}
-        className="mb-5 flex w-full items-center gap-3 rounded-2xl card-surface p-3.5 text-left transition-colors hover:bg-plum-900/[0.02]"
-      >
-        <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? 'Bạn'} size={36} verified={viewer?.verified} />
-        <span className="flex-1 rounded-full bg-plum-900/[0.05] px-4 py-2.5 text-sm text-plum-400">
-          Viết bình luận của bạn…
-        </span>
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-500/10 text-brand-600">
-          <Pencil size={16} />
-        </span>
-      </button>
+    createComment.mutate(
+      { content: trimmed, parentId: replyingTo.id },
+      {
+        onSuccess: () => {
+          setText('')
+          toast.success(t('feed.replySentSuccess', 'Đã gửi phản hồi!'))
+          onSuccess()
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || err.message || t('feed.replySentError', 'Không thể gửi phản hồi.'))
+        },
+      }
     )
   }
 
   return (
-    <Card hover={false} className="mb-4 p-5">
-      <div className="mb-3 flex items-center gap-2.5">
-        <Avatar src={viewer?.avatarUrl ?? ''} name={viewer?.name ?? 'Bạn'} size={34} verified={viewer?.verified} />
-        <div className="min-w-0">
-          <h3 className="text-sm font-bold text-plum-900">Bình luận của bạn</h3>
-          <p className="text-xs text-plum-400">Tham gia thảo luận về bài viết này</p>
-        </div>
-      </div>
-
-      {replyingTo && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg bg-[#F27024]/10 px-3 py-1.5 text-xs font-semibold text-[#F27024] animate-fade-in w-fit">
-          <MessageCircle size={14} />
-          Đang trả lời {replyingTo.name}
-          <button type="button" onClick={() => setReplyingTo(null)} className="ml-2 hover:text-[#d96010]">
-            <X size={14} />
-          </button>
-        </div>
-      )}
-
-      {createComment.isError && (
-        <div className="mb-3 flex items-center gap-2 rounded-lg bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-600">
-          <AlertTriangle size={16} className="shrink-0" /> {(createComment.error as Error).message}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} noValidate>
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={3}
-          maxLength={COMMENT_MAX}
-          placeholder={replyingTo ? `Viết câu trả lời cho ${replyingTo.name}...` : "Chia sẻ bình luận của bạn…"}
-          className="w-full resize-y rounded-xl border border-plum-900/10 bg-plum-900/[0.03] px-4 py-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-        />
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-plum-400">
-            {content.length.toLocaleString('vi-VN')}/{COMMENT_MAX.toLocaleString('vi-VN')}
-          </span>
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" size="md" onClick={collapse} disabled={createComment.isPending}>
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              disabled={disabled}
-              leftIcon={createComment.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+    <div className="relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
+      <form onSubmit={handleSubmit} className="flex items-start gap-2.5 rounded-2xl bg-surface-2 p-3">
+        <Avatar src={viewer?.avatarUrl ?? undefined} name={viewer?.name ?? t('common.you', 'Bạn')} size={28} verified={viewer?.verified} className="shrink-0" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-center justify-between text-xs text-text-subtle">
+            <span>
+              {t('forum.replyingTo', { name: replyingTo.name })}
+            </span>
+            <button aria-label={t('common.close', 'Đóng')} type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
+              <X size={13} />
+            </button>
+          </div>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={1000}
+            rows={2}
+            autoFocus
+            placeholder={t('feed.writeReplyPlaceholder', { name: replyingTo.name })}
+            className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
             >
-              {createComment.isPending ? 'Đang gửi…' : 'Gửi bình luận'}
-            </Button>
+              {t('common.cancel', 'Hủy')}
+            </button>
+            <button
+              type="submit"
+              disabled={!text.trim() || createComment.isPending}
+              className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
+            >
+              {createComment.isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+              <span>{t('feed.sendReply', 'Gửi phản hồi')}</span>
+            </button>
           </div>
         </div>
       </form>
-    </Card>
+    </div>
+  )
+}
+
+/**
+ * Ô soạn bình luận chính ở đầu danh sách (dạng thanh pill thanh lịch như hội nhóm).
+ */
+function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
+  const { t } = useTranslation()
+  const viewer = useAuthStore((s) => s.user)
+  const promptLogin = useLoginPrompt((s) => s.open)
+  const [content, setContent] = useState('')
+  const createComment = useCreateComment(postId)
+
+  if (isGuest || !viewer) {
+    return (
+      <div className="flex items-center justify-between rounded-xl bg-surface p-3 border border-border shadow-2xs">
+        <p className="text-xs text-text-subtle">{t('auth.loginToComment')}</p>
+        <button
+          type="button"
+          onClick={() => promptLogin(t('auth.loginToComment'))}
+          className="text-xs font-bold text-primary-solid hover:underline flex items-center gap-1 cursor-pointer"
+        >
+          {t('common.login')} <ArrowRight size={12} />
+        </button>
+      </div>
+    )
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = content.trim()
+    if (!trimmed || createComment.isPending) return
+
+    createComment.mutate(
+      { content: trimmed },
+      {
+        onSuccess: () => {
+          setContent('')
+          toast.success(t('feed.commentSent', 'Đã gửi bình luận!'))
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || err.message || t('feed.createCommentError', 'Không thể gửi bình luận.'))
+        },
+      }
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+      <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
+      <div className="relative flex-1">
+        <input
+          aria-label={t('feed.writePublicComment', 'Viết bình luận công khai...')}
+          type="text"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          maxLength={1000}
+          placeholder={t('feed.writePublicComment', 'Viết bình luận công khai...')}
+          className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
+        />
+        <button
+          type="submit"
+          disabled={!content.trim() || createComment.isPending}
+          aria-label={t('feed.sendCommentAria', 'Gửi bình luận')}
+          className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
+        >
+          {createComment.isPending ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : (
+            <Send size={13} />
+          )}
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -673,13 +1006,22 @@ function CommentComposer({ postId, replyingTo, setReplyingTo }: { postId: string
  * xử lý đầy đủ các trạng thái loading / not-available (404) / forbidden (403) / error / thành công.
  */
 export function PostDetailPage() {
+  const { t } = useTranslation()
   // === Bước 1: Lấy ID bài viết từ URL ===
   const { id = '' } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [cancelEventModalOpen, setCancelEventModalOpen] = useState(false)
+
+  const cancelEventMutation = useCancelEvent()
 
   // === Bước 2: Lấy phiên đăng nhập & tính quyền (RBAC) ===
   const user = useAuthStore((s) => s.user)
   const isGuest = !user
+  const canReport = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
   // === Bước 3: Gọi dữ liệu chi tiết bài viết ===
   const { data: post, isLoading, isError, error, refetch } = usePostDetail(id)
@@ -708,8 +1050,14 @@ export function PostDetailPage() {
             <PostDetailCard
               post={post}
               canInteract={!isGuest}
+              canReport={canReport}
+              currentUserId={user?.id}
               currentUserName={user?.name}
               onEdit={() => setEditModalOpen(true)}
+              onDelete={() => setDeleteModalOpen(true)}
+              onReport={() => setReportModalOpen(true)}
+              onShare={() => setShareModalOpen(true)}
+              onCancelEvent={() => setCancelEventModalOpen(true)}
             />
           </Reveal>
 
@@ -723,6 +1071,64 @@ export function PostDetailPage() {
             />
           )}
 
+          {/* Modal xóa bài viết (UC23) */}
+          {deleteModalOpen && (
+            <DeletePostModal
+              open={deleteModalOpen}
+              onClose={() => setDeleteModalOpen(false)}
+              post={post}
+              onDeleted={() => {
+                navigate('/app')
+              }}
+            />
+          )}
+
+          {reportModalOpen && (
+            <ReportPostModal
+              open={reportModalOpen}
+              postId={post.id}
+              onClose={() => setReportModalOpen(false)}
+            />
+          )}
+
+          {/* Modal chia sẻ bài viết (UC21) */}
+          <ShareModal
+            isOpen={shareModalOpen}
+            onClose={() => setShareModalOpen(false)}
+            post={post}
+          />
+
+          {post.event && (
+            <CancelEventModal
+              isOpen={cancelEventModalOpen}
+              onClose={() => setCancelEventModalOpen(false)}
+              onConfirm={() => {
+                const eventId = post.event?.id ?? post.eventId ?? post.id
+                if (!eventId) return
+                cancelEventMutation.mutate(
+                  { eventId },
+                  {
+                    onSuccess: (res) => {
+                      toast.success(res.message || t('event.cancelEventSuccess', 'Đã hủy sự kiện thành công!'))
+                      setCancelEventModalOpen(false)
+                      refetch()
+                    },
+                    onError: (err: any) => {
+                      toast.error(
+                        err.response?.data?.message ||
+                          err.message ||
+                          t('event.cancelEventError', 'Không thể hủy sự kiện. Vui lòng thử lại.')
+                      )
+                    },
+                  }
+                )
+              }}
+              isPending={cancelEventMutation.isPending}
+              eventTitle={post.event.title}
+            />
+          )}
+
+          {/* Bình luận */}
         </>
       ) : null}
     </div>
@@ -739,15 +1145,17 @@ export function PostDetailPage() {
  */
 function CommentsSection({
   postId,
-  commentCount,
+  commentCount: _commentCount,
   isGuest,
 }: {
   postId: string
   commentCount: number
   isGuest: boolean
 }) {
+  const { t } = useTranslation()
   const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null)
-  
+  const [deletingComment, setDeletingComment] = useState<Comment | null>(null)
+  const currentUser = useAuthStore((s) => s.user)
   const {
     data,
     isLoading,
@@ -776,7 +1184,7 @@ function CommentsSection({
     root,
     ...(repliesByParent[root.id] ?? []),
   ])
-  
+
   // Đảm bảo không mất bình luận nào (vd: reply mà root nằm ở trang bị thiếu)
   const structuredIds = new Set(structuredComments.map(c => c.id))
   const orphanedComments = comments.filter(c => !structuredIds.has(c.id))
@@ -785,19 +1193,51 @@ function CommentsSection({
     setReplyingTo({ id, name })
   }
 
+  /** Chỉ tác giả Student/Alumni mới nhìn thấy thao tác UC19/UC20; backend kiểm tra lại khi gọi API. */
+  const canManageComment = (comment: Comment) =>
+    !!currentUser &&
+    (currentUser.role === 'STUDENT' || currentUser.role === 'ALUMNI') &&
+    currentUser.id === comment.authorId
+
+  const openDeleteComment = (comment: Comment) => {
+    setDeletingComment(comment)
+  }
+
+  const hasScrolledRef = useRef(false)
+
+  // Tự động cuộn và làm nổi bật bình luận nếu URL có định danh hash cụ thể (#comment-{id})
+  useEffect(() => {
+    if (window.location.hash && comments.length > 0 && !hasScrolledRef.current) {
+      const targetHash = window.location.hash.substring(1)
+      if (targetHash.startsWith('comment-')) {
+        const element = document.getElementById(targetHash)
+        if (element) {
+          hasScrolledRef.current = true
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            element.classList.add('bg-brand-500/15', 'p-2', 'ring-2', 'ring-brand-400/40')
+            setTimeout(() => {
+              element.classList.remove('bg-brand-500/15', 'p-2', 'ring-2', 'ring-brand-400/40')
+            }, 4000)
+          }, 300)
+        }
+      } else if (targetHash === 'comments') {
+        hasScrolledRef.current = true
+        const element = document.getElementById('comments')
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 300)
+        }
+      }
+    }
+  }, [comments])
+
   return (
     <section id="comments" className="space-y-4">
-      <div className="mb-4 flex items-center gap-2.5">
-        <MessageCircle size={18} className="text-brand-600" />
-        <h2 className="text-lg font-extrabold text-plum-900">Bình luận</h2>
-        <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-brand-500/10 px-2 text-xs font-bold text-brand-700">
-          {compact(commentCount)}
-        </span>
-      </div>
-
       {/* Ô soạn & đăng bình luận gốc (UC18) */}
       <div id="comments-box">
-        <CommentBox isGuest={isGuest} postId={postId} replyingTo={null} setReplyingTo={setReplyingTo} />
+        <CommentBox isGuest={isGuest} postId={postId} />
       </div>
 
       {/* Danh sách bình luận theo trạng thái tải */}
@@ -808,30 +1248,46 @@ function CommentsSection({
         </div>
       ) : isError ? (
         <Card hover={false} className="flex items-center justify-between gap-3 p-4">
-          <p className="text-sm text-plum-500">Không tải được bình luận.</p>
-          <Button variant="secondary" size="sm" onClick={() => refetch()}>Thử lại</Button>
+          <p className="text-sm text-text-subtle">{t('feed.loadCommentsError', 'Không tải được bình luận.')}</p>
+          <Button variant="secondary" size="sm" onClick={() => refetch()}>{t('common.tryAgain', 'Thử lại')}</Button>
         </Card>
       ) : comments.length === 0 ? (
-        <p className="py-6 text-center text-sm text-plum-400">Chưa có bình luận nào — hãy là người đầu tiên bình luận.</p>
+        <p className="py-6 text-center text-sm text-text-subtle">{t('feed.noCommentsYet', 'Chưa có bình luận nào — hãy là người đầu tiên bình luận.')}</p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {rootComments.map((root) => {
             const replies = repliesByParent[root.id] || []
             return (
-              <div key={root.id} className="space-y-4">
+              <div key={root.id} className="space-y-2.5">
                 {/* Bình luận gốc */}
-                <CommentItem comment={root} onReply={!isGuest ? handleReply : undefined} />
-                
+                <CommentItem
+                  comment={root}
+                  postId={postId}
+                  canEdit={canManageComment(root)}
+                  onReply={!isGuest ? handleReply : undefined}
+                  onDelete={canManageComment(root) ? openDeleteComment : undefined}
+                />
                 {/* Các bình luận trả lời */}
                 {replies.map((reply) => (
-                  <CommentItem key={reply.id} comment={reply} onReply={!isGuest ? handleReply : undefined} />
+                  <CommentItem
+                    key={reply.id}
+                    comment={reply}
+                    postId={postId}
+                    parentAuthor={root.author}
+                    canEdit={canManageComment(reply)}
+                    onReply={!isGuest ? handleReply : undefined}
+                    onDelete={canManageComment(reply) ? openDeleteComment : undefined}
+                  />
                 ))}
 
                 {/* Form soạn trả lời hiển thị inline ngay dưới thread này */}
                 {replyingTo?.id === root.id && (
-                  <div className="ml-10 animate-fade-in">
-                    <CommentBox isGuest={isGuest} postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
-                  </div>
+                  <InlineReplyForm
+                    postId={postId}
+                    replyingTo={replyingTo}
+                    onCancel={() => setReplyingTo(null)}
+                    onSuccess={() => setReplyingTo(null)}
+                  />
                 )}
               </div>
             )
@@ -839,19 +1295,28 @@ function CommentsSection({
 
           {/* Các bình luận mồ côi (nếu có, để đề phòng lỗi dữ liệu) */}
           {orphanedComments.map((c) => (
-            <div key={c.id} className="space-y-4">
-              <CommentItem comment={c} onReply={!isGuest ? handleReply : undefined} />
+            <div key={c.id} className="space-y-2.5">
+              <CommentItem
+                comment={c}
+                postId={postId}
+                canEdit={canManageComment(c)}
+                onReply={!isGuest ? handleReply : undefined}
+                onDelete={canManageComment(c) ? openDeleteComment : undefined}
+              />
               {replyingTo?.id === c.id && (
-                <div className="ml-10 animate-fade-in">
-                  <CommentBox isGuest={isGuest} postId={postId} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
-                </div>
+                <InlineReplyForm
+                  postId={postId}
+                  replyingTo={replyingTo}
+                  onCancel={() => setReplyingTo(null)}
+                  onSuccess={() => setReplyingTo(null)}
+                />
               )}
             </div>
           ))}
 
           {/* Điều khiển tải thêm bình luận */}
           {hasNextPage && (
-            <div className="pt-1 text-center">
+            <div className="pt-2 text-center">
               <Button
                 variant="secondary"
                 size="sm"
@@ -859,12 +1324,20 @@ function CommentsSection({
                 disabled={isFetchingNextPage}
                 leftIcon={isFetchingNextPage ? <Loader2 size={15} className="animate-spin" /> : undefined}
               >
-                {isFetchingNextPage ? 'Đang tải…' : 'Xem thêm bình luận'}
+                {isFetchingNextPage ? t('feed.loadingMore', 'Đang tải…') : t('feed.viewMoreComments', 'Xem thêm bình luận')}
               </Button>
             </div>
           )}
         </div>
       )}
+
+      <DeleteCommentModal
+        isOpen={deletingComment !== null}
+        onClose={() => setDeletingComment(null)}
+        onDeleted={() => {}}
+        postId={postId}
+        comment={deletingComment}
+      />
     </section>
   )
 }

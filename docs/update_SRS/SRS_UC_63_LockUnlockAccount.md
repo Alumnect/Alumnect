@@ -48,7 +48,7 @@ stateDiagram-v2
 * **Function details**:
   * **Data**: `id` người dùng và trạng thái mới (`status` gửi trong Request Body).
   * **Validation**: Trạng thái gửi lên không được rỗng (`@NotNull`) và phải thuộc danh mục Enum hợp lệ.
-  * **Business rules**: Admin không được tự khóa chính mình hoặc các tài khoản Admin khác để tránh mất quyền truy cập hệ thống.
+  * **Business rules**: Admin không được tự khóa tài khoản của bản thân hoặc các tài khoản Admin khác để tránh mất quyền truy cập hệ thống.
   * **Error Handling**: Ném lỗi 400 Bad Request nếu trạng thái gửi lên không hợp lệ.
   * **Normal case**: Cập nhật trạng thái thành công, trả về HTTP 200 OK.
   * **Abnormal case**: Lỗi kết nối CSDL, trả về HTTP 500.
@@ -156,7 +156,7 @@ Bảng sửa đổi:
 * Bảng `users` (trường `account_status` cập nhật thành `LOCKED` hoặc `ACTIVE`).
 
 ##### 3.1.4 API Contract
-* **Đường dẫn**: `PUT /api/v1/admin/users/3/status`
+* **Đường dẫn**: `PUT /api/v1/admin/users/{id}/status`
 * **HTTP Status**: 200 OK
 * **Request Payload**:
   ```json

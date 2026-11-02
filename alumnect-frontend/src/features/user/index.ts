@@ -6,6 +6,7 @@ export * from './hooks/useUserQueries'
 export { ChangePasswordForm } from './components/ChangePasswordForm'
 export { EditProfileModal } from './components/EditProfileModal'
 export { EditProfileView } from './components/EditProfileView'
+export { CampusSelect } from './components/CampusSelect'
 
 export { ExperienceFormModal } from './components/ExperienceFormModal'
 export { PlaceAutocomplete } from './components/PlaceAutocomplete'
@@ -13,3 +14,8 @@ export * from './hooks/useExperienceMutations'
 export * from './hooks/useExperienceQueries'
 
 export { FollowListModal } from './components/FollowListModal'
+export { UserSearchFilterBar, type FilterState } from './components/UserSearchFilterBar'
+export { UserDirectoryCard } from './components/UserDirectoryCard'
+export { ConnectionSuggestionCard } from './components/ConnectionSuggestionCard'
+export { ConnectionSuggestionsWidget } from './components/ConnectionSuggestionsWidget'
+

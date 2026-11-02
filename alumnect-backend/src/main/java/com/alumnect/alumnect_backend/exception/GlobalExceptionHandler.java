@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -64,6 +65,21 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Xử lý lỗi từ cổng chi PayOS (sai key, IP chưa whitelist, lỗi kết nối) → HTTP 503.
+     */
+    @ExceptionHandler(com.alumnect.alumnect_backend.integration.disbursement.DisbursementException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDisbursementException(
+            com.alumnect.alumnect_backend.integration.disbursement.DisbursementException ex) {
+        String hint = ex.getErrorCode() != null && ex.getErrorCode().equals("403")
+                ? " Hãy thêm IP của server vào danh sách cho phép của Kênh chi trên my.payos.vn."
+                : "";
+        return new ResponseEntity<>(
+                ApiResponse.error(503, "Không kết nối được Kênh chi PayOS: " + ex.getMessage() + hint),
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+
+    /**
      * Xử lý ngoại lệ BadRequestException khi dữ liệu truyền lên không hợp lệ.
      * Trả về HTTP Status 400 (Bad Request).
      */
@@ -114,6 +130,21 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(
                 ApiResponse.error(-1, "Dữ liệu gửi lên không hợp lệ", errors),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    /**
+     * Xử lý JSON body bị sai cú pháp hoặc không thể ánh xạ sang DTO.
+     * Đây là lỗi dữ liệu đầu vào của Client nên phải trả HTTP 400, không phải HTTP 500.
+     *
+     * @param ex Ngoại lệ phát sinh khi Spring đọc request body
+     * @return ApiResponse lỗi dữ liệu đầu vào với HTTP 400
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        return new ResponseEntity<>(
+                ApiResponse.error(400, "Dữ liệu gửi lên không hợp lệ"),
                 HttpStatus.BAD_REQUEST
         );
     }

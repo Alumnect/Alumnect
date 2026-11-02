@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 import { AuthScaffold, Field, GoogleButton, useLogin, loginSchema } from '@/features/auth'
 import type { LoginInput } from '@/features/auth'
 import { Button } from '@/components/ui/Button'
+import { useTranslation } from 'react-i18next'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const [show, setShow] = useState(false)
   const loginM = useLogin()
   const location = useLocation()
@@ -24,8 +26,8 @@ export function LoginPage() {
 
   return (
     <AuthScaffold>
-      <h2 className="text-3xl font-extrabold text-plum-900">Chào mừng trở lại</h2>
-      <p className="mt-2 text-sm text-plum-500">Đăng nhập để kết nối cùng mạng lưới cựu sinh viên FPTU.</p>
+      <h1 className="text-3xl font-extrabold text-text">{t('auth.welcomeBack')}</h1>
+      <p className="mt-2 text-sm text-text-subtle">{t('auth.loginSubtitle')}</p>
 
       {successMessage && (
         <div className="mt-4 rounded-xl bg-teal-50 border border-teal-200/50 p-3 text-xs text-teal-700 flex items-start gap-2 animate-pop">
@@ -38,7 +40,7 @@ export function LoginPage() {
 
       <form className="mt-8 space-y-4" onSubmit={handleSubmit((v) => loginM.mutate(v))} noValidate>
         <Field
-          label="Email"
+          label={t('auth.email')}
           type="email"
           placeholder="ten@fpt.edu.vn"
           icon={<Mail size={16} />}
@@ -46,7 +48,7 @@ export function LoginPage() {
           {...register('email')}
         />
         <Field
-          label="Mật khẩu"
+          label={t('auth.password')}
           type={show ? 'text' : 'password'}
           placeholder="••••••••"
           icon={<Lock size={16} />}
@@ -55,7 +57,7 @@ export function LoginPage() {
             <button
               type="button"
               onClick={() => setShow((v) => !v)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-plum-400 hover:bg-plum-900/[0.05] hover:text-plum-900"
+              className="flex h-6 w-6 items-center justify-center text-text-subtle hover:text-text-muted transition-colors cursor-pointer"
               aria-label="Ẩn hiện mật khẩu"
             >
               {show ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -65,19 +67,23 @@ export function LoginPage() {
         />
 
         <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center gap-2 text-plum-500">
-            <input type="checkbox" className="h-4 w-4 rounded border-plum-900/20 accent-brand-500" {...register('remember')} />
-            Ghi nhớ đăng nhập
+          <label className="flex min-h-7 cursor-pointer items-center gap-2 text-text-muted">
+            <input type="checkbox" className="h-4 w-4 rounded border-border-strong accent-brand-500" {...register('remember')} />
+            {t('auth.rememberMe')}
           </label>
-          <Link to="/forgot-password" className="font-semibold text-brand-600 hover:text-brand-700">
-            Quên mật khẩu?
+          <Link to="/forgot-password" className="inline-flex min-h-7 items-center font-semibold text-primary-solid hover:underline">
+            {t('auth.forgotPassword')}
           </Link>
         </div>
 
         {loginM.isError && (
-          <p className="rounded-lg bg-coral-300/30 px-3 py-2 text-sm font-medium text-coral-700">
-            {(loginM.error as Error).message}
-          </p>
+          <div
+            role="alert"
+            className="flex items-center gap-2.5 rounded-xl border border-danger-border bg-danger-soft p-3 text-xs font-semibold text-danger animate-pop"
+          >
+            <AlertCircle size={16} className="shrink-0 text-danger" />
+            <span className="text-danger font-medium">{(loginM.error as Error).message}</span>
+          </div>
         )}
 
         <Button
@@ -88,22 +94,22 @@ export function LoginPage() {
           disabled={loginM.isPending}
           rightIcon={<ArrowRight size={18} />}
         >
-          {loginM.isPending ? 'Đang đăng nhập…' : 'Đăng nhập'}
+          {loginM.isPending ? t('auth.loggingIn') : t('common.login')}
         </Button>
       </form>
 
       <div className="my-6 flex items-center gap-4">
-        <span className="h-px flex-1 bg-plum-900/10" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-plum-400">hoặc</span>
-        <span className="h-px flex-1 bg-plum-900/10" />
+        <span className="h-px flex-1 bg-surface-3" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">{t('common.or')}</span>
+        <span className="h-px flex-1 bg-surface-3" />
       </div>
 
-      <GoogleButton label="Tiếp tục với Google FPT" />
+      <GoogleButton label={t('auth.continueWithGoogle')} />
 
-      <p className="mt-8 text-center text-sm text-plum-500">
-        Chưa có tài khoản AlumNect?{' '}
-        <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700">
-          Đăng ký ngay
+      <p className="mt-8 text-center text-sm text-text-subtle">
+        {t('auth.dontHaveAccount')}{' '}
+        <Link to="/register" className="font-bold text-primary-solid hover:text-primary-solid">
+          {t('auth.registerNow')}
         </Link>
       </p>
     </AuthScaffold>

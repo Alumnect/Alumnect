@@ -58,6 +58,8 @@ public class SecurityConfiguration {
         http.authorizeHttpRequests(config -> config
                 // Cho phép truy cập tự do các tài liệu Swagger/OpenAPI
                 .requestMatchers(Endpoints.SWAGGER_ENDPOINTS).permitAll()
+                // Cho phép bắt tay kết nối WebSocket (xác thực token qua STOMP channel interceptor)
+                .requestMatchers(Endpoints.WEBSOCKET_ENDPOINTS).permitAll()
                 // Cho phép các request GET công khai
                 .requestMatchers(HttpMethod.GET, Endpoints.PUBLIC_GET).permitAll()
                 // Cho phép các request POST công khai (register, login, google)

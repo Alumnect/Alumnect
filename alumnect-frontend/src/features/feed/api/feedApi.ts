@@ -41,6 +41,9 @@ function inferHasMore(body: unknown, received: number): boolean {
   const d = (b?.data ?? b) as Record<string, unknown> | undefined
   if (typeof d?.hasMore === 'boolean') return d.hasMore
   if (typeof d?.last === 'boolean') return !d.last
+  if (typeof d?.pageNumber === 'number' && typeof d?.totalPages === 'number') {
+    return d.pageNumber + 1 < d.totalPages
+  }
   if (typeof d?.number === 'number' && typeof d?.totalPages === 'number') {
     return d.number + 1 < d.totalPages
   }
@@ -65,10 +68,19 @@ function parsePosts(raw: unknown[]): Post[] {
 /** Kết quả trả về sau khi thích/bỏ thích một bài viết (UC17 - Like a post). */
 export type LikeResult = { liked: boolean; likeCount: number }
 
+/** Kết quả trả về sau khi lưu/bỏ lưu một bài viết (UC20 - Save Post). */
+export type SaveResult = { saved: boolean }
+
 /** Chuẩn hóa phản hồi thích/bỏ thích từ nhiều biến thể phong bì (envelope) thành LikeResult. */
 function normalizeLike(body: unknown): LikeResult {
   const d = ((body as { data?: unknown })?.data ?? body) as { liked?: boolean; likeCount?: number } | undefined
   return { liked: !!d?.liked, likeCount: Number(d?.likeCount ?? 0) }
+}
+
+/** Chuẩn hóa phản hồi lưu/bỏ lưu từ phong bì (envelope) thành SaveResult. */
+function normalizeSave(body: unknown): SaveResult {
+  const d = ((body as { data?: unknown })?.data ?? body) as { saved?: boolean } | undefined
+  return { saved: !!d?.saved }
 }
 
 /* ------------------------------------------------------------------ */
@@ -104,27 +116,41 @@ async function getMockPage(page: number, filter: FeedFilter): Promise<FeedPageRe
 export const feedApi = {
   /**
    * Lấy một trang bảng tin cộng đồng.
-   * Gọi `GET /api/v1/posts?page={n}&size={m}&sort=recent[&type=...]`; token Bearer
+   * Gọi `GET /api/v1/posts?page={n}&size={m}&sort={sort}[&type=...]`; token Bearer
    * (nếu có) được interceptor `http` tự đính kèm để backend phân biệt Guest/thành viên
-   * khi lọc theo phạm vi hiển thị (BR-12). Trường `liked` luôn là false ở UC15 (BR-14).
+   * khi lọc theo phạm vi hiển thị (BR-12).
    * @param page Chỉ số trang cần lấy (0-based)
    * @param filter Bộ lọc loại bài viết ('all' = không lọc)
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
    */
-  getFeed: async ({ page = 0, filter = 'all' as FeedFilter } = {}): Promise<FeedPageResult> => {
+  getFeed: async ({
+    page = 0,
+    filter = 'all' as FeedFilter,
+    keyword = '',
+    size = PAGE_SIZE,
+    eventFilter,
+  }: {
+    page?: number
+    filter?: FeedFilter
+    keyword?: string
+    size?: number
+    eventFilter?: string
+  } = {}): Promise<FeedPageResult> => {
     // B1: Chế độ demo — dùng mock để FE chạy độc lập khi chưa có backend.
     if (!AUTH_ENFORCED) return getMockPage(page, filter)
 
-    // B2: Dựng query string phân trang + sắp xếp mới nhất, kèm lọc theo loại nếu có.
-    const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE), sort: 'recent' })
+    // B2: Dựng query string phân trang, kèm lọc theo loại nếu có.
+    const query = new URLSearchParams({ page: String(page), size: String(size) })
     if (filter !== 'all') query.set('type', filter)
+    if (keyword.trim() !== '') query.set('keyword', keyword.trim())
+    if (eventFilter) query.set('eventFilter', eventFilter)
 
     // B3: Gọi API (interceptor tự đính Bearer token & bóc envelope response.data).
     const body = await http.get(`/posts?${query.toString()}`)
 
     // B4: Trích + xác thực dữ liệu bằng Zod, rồi suy ra cờ còn trang tiếp theo.
     const items = parsePosts(extractRawItems(body))
-    return { items, page, hasMore: inferHasMore(body, items.length) }
+    return { items, page, hasMore: items.length > 0 && inferHasMore(body, items.length) }
   },
 
   /**
@@ -178,6 +204,17 @@ export const feedApi = {
   },
 
   /**
+   * Xóa một bài viết (UC23 - Delete a post).
+   * Gọi `DELETE /api/v1/posts/${postId}`. 
+   * Trả về true nếu thành công.
+   * @param postId ID bài viết cần xóa
+   */
+  deletePost: async (postId: string): Promise<boolean> => {
+    await http.delete(`/posts/${encodeURIComponent(postId)}`)
+    return true
+  },
+
+  /**
    * Tải ảnh đính kèm bài viết lên Cloudflare R2 qua link ký sẵn (presigned URL),
    * theo đúng cơ chế đã dùng ở luồng đăng ký: xin link PUT tạm thời rồi tải trực tiếp
    * từ client lên R2, trả về URL công khai để gán vào `imageUrl` khi tạo bài.
@@ -192,4 +229,44 @@ export const feedApi = {
     await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
     return publicUrl
   },
+
+  /**
+   * Lưu/đánh dấu bài viết (UC20 - Save Post).
+   * Gọi `POST /api/v1/posts/{id}/save`.
+   * @param postId ID bài viết cần lưu
+   */
+  savePost: async (postId: string): Promise<SaveResult> => {
+    const body = await http.post(`/posts/${encodeURIComponent(postId)}/save`)
+    return normalizeSave(body)
+  },
+
+  /**
+   * Bỏ lưu bài viết (UC20 - Save Post).
+   * Gọi `DELETE /api/v1/posts/{id}/save`.
+   * @param postId ID bài viết cần bỏ lưu
+   */
+  unsavePost: async (postId: string): Promise<SaveResult> => {
+    const body = await http.delete(`/posts/${encodeURIComponent(postId)}/save`)
+    return normalizeSave(body)
+  },
+
+  /**
+   * Lấy danh sách bài viết đã lưu của người dùng (UC20 - View Saved Posts).
+   * Gọi `GET /api/v1/posts/saved?page={n}&size={m}`.
+   * @param page Chỉ số trang (0-based)
+   * @param size Số bài viết mỗi trang
+   */
+  getSavedPosts: async ({ page = 0, size = PAGE_SIZE } = {}): Promise<FeedPageResult> => {
+    const query = new URLSearchParams({ page: String(page), size: String(size) })
+    const body = await http.get(`/posts/saved?${query.toString()}`)
+    const items = parsePosts(extractRawItems(body))
+    return { items, page, hasMore: inferHasMore(body, items.length) }
+  },
+
+  getUserPosts: async (userId: string | number, { page = 0, size = PAGE_SIZE, category = 'all' } = {}): Promise<FeedPageResult> => {
+    const query = new URLSearchParams({ page: String(page), size: String(size), category })
+    const body = await http.get(`/posts/user/${userId}?${query.toString()}`)
+    const items = parsePosts(extractRawItems(body))
+    return { items, page, hasMore: inferHasMore(body, items.length) }
+  }
 }

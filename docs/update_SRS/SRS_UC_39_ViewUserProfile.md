@@ -64,8 +64,9 @@ Chịu trách nhiệm hiển thị thông tin hồ sơ cá nhân phục vụ gia
     *   **Timing Frequency**: Bất cứ khi nào người dùng muốn xem thông tin chi tiết hồ sơ.
 *   **Function description**:
     *   **Actors/Roles**: Tất cả người dùng đã đăng nhập, ADMIN, hoặc khách vãng lai (xem hồ sơ công khai).
-    *   **Purpose**: Cho phép người dùng xem thông tin chi tiết của bản thân (để chỉnh sửa, quản lý) hoặc của người dùng khác (để xem thông tin liên hệ, sự nghiệp, tìm kiếm kết nối).
-    *   **Interface**: Giao diện Premium Pastel sang trọng với góc bo tròn lớn (`rounded-3xl`), thẻ trắng mềm (`pillowy white cards`), thông tin liên hệ, giới thiệu tiểu sử, và dòng thời gian hành trình sự nghiệp/học tập.
+    *   **Interface**: Giao diện Premium Pastel sang trọng với góc bo tròn lớn (`rounded-3xl`), thẻ trắng mềm (`pillowy white cards`), thông tin liên hệ, giới thiệu tiểu sử, và dòng thời gian hành trình sự nghiệp/học tập:
+        *   **Huy hiệu vai trò chuẩn hóa**: Phân định rõ ràng vai trò người dùng bằng huy hiệu học thuật trực quan: **`🎓 Sinh viên`** (đối với tài khoản Student) hoặc **`🎓 Cựu sinh viên`** (đối với tài khoản Alumni) ngay cạnh họ tên; không dùng dấu tick cam xác thực đơn thuần để tránh gây hiểu lầm về đặc quyền tài khoản.
+        *   **Thông tin nghề nghiệp & đào tạo**: Hiển thị chức danh kèm công ty (`Vị trí @ Công ty`) hoặc chuyên ngành kèm cơ sở đào tạo (`Campus`), niên khóa đào tạo.
 *   **Data processing**:
     *   Ánh xạ thực thể `UserProfile` và `User` sang cấu trúc DTO `UserProfileResponse` qua MapStruct.
     *   Kiểm tra quyền truy cập trạng thái tài khoản đối với hồ sơ của người dùng khác (Chỉ tài khoản `ACTIVE` mới được phép xem công khai).
@@ -77,8 +78,9 @@ Chịu trách nhiệm hiển thị thông tin hồ sơ cá nhân phục vụ gia
         *   Endpoint: `GET /api/v1/users/profile/{userId}`
         *   Auth: Công khai (Không bắt buộc token).
     *   **Business rules**:
-        *   Người dùng xem hồ sơ của chính mình được phép xem bất kỳ lúc nào, kể cả khi trạng thái tài khoản là `PENDING` hoặc `LOCKED`.
+        *   Người dùng xem hồ sơ của bản thân được phép xem bất kỳ lúc nào, kể cả khi trạng thái tài khoản là `PENDING` hoặc `LOCKED`.
         *   Khi xem hồ sơ của người khác (Other Profile), tài khoản cần xem bắt buộc phải ở trạng thái `ACTIVE` đối với mọi đối tượng gọi API (kể cả ADMIN hay chính chủ khi gọi API công khai này). Nếu không, hệ thống chặn và báo lỗi 400.
+        *   **BR-10**: Nhận diện vai trò trên trang cá nhân sử dụng huy hiệu học thuật trực quan (`🎓 Sinh viên` / `🎓 Cựu sinh viên`), không dùng dấu tick cam đơn thuần.
     *   **Error Handling**:
         *   Xem tài khoản bị khóa/chưa kích hoạt (đối với người dùng khác): Trả về lỗi 400 Bad Request kèm thông báo: *"Tài khoản người dùng này chưa được kích hoạt hoặc đã bị khóa."*
         *   Không tồn tại ID người dùng cần xem: Trả về lỗi 404 Not Found kèm thông báo: *"Không tìm thấy tài khoản người dùng với ID: {userId}"*

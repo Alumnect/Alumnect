@@ -18,11 +18,13 @@ export function vnd(n: number): string {
 }
 
 /** Derive initials from a full name. */
-export function initials(name: string): string {
+export function initials(name?: string | null): string {
+  if (!name || typeof name !== 'string') return '?'
   return name
+    .trim()
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? '')
-    .join('')
+    .join('') || '?'
 }

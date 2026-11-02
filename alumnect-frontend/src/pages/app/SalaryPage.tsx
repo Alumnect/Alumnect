@@ -1,114 +1,436 @@
-import { useState } from 'react'
-import { LineChart, ShieldCheck, Plus, Filter } from 'lucide-react'
-import { PageHeader, Badge, Card, EmptyState } from '@/components/ui'
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  LineChart, Plus, Filter, AlertTriangle, RefreshCw, ListChecks, Search, X, LayoutGrid,
+  MapPin, Code2, Megaphone, Users, Palette, Briefcase,
+  BarChart3, History,
+} from 'lucide-react'
+import { PageHeader, Card, EmptyState, toast, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
-import type { SalaryRow } from '@/lib/constants'
+import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/store/authStore'
+import {
+  ContributeSalaryModal,
+  MyContributionsModal,
+  SalaryContributionsFeed,
+  useSalaryStatistics,
+  useIndustries,
+  SALARY_LEVELS,
+  getIndustryIcon,
+} from '@/features/salary'
+import type { SalaryContribution, SalaryLevel } from '@/features/salary'
+import { EntitySelectField, type SelectOption } from '@/features/forum/components/EntitySelectField'
 
-const REGIONS = ['Tất cả khu vực', 'TP.HCM', 'Hà Nội', 'Đà Nẵng', 'Từ xa']
+const ALL_REGIONS = '__ALL_REGIONS__'
+const JOB_TITLE_SEARCH_MAX_LENGTH = 150
 
-// TODO(team): chưa có API Salary Board — thay SALARY bằng dữ liệu thật khi backend sẵn sàng.
-const SALARY: SalaryRow[] = []
+/** Ánh xạ thông minh icon và màu sắc chủ đạo theo từ khóa vị trí công việc */
+function getJobStyle(role: string) {
+  const r = role.toLowerCase()
+  if (r.includes('data') || r.includes('analyst') || r.includes('dữ liệu') || r.includes('bi')) {
+    return { icon: BarChart3, bg: 'bg-info-soft text-info', badge: 'bg-info-soft text-info border-info-border' }
+  }
+  if (r.includes('design') || r.includes('ui') || r.includes('ux') || r.includes('thiết kế') || r.includes('graphic')) {
+    return { icon: Palette, bg: 'bg-danger-soft text-danger', badge: 'bg-danger-soft text-danger border-danger-border' }
+  }
+  if (r.includes('dev') || r.includes('lập trình') || r.includes('engineer') || r.includes('kỹ sư') || r.includes('software') || r.includes('frontend') || r.includes('backend') || r.includes('fullstack')) {
+    return { icon: Code2, bg: 'bg-primary-soft text-primary-solid', badge: 'bg-primary-soft text-primary-solid border-primary-soft-border' }
+  }
+  if (r.includes('market') || r.includes('seo') || r.includes('content') || r.includes('quảng cáo') || r.includes('media')) {
+    return { icon: Megaphone, bg: 'bg-info-soft text-info', badge: 'bg-info-soft text-info border-info-border' }
+  }
+  if (r.includes('business') || r.includes('sales') || r.includes('kinh doanh') || r.includes('finance') || r.includes('tài chính') || r.includes('manager') || r.includes('quản lý') || r.includes('pm')) {
+    return { icon: Briefcase, bg: 'bg-success-soft text-success', badge: 'bg-success-soft text-success border-success-border' }
+  }
+  return { icon: Users, bg: 'bg-warning-soft text-warning', badge: 'bg-warning-soft text-warning border-warning-border' }
+}
+
+/** Khung xương hiển thị trong lúc tải thống kê lần đầu (UC53). */
+function SalarySkeleton() {
+  return (
+    <div className="space-y-5">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="rounded-2xl border border-border p-4 bg-surface-2">
+          <div className="mb-2.5 flex items-center justify-between">
+            <div className="h-4 w-44 animate-pulse rounded bg-border" />
+            <div className="h-3.5 w-24 animate-pulse rounded bg-surface-2" />
+          </div>
+          <div className="h-8 w-full animate-pulse rounded-full bg-surface-2" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** Trạng thái lỗi khi tải thống kê lương thất bại (UC53). */
+function SalaryStatsError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
+  return (
+    <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
+        <AlertTriangle size={24} />
+      </span>
+      <div>
+        <p className="font-bold text-text">{t('salary.loadError')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('common.error')}</p>
+      </div>
+      <Button variant="secondary" size="sm" leftIcon={<RefreshCw size={14} />} onClick={onRetry}>
+        {t('common.tryAgain')}
+      </Button>
+    </Card>
+  )
+}
 
 export function SalaryPage() {
-  const [region, setRegion] = useState('Tất cả khu vực')
-  // Giữ `max` tính trên TOÀN BỘ dữ liệu (không phải tập đã lọc) để thang đo
-  // biểu đồ không nhảy khi đổi vùng — giúp so sánh trực quan giữa các lần lọc.
+  const { t } = useTranslation()
+  const role = useAuthStore((s) => s.user?.role)
+  // Quy tắc nghiệp vụ (UC50, UC51, UC52): CHỈ ALUMNI mới có quyền đóng góp, sửa hoặc xóa dữ liệu lương.
+  const canContribute = role === 'ALUMNI'
+
+  const [contributeOpen, setContributeOpen] = useState(false)
+  const [myContributionsOpen, setMyContributionsOpen] = useState(false)
+  const [editingContribution, setEditingContribution] = useState<SalaryContribution | null>(null)
+  const [feedOpen, setFeedOpen] = useState(false)
+
+  // Bộ lọc UC54: ngành nghề, khu vực, chức danh, cấp bậc
+  const [industryId, setIndustryId] = useState<number | null>(null)
+  const [region, setRegion] = useState<string>(ALL_REGIONS)
+  const [level, setLevel] = useState<SalaryLevel | null>(null)
+  const [jobTitleInput, setJobTitleInput] = useState<string>('')
+  const [jobTitle, setJobTitle] = useState<string>('')
+
+  // Debounce tìm kiếm chức danh 400ms để giảm số lần gọi API khi gõ phím
+  useEffect(() => {
+    const timer = setTimeout(() => setJobTitle(jobTitleInput), 400)
+    return () => clearTimeout(timer)
+  }, [jobTitleInput])
+
+  const isFiltering = region !== ALL_REGIONS || industryId !== null || level !== null || jobTitle.trim().length > 0
+  const clearFilters = () => {
+    setRegion(ALL_REGIONS)
+    setIndustryId(null)
+    setLevel(null)
+    setJobTitleInput('')
+  }
+
+  const { data: industries } = useIndustries()
+  const { data: baseStats } = useSalaryStatistics()
+  const regionOptions: SelectOption<string>[] = useMemo(() => {
+    const rawCities = Array.from(new Set((baseStats?.rows ?? []).map((r) => r.region))).sort()
+    return rawCities.map((city) => ({ id: city, name: city }))
+  }, [baseStats])
+  const levels = useMemo(() => {
+    const present = new Set((baseStats?.rows ?? []).map((r) => r.level))
+    return SALARY_LEVELS.filter((lv) => present.has(lv))
+  }, [baseStats])
+
+  const { data, isLoading, isError, error, refetch } = useSalaryStatistics({
+    industryId,
+    region: region !== ALL_REGIONS ? region : undefined,
+    jobTitle: jobTitle.trim() || undefined,
+    level,
+  })
+
+  // Phân trang danh sách mức lương theo vị trí (5 vị trí / trang)
+  const STATS_PAGE_SIZE = 5
+  const [statsPage, setStatsPage] = useState(0)
+
+  // Reset về trang 1 khi thay đổi bộ lọc
+  useEffect(() => {
+    setStatsPage(0)
+  }, [industryId, region, level, jobTitle])
+
+  const rows = data?.rows ?? []
+  const totalStatsPages = Math.ceil(rows.length / STATS_PAGE_SIZE)
+  const paginatedRows = useMemo(() => {
+    const start = statsPage * STATS_PAGE_SIZE
+    return rows.slice(start, start + STATS_PAGE_SIZE)
+  }, [rows, statsPage])
+
   // Fallback 1 khi chưa có dữ liệu để tránh Math.max() trả về -Infinity.
-  const max = SALARY.length ? Math.max(...SALARY.map((s) => s.p75)) : 1
-  const rows = SALARY.filter((s) => region === 'Tất cả khu vực' || s.region === region)
+  const max = rows.length ? Math.max(...rows.map((s) => s.p75)) : 1
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Header */}
       <PageHeader
         icon={<LineChart size={20} />}
-        title="Bảng Lương Ẩn Danh"
-        subtitle="Dữ liệu mức lương thực tế và ẩn danh từ cộng đồng cựu sinh viên FPTU."
-        actions={<Button variant="gold" size="sm" leftIcon={<Plus size={15} />}>Đóng góp dữ liệu</Button>}
+        title={t('salary.title')}
+        subtitle={t('salary.subtitle')}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<History size={15} className="text-primary-solid" />}
+              onClick={() => setFeedOpen(true)}
+            >
+              {t('salary.recentContributions')}
+            </Button>
+            {canContribute && (
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<ListChecks size={15} />}
+                  onClick={() => setMyContributionsOpen(true)}
+                >
+                  {t('salary.myContributions')}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<Plus size={15} />}
+                  onClick={() => setContributeOpen(true)}
+                >
+                  {t('salary.contributeData')}
+                </Button>
+              </>
+            )}
+          </div>
+        }
       />
 
-      <Reveal>
-        <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[
-            { k: 6400, s: '+', v: 'Lượt khảo sát' },
-            { k: 40, s: '+', v: 'Vị trí theo dõi' },
-            { k: 32, s: 'Tr', v: 'Trung vị (VND)' },
-            { k: 100, s: '%', v: 'Bảo mật ẩn danh' },
-          ].map((x) => (
-            <Card key={x.v} hover={false} className="p-4 text-center">
-              <p className="text-2xl font-extrabold text-plum-900"><Counter value={x.k} suffix={x.s} /></p>
-              <p className="mt-1 text-xs text-plum-400">{x.v}</p>
-            </Card>
-          ))}
-        </div>
-      </Reveal>
-
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        <Filter size={15} className="text-plum-400" />
-        {REGIONS.map((r) => (
-          <button
-            key={r}
-            onClick={() => setRegion(r)}
-            className={cn('rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all', region === r ? 'bg-gradient-to-r from-brand-500 to-violet-500 text-white' : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]')}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
-
-      <Reveal>
-        <Card hover={false} className="overflow-hidden p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-bold text-plum-900">Dải lương theo vị trí <span className="text-plum-400">(Triệu VNĐ / tháng)</span></h2>
-            <Badge tone="success" icon={<ShieldCheck size={13} />}>Ẩn danh 100%</Badge>
+      {/* Bộ lọc (UC54): Chức danh, Ngành nghề, Khu vực & Cấp bậc */}
+      <Card hover={false} className="overflow-visible p-4 space-y-3.5">
+        <div className="grid gap-3 sm:grid-cols-3">
+          {/* 1. Tìm kiếm chức danh */}
+          <div className="relative">
+            <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+            <input
+              aria-label={t('salary.searchJob')}
+              value={jobTitleInput}
+              onChange={(e) => setJobTitleInput(e.target.value)}
+              placeholder={t('salary.searchJob')}
+              maxLength={JOB_TITLE_SEARCH_MAX_LENGTH}
+              className="h-11 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors dark:placeholder-[#b0b3b8]"
+            />
+            {jobTitleInput && (
+              <button
+                onClick={() => setJobTitleInput('')}
+                aria-label={t('common.clearSearch')}
+                className="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-subtle transition-colors hover:bg-border hover:text-text-muted"
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
 
-          {rows.length === 0 ? (
+          {/* 2. Chọn ngành nghề */}
+          <EntitySelectField
+            items={industries}
+            value={industryId}
+            onChange={setIndustryId}
+            placeholder={t('salary.allIndustries')}
+            searchPlaceholder={t('salary.searchIndustry')}
+            searchable
+            itemIcon={(name) => {
+              const Icon = getIndustryIcon(name)
+              return <Icon size={15} className="text-primary-solid shrink-0" />
+            }}
+            buttonIcon={<LayoutGrid size={15} className="text-primary-solid" />}
+          />
+
+          {/* 3. Chọn khu vực (tỉnh / thành phố) */}
+          <EntitySelectField<string>
+            items={regionOptions}
+            value={region !== ALL_REGIONS ? region : null}
+            onChange={(val) => setRegion(val ?? ALL_REGIONS)}
+            placeholder={t('salary.allRegions')}
+            searchPlaceholder={t('salary.searchRegion')}
+            searchable
+            buttonIcon={<MapPin size={15} className="text-primary-solid" />}
+          />
+        </div>
+
+        {/* Hàng lọc Cấp bậc & Nút Xóa bộ lọc */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-border">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-text-subtle mr-1 flex items-center gap-1">
+              <Filter size={12} className="text-text-subtle" /> {t('salary.level')}:
+            </span>
+            <button
+              type="button"
+              onClick={() => setLevel(null)}
+              className={cn(
+                'min-h-8 rounded-full px-3 py-1 text-sm font-semibold transition-colors',
+                level === null
+                  ? 'bg-text text-bg shadow-raised'
+                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
+              )}
+            >
+              {t('common.all')}
+            </button>
+            {levels.map((lv) => (
+              <button
+                key={lv}
+                type="button"
+                onClick={() => setLevel(level === lv ? null : lv)}
+                className={cn(
+                  'min-h-8 rounded-full px-3 py-1 text-sm font-semibold transition-colors',
+                  level === lv
+                    ? 'bg-primary-solid text-on-primary shadow-raised'
+                    : 'bg-surface-2 text-text-muted hover:bg-surface-3'
+                )}
+              >
+                {lv}
+              </button>
+            ))}
+          </div>
+
+          {isFiltering && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1 text-xs font-semibold text-danger hover:text-danger shrink-0 ml-auto"
+            >
+              <X size={13} /> {t('common.clearFilter')}
+            </button>
+          )}
+        </div>
+      </Card>
+
+      {/* Khối 1: Mức lương theo vị trí công việc */}
+      <Reveal>
+        <Card hover={false} className="overflow-hidden p-5 sm:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-text">
+                {t('salary.salaryByPosition')}
+              </h2>
+              <span className="text-xs text-text-subtle font-medium">{t('salary.millionPerMonth')}</span>
+            </div>
+          </div>
+
+          {isLoading ? (
+            <SalarySkeleton />
+          ) : isError ? (
+            <SalaryStatsError message={(error as Error)?.message} onRetry={() => refetch()} />
+          ) : rows.length === 0 ? (
             <EmptyState
               icon={<LineChart size={24} />}
-              title="Chưa có dữ liệu lương cho khu vực này"
-              description="Hãy thử chọn khu vực khác hoặc là người đầu tiên đóng góp dữ liệu."
-              action={<Button size="sm" variant="secondary" onClick={() => setRegion('Tất cả khu vực')}>Xóa bộ lọc</Button>}
+              title={t('salary.emptyTitle')}
+              description={t('salary.emptyDesc')}
+              action={isFiltering ? <Button size="sm" variant="secondary" onClick={clearFilters}>{t('common.clearFilter')}</Button> : undefined}
             />
           ) : (
-          <Stagger className="space-y-5" gap={0.07}>
-            {rows.map((s) => (
-              <StaggerItem key={`${s.role}-${s.level}-${s.region}`}>
-                <div>
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="font-semibold text-plum-900">
-                      {s.role} <span className="text-plum-400">· {s.level} · {s.region}</span>
-                    </span>
-                    <span className="text-plum-400">{s.samples} mẫu khảo sát</span>
-                  </div>
-                  {/* range bar: p25 — median — p75 */}
-                  <div className="relative h-7 rounded-full bg-plum-900/[0.04]">
-                    <div
-                      className="absolute top-0 h-full rounded-full bg-gradient-to-r from-brand-600/40 to-violet-600/40"
-                      style={{ left: `${(s.p25 / max) * 100}%`, width: `${((s.p75 - s.p25) / max) * 100}%` }}
-                    />
-                    <div
-                      className="absolute top-1/2 h-7 w-1.5 -translate-y-1/2 rounded-full bg-gold-400 shadow-glow-gold"
-                      style={{ left: `${(s.median / max) * 100}%` }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-between px-3 text-[11px] font-semibold">
-                      <span className="text-plum-500">{s.p25}Tr</span>
-                      <span className="text-gold-600">trung vị {s.median}Tr</span>
-                      <span className="text-plum-500">{s.p75}Tr</span>
+            <Stagger className="space-y-4" gap={0.06}>
+              {paginatedRows.map((s) => {
+                const style = getJobStyle(s.role)
+                const IconComponent = style.icon
+                return (
+                  <StaggerItem key={`${s.role}-${s.level}-${s.region}`}>
+                    <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs">
+                      {/* Tiêu đề vị trí & số mẫu */}
+                      <div className="flex items-center gap-3 mb-2.5">
+                        <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl', style.bg)}>
+                          <IconComponent size={16} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="truncate font-bold text-sm text-text">
+                              {s.role}
+                              <span className={cn('ml-2 font-semibold text-xs px-2 py-0.5 rounded-md border', style.badge)}>
+                                {s.level}
+                              </span>
+                              <span className="ml-1.5 font-normal text-xs text-text-subtle">· {s.region}</span>
+                            </h3>
+                            <span className="shrink-0 text-xs font-medium text-text-subtle flex items-center gap-1">
+                              <Users size={12} /> {t('salary.sharesCount', { count: s.samples })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tóm tắt mức lương rõ ràng, dễ hiểu */}
+                      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xs text-text-subtle font-medium">{t('salary.commonSalary')}</span>
+                          <span className="text-base sm:text-lg font-extrabold text-primary-solid">{s.median} {t('salary.millionVndUnit')}</span>
+                          <span className="text-xs text-text-subtle"> {t('salary.perMonth')}</span>
+                        </div>
+                        <div className="text-xs text-text-subtle">
+                          {t('salary.salaryRangeText', { min: s.p25, max: s.p75 })}
+                        </div>
+                      </div>
+
+                      {/* Thanh trực quan dải lương */}
+                      <div className="space-y-1.5">
+                        <div className="relative h-3.5 rounded-full bg-surface-2 overflow-hidden">
+                          {/* Dải lương từ thấp đến cao */}
+                          <div
+                            className="absolute top-0 h-full rounded-full bg-primary-solid transition duration-500"
+                            style={{ left: `${(s.p25 / max) * 100}%`, width: `${((s.p75 - s.p25) / max) * 100}%` }}
+                          />
+                          {/* Vạch mốc lương phổ biến */}
+                          <div
+                            className="absolute top-0 h-full w-1.5 rounded-full bg-gold-400 shadow-sm transition duration-500"
+                            style={{ left: `${(s.median / max) * 100}%` }}
+                          />
+                        </div>
+
+                        {/* 3 mốc số bên dưới: Khởi điểm | Phổ biến nhất | Cao nhất */}
+                        <div className="flex items-center justify-between text-xs text-text-subtle font-medium pt-0.5">
+                          <span>{t('salary.fromSalary', { val: s.p25 })}</span>
+                          <span className="text-primary-solid font-bold">{t('salary.medianSalary', { val: s.median })}</span>
+                          <span>{t('salary.toSalary', { val: s.p75 })}</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </StaggerItem>
-            ))}
-          </Stagger>
+                  </StaggerItem>
+                )
+              })}
+            </Stagger>
+          )}
+
+          {/* Thanh phân trang khi có nhiều hơn 1 trang */}
+          {totalStatsPages > 1 && (
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-center">
+              <Pagination
+                page={statsPage}
+                totalPages={totalStatsPages}
+                onPageChange={setStatsPage}
+                scrollToTop={false}
+              />
+            </div>
           )}
         </Card>
       </Reveal>
 
-      <p className="mt-4 text-center text-xs text-plum-400">
-        Thống kê chỉ hiển thị khi đạt đủ số lượng mẫu khảo sát tối thiểu. Danh tính của bạn luôn được bảo mật tuyệt đối.
-      </p>
+      {/* Khối 2: Popup lượt đóng góp gần đây */}
+      <SalaryContributionsFeed isOpen={feedOpen} onClose={() => setFeedOpen(false)} />
+
+      {/* Modal danh sách đóng góp của chính mình (UC51) */}
+      {myContributionsOpen && (
+        <MyContributionsModal
+          onClose={() => setMyContributionsOpen(false)}
+          onEdit={(contribution) => {
+            setMyContributionsOpen(false)
+            setEditingContribution(contribution)
+          }}
+        />
+      )}
+
+      {/* Modal đóng góp (UC50) HOẶC chỉnh sửa (UC51) */}
+      {(contributeOpen || editingContribution) && (
+        <ContributeSalaryModal
+          editContribution={editingContribution ?? undefined}
+          onClose={() => {
+            setContributeOpen(false)
+            setEditingContribution(null)
+          }}
+          onSuccess={() => {
+            const wasEdit = !!editingContribution
+            setContributeOpen(false)
+            setEditingContribution(null)
+            toast.success(
+              wasEdit
+                ? t('salary.updateSuccess')
+                : t('salary.contributeSuccess')
+            )
+          }}
+        />
+      )}
     </div>
   )
 }

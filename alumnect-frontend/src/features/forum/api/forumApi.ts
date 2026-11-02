@@ -14,6 +14,15 @@ import type { Answer, AnswerPageResult, CreateAnswerInput, UpdateAnswerInput } f
 /** Số câu hỏi mỗi trang (đồng bộ với tham số `size` mặc định của backend). */
 export const PAGE_SIZE = 10
 
+/** Kết quả trả về sau khi bình chọn/bỏ bình chọn một câu hỏi (UC42 - Vote on a question). */
+export type VoteResult = { voted: boolean; voteCount: number }
+
+/** Chuẩn hóa phản hồi bình chọn từ nhiều biến thể phong bì (envelope) thành VoteResult. */
+function normalizeVote(body: unknown): VoteResult {
+  const d = ((body as { data?: unknown })?.data ?? body) as { voted?: boolean; voteCount?: number } | undefined
+  return { voted: !!d?.voted, voteCount: Number(d?.voteCount ?? 0) }
+}
+
 /**
  * Trích mảng phần tử thô từ nhiều biến thể phong bì (envelope) phản hồi:
  * hỗ trợ Spring Page (`content`), dạng `{ items }` hoặc mảng trực tiếp.
@@ -77,10 +86,11 @@ function parseAnswers(raw: unknown[]): Answer[] {
 
 export const forumApi = {
   /**
-   * Lấy một trang danh sách câu hỏi trên diễn đàn Q&A.
-   * Gọi `GET /api/v1/questions?page={n}&size={m}&sort={s}[&topicId={id}]`.
+   * Lấy một trang danh sách câu hỏi trên diễn đàn Q&A, có thể kèm tìm kiếm theo từ khóa (UC44 - Search questions).
+   * Gọi `GET /api/v1/questions?page={n}&size={m}&sort={s}[&keyword={k}][&topicId={id}]`.
    * @param page Chỉ số trang cần lấy (0-based)
    * @param sort Tiêu chí sắp xếp ('recent' | 'votes' | 'answers'), có thể ghép nhiều bằng dấu phẩy
+   * @param keyword Từ khóa tìm kiếm trên tiêu đề/nội dung câu hỏi, rỗng = không tìm kiếm
    * @param topicIds Danh sách ID thể loại để lọc (tick nhiều), rỗng = không lọc
    * @param majorIds Danh sách ID ngành để lọc (tick nhiều), rỗng = không lọc — độc lập với thể loại
    * @return Một trang kết quả đã chuẩn hóa (items + thông tin phân trang)
@@ -88,11 +98,13 @@ export const forumApi = {
   getQuestions: async ({
     page = 0,
     sort = 'recent',
+    keyword = '',
     topicIds = [],
     majorIds = [],
-  }: { page?: number; sort?: string; topicIds?: number[]; majorIds?: number[] } = {}): Promise<QuestionPageResult> => {
+  }: { page?: number; sort?: string; keyword?: string; topicIds?: number[]; majorIds?: number[] } = {}): Promise<QuestionPageResult> => {
     const query = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE), sort })
     // Gửi nhiều id dạng CSV: topicId=3,7,9 / majorId=1,4 — backend nhận List<Long>.
+    if (keyword.trim()) query.set('keyword', keyword.trim())
     if (topicIds.length > 0) query.set('topicId', topicIds.join(','))
     if (majorIds.length > 0) query.set('majorId', majorIds.join(','))
 
@@ -126,6 +138,37 @@ export const forumApi = {
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return questionDetailSchema.parse(payload)
+  },
+
+  /**
+   * Xóa (mềm) một câu hỏi đã có (UC47 - Delete a question).
+   * Gọi `DELETE /api/v1/questions/{id}`; interceptor `http` tự đính Bearer token. Chỉ tác giả xóa được (BE chặn 403).
+   * @param id ID câu hỏi cần xóa
+   */
+  deleteQuestion: async (id: string | number): Promise<void> => {
+    await http.delete(`/questions/${id}`)
+  },
+
+  /**
+   * Bình chọn (upvote) một câu hỏi (UC42 - Vote on a question).
+   * Gọi `POST /api/v1/questions/{id}/vote`; interceptor `http` tự đính Bearer token. Thao tác lũy đẳng.
+   * @param id ID câu hỏi cần bình chọn
+   * @return Trạng thái bình chọn mới + tổng số vote ({ voted: true, voteCount })
+   */
+  voteQuestion: async (id: string | number): Promise<VoteResult> => {
+    const body = await http.post(`/questions/${id}/vote`)
+    return normalizeVote(body)
+  },
+
+  /**
+   * Bỏ bình chọn một câu hỏi (UC42 - Vote on a question).
+   * Gọi `DELETE /api/v1/questions/{id}/vote`. Thao tác lũy đẳng — bỏ bình chọn câu hỏi chưa bình chọn không đổi.
+   * @param id ID câu hỏi cần bỏ bình chọn
+   * @return Trạng thái bình chọn mới + tổng số vote ({ voted: false, voteCount })
+   */
+  unvoteQuestion: async (id: string | number): Promise<VoteResult> => {
+    const body = await http.delete(`/questions/${id}/vote`)
+    return normalizeVote(body)
   },
 
   /**
@@ -228,5 +271,39 @@ export const forumApi = {
     const b = body as unknown as Record<string, unknown> | undefined
     const payload = (b?.data ?? b) as unknown
     return answerSchema.parse(payload)
+  },
+
+  /**
+   * Bình chọn (upvote) một câu trả lời (hoặc reply) (UC43 - Vote on an answer).
+   * Gọi `POST /api/v1/questions/{questionId}/answers/{answerId}/vote`; interceptor `http` tự đính Bearer token. Thao tác lũy đẳng.
+   * @param questionId ID câu hỏi chứa câu trả lời
+   * @param answerId ID câu trả lời cần bình chọn
+   * @return Trạng thái bình chọn mới + tổng số vote ({ voted: true, voteCount })
+   */
+  voteAnswer: async ({ questionId, answerId }: { questionId: string | number; answerId: string | number }): Promise<VoteResult> => {
+    const body = await http.post(`/questions/${questionId}/answers/${answerId}/vote`)
+    return normalizeVote(body)
+  },
+
+  /**
+   * Bỏ bình chọn một câu trả lời (hoặc reply) (UC43 - Vote on an answer).
+   * Gọi `DELETE /api/v1/questions/{questionId}/answers/{answerId}/vote`. Thao tác lũy đẳng.
+   * @param questionId ID câu hỏi chứa câu trả lời
+   * @param answerId ID câu trả lời cần bỏ bình chọn
+   * @return Trạng thái bình chọn mới + tổng số vote ({ voted: false, voteCount })
+   */
+  unvoteAnswer: async ({ questionId, answerId }: { questionId: string | number; answerId: string | number }): Promise<VoteResult> => {
+    const body = await http.delete(`/questions/${questionId}/answers/${answerId}/vote`)
+    return normalizeVote(body)
+  },
+
+  /**
+   * Xóa (mềm) một câu trả lời (hoặc reply) (UC49 - Delete an answer).
+   * Gọi `DELETE /api/v1/questions/{questionId}/answers/{answerId}`; chỉ tác giả xóa được (BE chặn 403).
+   * @param questionId ID câu hỏi chứa câu trả lời
+   * @param answerId ID câu trả lời cần xóa
+   */
+  deleteAnswer: async ({ questionId, answerId }: { questionId: string | number; answerId: string | number }): Promise<void> => {
+    await http.delete(`/questions/${questionId}/answers/${answerId}`)
   },
 }

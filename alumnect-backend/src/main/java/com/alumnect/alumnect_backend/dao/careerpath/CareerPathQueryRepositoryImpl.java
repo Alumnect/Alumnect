@@ -26,13 +26,13 @@ public class CareerPathQueryRepositoryImpl implements CareerPathQueryRepository 
             Long majorId,
             Pageable pageable
     ) {
-        StringBuilder jpql = new StringBuilder("SELECT up.userId FROM UserProfile up JOIN up.user u WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE AND u.role.name = 'ALUMNI' AND EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id)");
-        StringBuilder countJpql = new StringBuilder("SELECT COUNT(up.userId) FROM UserProfile up JOIN up.user u WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE AND u.role.name = 'ALUMNI' AND EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id)");
+        StringBuilder jpql = new StringBuilder("SELECT up.userId FROM UserProfile up JOIN up.user u LEFT JOIN up.major m WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE AND u.role.name = 'ALUMNI' AND EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id)");
+        StringBuilder countJpql = new StringBuilder("SELECT COUNT(up.userId) FROM UserProfile up JOIN up.user u LEFT JOIN up.major m WHERE u.accountStatus = com.alumnect.alumnect_backend.common.enums.AccountStatus.ACTIVE AND u.role.name = 'ALUMNI' AND EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id)");
         
         StringBuilder where = new StringBuilder();
         
         if (search != null && !search.trim().isEmpty()) {
-            where.append(" AND (LOWER(up.fullName) LIKE :searchPattern OR EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id AND (LOWER(e.title) LIKE :searchPattern OR LOWER(e.company) LIKE :searchPattern OR LOWER(e.location) LIKE :searchPattern)))");
+            where.append(" AND (LOWER(up.fullName) LIKE :searchPattern OR (m IS NOT NULL AND (LOWER(m.name) LIKE :searchPattern OR LOWER(m.code) LIKE :searchPattern)) OR EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id AND (LOWER(e.title) LIKE :searchPattern OR LOWER(e.company) LIKE :searchPattern OR LOWER(e.location) LIKE :searchPattern)))");
         }
         if (title != null && !title.trim().isEmpty()) {
             where.append(" AND EXISTS (SELECT 1 FROM Experience e WHERE e.user.id = u.id AND LOWER(e.title) LIKE :titlePattern)");
@@ -47,7 +47,7 @@ public class CareerPathQueryRepositoryImpl implements CareerPathQueryRepository 
             where.append(" AND up.cohort = :cohort");
         }
         if (majorId != null) {
-            where.append(" AND up.major.id = :majorId");
+            where.append(" AND m.id = :majorId");
         }
         
         jpql.append(where);

@@ -32,10 +32,6 @@ public class VerificationRequest {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /** Năm tốt nghiệp của cựu sinh viên */
-    @Column(name = "graduation_year", nullable = false)
-    private Integer graduationYear;
-
     /** Chuyên ngành đã học (có thể null nếu chuyên ngành bị xóa) */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "major_id")
@@ -44,10 +40,6 @@ public class VerificationRequest {
     /** URL minh chứng xác nhận là cựu sinh viên (VD: link bằng tốt nghiệp, transcript) */
     @Column(name = "proof_url", length = 500)
     private String proofUrl;
-
-    /** Ghi chú bổ sung từ người đăng ký (không bắt buộc) */
-    @Column(length = 500)
-    private String note;
 
     /** Trạng thái xét duyệt: PENDING → APPROVED / REJECTED */
     @Enumerated(EnumType.STRING)

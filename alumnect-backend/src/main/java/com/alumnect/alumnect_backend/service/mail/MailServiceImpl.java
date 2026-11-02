@@ -3,6 +3,7 @@ package com.alumnect.alumnect_backend.service.mail;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -19,6 +20,12 @@ public class MailServiceImpl implements MailService {
 
     @Autowired(required = false)
     private JavaMailSender mailSender;
+
+    @Value("${spring.mail.username:}")
+    private String fromEmail;
+
+    @Value("${app.mail.from-name:AlumNect}")
+    private String fromName;
 
     /**
      * Thực hiện tạo khuôn mẫu HTML và gửi email chứa mã OTP xác thực tài khoản.
@@ -69,6 +76,9 @@ public class MailServiceImpl implements MailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            if (fromEmail != null && !fromEmail.isBlank()) {
+                helper.setFrom(fromEmail, (fromName != null && !fromName.isBlank()) ? fromName : "AlumNect");
+            }
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
@@ -135,6 +145,9 @@ public class MailServiceImpl implements MailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            if (fromEmail != null && !fromEmail.isBlank()) {
+                helper.setFrom(fromEmail, (fromName != null && !fromName.isBlank()) ? fromName : "AlumNect");
+            }
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);

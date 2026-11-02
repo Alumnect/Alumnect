@@ -41,7 +41,7 @@ stateDiagram-v2
     *   **Xử lý Liên kết/Phân luồng**:
         *   **Liên kết tự động**: Nếu email tài khoản Google trùng khớp với một tài khoản cục bộ (`LOCAL`) có sẵn trong hệ thống, hệ thống tự động lưu bản ghi liên kết mới vào bảng `user_oauth_providers`, giữ nguyên mật khẩu cục bộ (`password_hash`) và phương thức xác thực (`auth_provider` vẫn giữ là `LOCAL`), sau đó kích hoạt/đăng nhập bằng Google hoặc bằng Email/Mật khẩu cục bộ (Hybrid Login).
         *   **Người dùng mới (Redirection)**: Nếu email chưa tồn tại, Backend ném lỗi `GoogleUserNotFoundException` (HTTP 404) cùng dữ liệu `email`, `fullName` và `providerUserId` (sub ID) của Google. Frontend nhận dữ liệu này, tự động chuyển hướng sang trang đăng ký với các trường email (được khóa, không cho sửa) và tên được điền sẵn, đồng thời ẩn trường mật khẩu.
-        *   **Hoàn tất hồ sơ mới**: Người dùng hoàn thành các thông tin trường học bắt buộc (Mã số sinh viên, Chuyên ngành, Khóa học) rồi nhấn đăng ký. Backend lưu thông tin người dùng với trạng thái `ACTIVE` (đối với sinh viên) hoặc `WAITING_APPROVAL` (đối với cựu sinh viên).
+        *   **Hoàn tất hồ sơ mới**: Người dùng hoàn thành các thông tin trường học bắt buộc (Mã số sinh viên, Chuyên ngành; với Cựu sinh viên tải thêm ảnh minh chứng) rồi nhấn đăng ký. Backend lưu thông tin người dùng với trạng thái `ACTIVE` (đối với sinh viên) hoặc `WAITING_APPROVAL` (đối với cựu sinh viên).
 *   **Bước 3 - Kết thúc**: Hệ thống trả về cặp JWT tokens (Access Token và Refresh Token) cùng thông tin cơ bản của người dùng, đưa người dùng vào trang Dashboard hệ thống.
 
 ---
@@ -60,7 +60,7 @@ Module Quản lý tài khoản chịu trách nhiệm về toàn bộ các quy tr
 *   **Purpose**: Đơn giản hóa quá trình đăng nhập và đăng ký tài khoản của sinh viên/cựu sinh viên FPTU thông qua tài khoản Google của họ.
 *   **Interface**:
     *   Nút Google Sign-In chính thức được nhúng qua script của Google.
-    *   Trang đăng ký đặc thù khi điền thông tin bổ sung: Khóa input Email, ẩn trường mật khẩu, và hiển thị các trường thông tin bắt buộc (Vai trò, Chuyên ngành, Khóa, MSSV, Minh chứng đối với Cựu sinh viên).
+    *   Trang đăng ký đặc thù khi điền thông tin bổ sung: Khóa input Email, ẩn trường mật khẩu, và hiển thị các trường thông tin bắt buộc (Vai trò, Chuyên ngành, MSSV; Minh chứng đối với Cựu sinh viên).
 
 **Data processing**:
 1.  **Google Token Verification**: Gửi HTTP GET request đến Google API để lấy thông tin tài khoản.
@@ -73,10 +73,10 @@ Module Quản lý tài khoản chịu trách nhiệm về toàn bộ các quy tr
 *   Layout trang đăng ký thông tin bổ sung: `/register` với các trường Email bị khóa và không có trường Mật khẩu.
 
 **Function details**:
-*   **Data**: Google ID Token, Vai trò, Chuyên ngành ID, Khóa học, Mã số sinh viên, Năm tốt nghiệp (nếu là Alumni), Link ảnh minh chứng (nếu là Alumni), Ghi chú (nếu có).
+*   **Data**: Google ID Token, Vai trò, Chuyên ngành ID, Mã số sinh viên, Link ảnh minh chứng (nếu là Alumni).
 *   **Validation**:
     *   Mã số sinh viên không được trùng lặp.
-    *   Ảnh minh chứng và năm tốt nghiệp là bắt buộc với vai trò Cựu sinh viên (ALUMNI).
+    *   Ảnh minh chứng là bắt buộc với vai trò Cựu sinh viên (ALUMNI).
 *   **Business rules**:
     *   Tài khoản đăng nhập qua Google có thể đăng nhập thông thường bằng mật khẩu cục bộ nếu tài khoản đã được thiết lập mật khẩu cục bộ (Hybrid Login).
     *   Hệ thống chỉ chấp nhận email Google có trạng thái `email_verified` bằng `true`.
@@ -141,11 +141,8 @@ classDiagram
         -String fullName
         -String role
         -Long majorId
-        -Integer cohort
         -String studentCode
-        -Integer graduationYear
         -String proofUrl
-        -String note
     }
     
     class LoginResponse {

@@ -1,0 +1,385 @@
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import { TRANSITION } from '@/lib/motion'
+import { useDialog } from '@/hooks/useDialog'
+import { 
+  X, 
+  Download, 
+  ExternalLink, 
+  ZoomIn, 
+  ZoomOut, 
+  RotateCw,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
+
+interface ImageViewerModalProps {
+  isOpen: boolean
+  onClose: () => void
+  src: string
+  alt?: string
+  fileName?: string
+  senderName?: string
+  senderAvatar?: string
+  time?: string
+  /** Chuyển sang ảnh trước / sau (chỉ truyền khi bài viết có nhiều ảnh); thiếu thì ẩn nút điều hướng. */
+  onPrev?: () => void
+  onNext?: () => void
+  /** Bộ đếm hiển thị ở header, ví dụ "2 / 4". */
+  counter?: string
+}
+
+export function ImageViewerModal({
+  isOpen,
+  onClose,
+  src,
+  alt,
+  fileName,
+  senderName,
+  senderAvatar,
+  time,
+  onPrev,
+  onNext,
+  counter,
+}: ImageViewerModalProps) {
+  const { t } = useTranslation()
+  const resolvedAlt = alt || t('common.image')
+  const [zoom, setZoom] = useState(1)
+  const [rotation, setRotation] = useState(0)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartRef = useRef({ x: 0, y: 0 })
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Reset trạng thái hiển thị khi mở ảnh mới
+  useEffect(() => {
+    if (isOpen) {
+      setZoom(1)
+      setRotation(0)
+      setPan({ x: 0, y: 0 })
+    }
+  }, [isOpen, src])
+
+  // Phóng to / Thu nhỏ
+  const handleZoomIn = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setZoom((prev) => Math.min(prev + 0.3, 3.5))
+  }
+
+  const handleZoomOut = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setZoom((prev) => {
+      const next = Math.max(prev - 0.3, 0.6)
+      if (next <= 1) setPan({ x: 0, y: 0 })
+      return next
+    })
+  }
+
+  // Xoay ảnh 90 độ
+  const handleRotate = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setRotation((prev) => (prev + 90) % 360)
+  }
+
+  // Khôi phục kích thước ban đầu
+  const handleReset = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setZoom(1)
+    setRotation(0)
+    setPan({ x: 0, y: 0 })
+  }
+
+  // Double click để toggle zoom 1.8x
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (zoom > 1.1) {
+      handleReset()
+    } else {
+      setZoom(1.8)
+    }
+  }
+
+  // Lăn chuột để zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.deltaY < 0) {
+      setZoom((prev) => Math.min(prev + 0.15, 3.5))
+    } else {
+      setZoom((prev) => {
+        const next = Math.max(prev - 0.15, 0.6)
+        if (next <= 1) setPan({ x: 0, y: 0 })
+        return next
+      })
+    }
+  }
+
+  // Kéo chuột để di chuyển ảnh khi đang phóng to
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoom <= 1) return
+    e.preventDefault()
+    setIsDragging(true)
+    dragStartRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || zoom <= 1) return
+    setPan({
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    })
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  // Phím tắt bàn phím
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' && onPrev) {
+        onPrev()
+      } else if (e.key === 'ArrowRight' && onNext) {
+        onNext()
+      } else if (e.key === '+' || e.key === '=') {
+        setZoom((prev) => Math.min(prev + 0.25, 3.5))
+      } else if (e.key === '-' || e.key === '_') {
+        setZoom((prev) => {
+          const next = Math.max(prev - 0.25, 0.6)
+          if (next <= 1) setPan({ x: 0, y: 0 })
+          return next
+        })
+      } else if (e.key === 'r' || e.key === 'R') {
+        setRotation((prev) => (prev + 90) % 360)
+      } else if (e.key === '0') {
+        setZoom(1)
+        setRotation(0)
+        setPan({ x: 0, y: 0 })
+      }
+    },
+    [onPrev, onNext]
+  )
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, handleKeyDown])
+
+  // Esc, bẫy tiêu điểm, khóa cuộn, trả tiêu điểm khi đóng
+  useDialog(dialogRef, { open: isOpen && !!src, onClose })
+
+  // Tải ảnh về máy
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      const response = await fetch(src)
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = fileName || `image-${Date.now()}.jpg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+    } catch {
+      window.open(src, '_blank')
+    }
+  }
+
+  if (!isOpen || !src) return null
+
+  return createPortal(
+    <AnimatePresence>
+      <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={resolvedAlt}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0, transition: TRANSITION.exit }}
+        transition={TRANSITION.overlay}
+        onClick={onClose}
+        onWheel={handleWheel}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        className="fixed inset-0 z-[999999] flex select-none outline-none items-center justify-center bg-black/92 backdrop-blur-sm"
+      >
+        {/* --- HEADER CHUẨN FACEBOOK MESSENGER --- */}
+        <div
+          className="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/70 via-black/30 to-transparent"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Thông tin người gửi / Tên ảnh bên trái */}
+          <div className="flex items-center gap-3">
+            {senderAvatar ? (
+              <img
+                src={senderAvatar}
+                alt={senderName || ''}
+                className="h-9 w-9 rounded-full object-cover ring-2 ring-white/20"
+              />
+            ) : null}
+            <div className="flex flex-col">
+              {senderName ? (
+                <span className="text-sm font-semibold text-white drop-shadow-sm">
+                  {senderName}
+                </span>
+              ) : fileName ? (
+                <span className="max-w-xs truncate text-sm font-semibold text-white/90 drop-shadow-sm">
+                  {fileName}
+                </span>
+              ) : null}
+              {time ? (
+                <span className="text-xs text-white/60 drop-shadow-sm">{time}</span>
+              ) : null}
+            </div>
+          </div>
+
+          {counter ? (
+            <span className="ml-auto mr-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white/90">{counter}</span>
+          ) : null}
+
+          {/* Nút Đóng (X) tròn đặc trưng của Messenger ở góc trên bên phải */}
+          <button
+            type="button"
+            onClick={onClose}
+            title={`${t('common.close')} (Esc)`}
+            aria-label={t('common.close')}
+            data-dialog-close
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#242526] text-white/90 shadow-md border border-white/10 transition hover:bg-[#3a3b3c] hover:text-white hover:scale-105 active:scale-95"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* --- KHU VỰC HIỂN THỊ ẢNH CHÍNH --- */}
+        <div
+          className="relative flex h-full w-full items-center justify-center overflow-hidden p-6"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.92, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={handleDoubleClick}
+            onMouseDown={handleMouseDown}
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotation}deg)`,
+              cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in',
+              transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+            }}
+            className="inline-block max-h-[86vh] max-w-[90vw] select-none"
+          >
+            <img
+              src={src}
+              alt={resolvedAlt}
+              draggable={false}
+              className="max-h-[84vh] max-w-[88vw] rounded-xl object-contain shadow-2xl ring-1 ring-white/10"
+            />
+          </motion.div>
+        </div>
+
+        {/* --- NÚT CHUYỂN ẢNH TRƯỚC / SAU (bài viết nhiều ảnh) --- */}
+        {onPrev && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onPrev() }}
+            title={`${t('common.prevImage')} (←)`}
+            aria-label={t('common.prevImage')}
+            className="absolute left-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
+          >
+            <ChevronLeft size={26} />
+          </button>
+        )}
+        {onNext && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onNext() }}
+            title={`${t('common.nextImage')} (→)`}
+            aria-label={t('common.nextImage')}
+            className="absolute right-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#242526]/90 text-white shadow-lg transition hover:scale-105 hover:bg-[#3a3b3c] active:scale-95"
+          >
+            <ChevronRight size={26} />
+          </button>
+        )}
+
+        {/* --- THANH ĐIỀU KHIỂN DOCK NỔI PHÍA DƯỚI (FLOATING TOOLBAR GIỐNG MESSENGER) --- */}
+        <div
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 rounded-full bg-[#242526]/95 border border-white/15 px-3 py-1.5 shadow-2xl backdrop-blur-md"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Thu nhỏ */}
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            disabled={zoom <= 0.6}
+            title={`${t('common.zoomOut')} (-)`}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            <ZoomOut size={17} />
+          </button>
+
+          {/* Hiển thị tỉ lệ Zoom & Reset */}
+          <button
+            type="button"
+            onClick={handleReset}
+            title={t('common.resetZoom')}
+            className="min-w-[50px] px-1.5 py-1 text-center text-xs font-semibold text-white/90 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+
+          {/* Phóng to */}
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            disabled={zoom >= 3.5}
+            title={`${t('common.zoomIn')} (+)`}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            <ZoomIn size={17} />
+          </button>
+
+          <div className="mx-1 h-4 w-px bg-white/20" />
+
+          {/* Xoay ảnh 90 độ */}
+          <button
+            type="button"
+            onClick={handleRotate}
+            title={`${t('common.rotateImage')} (R)`}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+          >
+            <RotateCw size={17} />
+          </button>
+
+          {/* Tải xuống */}
+          <button
+            type="button"
+            onClick={handleDownload}
+            title={t('common.downloadImage')}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+          >
+            <Download size={17} />
+          </button>
+
+          {/* Mở tab mới */}
+          <a
+            href={src}
+            target="_blank"
+            rel="noreferrer"
+            title={t('common.openInNewTab')}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+          >
+            <ExternalLink size={17} />
+          </a>
+        </div>
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  )
+}

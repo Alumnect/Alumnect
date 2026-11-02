@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,7 @@ public class Post {
     private Instant updatedAt;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 30)
     @Builder.Default
     private List<PostMedia> mediaList = new ArrayList<>();
 

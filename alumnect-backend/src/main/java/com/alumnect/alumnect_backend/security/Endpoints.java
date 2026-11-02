@@ -1,5 +1,7 @@
 package com.alumnect.alumnect_backend.security;
 
+import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
+
 /**
  * Lớp hằng số tập trung toàn bộ danh sách URL của hệ thống.
  * Được sử dụng bởi {@link SecurityConfiguration} để cấu hình Spring Security:
@@ -21,9 +23,16 @@ public class Endpoints {
         "/error"
     };
 
+    // WebSocket Handshake endpoints — cho phép nâng cấp kết nối HTTP sang WebSocket
+    public static final String[] WEBSOCKET_ENDPOINTS = {
+        WebSocketDestinations.WS_ENDPOINT,
+        WebSocketDestinations.WS_ENDPOINT + "/**"
+    };
+
     // Endpoint công khai — GET, không cần đăng nhập
     public static final String[] PUBLIC_GET = {
         "/api/v1/majors",           // Lấy danh sách chuyên ngành (dùng lúc đăng ký)
+        "/api/v1/industries",       // Lấy danh mục ngành nghề cho dropdown Salary Board (UC50)
         "/api/v1/auth/verify-email",    // Xác nhận email qua mã OTP (click link hoặc nhập mã)
         "/api/v1/auth/verify-email/**",
         "/api/v1/files/presigned-url", // Sinh link ký sẵn để tải file
@@ -34,16 +43,32 @@ public class Endpoints {
         "/api/v1/questions/topics", // Lấy danh mục chủ đề để lọc câu hỏi (UC38)
         "/api/v1/questions/*",      // Xem chi tiết một câu hỏi theo id (UC39 - Guest xem được)
         "/api/v1/questions/*/answers", // Xem danh sách câu trả lời của một câu hỏi (UC41 - Guest xem được)
+        "/api/v1/users/search",       // Tìm kiếm và lọc danh sách thành viên công khai (UC09)
+        "/api/v1/users/filter-options", // Lấy danh sách tùy chọn bộ lọc động (khóa học, thành phố)
+        "/api/v1/users/suggestions",  // Lấy danh sách thành viên gợi ý kết nối (UC10)
         "/api/v1/users/profile/*",    // Xem hồ sơ cá nhân người khác bằng ID (UC39)
+
         "/api/v1/users/*/followers",  // Lấy danh sách người theo dõi công khai (phân trang)
         "/api/v1/users/*/following",  // Lấy danh sách người đang theo dõi công khai (phân trang)
         "/api/v1/career-paths",       // Lấy danh sách Career Paths phân trang công khai
-        "/api/v1/career-paths/users/*" // Lấy chi tiết Career Path của người dùng công khai
+        "/api/v1/career-paths/users/*", // Lấy chi tiết Career Path của người dùng công khai
+        "/api/v1/events/*/rsvp",      // Kiểm tra trạng thái đăng ký sự kiện công khai (UC25)
+        "/api/v1/events/*/attendees",  // Lấy danh sách người tham gia sự kiện công khai (UC25)
+        "/api/v1/events/{eventId:\\d+}", // Xem chi tiết sự kiện công khai (UC25 - Guest xem được)
+        "/api/v1/groups",             // Khám phá danh sách hội nhóm — Guest xem được
+        "/api/v1/groups/{groupId:\\d+}",         // Chi tiết hội nhóm (nhóm riêng tư chỉ lộ thông tin công khai) — chỉ khớp id số, không khớp /groups/my-groups
+        "/api/v1/groups/{groupId:\\d+}/members", // Danh sách thành viên — Service tự chặn nhóm riêng tư với người ngoài nhóm
+        "/api/v1/groups/{groupId:\\d+}/posts",   // Danh sách thảo luận trong nhóm — Service tự chặn nhóm riêng tư với người ngoài nhóm
+        "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}", // Chi tiết bài viết thảo luận trong nhóm
+        "/api/v1/groups/{groupId:\\d+}/posts/{postId:\\d+}/comments", // Danh sách bình luận trong bài viết
     };
 
 
     // Endpoint công khai — POST, không cần đăng nhập
     public static final String[] PUBLIC_POST = {
+        "/api/v1/mentoring/subscriptions/payment/webhook", // Tiếp nhận Webhook IPN từ PayOS (UC93)
+        "/api/v1/mentoring/task-payments/webhook", // Tiếp nhận Webhook IPN từ PayOS cho Task Payment (UC105)
+        "/api/v1/payments/payos/webhook", // Webhook PayOS dùng chung (định tuyến theo orderCode)
         "/api/v1/auth/register", // Đăng ký tài khoản mới
         "/api/v1/auth/login",    // Đăng nhập lấy JWT token
         "/api/v1/auth/google",   // Đăng nhập bằng Google OAuth2

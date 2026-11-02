@@ -2,21 +2,27 @@ package com.alumnect.alumnect_backend.service.forum;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.AnswerStatus;
+import com.alumnect.alumnect_backend.common.enums.VoteTargetType;
 import com.alumnect.alumnect_backend.dao.forum.AnswerRepository;
 import com.alumnect.alumnect_backend.dao.forum.QuestionRepository;
+import com.alumnect.alumnect_backend.dao.forum.VoteRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.forum.CreateAnswerRequest;
 import com.alumnect.alumnect_backend.dto.request.forum.UpdateAnswerRequest;
 import com.alumnect.alumnect_backend.dto.response.forum.AnswerResponse;
+import com.alumnect.alumnect_backend.dto.response.forum.VoteResponse;
 import com.alumnect.alumnect_backend.entity.forum.Answer;
 import com.alumnect.alumnect_backend.entity.forum.Question;
+import com.alumnect.alumnect_backend.entity.forum.Vote;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.forum.AnswerMapper;
+import com.alumnect.alumnect_backend.service.moderation.ContentModerationService;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +32,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +64,15 @@ public class AnswerServiceImpl implements AnswerService {
     @Autowired
     private AnswerMapper answerMapper;
 
+    @Autowired
+    private VoteRepository voteRepository;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private ContentModerationService contentModerationService;
+
     /**
      * {@inheritDoc}
      * <p>
@@ -65,7 +81,7 @@ public class AnswerServiceImpl implements AnswerService {
      * map sang {@link AnswerResponse}.
      */
     @Override
-    public PageResponse<AnswerResponse> getAnswers(Long questionId, int page, int size) {
+    public PageResponse<AnswerResponse> getAnswers(Long questionId, int page, int size, String viewerEmail) {
         if (page < 0) {
             throw new BadRequestException("Tham số page phải là số nguyên không âm");
         }
@@ -94,15 +110,22 @@ public class AnswerServiceImpl implements AnswerService {
         Map<Long, UserProfile> profileByUserId = userProfileRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
 
+        // Gộp truy vấn trạng thái bình chọn (UC43) theo lô cho CẢ câu trả lời gốc lẫn reply — tránh N+1 query.
+        List<Long> allAnswerIds = new ArrayList<>();
+        tops.forEach(a -> allAnswerIds.add(a.getId()));
+        replies.forEach(a -> allAnswerIds.add(a.getId()));
+        Set<Long> votedAnswerIds = computeVotedAnswerIds(viewerEmail, allAnswerIds);
+
         // Gom reply theo id câu trả lời gốc (parent), map sẵn sang DTO (reply không có reply con).
         Map<Long, List<AnswerResponse>> repliesByParent = replies.stream().collect(Collectors.groupingBy(
                 r -> r.getParent().getId(),
-                Collectors.mapping(r -> answerMapper.toResponse(r, profileByUserId.get(r.getAuthor().getId()), List.of()),
+                Collectors.mapping(r -> answerMapper.toResponse(r, profileByUserId.get(r.getAuthor().getId()), List.of(),
+                        votedAnswerIds.contains(r.getId())),
                         Collectors.toList())));
 
         List<AnswerResponse> content = tops.stream()
                 .map(a -> answerMapper.toResponse(a, profileByUserId.get(a.getAuthor().getId()),
-                        repliesByParent.getOrDefault(a.getId(), List.of())))
+                        repliesByParent.getOrDefault(a.getId(), List.of()), votedAnswerIds.contains(a.getId())))
                 .collect(Collectors.toList());
 
         return PageResponse.<AnswerResponse>builder()
@@ -156,7 +179,7 @@ public class AnswerServiceImpl implements AnswerService {
                 .question(question)
                 .author(author)
                 .parent(parent)
-                .body(request.getBody().trim())
+                .body(contentModerationService.sanitizeContent(request.getBody().trim()))
                 .status(AnswerStatus.ACTIVE)
                 .voteCount(0)
                 .build();
@@ -172,7 +195,9 @@ public class AnswerServiceImpl implements AnswerService {
                 saved.getId(), questionId, request.getParentId(), email);
 
         UserProfile profile = userProfileRepository.findById(author.getId()).orElse(null);
-        return answerMapper.toResponse(saved, profile, List.of());
+        notificationService.sendAnswerNotification(author, question, saved);
+        // Câu trả lời vừa tạo chắc chắn chưa ai bình chọn (kể cả chính tác giả).
+        return answerMapper.toResponse(saved, profile, List.of(), false);
     }
 
     /**
@@ -201,11 +226,182 @@ public class AnswerServiceImpl implements AnswerService {
             throw new ForbiddenException("Chỉ tác giả mới được chỉnh sửa câu trả lời này");
         }
 
-        answer.setBody(request.getBody().trim());
+        answer.setBody(contentModerationService.sanitizeContent(request.getBody().trim()));
         Answer saved = answerRepository.save(answer);
         log.info("Cập nhật câu trả lời: id={}, questionId={}, tác giả={}", saved.getId(), questionId, email);
 
         UserProfile profile = userProfileRepository.findById(user.getId()).orElse(null);
-        return answerMapper.toResponse(saved, profile, List.of());
+        boolean voted = !computeVotedAnswerIds(email, List.of(saved.getId())).isEmpty();
+        return answerMapper.toResponse(saved, profile, List.of(), voted);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: xác thực user + vai trò Student/Alumni (403 nếu khác) → tìm câu trả lời ACTIVE thuộc đúng
+     * câu hỏi (404 nếu không) → nếu CHƯA bình chọn thì tạo {@link Vote} (value=1) + tăng {@code voteCount}
+     * (idempotent — bình chọn lần 2 không tạo thêm bản ghi/không tăng thêm).
+     */
+    @Override
+    @Transactional
+    public VoteResponse voteAnswer(String email, Long questionId, Long answerId) {
+        User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được bình chọn câu trả lời");
+        Answer answer = findActiveAnswerInQuestion(questionId, answerId);
+
+        // KHÔNG gọi answer.setVoteCount(...) — answer đang managed trong persistence context, set lại
+        // field sẽ khiến Hibernate coi entity "dirty" và tự flush thêm 1 UPDATE khi transaction commit,
+        // vô tình đụng vào updated_at (qua @PreUpdate) dù nội dung chưa hề bị sửa. Chỉ tính giá trị mới
+        // ở biến cục bộ để trả về, còn DB đã được cập nhật đúng qua bulk query incrementVoteCount.
+        int newVoteCount = answer.getVoteCount();
+        if (!voteRepository.existsByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.ANSWER, answerId)) {
+            voteRepository.save(Vote.builder()
+                    .user(user)
+                    .targetType(VoteTargetType.ANSWER)
+                    .targetId(answerId)
+                    .value((short) 1)
+                    .build());
+            answerRepository.incrementVoteCount(answerId);
+            newVoteCount = newVoteCount + 1;
+            log.info("Bình chọn câu trả lời: id={}, questionId={}, người bình chọn={}", answerId, questionId, email);
+        }
+        return VoteResponse.builder().voted(true).voteCount(newVoteCount).build();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: xác thực user + vai trò Student/Alumni (403 nếu khác) → tìm câu trả lời ACTIVE thuộc đúng
+     * câu hỏi (404 nếu không) → nếu ĐÃ bình chọn thì xóa {@link Vote} + giảm {@code voteCount} (không âm).
+     */
+    @Override
+    @Transactional
+    public VoteResponse unvoteAnswer(String email, Long questionId, Long answerId) {
+        User user = resolveMemberOrThrow(email, "Chỉ sinh viên và cựu sinh viên mới được bình chọn câu trả lời");
+        Answer answer = findActiveAnswerInQuestion(questionId, answerId);
+
+        // Không set lại field trên entity managed — xem giải thích ở voteAnswer() phía trên.
+        int newVoteCount = answer.getVoteCount();
+        if (voteRepository.existsByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.ANSWER, answerId)) {
+            voteRepository.deleteByUserIdAndTargetTypeAndTargetId(user.getId(), VoteTargetType.ANSWER, answerId);
+            answerRepository.decrementVoteCount(answerId);
+            newVoteCount = Math.max(0, newVoteCount - 1);
+            log.info("Bỏ bình chọn câu trả lời: id={}, questionId={}, người bỏ bình chọn={}", answerId, questionId, email);
+        }
+        return VoteResponse.builder().voted(false).voteCount(newVoteCount).build();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Luồng: tìm user theo email (404) → tìm câu trả lời ACTIVE thuộc đúng câu hỏi (404 nếu không, tái
+     * dùng {@link #findActiveAnswerInQuestion}) → kiểm tra người dùng chính là TÁC GIẢ (403 nếu không)
+     * → dọn lượt bình chọn (bảng {@code votes} không có FK cứng nên không tự cascade) của câu trả lời
+     * và các reply trực tiếp (nếu là câu trả lời gốc) → nếu là câu trả lời GỐC thì <b>xóa cứng tường
+     * minh</b> các reply trước bằng bulk query ({@link AnswerRepository#deleteByParentId}) — KHÔNG dựa
+     * vào ràng buộc DB {@code ON DELETE CASCADE}, vì persistence context vẫn còn đang giữ managed các
+     * reply nạp ở bước trên, xóa ngầm dưới DB sẽ khiến Hibernate lệch trạng thái khi flush → sau đó xóa
+     * cứng chính câu trả lời → nếu là câu trả lời GỐC thì giảm {@code answer_count} của câu hỏi (đối
+     * xứng với {@link #createAnswer}, không âm).
+     * <p>
+     * Xóa cứng (không phải xóa mềm) để nhất quán với cách {@code PostServiceImpl.deleteComment} (UC20)
+     * xử lý bình luận — Answer đóng vai trò tương tự Comment (phản hồi dưới nội dung chính), khác với
+     * Question/Post (nội dung chính) vốn xóa mềm để giữ lịch sử.
+     */
+    @Override
+    @Transactional
+    public void deleteAnswer(String email, Long questionId, Long answerId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+
+        Answer answer = findActiveAnswerInQuestion(questionId, answerId);
+
+        // Ownership (UC49): chỉ tác giả câu trả lời mới được xóa; người khác nhận 403.
+        if (!answer.getAuthor().getId().equals(user.getId())) {
+            throw new ForbiddenException("Chỉ tác giả mới được xóa câu trả lời này");
+        }
+
+        boolean isTopLevel = answer.getParent() == null;
+
+        // Nếu là câu trả lời GỐC: gom ID reply trực tiếp (chỉ lấy ID, không nạp entity) để dọn vote
+        // polymorphic trước — votes không có FK nên không tự cascade.
+        List<Long> deletedAnswerIds = new ArrayList<>();
+        deletedAnswerIds.add(answerId);
+        if (isTopLevel) {
+            deletedAnswerIds.addAll(answerRepository.findActiveReplyIdsByParentId(answerId));
+        }
+        voteRepository.deleteByTargetTypeAndTargetIdIn(VoteTargetType.ANSWER, deletedAnswerIds);
+
+        // Xóa reply TRƯỚC bằng bulk query tường minh (không dựa cascade DB ngầm), rồi mới xóa câu trả lời gốc.
+        if (isTopLevel) {
+            answerRepository.deleteByParentId(answerId);
+        }
+        answerRepository.delete(answer);
+
+        // Chỉ câu trả lời GỐC mới giảm bộ đếm answer_count (reply không tính vào số câu trả lời khi tạo).
+        if (isTopLevel) {
+            Question question = answer.getQuestion();
+            question.setAnswerCount(Math.max(0, question.getAnswerCount() - 1));
+            questionRepository.save(question);
+        }
+
+        log.info("Xóa cứng câu trả lời: id={}, questionId={}, số reply bị xóa theo={}, tác giả={}",
+                answerId, questionId, deletedAnswerIds.size() - 1, email);
+    }
+
+    /**
+     * Xác thực người dùng theo email và kiểm tra vai trò Student/Alumni — dùng chung cho các thao tác
+     * bình chọn (UC43). Mirror pattern {@code resolveMemberOrThrow} của QuestionServiceImpl (UC42)/PostServiceImpl (UC17).
+     *
+     * @param email            Email người dùng đang đăng nhập
+     * @param forbiddenMessage Thông điệp lỗi Tiếng Việt khi vai trò không phải Student/Alumni
+     * @return User đã xác thực, chắc chắn có vai trò Student hoặc Alumni
+     * @throws ResourceNotFoundException nếu không tìm thấy tài khoản
+     * @throws ForbiddenException        nếu vai trò không phải Student/Alumni
+     */
+    private User resolveMemberOrThrow(String email, String forbiddenMessage) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
+        String role = user.getRole() != null ? user.getRole().getName().toUpperCase() : "";
+        if (!role.equals("STUDENT") && !role.equals("ALUMNI")) {
+            throw new ForbiddenException(forbiddenMessage);
+        }
+        return user;
+    }
+
+    /**
+     * Tìm câu trả lời ACTIVE theo id, xác nhận thuộc đúng câu hỏi trên đường dẫn (tránh bình chọn nhầm
+     * chéo câu hỏi) — dùng chung cho {@link #voteAnswer} và {@link #unvoteAnswer}, cùng cách kiểm tra
+     * với {@link #updateAnswer} (UC48).
+     *
+     * @param questionId ID câu hỏi trên đường dẫn
+     * @param answerId   ID câu trả lời cần tìm
+     * @return Câu trả lời ACTIVE thuộc đúng câu hỏi
+     * @throws ResourceNotFoundException nếu không tồn tại/không ACTIVE/không thuộc câu hỏi này
+     */
+    private Answer findActiveAnswerInQuestion(Long questionId, Long answerId) {
+        Answer answer = answerRepository.findById(answerId)
+                .filter(a -> a.getStatus() == AnswerStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy câu trả lời với id: " + answerId));
+        if (!answer.getQuestion().getId().equals(questionId)) {
+            throw new ResourceNotFoundException("Không tìm thấy câu trả lời với id: " + answerId);
+        }
+        return answer;
+    }
+
+    /**
+     * Tính tập ID câu trả lời (trong một tập cho trước) mà người xem hiện tại đã bình chọn (UC43), theo
+     * lô để tránh N+1 query. Guest ({@code viewerEmail} null) hoặc danh sách rỗng luôn trả về tập rỗng.
+     *
+     * @param viewerEmail Email người xem hiện tại, null nếu là Guest
+     * @param answerIds   Tập ID câu trả lời cần kiểm tra
+     * @return Tập con các ID câu trả lời mà người xem đã bình chọn
+     */
+    private Set<Long> computeVotedAnswerIds(String viewerEmail, List<Long> answerIds) {
+        if (viewerEmail == null || answerIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        return userRepository.findByEmail(viewerEmail)
+                .map(u -> new HashSet<>(voteRepository.findVotedTargetIds(u.getId(), VoteTargetType.ANSWER, answerIds)))
+                .orElseGet(HashSet::new);
     }
 }

@@ -1,0 +1,86 @@
+package com.alumnect.alumnect_backend.dto.response.admin;
+
+import com.alumnect.alumnect_backend.common.enums.ReportReason;
+import com.alumnect.alumnect_backend.common.enums.ReportStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+
+/**
+ * DTO chứa thông tin chi tiết báo cáo vi phạm bài viết dành cho giao diện Quản trị viên (Admin).
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AdminReportResponse {
+
+    /** ID của báo cáo */
+    private Long id;
+
+    /** ID của bài viết bị báo cáo */
+    private Long postId;
+
+    /** Nội dung văn bản của bài viết bị báo cáo */
+    private String postContent;
+
+    /** Trạng thái hiện tại của bài viết bị báo cáo */
+    private String postStatus;
+
+    /** Loại bài viết bị báo cáo (GENERAL, ACHIEVEMENT, RECRUITMENT, EVENT) */
+    private String postType;
+
+    /** ID của tác giả bài viết bị báo cáo */
+    private Long postAuthorId;
+
+    /** Họ tên tác giả bài viết bị báo cáo */
+    private String postAuthorName;
+
+    /** Email tác giả bài viết bị báo cáo */
+    private String postAuthorEmail;
+
+    /** ID của người gửi báo cáo (reporter) */
+    private Long reporterId;
+
+    /** Họ tên người gửi báo cáo */
+    private String reporterName;
+
+    /** Email người gửi báo cáo */
+    private String reporterEmail;
+
+    /** Ảnh đại diện của người gửi báo cáo */
+    private String reporterAvatarUrl;
+
+    /** Lý do báo cáo (SPAM, INAPPROPRIATE, ...) */
+    private ReportReason reason;
+
+    /** Mô tả chi tiết của báo cáo */
+    private String description;
+
+    /** Trạng thái của báo cáo (PENDING, RESOLVED, DISMISSED) */
+    private ReportStatus status;
+
+    /** Thời điểm gửi báo cáo */
+    private Instant createdAt;
+
+    /** Điểm số rủi ro do bộ lọc từ cấm đánh giá (0.00 đến 1.00) */
+    private Double aiScore;
+
+    /** Lý do hoặc mã phân loại vi phạm */
+    private String aiFlaggedReason;
+
+    /** Đã tự động bị ẩn do vi phạm nghiêm trọng chưa */
+    private Boolean autoModerated;
+
+    /** Danh sách từ cấm phát hiện được */
+    private String detectedKeywords;
+
+    /** Mức độ rủi ro hiển thị giao diện (HIGH, MEDIUM, LOW) */
+    private String riskLevel;
+
+    /** Báo cáo do hệ thống tự động tạo, không có người gửi */
+    private Boolean systemGenerated;
+}

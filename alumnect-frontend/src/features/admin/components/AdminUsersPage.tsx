@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { Search, Lock, Unlock, Users, X, Loader2, Mail, Phone, BookOpen, GraduationCap, Calendar, FileText, Award } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Modal, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAdminUsers, useAdminUserDetail, useUpdateUserStatus } from '../hooks/useAdmin'
+import { AdminMentorCvModal } from './AdminMentorCvModal'
 
 const TABS = [
   { name: 'Tất cả', value: 'ALL' },
   { name: 'Cựu sinh viên', value: 'ALUMNI' },
   { name: 'Sinh viên', value: 'STUDENT' },
-  { name: 'Chờ duyệt', value: 'PENDING' },
   { name: 'Đang khóa', value: 'LOCKED' },
 ]
 
@@ -20,9 +19,13 @@ export function AdminUsersPage() {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(0)
 
+  // UC96 State
+  const [selectedCvMentorId, setSelectedCvMentorId] = useState<number | null>(null)
+  const [isCvModalOpen, setIsCvModalOpen] = useState(false)
+
   // Mapping tab values to API parameters
   const roleParam = tab === 'ALUMNI' ? 'ALUMNI' : tab === 'STUDENT' ? 'STUDENT' : undefined
-  const statusParam = tab === 'PENDING' ? 'WAITING_APPROVAL' : tab === 'LOCKED' ? 'LOCKED' : undefined
+  const statusParam = tab === 'LOCKED' ? 'LOCKED' : undefined
 
   // Fetch users
   const { data, isLoading, error } = useAdminUsers({
@@ -50,20 +53,22 @@ export function AdminUsersPage() {
     }
   }, [selectedUserId])
 
+  const [confirmUserLock, setConfirmUserLock] = useState<{ id: number; currentStatus: string } | null>(null)
+
   // Lock / Unlock Action handler
-  const handleToggleLock = async (userId: number, currentStatus: string) => {
-    const nextStatus = currentStatus === 'LOCKED' ? 'ACTIVE' : 'LOCKED'
-    const confirmMsg =
-      currentStatus === 'LOCKED'
-        ? 'Bạn có chắc chắn muốn mở khóa tài khoản này không?'
-        : 'Bạn có chắc chắn muốn khóa tài khoản này không? Người dùng sẽ không thể đăng nhập.'
+  const handleToggleLock = (userId: number, currentStatus: string) => {
+    setConfirmUserLock({ id: userId, currentStatus })
+  }
 
-    if (!confirm(confirmMsg)) return
-
+  const handleConfirmToggleLock = async () => {
+    if (!confirmUserLock) return
+    const nextStatus = confirmUserLock.currentStatus === 'LOCKED' ? 'ACTIVE' : 'LOCKED'
     try {
-      await updateStatusMutation.mutateAsync({ id: userId, status: nextStatus })
+      await updateStatusMutation.mutateAsync({ id: confirmUserLock.id, status: nextStatus })
+      toast.success(nextStatus === 'ACTIVE' ? 'Đã mở khóa tài khoản thành công!' : 'Đã khóa tài khoản thành công!')
+      setConfirmUserLock(null)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Lỗi khi cập nhật trạng thái')
+      toast.error(err instanceof Error ? err.message : 'Lỗi khi cập nhật trạng thái')
     }
   }
 
@@ -74,43 +79,46 @@ export function AdminUsersPage() {
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Quản lý tài khoản"
-        subtitle="Tìm kiếm, phân trang tài khoản, xem hồ sơ chi tiết và khóa/mở khóa tài khoản người dùng."
+        subtitle="Tìm kiếm, xem hồ sơ chi tiết và khóa/mở khóa tài khoản người dùng."
       />
 
-      {/* Tabs and search bar */}
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => {
-                setTab(t.value)
-                setPage(0) // reset về trang đầu
+      {/* Tabs and search bar bọc Card chuẩn đồng bộ với AdminPostsPage & AdminReportsQueue */}
+      <Card hover={false} className="mb-5 p-4 bg-surface/80 backdrop-blur border border-border shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => {
+                  setTab(t.value)
+                  setPage(0) // reset về trang đầu
+                }}
+                className={cn(
+                  'rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer select-none',
+                  tab === t.value
+                    ? 'bg-primary-solid text-on-primary shadow-xs'
+                    : 'bg-surface-2 text-text-muted hover:bg-surface-3'
+                )}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex items-center sm:w-72">
+            <Search size={16} className="pointer-events-none absolute left-3 text-text-subtle" />
+            <input
+              aria-label="Tìm theo tên, email, mã số..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setPage(0)
               }}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all',
-                tab === t.value
-                  ? 'bg-gradient-to-r from-gold-300 to-gold-400 text-plum-900'
-                  : 'bg-plum-900/[0.04] text-plum-500 hover:bg-plum-900/[0.06]'
-              )}
-            >
-              {t.name}
-            </button>
-          ))}
+              placeholder="Tìm theo tên, email, mã số..."
+              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-sm text-text placeholder:text-text-subtle focus:border-brand-400/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+            />
+          </div>
         </div>
-        <div className="relative flex items-center sm:w-72">
-          <Search size={16} className="pointer-events-none absolute left-3 text-plum-400" />
-          <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value)
-              setPage(0)
-            }}
-            placeholder="Tìm theo tên, email, mã số..."
-            className="h-10 w-full rounded-xl border border-plum-900/10 bg-plum-900/[0.04] pl-9 pr-3 text-sm text-plum-900 placeholder:text-plum-400 focus:border-gold-400/50 focus:outline-none"
-          />
-        </div>
-      </div>
+      </Card>
 
       <Reveal>
         {isLoading ? (
@@ -142,9 +150,9 @@ export function AdminUsersPage() {
         ) : (
           <div className="space-y-4">
             <Card hover={false} className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
+              <table className="w-full min-w-[720px] text-sm">
                 <thead>
-                  <tr className="border-b border-plum-900/8 text-left text-xs uppercase tracking-wide text-plum-400">
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-text-subtle">
                     <th className="px-5 py-3 font-semibold">Thành viên</th>
                     <th className="px-5 py-3 font-semibold">Vai trò</th>
                     <th className="px-5 py-3 font-semibold">Trạng thái</th>
@@ -156,7 +164,7 @@ export function AdminUsersPage() {
                   {users.map((u) => (
                     <tr
                       key={u.id}
-                      className="border-b border-plum-900/5 transition-colors last:border-0 hover:bg-white/[0.03]"
+                      className="border-b border-border transition-colors last:border-0 hover:bg-white/[0.03]"
                     >
                       <td className="px-5 py-3.5">
                         <div
@@ -165,10 +173,10 @@ export function AdminUsersPage() {
                         >
                           <Avatar src={u.avatarUrl} name={u.fullName} size={38} verified={u.isAccountVerified} />
                           <div>
-                            <p className="font-semibold text-plum-900 group-hover/user:text-gold-600 transition-colors">
+                            <p className="font-semibold text-text group-hover/user:text-gold-600 transition-colors">
                               {u.fullName}
                             </p>
-                            <p className="text-xs text-plum-400">{u.email}</p>
+                            <p className="text-xs text-text-subtle">{u.email}</p>
                           </div>
                         </div>
                       </td>
@@ -179,36 +187,38 @@ export function AdminUsersPage() {
                           }
                           className="px-2.5 py-0.5"
                         >
-                          {u.role === 'ADMIN' ? 'Admin' : u.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
+                          {u.role === 'ADMIN' ? 'Quản trị viên' : u.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
                         </Badge>
                       </td>
                       <td className="px-5 py-3.5">
                         <Badge
-                          tone={
-                            u.accountStatus === 'ACTIVE'
-                              ? 'success'
-                              : u.accountStatus === 'LOCKED'
-                                ? 'danger'
-                                : 'gold'
-                          }
+                          tone={u.accountStatus === 'LOCKED' ? 'danger' : 'success'}
                           className="px-2.5 py-0.5"
                         >
-                          {u.accountStatus === 'ACTIVE'
-                            ? 'Hoạt động'
-                            : u.accountStatus === 'LOCKED'
-                              ? 'Bị khóa'
-                              : 'Đợi duyệt'}
+                          {u.accountStatus === 'LOCKED' ? 'Bị khóa' : 'Hoạt động'}
                         </Badge>
                       </td>
-                      <td className="px-5 py-3.5 text-plum-600">
+                      <td className="px-5 py-3.5 text-text-muted">
                         {u.studentCode || 'N/A'}{' '}
-                        {u.cohort ? <span className="text-xs text-plum-400">(K{u.cohort})</span> : ''}
+                        {u.cohort ? <span className="text-xs text-text-subtle">(K{u.cohort})</span> : ''}
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center justify-end gap-2">
+                          {u.role === 'ALUMNI' && (u.hasMentorProfile || u.mentorProfileId) && (
+                            <button
+                              onClick={() => {
+                                setSelectedCvMentorId(u.mentorProfileId || u.id)
+                                setIsCvModalOpen(true)
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-1.5 text-xs font-bold text-primary-solid hover:bg-orange-100 border border-orange-200/80 shadow-sm transition"
+                              title="Xem CV Mentor"
+                            >
+                              <FileText size={13} /> CV Mentor
+                            </button>
+                          )}
                           <button
                             onClick={() => setSelectedUserId(u.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-plum-900/[0.04] px-2.5 py-1.5 text-xs font-semibold text-plum-600 hover:bg-plum-900/[0.08]"
+                            className="inline-flex items-center justify-center rounded-lg bg-surface-2 px-2.5 py-1.5 text-xs font-semibold text-text-muted hover:bg-surface-3"
                           >
                             Chi tiết
                           </button>
@@ -216,10 +226,10 @@ export function AdminUsersPage() {
                             <button
                               onClick={() => handleToggleLock(u.id, u.accountStatus)}
                               className={cn(
-                                'grid h-8 w-8 place-items-center rounded-lg ring-1 ring-inset transition-all',
+                                'grid h-8 w-8 place-items-center rounded-lg ring-1 ring-inset transition',
                                 u.accountStatus === 'LOCKED'
-                                  ? 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/20 hover:bg-emerald-500/20'
-                                  : 'bg-rose-500/10 text-rose-600 ring-rose-500/20 hover:bg-rose-500/20'
+                                  ? 'bg-success-soft text-success ring-success hover:bg-success-border/60'
+                                  : 'bg-danger-soft text-danger ring-danger hover:bg-danger-border/60'
                               )}
                               title={u.accountStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
                             >
@@ -235,58 +245,39 @@ export function AdminUsersPage() {
             </Card>
 
             {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-2">
-                <p className="text-xs text-plum-400">
-                  Hiển thị trang <strong>{page + 1}</strong> trên tổng số <strong>{totalPages}</strong> trang
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={page === 0}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    Trước
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={page >= totalPages - 1}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </Reveal>
 
       {/* User Profile Detail Drawer / Modal */}
       {selectedUserId !== null &&
-        createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-plum-950/45 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-            <Card
-              hover={false}
-              className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl border border-brand-100/30 rounded-2xl animate-pop"
-            >
-              {/* Header Banner - Wrap avatar, name, and email with white text on gradient background */}
-              <div className="relative bg-gradient-to-r from-brand-400 via-brand-300 to-gold-400 p-6 text-white rounded-t-2xl shadow-sm">
+        <DialogFrame
+            onClose={() => setSelectedUserId(null)}
+            zIndexClassName="z-50"
+            maxWidthClassName="max-w-xl"
+            className="z-10 overflow-y-auto p-0 border-plum-950/15 pop"
+          >
+              {/* Header Banner - Clean white matching user modals */}
+              <div className="relative bg-surface p-6 border-b border-border rounded-t-3xl">
                 <button
                   onClick={() => setSelectedUserId(null)}
-                  className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-all border border-white/10 z-20 shadow-xs"
+                  className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-xl text-text-subtle hover:bg-surface-2 hover:text-text transition-colors z-20 cursor-pointer"
+                  title="Đóng cửa sổ"
                 >
-                  <X size={16} />
+                  <X size={18} />
                 </button>
 
                 {isLoadingDetail ? (
                   <div className="flex items-center gap-4">
-                    <Skeleton className="h-20 w-20 rounded-full border-4 border-white/30 shadow-md bg-white/10 shrink-0" />
+                    <Skeleton className="h-20 w-20 rounded-full border-2 border-border shadow-sm shrink-0" />
                     <div className="space-y-2 flex-1 pb-1">
-                      <Skeleton className="h-5 w-40 bg-white/20" />
-                      <Skeleton className="h-4 w-48 bg-white/20" />
+                      <Skeleton className="h-5 w-40" />
+                      <Skeleton className="h-4 w-48" />
                     </div>
                   </div>
                 ) : userDetail ? (
@@ -294,24 +285,30 @@ export function AdminUsersPage() {
                     <Avatar
                       src={userDetail.avatarUrl}
                       name={userDetail.fullName}
-                      size={80}
+                      size={72}
                       verified={userDetail.isAccountVerified}
-                      className="rounded-full border-4 border-white ring-1 ring-plum-900/5 shadow-md shrink-0 bg-white"
+                      className="rounded-full border-2 border-border ring-2 ring-slate-100/80 shadow-sm shrink-0 bg-surface"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-xl font-bold text-white tracking-tight">{userDetail.fullName}</h2>
+                        <h2 className="text-xl font-bold text-text tracking-tight">{userDetail.fullName}</h2>
                         <Badge
-                          tone="neutral"
-                          className="bg-white/20 backdrop-blur-md px-2 py-0.5 text-[9px] rounded-full shrink-0 font-extrabold uppercase border border-white/30 text-white shadow-2xs"
+                          tone={userDetail.role === 'ADMIN' ? 'neutral' : userDetail.role === 'ALUMNI' ? 'brand' : 'aqua'}
+                          className="px-2.5 py-0.5 text-xs rounded-full shrink-0 font-bold uppercase border"
                         >
-                          {userDetail.role === 'ADMIN' ? 'Admin' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
+                          {userDetail.role === 'ADMIN' ? 'Quản trị viên' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
+                        </Badge>
+                        <Badge
+                          tone={userDetail.accountStatus === 'LOCKED' ? 'danger' : 'success'}
+                          className="px-2.5 py-0.5 text-xs rounded-full shrink-0 font-bold uppercase border"
+                        >
+                          {userDetail.accountStatus === 'LOCKED' ? 'Bị khóa' : 'Hoạt động'}
                         </Badge>
                       </div>
-                      <p className="text-white/80 text-xs mt-0.5 font-medium">{userDetail.email}</p>
+                      <p className="text-text-subtle text-xs mt-0.5 font-medium">{userDetail.email}</p>
                       {userDetail.headline && (
-                        <p className="text-gold-100 text-xs mt-2 italic font-semibold flex items-center gap-1.5 bg-black/10 px-2.5 py-1.5 rounded-lg border border-white/5 w-fit">
-                          <Award size={13} className="shrink-0 text-gold-400" />
+                        <p className="text-text-muted text-xs mt-2 italic font-medium flex items-center gap-1.5 bg-surface-2 border border-border px-2.5 py-1.5 rounded-xl w-fit">
+                          <Award size={13} className="shrink-0 text-warning" />
                           <span>"{userDetail.headline}"</span>
                         </p>
                       )}
@@ -321,11 +318,11 @@ export function AdminUsersPage() {
               </div>
 
               {/* Body Content */}
-              <div className="p-6 space-y-4 bg-white">
+              <div className="p-6 space-y-4 bg-surface">
                 {isLoadingDetail ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-16 w-full bg-plum-900/5 rounded-xl" />
+                      <Skeleton key={i} className="h-16 w-full bg-surface-2 rounded-xl" />
                     ))}
                   </div>
                 ) : userDetail ? (
@@ -333,21 +330,21 @@ export function AdminUsersPage() {
                     {/* Information Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Contact Column */}
-                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                          <Mail size={12} className="text-brand-500" />
+                      <div className="space-y-3.5 p-4.5 rounded-2xl bg-surface-2 border border-border">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                          <Mail size={13} className="text-primary-solid" />
                           <span>Thông tin liên hệ</span>
                         </h4>
                         
                         <div className="space-y-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Địa chỉ Email</span>
-                            <span className="font-semibold text-plum-900 break-all">{userDetail.email}</span>
+                            <span className="text-xs font-medium text-text-subtle block mb-0.5">Địa chỉ Email</span>
+                            <span className="font-semibold text-text break-all">{userDetail.email}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Số điện thoại</span>
-                            <span className="font-semibold text-plum-900 flex items-center gap-1">
-                              <Phone size={11} className="text-slate-400 shrink-0" />
+                            <span className="text-xs font-medium text-text-subtle block mb-0.5">Số điện thoại</span>
+                            <span className="font-semibold text-text flex items-center gap-1">
+                              <Phone size={11} className="text-text-subtle shrink-0" />
                               {userDetail.phone || 'Chưa cập nhật'}
                             </span>
                           </div>
@@ -355,26 +352,26 @@ export function AdminUsersPage() {
                       </div>
 
                       {/* Education Column */}
-                      <div className="space-y-3.5 p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 shadow-3xs">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                          <GraduationCap size={13} className="text-brand-500" />
+                      <div className="space-y-3.5 p-4.5 rounded-2xl bg-surface-2 border border-border">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                          <GraduationCap size={14} className="text-primary-solid" />
                           <span>Học vấn & Mã số</span>
                         </h4>
                         
                         <div className="space-y-2 text-xs">
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Chuyên ngành</span>
-                            <span className="font-semibold text-plum-900 flex items-center gap-1">
-                              <BookOpen size={11} className="text-slate-400 shrink-0" />
+                            <span className="text-xs font-medium text-text-subtle block mb-0.5">Chuyên ngành</span>
+                            <span className="font-semibold text-text flex items-center gap-1">
+                              <BookOpen size={11} className="text-text-subtle shrink-0" />
                               {userDetail.majorName ? `${userDetail.majorName} (${userDetail.majorCode})` : 'Chưa chọn'}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block mb-0.5">Mã sinh viên / Khóa</span>
-                            <span className="font-semibold text-plum-900 flex items-center gap-1.5">
+                            <span className="text-xs font-medium text-text-subtle block mb-0.5">Mã sinh viên / Khóa</span>
+                            <span className="font-semibold text-text flex items-center gap-1.5">
                               <span>{userDetail.studentCode || 'N/A'}</span>
                               {userDetail.cohort ? (
-                                <Badge tone="neutral" className="px-1.5 py-0 text-[9px] font-bold border border-plum-900/10">
+                                <Badge tone="neutral" className="px-1.5 py-0 text-xs font-bold border border-border">
                                   K{userDetail.cohort}
                                 </Badge>
                               ) : ''}
@@ -386,38 +383,38 @@ export function AdminUsersPage() {
 
                     {/* Biography block if present */}
                     {userDetail.biography && (
-                      <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100/80 space-y-2">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                          <FileText size={12} className="text-brand-500" />
+                      <div className="p-4.5 rounded-2xl bg-surface-2 border border-border space-y-2">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                          <FileText size={13} className="text-primary-solid" />
                           <span>Tiểu sử bản thân</span>
                         </h4>
-                        <p className="text-xs text-plum-800 leading-relaxed whitespace-pre-line">{userDetail.biography}</p>
+                        <p className="text-xs text-text leading-relaxed whitespace-pre-line font-normal">{userDetail.biography}</p>
                       </div>
                     )}
 
                     {/* Account Status / Metadata */}
-                    <div className="p-4 rounded-xl bg-slate-50/30 border border-slate-100/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="p-4 rounded-2xl bg-slate-50/60 border border-border flex flex-wrap items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-1.5">
-                        <Calendar size={13} className="text-slate-400" />
-                        <span className="text-slate-400">Tham gia:</span>
-                        <span className="font-semibold text-plum-900">
+                        <Calendar size={13} className="text-text-subtle" />
+                        <span className="text-text-subtle">Tham gia:</span>
+                        <span className="font-semibold text-text">
                           {new Date(userDetail.createdAt).toLocaleDateString('vi-VN')}
                         </span>
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-[9px] px-2 py-0.5">
+                        <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-xs px-2.5 py-0.5 font-bold">
                           {userDetail.accountStatus === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
                         </Badge>
-                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-[9px] px-2 py-0.5">
+                        <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-xs px-2.5 py-0.5 font-bold">
                           {userDetail.isAccountVerified ? 'Đã xác minh' : 'Chưa xác minh'}
                         </Badge>
                       </div>
                     </div>
 
                     {/* Actions under Modal */}
-                    {userDetail.role !== 'ADMIN' && (
-                      <div className="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
+                    <div className="mt-6 flex justify-end gap-2.5 border-t border-border pt-4">
+                      {userDetail.role !== 'ADMIN' && (
                         <Button
                           size="sm"
                           variant={userDetail.accountStatus === 'LOCKED' ? 'primary' : 'secondary'}
@@ -425,10 +422,10 @@ export function AdminUsersPage() {
                             handleToggleLock(userDetail.id, userDetail.accountStatus)
                           }}
                           className={cn(
-                            'font-bold text-xs shadow-3xs rounded-xl px-4 py-2 transition-all',
+                            'font-bold text-xs rounded-xl px-4 py-2 transition',
                             userDetail.accountStatus === 'LOCKED'
-                              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 hover:shadow-xs'
-                              : 'border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100/80 hover:text-red-700'
+                              ? 'bg-success text-text-inverse hover:opacity-90 shadow-xs'
+                              : 'border border-danger-border bg-danger-soft text-danger hover:bg-danger-border/60 hover:text-danger'
                           )}
                         >
                           {updateStatusMutation.isPending ? (
@@ -440,23 +437,55 @@ export function AdminUsersPage() {
                           )}
                           {userDetail.accountStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => setSelectedUserId(null)}
-                          className="font-bold text-xs border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl px-4 py-2"
-                        >
-                          Đóng
-                        </Button>
-                      </div>
-                    )}
+                      )}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setSelectedUserId(null)}
+                        className="font-bold text-xs border border-border text-text-muted hover:bg-surface-2 rounded-xl px-4 py-2"
+                      >
+                        Đóng
+                      </Button>
+                    </div>
                   </>
                 ) : null}
               </div>
-            </Card>
-          </div>,
-          document.body
-        )}
+            </DialogFrame>}
+
+      {/* Modal xác nhận khóa / mở khóa tài khoản */}
+      {confirmUserLock && (
+        <Modal
+          isOpen={!!confirmUserLock}
+          onClose={() => setConfirmUserLock(null)}
+          title={confirmUserLock.currentStatus === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+          icon={confirmUserLock.currentStatus === 'LOCKED' ? <Unlock size={18} className="text-success" /> : <Lock size={18} className="text-danger" />}
+          footer={
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setConfirmUserLock(null)} disabled={updateStatusMutation.isPending}>
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmToggleLock}
+                disabled={updateStatusMutation.isPending}
+                className={confirmUserLock.currentStatus === 'LOCKED' ? 'bg-success hover:opacity-90 text-text-inverse' : 'bg-danger hover:opacity-90 text-text-inverse'}
+              >
+                {updateStatusMutation.isPending ? 'Đang xử lý...' : confirmUserLock.currentStatus === 'LOCKED' ? 'Mở khóa' : 'Khóa tài khoản'}
+              </Button>
+            </div>
+          }
+        >
+          <p className="text-sm text-text-muted">
+            Bạn có chắc muốn {confirmUserLock.currentStatus === 'LOCKED' ? 'mở khóa' : 'khóa'} tài khoản này không?
+          </p>
+        </Modal>
+      )}
+      {/* UC96 Modal Xem CV Mentor cho Quản trị viên */}
+      <AdminMentorCvModal
+        isOpen={isCvModalOpen}
+        onClose={() => setIsCvModalOpen(false)}
+        mentorProfileId={selectedCvMentorId}
+      />
     </div>
   )
 }

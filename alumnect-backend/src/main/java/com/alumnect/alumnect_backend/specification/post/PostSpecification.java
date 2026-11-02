@@ -53,14 +53,19 @@ public class PostSpecification {
                     predicates.add(cb.equal(root.get("status"), PostStatus.ACTIVE));
                 } else if ("HIDDEN".equals(statusUpper)) {
                     predicates.add(cb.equal(root.get("status"), PostStatus.HIDDEN));
+                } else if ("DELETED".equals(statusUpper)) {
+                    predicates.add(cb.equal(root.get("status"), PostStatus.DELETED));
                 }
             }
 
             // 4. Lọc theo loại bài viết (category)
             if (type != null && !type.trim().isEmpty() && !"ALL".equalsIgnoreCase(type.trim())) {
                 try {
-                    // Ánh xạ chuỗi sang Enum hoặc so khớp String tuỳ thuộc loại thuộc tính của Entity
-                    predicates.add(cb.equal(cb.upper(root.get("category").as(String.class)), type.trim().toUpperCase()));
+                    String typeStr = type.trim().toUpperCase();
+                    if ("NORMAL".equals(typeStr)) {
+                        typeStr = "GENERAL";
+                    }
+                    predicates.add(cb.equal(cb.upper(root.get("category").as(String.class)), typeStr));
                 } catch (Exception e) {
                     // Bỏ qua nếu có lỗi convert
                 }

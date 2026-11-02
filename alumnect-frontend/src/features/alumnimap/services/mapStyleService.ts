@@ -8,6 +8,7 @@
  * - Kiểm tra tọa độ có thuộc lãnh thổ Việt Nam không
  */
 
+import i18n from '@/i18n'
 import type { MapProvider, MapTheme } from '../model/alumniMapTypes'
 
 // ---------------------------------------------------------------------------
@@ -221,10 +222,18 @@ export interface StyleEntry {
 }
 
 /** Danh sách các chủ đề có sẵn cho UI switcher */
+const themeEntry = (theme: MapTheme, vi: string, en: string): StyleEntry => ({
+  theme,
+  // Nhãn theo ngôn ngữ hiện tại tại thời điểm truy cập (đổi ngôn ngữ không cần tải lại trang)
+  get name() {
+    return i18n.language === 'en' ? en : vi
+  },
+})
+
 export const AVAILABLE_THEMES: StyleEntry[] = [
-  { theme: 'DEFAULT', name: 'Đường phố' },
-  { theme: 'MINIMAL', name: 'Tối giản' },
-  { theme: 'DARK',    name: 'Đêm tối' },
-  { theme: 'PASTEL',  name: 'Pastel' },
-  { theme: 'SATELLITE', name: 'Vệ tinh' },
+  themeEntry('DEFAULT', 'Đường phố', 'Streets'),
+  themeEntry('MINIMAL', 'Tối giản', 'Minimal'),
+  themeEntry('DARK', 'Đêm tối', 'Dark'),
+  themeEntry('PASTEL', 'Pastel', 'Pastel'),
+  themeEntry('SATELLITE', 'Vệ tinh', 'Satellite'),
 ]

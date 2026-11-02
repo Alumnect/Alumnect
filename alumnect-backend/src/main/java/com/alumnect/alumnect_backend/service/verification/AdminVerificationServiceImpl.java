@@ -14,6 +14,7 @@ import com.alumnect.alumnect_backend.entity.verification.VerificationRequest;
 import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.verification.AdminVerificationMapper;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Lớp triển khai các nghiệp vụ phê duyệt yêu cầu xác minh cựu sinh viên của Admin.
@@ -40,6 +44,7 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final AdminVerificationMapper adminVerificationMapper;
+    private final NotificationService notificationService;
 
     /**
      * Lấy danh sách các phiếu yêu cầu xác minh cựu sinh viên phân trang.
@@ -72,12 +77,17 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
 
         Page<VerificationRequest> requestPage = verificationRequestRepository.findAll(spec, pageable);
 
+        List<Long> userIds = requestPage.getContent().stream()
+                .map(req -> req.getUser().getId())
+                .distinct()
+                .toList();
+
+        Map<Long, UserProfile> profilesMap = userIds.isEmpty() ? Map.of() :
+                userProfileRepository.findAllById(userIds).stream()
+                        .collect(Collectors.toMap(UserProfile::getUserId, Function.identity()));
+
         List<AdminVerificationRequestDto> content = requestPage.getContent().stream()
-                .map(req -> {
-                    UserProfile profile = userProfileRepository.findById(req.getUser().getId())
-                            .orElse(null);
-                    return adminVerificationMapper.toDto(req, profile);
-                })
+                .map(req -> adminVerificationMapper.toDto(req, profilesMap.get(req.getUser().getId())))
                 .toList();
 
         return PageResponse.<AdminVerificationRequestDto>builder()
@@ -126,6 +136,7 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
             user.setAccountVerified(true);
             user.setAccountStatus(AccountStatus.ACTIVE);
             userRepository.save(user);
+            notificationService.sendWelcomeNotification(user);
         } else if (decision == VerificationStatus.REJECTED) {
             user.setAccountVerified(false);
             user.setAccountStatus(AccountStatus.LOCKED);

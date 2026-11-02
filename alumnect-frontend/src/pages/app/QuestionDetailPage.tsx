@@ -6,23 +6,26 @@
  *  - Lấy chi tiết câu hỏi qua hook `useQuestionDetail` (TanStack Query).
  *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / không tìm thấy (404) / lỗi (retry) / thành công.
  *  - Ai cũng xem được (Guest/Student/Alumni) vì câu hỏi ACTIVE là nội dung công khai.
- *  - Chỉ HIỂN THỊ chi tiết; vote và trả lời thuộc các UC khác nên ở đây chỉ đọc số liệu.
+ *  - UC42: bình chọn/bỏ bình chọn câu hỏi (chỉ Student/Alumni đã đăng nhập; Guest bấm → popup mời đăng nhập).
  */
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ChevronUp, Clock, AlertTriangle, SearchX, Pencil } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, ChevronUp, Clock, AlertTriangle, SearchX, Pencil, Trash2 } from 'lucide-react'
 import { Badge, Card, Avatar, ImageCarousel } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { useQuestionDetail, AnswersSection, AskQuestionModal } from '@/features/forum'
+import { useLoginPrompt } from '@/store/loginPrompt'
+import { useQuestionDetail, AnswersSection, AskQuestionModal, DeleteQuestionModal, useToggleVoteQuestion } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
 
-/** Chuyển mốc ISO-8601 sang ngày giờ đọc được (VD: "11/07/2026 09:30"), rỗng nếu không hợp lệ. */
-function formatDateTime(iso: string): string {
+/** Chuyển mốc ISO-8601 sang ngày giờ đọc được, rỗng nếu không hợp lệ. */
+function formatDateTime(iso: string, lang = 'vi'): string {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString('vi-VN', {
+  return d.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -33,12 +36,13 @@ function formatDateTime(iso: string): string {
 
 /** Liên kết quay lại danh sách câu hỏi. */
 function BackLink() {
+  const { t } = useTranslation()
   return (
     <Link
       to="/app/forum"
-      className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-plum-500 transition-colors hover:text-brand-600"
+      className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-text-subtle transition-colors hover:text-primary-solid"
     >
-      <ArrowLeft size={16} /> Quay lại danh sách câu hỏi
+      <ArrowLeft size={16} /> {t('forum.backToQuestions')}
     </Link>
   )
 }
@@ -48,19 +52,19 @@ function DetailSkeleton() {
   return (
     <Card hover={false} className="p-6 sm:p-8">
       <div className="space-y-4">
-        <div className="h-4 w-24 animate-pulse rounded bg-plum-900/[0.06]" />
-        <div className="h-7 w-3/4 animate-pulse rounded bg-plum-900/[0.07]" />
+        <div className="h-4 w-24 animate-pulse rounded bg-border" />
+        <div className="h-7 w-3/4 animate-pulse rounded bg-border" />
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 animate-pulse rounded-full bg-plum-900/[0.07]" />
+          <div className="h-10 w-10 animate-pulse rounded-full bg-border" />
           <div className="space-y-1.5">
-            <div className="h-3.5 w-32 animate-pulse rounded bg-plum-900/[0.06]" />
-            <div className="h-3 w-24 animate-pulse rounded bg-plum-900/[0.05]" />
+            <div className="h-3.5 w-32 animate-pulse rounded bg-border" />
+            <div className="h-3 w-24 animate-pulse rounded bg-surface-2" />
           </div>
         </div>
         <div className="space-y-2.5 pt-2">
-          <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.05]" />
-          <div className="h-3.5 w-full animate-pulse rounded bg-plum-900/[0.05]" />
-          <div className="h-3.5 w-2/3 animate-pulse rounded bg-plum-900/[0.05]" />
+          <div className="h-3.5 w-full animate-pulse rounded bg-surface-2" />
+          <div className="h-3.5 w-full animate-pulse rounded bg-surface-2" />
+          <div className="h-3.5 w-2/3 animate-pulse rounded bg-surface-2" />
         </div>
       </div>
     </Card>
@@ -71,19 +75,20 @@ function DetailSkeleton() {
  * Trạng thái không tìm thấy câu hỏi (HTTP 404 — câu hỏi không tồn tại hoặc đã bị ẩn/xóa).
  */
 function NotFoundState() {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-12 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-900/[0.05] text-plum-400">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-2 text-text-subtle">
         <SearchX size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tìm thấy câu hỏi</p>
-        <p className="mt-1 text-sm text-plum-500">
-          Câu hỏi này không tồn tại hoặc đã bị ẩn/xóa khỏi diễn đàn.
+        <p className="font-bold text-text">{t('forum.questionNotFound')}</p>
+        <p className="mt-1 text-sm text-text-subtle">
+          {t('forum.questionNotFoundDesc')}
         </p>
       </div>
       <ButtonLink to="/app/forum" variant="secondary" size="sm" leftIcon={<ArrowLeft size={16} />}>
-        Về danh sách câu hỏi
+        {t('forum.backToQuestions')}
       </ButtonLink>
     </Card>
   )
@@ -95,93 +100,168 @@ function NotFoundState() {
  * @param onRetry Hàm gọi lại API
  */
 function DetailError({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  const { t } = useTranslation()
   return (
     <Card hover={false} className="flex flex-col items-center gap-3 p-10 text-center">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/10 text-rose-500">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-danger-soft text-danger">
         <AlertTriangle size={24} />
       </span>
       <div>
-        <p className="font-bold text-plum-900">Không tải được chi tiết câu hỏi</p>
-        <p className="mt-1 text-sm text-plum-500">{message ?? 'Đã có lỗi hệ thống xảy ra. Vui lòng thử lại.'}</p>
+        <p className="font-bold text-text">{t('forum.loadError')}</p>
+        <p className="mt-1 text-sm text-text-subtle">{message ?? t('common.error')}</p>
       </div>
-      <Button variant="secondary" size="sm" onClick={onRetry}>Thử lại</Button>
+      <Button variant="secondary" size="sm" onClick={onRetry}>{t('common.tryAgain')}</Button>
     </Card>
   )
 }
 
 /** Nội dung chi tiết câu hỏi (không bọc Card riêng — đặt chung Card với khu vực câu trả lời). */
-function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canEdit: boolean; onEdit: () => void }) {
-  const postedAt = formatDateTime(q.createdAt)
+function QuestionDetailContent({
+  q,
+  canEdit,
+  canVote,
+  onEdit,
+  onDelete,
+}: {
+  q: QuestionDetail
+  canEdit: boolean
+  canVote: boolean
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const { t, i18n } = useTranslation()
+  const postedAt = formatDateTime(q.createdAt, i18n.language)
+
+  // Bình chọn (UC42): state cục bộ cập nhật lạc quan, cùng pattern với "Thích bài viết" (UC17 - useToggleLike).
+  const [voted, setVoted] = useState(q.voted)
+  const [votes, setVotes] = useState(q.votes)
+  useEffect(() => {
+    setVoted(q.voted)
+    setVotes(q.votes)
+  }, [q.voted, q.votes])
+
+  const promptLogin = useLoginPrompt((s) => s.open)
+  const toggleVote = useToggleVoteQuestion()
+
+  const handleVote = () => {
+    if (!canVote) {
+      promptLogin(t('forum.promptLoginVoteQuestion'))
+      return
+    }
+    const next = !voted
+    setVoted(next)
+    setVotes((v) => v + (next ? 1 : -1))
+    toggleVote.mutate(
+      { questionId: q.id, vote: next },
+      {
+        onSuccess: (data) => {
+          setVoted(data.voted)
+          setVotes(data.voteCount)
+        },
+        onError: () => {
+          setVoted(!next)
+          setVotes((v) => v + (next ? -1 : 1))
+        },
+      },
+    )
+  }
+
   return (
     <div className="flex gap-5">
-      {/* Cột trái: số vote (chỉ đọc ở UC39 — bình chọn thuộc UC khác) */}
+      {/* Cột trái: nút bình chọn (UC42) — chỉ hiện trên desktop, mobile hiện ở cuối nội dung */}
       <div className="hidden flex-col items-center gap-1 sm:flex">
-        <span className="grid h-11 w-11 place-items-center rounded-xl bg-plum-900/[0.04] text-plum-500 ring-1 ring-inset ring-plum-900/10">
+        <button
+          type="button"
+          onClick={handleVote}
+          aria-pressed={voted}
+          aria-label={voted ? t('forum.unvoteQuestionAria') : t('forum.voteQuestionAria')}
+          className={cn(
+            'grid h-11 w-11 place-items-center rounded-xl ring-1 ring-inset transition-colors',
+            voted ? 'bg-primary-soft text-primary-solid ring-primary/30' : 'bg-surface-2 text-text-subtle ring-border hover:bg-surface-3',
+          )}
+        >
           <ChevronUp size={20} />
-        </span>
-        <span className="text-sm font-bold text-plum-900">{q.votes}</span>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-plum-400">bình chọn</span>
+        </button>
+        <span className="text-sm font-bold text-text">{votes}</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-subtle">{t('forum.votes')}</span>
       </div>
 
       {/* Cột phải: chủ đề, tiêu đề, thông tin tác giả, nội dung đầy đủ */}
       <div className="min-w-0 flex-1">
-        {/* Hàng đầu: nhãn thể loại/ngành (trái) + nút Chỉnh sửa (phải, chỉ tác giả) */}
+        {/* Hàng đầu: nhãn thể loại/ngành (trái) + nút Chỉnh sửa/Xóa (phải, chỉ tác giả — UC46/UC47) */}
         {(q.topic || q.major || canEdit) && (
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="flex flex-wrap items-center gap-1.5">
-              {q.topic && <Badge tone="violet" className="px-2.5 py-0.5 text-[10px]">{q.topic}</Badge>}
-              {q.major && <Badge tone="aqua" className="px-2.5 py-0.5 text-[10px]">{q.major}</Badge>}
+              {q.topic && <Badge tone="violet" className="px-2.5 py-0.5 text-xs">{q.topic}</Badge>}
+              {q.major && <Badge tone="aqua" className="px-2.5 py-0.5 text-xs">{q.major}</Badge>}
             </div>
             {canEdit && (
-              <button
-                type="button"
-                onClick={onEdit}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-plum-900/10 bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-plum-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-brand-600"
-              >
-                <Pencil size={13} /> Chỉnh sửa
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition hover:border-brand-400/50 hover:bg-brand-500/[0.06] hover:text-primary-solid"
+                >
+                  <Pencil size={13} /> {t('common.edit')}
+                </button>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-xs font-semibold text-text-muted shadow-sm transition hover:border-danger hover:bg-danger-soft hover:text-danger"
+                >
+                  <Trash2 size={13} /> {t('common.delete')}
+                </button>
+              </div>
             )}
           </div>
         )}
-        <h1 className="text-2xl font-extrabold leading-snug text-plum-900 sm:text-[1.75rem]">{q.title}</h1>
+        <h1 className="text-2xl font-extrabold leading-snug text-text sm:text-[1.75rem]">{q.title}</h1>
 
         {/* Hàng thông tin tác giả + thời gian đăng */}
-        <div className="mt-4 flex flex-wrap items-center gap-3 border-b border-plum-900/8 pb-5">
+        <div className="mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-5">
           <Link
             to={q.authorId ? `/app/profile?userId=${q.authorId}` : '/app/profile'}
-            className="flex items-center gap-3 min-w-0 hover:text-brand-600 transition-colors group"
+            className="flex items-center gap-3 min-w-0 hover:text-primary-solid transition-colors group"
           >
             <Avatar src={q.avatar} name={q.author} size={40} verified={q.verified} />
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-plum-900 group-hover:text-brand-600 group-hover:underline">{q.author}</p>
+              <p className="truncate text-sm font-bold text-text group-hover:text-primary-solid group-hover:underline">{q.author}</p>
               {q.authorHeadline ? (
-                <p className="truncate text-xs text-plum-500">{q.authorHeadline}</p>
+                <p className="truncate text-xs text-text-subtle">{q.authorHeadline}</p>
               ) : null}
             </div>
           </Link>
-          <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-plum-400">
+          <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-text-subtle">
             <Clock size={13} />
             {postedAt ? <span title={postedAt}>{postedAt}</span> : <span>{q.time}</span>}
           </span>
         </div>
 
         {/* Nội dung đầy đủ của câu hỏi — giữ nguyên xuống dòng của người dùng */}
-        <div className="mt-5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-plum-700">
-          {q.body || 'Câu hỏi này chưa có nội dung chi tiết.'}
+        <div className="mt-5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-text-muted">
+          {q.body || t('forum.noQuestionDetail')}
         </div>
 
         {/* Ảnh đính kèm của câu hỏi — carousel dùng chung với bài đăng (kéo/vuốt xem tất cả ảnh) */}
         {q.images.length > 0 && (
-          <div className="mt-5 overflow-hidden rounded-xl border border-plum-900/10 shadow-sm">
-            <ImageCarousel images={q.images} height={420} altPrefix="Ảnh câu hỏi" />
+          <div className="mt-5 overflow-hidden rounded-xl border border-border shadow-sm">
+            <ImageCarousel images={q.images} height={420} altPrefix={t('forum.altQuestionImage')} />
           </div>
         )}
 
-        {/* Số vote (chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
+        {/* Nút bình chọn (UC42, chỉ hiển thị trên mobile do cột vote bên trái bị ẩn) */}
         <div className="mt-5 text-sm sm:hidden">
-          <span className="inline-flex items-center gap-1.5 font-semibold text-plum-500">
-            <ChevronUp size={15} /> {q.votes} bình chọn
-          </span>
+          <button
+            type="button"
+            onClick={handleVote}
+            aria-pressed={voted}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold transition-colors',
+              voted ? 'bg-primary-soft text-primary-solid' : 'text-text-subtle hover:bg-border',
+            )}
+          >
+            <ChevronUp size={15} /> {votes} {t('forum.votes')}
+          </button>
         </div>
       </div>
     </div>
@@ -193,12 +273,17 @@ function QuestionDetailContent({ q, canEdit, onEdit }: { q: QuestionDetail; canE
  */
 export function QuestionDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { data, isLoading, isError, error, refetch } = useQuestionDetail(id)
   const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
-  // Quyền chỉnh sửa (UC46): chỉ chính TÁC GIẢ câu hỏi (Student/Alumni) mới thấy nút "Chỉnh sửa".
+  // Quyền chỉnh sửa/xóa (UC46/UC47): chỉ chính TÁC GIẢ câu hỏi (Student/Alumni) mới thấy nút.
   const user = useAuthStore((s) => s.user)
   const canEdit = !!user && !!data && String(user.id) === data.authorId && (user.role === 'STUDENT' || user.role === 'ALUMNI')
+
+  // Quyền bình chọn (UC42): mọi Student/Alumni đã đăng nhập (kể cả tác giả), không giới hạn chủ sở hữu.
+  const canVote = !!user && (user.role === 'STUDENT' || user.role === 'ALUMNI')
 
   // Phân biệt lỗi 404 (không tìm thấy) với lỗi hệ thống khác để hiển thị đúng trạng thái.
   const notFound = isError && /không tìm thấy|not found|404/i.test((error as Error)?.message ?? '')
@@ -216,10 +301,10 @@ export function QuestionDetailPage() {
         // Câu hỏi + câu trả lời nằm chung MỘT card (như bài viết + bình luận trên Facebook/Reddit)
         <Card hover={false} className="overflow-hidden p-0">
           <div className="p-6 sm:p-8">
-            <QuestionDetailContent q={data} canEdit={canEdit} onEdit={() => setEditOpen(true)} />
+            <QuestionDetailContent q={data} canEdit={canEdit} canVote={canVote} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
           </div>
           {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
-          <div className="border-t border-plum-900/[0.08] bg-plum-900/[0.02] p-6 sm:p-8">
+          <div className="border-t border-border bg-surface-2 p-6 sm:p-8">
             <AnswersSection questionId={data.id} count={data.answers} />
           </div>
         </Card>
@@ -229,6 +314,15 @@ export function QuestionDetailPage() {
 
       {/* Modal chỉnh sửa câu hỏi (UC46) — mở khi tác giả bấm "Chỉnh sửa" */}
       {editOpen && data && <AskQuestionModal editQuestion={data} onClose={() => setEditOpen(false)} />}
+
+      {/* Modal xác nhận xóa câu hỏi (UC47) — mở khi tác giả bấm "Xóa"; xóa xong điều hướng về danh sách */}
+      {deleteOpen && data && (
+        <DeleteQuestionModal
+          questionId={data.id}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={() => navigate('/app/forum')}
+        />
+      )}
     </div>
   )
 }

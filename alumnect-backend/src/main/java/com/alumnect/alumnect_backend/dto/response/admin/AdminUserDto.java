@@ -79,4 +79,10 @@ public class AdminUserDto {
 
     /** Danh sách liên kết mạng xã hội/website */
     private List<String> socialLinks;
+
+    /** Trạng thái đã từng đăng ký hồ sơ Mentor hay chưa */
+    private Boolean hasMentorProfile;
+
+    /** ID của hồ sơ Mentor (bảng mentor_profiles) nếu có */
+    private Long mentorProfileId;
 }

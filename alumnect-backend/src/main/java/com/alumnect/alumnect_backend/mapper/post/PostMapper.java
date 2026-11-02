@@ -1,16 +1,19 @@
 package com.alumnect.alumnect_backend.mapper.post;
 
-import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
-import com.alumnect.alumnect_backend.entity.post.Post;
-import com.alumnect.alumnect_backend.entity.user.User;
-import com.alumnect.alumnect_backend.entity.user.UserProfile;
-import com.alumnect.alumnect_backend.entity.job.JobPosting;
-import com.alumnect.alumnect_backend.entity.event.Event;
+import com.alumnect.alumnect_backend.common.enums.PostCategory;
 import com.alumnect.alumnect_backend.dto.response.post.JobDTO;
 import com.alumnect.alumnect_backend.dto.response.post.EventDTO;
+import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
+import com.alumnect.alumnect_backend.entity.event.Event;
+import com.alumnect.alumnect_backend.entity.job.JobPosting;
+import com.alumnect.alumnect_backend.entity.post.Post;
+import com.alumnect.alumnect_backend.entity.post.PostMedia;
+import com.alumnect.alumnect_backend.entity.user.User;
+import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,10 +37,12 @@ public class PostMapper {
      * @param post          Entity bài viết (đã JOIN FETCH sẵn {@code user})
      * @param authorProfile Hồ sơ công khai của tác giả (họ tên, avatar, headline) — có thể null nếu hồ sơ chưa được tạo
      * @param liked         true nếu người xem hiện tại đã thích bài viết này (UC17 - Like a post)
+     * @param saved         true nếu người xem hiện tại đã lưu bài viết này (UC20 - Save Post)
+     * @param job           Thông tin tuyển dụng (có thể null)
      * @param event         Thông tin sự kiện (có thể null)
      * @return DTO phẳng khớp schema Zod {@code postSchema} phía Frontend
      */
-    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, JobPosting job, Event event) {
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event, boolean isRegistered) {
         User author = post.getAuthor();
 
         // Tên hiển thị & avatar: lấy từ UserProfile nếu có, fallback về email khi hồ sơ chưa được tạo.
@@ -50,13 +55,13 @@ public class PostMapper {
         // (Sau khi merge dev, UserProfile không còn currentPosition/currentCompany —
         //  chức danh/công ty nay thuộc bảng experiences; tránh truy cập LAZY gây N+1 ở feed.)
         String role = authorProfile != null && authorProfile.getHeadline() != null
-                ? authorProfile.getHeadline()
+                ? authorProfile.getHeadline().replaceAll("(?i)\\s*\\|\\s*FPTU Alumni", "").replaceAll("(?i)FPTU Alumni", "").trim()
                 : "";
 
         return PostResponse.builder()
                 .id(String.valueOf(post.getId()))
                 .authorId(author != null && author.getId() != null ? String.valueOf(author.getId()) : null)
-                .type(post.getCategory() == com.alumnect.alumnect_backend.common.enums.PostCategory.GENERAL ? "normal" : post.getCategory().name().toLowerCase())
+                .type(post.getCategory() == PostCategory.GENERAL ? "normal" : post.getCategory().name().toLowerCase())
                 .author(authorName)
                 .role(role)
                 .avatar(avatarUrl != null ? avatarUrl : "")
@@ -65,8 +70,8 @@ public class PostMapper {
                 .text(post.getContent())
                 .images(post.getMediaList() != null
                         ? post.getMediaList().stream()
-                                .sorted(java.util.Comparator.comparingInt(com.alumnect.alumnect_backend.entity.post.PostMedia::getSortOrder))
-                                .map(com.alumnect.alumnect_backend.entity.post.PostMedia::getUrl)
+                                .sorted(Comparator.comparingInt(PostMedia::getSortOrder))
+                                .map(PostMedia::getUrl)
                                 .collect(Collectors.toList())
                         : List.of())
                 .likes(post.getLikeCount())
@@ -74,6 +79,8 @@ public class PostMapper {
                 .reposts(post.getRepostCount())
                 // UC17: cờ liked phản ánh người xem hiện tại đã thích bài này hay chưa.
                 .liked(liked)
+                // UC20: cờ saved phản ánh người xem hiện tại đã lưu bài này hay chưa.
+                .saved(saved)
                 .eventId(post.getEventId() != null ? String.valueOf(post.getEventId()) : null)
                 .jobId(post.getJobId() != null ? String.valueOf(post.getJobId()) : null)
                 .job(job != null ? JobDTO.builder()
@@ -86,13 +93,28 @@ public class PostMapper {
                         .contactEmail(job.getContactEmail())
                         .build() : null)
                 .event(event != null ? EventDTO.builder()
+                        .id(event.getId())
                         .title(event.getTitle())
                         .location(event.getLocation())
                         .startTime(event.getStartTime())
                         .endTime(event.getEndTime())
                         .capacity(event.getCapacity())
+                        .attendeeCount(event.getAttendeeCount())
+                        .status(event.getStatus() != null ? event.getStatus() : "ACTIVE")
+                        .isRegistered(isRegistered)
                         .build() : null)
                 .build();
+    }
+
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, boolean saved, JobPosting job, Event event) {
+        return toResponse(post, authorProfile, liked, saved, job, event, false);
+    }
+
+    /**
+     * Phương thức tương thích ngược (overload) không truyền cờ saved (mặc định false).
+     */
+    public PostResponse toResponse(Post post, UserProfile authorProfile, boolean liked, JobPosting job, Event event) {
+        return toResponse(post, authorProfile, liked, false, job, event);
     }
 
     /**

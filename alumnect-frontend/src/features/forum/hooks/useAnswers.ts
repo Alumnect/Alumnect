@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { forumApi } from '../api/forumApi'
+import type { VoteResult } from '../api/forumApi'
 import type { CreateAnswerInput, UpdateAnswerInput } from '../model/answer'
 
 /**
@@ -50,6 +51,45 @@ export function useUpdateAnswer(questionId: string) {
       forumApi.updateAnswer({ questionId, answerId, input }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['answers', questionId] })
+    },
+  })
+}
+
+/**
+ * Hook bình chọn/bỏ bình chọn một câu trả lời hoặc reply (UC43 - Vote on an answer).
+ *
+ * Bọc `useMutation` của TanStack Query: chọn endpoint theo cờ `vote`
+ * (POST /vote khi bình chọn, DELETE /vote khi bỏ bình chọn) và trả về trạng thái
+ * bình chọn mới do backend xác nhận ({ voted, voteCount }).
+ *
+ * UI dùng cập nhật lạc quan (optimistic) cục bộ ở component — cùng pattern với
+ * `useToggleVoteQuestion` (UC42) / `useToggleLike` (UC17): đổi trạng thái ngay khi
+ * bấm, đồng bộ theo `onSuccess`, hoàn tác (rollback) ở `onError`.
+ *
+ * @param questionId ID câu hỏi chứa câu trả lời (cố định cho cả phiên bấm vote trong 1 trang chi tiết)
+ * @return Đối tượng mutation (mutate, isPending, ...) nhận `{ answerId, vote }`
+ */
+export function useToggleVoteAnswer(questionId: string) {
+  return useMutation<VoteResult, Error, { answerId: string; vote: boolean }>({
+    mutationFn: ({ answerId, vote }) =>
+      vote ? forumApi.voteAnswer({ questionId, answerId }) : forumApi.unvoteAnswer({ questionId, answerId }),
+  })
+}
+
+/**
+ * Hook xóa (mềm) một câu trả lời hoặc reply (UC49 - Delete an answer). Khi thành công làm mới danh sách
+ * câu trả lời (['answers', id]) để câu vừa xóa biến mất, và chi tiết câu hỏi (['question', id]) để cập
+ * nhật số câu trả lời (chỉ đổi khi xóa câu trả lời GỐC — reply không tính vào bộ đếm).
+ * @param questionId ID câu hỏi chứa câu trả lời
+ * @return Đối tượng mutation (mutate, isPending, error...)
+ */
+export function useDeleteAnswer(questionId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (answerId: string) => forumApi.deleteAnswer({ questionId, answerId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['answers', questionId] })
+      queryClient.invalidateQueries({ queryKey: ['question', questionId] })
     },
   })
 }

@@ -1,6 +1,15 @@
 import http from '@/lib/http'
 import type { ApiResponse } from '@/features/auth/api/authApi'
-import type { ChangePasswordPayload, UserProfileResponse, FollowUserResponse } from '../model/userTypes'
+import type {
+  ChangePasswordPayload,
+  UserProfileResponse,
+  FollowUserResponse,
+  UpdateProfileRequest,
+  UserSearchParams,
+  UserDirectoryResponse,
+  UserFilterOptionsResponse,
+  ConnectionSuggestionResponse,
+} from '../model/userTypes'
 
 export const userApi = {
   /**
@@ -24,7 +33,7 @@ export const userApi = {
   /**
    * Cập nhật thông tin hồ sơ cá nhân của mình
    */
-  updateOwnProfile: (payload: import('../model/userTypes').UpdateProfileRequest) =>
+  updateOwnProfile: (payload: UpdateProfileRequest) =>
     http.put<any, ApiResponse<UserProfileResponse>>('/users/profile', payload),
 
   /**
@@ -66,5 +75,36 @@ export const userApi = {
       totalPages: number
       last: boolean
     }>>(`/users/${userId}/following`, { params: { page, size } }),
+
+  /**
+   * Tìm kiếm và lọc danh sách thành viên trong mạng lưới AlumNect (Alumni Directory)
+   * GET /users/search
+   */
+  searchUsers: (params?: UserSearchParams) =>
+    http.get<any, ApiResponse<{
+      content: UserDirectoryResponse[]
+      pageNumber: number
+      pageSize: number
+      totalElements: number
+      totalPages: number
+      last: boolean
+    }>>('/users/search', { params }),
+
+  /**
+   * Lấy danh sách các tùy chọn lọc động (khóa học, thành phố) từ DB
+   * GET /users/filter-options
+   */
+  getFilterOptions: () =>
+    http.get<any, ApiResponse<UserFilterOptionsResponse>>('/users/filter-options'),
+
+  /**
+   * Lấy danh sách thành viên gợi ý kết nối (UC10 - View Connection Suggestions)
+   * GET /users/suggestions
+   */
+  getConnectionSuggestions: (limit = 5) =>
+    http.get<any, ApiResponse<ConnectionSuggestionResponse[]>>('/users/suggestions', { params: { limit } }),
 }
+
+
+
 

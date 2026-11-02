@@ -4,6 +4,7 @@ import com.alumnect.alumnect_backend.entity.forum.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -52,4 +53,37 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "AND a.status = com.alumnect.alumnect_backend.common.enums.AnswerStatus.ACTIVE " +
             "ORDER BY a.createdAt ASC")
     List<Answer> findActiveRepliesByParentIds(@Param("parentIds") List<Long> parentIds);
+
+    /**
+     * Lấy ID của các REPLY ACTIVE thuộc một câu trả lời gốc — dùng khi chỉ cần ID (dọn vote/xóa),
+     * tránh nạp cả entity Answer + author vào persistence context một cách không cần thiết
+     * (khác {@link #findActiveRepliesByParentIds}, vốn JOIN FETCH author để hiển thị).
+     *
+     * @param parentId ID câu trả lời gốc
+     * @return Danh sách ID reply ACTIVE thuộc câu trả lời gốc này
+     */
+    @Query("SELECT a.id FROM Answer a " +
+            "WHERE a.parent.id = :parentId " +
+            "AND a.status = com.alumnect.alumnect_backend.common.enums.AnswerStatus.ACTIVE")
+    List<Long> findActiveReplyIdsByParentId(@Param("parentId") Long parentId);
+
+    /**
+     * Xóa cứng tường minh toàn bộ reply thuộc một câu trả lời gốc, bằng bulk query riêng — KHÔNG dựa
+     * vào ràng buộc DB {@code ON DELETE CASCADE} để tránh persistence context còn giữ các reply đã
+     * nạp trước đó (qua {@link #findActiveRepliesByParentIds}) ở trạng thái managed trong khi dòng dữ
+     * liệu thật đã bị xóa ngầm dưới DB, gây lệch trạng thái Hibernate khi xóa câu trả lời gốc (UC49).
+     *
+     * @param parentId ID câu trả lời gốc — mọi reply trực tiếp của nó sẽ bị xóa
+     */
+    @Modifying
+    @Query("DELETE FROM Answer a WHERE a.parent.id = :parentId")
+    void deleteByParentId(@Param("parentId") Long parentId);
+
+    @Modifying
+    @Query("UPDATE Answer a SET a.voteCount = a.voteCount + 1 WHERE a.id = :id")
+    void incrementVoteCount(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Answer a SET a.voteCount = CASE WHEN a.voteCount > 0 THEN a.voteCount - 1 ELSE 0 END WHERE a.id = :id")
+    void decrementVoteCount(@Param("id") Long id);
 }

@@ -111,6 +111,7 @@ export interface FollowUserResponse {
   isAccountVerified: boolean
   isFollowing: boolean
   studentCode?: string | null
+  role?: string
 }
 
 export interface UserSkillRequest {
@@ -135,3 +136,76 @@ export interface UpdateProfileRequest {
   skills?: UserSkillRequest[]
 }
 
+export interface UserDirectoryResponse {
+  userId: number
+  email: string
+  role: string
+  fullName: string
+  avatarUrl: string | null
+  coverUrl?: string | null
+  headline: string | null
+  major: MajorResponse | null
+  cohort: number | null
+  studentCode: string | null
+  city: string | null
+  skills?: UserSkillResponse[] | null
+  primaryExperience?: PrimaryExperienceResponse | null
+  followersCount?: number
+  followingCount?: number
+  isFollowing?: boolean
+  isAccountVerified: boolean
+  mutualFollowsCount?: number
+  createdAt: string
+}
+
+export interface UserSearchParams {
+  query?: string
+  name?: string
+  role?: string
+  majorId?: number
+  cohort?: number
+  city?: string
+  skill?: string
+  company?: string
+  page?: number
+  size?: number
+  sortBy?: string
+  sortDirection?: string
+}
+
+export interface UserFilterOptionsResponse {
+  cohorts: number[]
+  cities: string[]
+}
+
+export interface ConnectionSuggestionResponse {
+  userId: number
+  email: string
+  role: string
+  fullName: string
+  avatarUrl: string | null
+  headline: string | null
+  major: MajorResponse | null
+  cohort: number | null
+  studentCode: string | null
+  city: string | null
+  skills?: UserSkillResponse[] | null
+  primaryExperience?: PrimaryExperienceResponse | null
+  followersCount?: number
+  followingCount?: number
+  isFollowing?: boolean
+  isAccountVerified: boolean
+  createdAt: string
+  suggestionReason: string
+  reasonBadges?: string[]
+  mutualFollowsCount?: number
+  matchScore: number
+}
+
+export const FPT_CAMPUSES = [
+  'FPT University Đà Nẵng',
+  'FPT University Hà Nội',
+  'FPT University TP. Hồ Chí Minh',
+  'FPT University Cần Thơ',
+  'FPT University Quy Nhơn',
+] as const
