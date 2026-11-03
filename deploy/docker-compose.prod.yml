@@ -24,6 +24,7 @@ services:
     restart: unless-stopped
     environment:
       - JAVA_TOOL_OPTIONS=-Xms256m -Xmx900m -XX:+UseSerialGC
+      - SERVER_FORWARD_HEADERS_STRATEGY=framework
       - DB_HOST=postgres-db
       - DB_PORT=5432
       - DB_NAME=${DB_NAME}
