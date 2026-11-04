@@ -54,22 +54,42 @@ function absoluteTime(iso: string, lang: string): string {
 }
 
 /**
- * Làm sạch nội dung câu trả lời, loại bỏ các chuỗi @tên lặp lại ở đầu nếu đã hiển thị qua tag parentAuthor.
+ * Làm sạch nội dung câu trả lời, ưu tiên bóc tách đúng tên người được @mention trong luồng,
+ * nếu không có tiền tố @tên rõ ràng thì dùng parentAuthor mặc định.
  */
-function cleanAnswerBody(body: string, parentAuthor?: string): { mention?: string; cleanText: string } {
+function cleanAnswerBody(
+  body: string,
+  parentAuthor?: string,
+  knownAuthors?: string[]
+): { mention?: string; cleanText: string } {
   if (!body) return { cleanText: '' }
   let text = body.trim()
-  let mention = parentAuthor
+  let mention: string | undefined
 
-  // Nếu body bắt đầu bằng @Tên, bóc tách ra nếu chưa có parentAuthor
-  const match = text.match(/^@([^\s\n]+(?:\s+[^\s\n]+)?)\s*([\s\S]*)$/)
-  if (match) {
-    if (!mention) {
-      mention = match[1]
+  const candidates = Array.from(
+    new Set([...(knownAuthors ?? []), ...(parentAuthor ? [parentAuthor] : [])].filter(Boolean))
+  ).sort((a, b) => b.length - a.length)
+
+  for (const name of candidates) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const prefixRegex = new RegExp(`^(@${escaped}(?:\\s+|$))+`, 'i')
+    if (prefixRegex.test(text)) {
+      mention = name
+      text = text.replace(prefixRegex, '').trim()
+      break
     }
   }
 
-  // Nếu có mention (hoặc parentAuthor), loại bỏ toàn bộ các tiền tố @mention lặp lại ở đầu text
+  if (!mention) {
+    const match = text.match(/^@([^\s\n]+(?:\s+[^\s\n]+)?)\s+([\s\S]*)$/)
+    if (match) {
+      mention = match[1]
+      text = match[2].trim()
+    } else if (parentAuthor) {
+      mention = parentAuthor
+    }
+  }
+
   if (mention) {
     const escaped = mention.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     text = text.replace(new RegExp(`^(@${escaped}\\s*)+`, 'i'), '').trim()
@@ -115,8 +135,16 @@ function InlineAnswerForm({
   const bodyLength = watch('body')?.length ?? 0
 
   const onSubmit = (values: CreateAnswerInput) => {
-    if (mode === 'edit') update.mutate({ answerId: answerId as string, input: values }, { onSuccess: onDone })
-    else create.mutate({ input: values, parentId }, { onSuccess: onDone })
+    if (mode === 'edit') {
+      update.mutate({ answerId: answerId as string, input: values }, { onSuccess: onDone })
+    } else {
+      const trimmed = values.body.trim()
+      const finalBody =
+        replyingToName && !trimmed.toLowerCase().startsWith(`@${replyingToName.toLowerCase()}`)
+          ? `@${replyingToName} ${trimmed}`
+          : trimmed
+      create.mutate({ input: { ...values, body: finalBody }, parentId }, { onSuccess: onDone })
+    }
   }
 
   const placeholder =
@@ -176,11 +204,13 @@ function AnswerBubble({
   a,
   questionId,
   parentAuthor,
+  knownAuthors,
   isReply = false,
 }: {
   a: Answer
   questionId: string
   parentAuthor?: string
+  knownAuthors?: string[]
   isReply?: boolean
 }) {
   const { t, i18n } = useTranslation()
@@ -196,6 +226,9 @@ function AnswerBubble({
   const profileLink = a.authorId ? `/app/profile?userId=${a.authorId}` : '/app/profile'
   const replyCount = a.replies?.length ?? 0
   const replyParentId = isReply ? (a.parentId ?? undefined) : a.id
+  const threadAuthors = isReply
+    ? knownAuthors
+    : Array.from(new Set([a.author, ...(a.replies?.map((r) => r.author) ?? [])]))
 
   const [voted, setVoted] = useState(a.voted)
   const [votes, setVotes] = useState(a.votes)
@@ -230,102 +263,81 @@ function AnswerBubble({
     )
   }
 
+  const hasRootThread = !isReply && (replying || replyCount > 0)
+
   return (
-    <div
-      className={cn(
-        'group flex items-start gap-2.5 transition duration-300',
-        isReply &&
-          'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
-      )}
-    >
-      <Link to={profileLink} className="shrink-0 hover:opacity-85 transition-opacity">
-        <Avatar src={a.avatar} name={a.author} size={isReply ? 28 : 32} verified={a.verified} />
-      </Link>
-      <div className="min-w-0 flex-1">
-        <div className="rounded-2xl bg-surface-2 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Link to={profileLink} className="text-xs font-bold text-text hover:underline transition-colors">
+    <div>
+      <div className="group flex items-start gap-3 transition duration-300">
+        <div className="flex shrink-0 flex-col items-center self-stretch">
+          <Link to={profileLink} className="mt-0.5 flex shrink-0 rounded-full transition-opacity hover:opacity-85">
+            <Avatar src={a.avatar} name={a.author} size={isReply ? 30 : 36} verified={a.verified} />
+          </Link>
+          {hasRootThread && (
+            <div className="mt-1.5 w-0.5 flex-1 rounded-full bg-border-strong/80 dark:bg-border-strong" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="rounded-2xl border border-border bg-surface px-4 py-2.5 shadow-2xs transition-colors dark:border-border dark:bg-surface-2/80">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <Link to={profileLink} className="text-[13.5px] font-bold leading-5 text-text transition-colors hover:text-primary-solid hover:underline">
                 {a.author}
               </Link>
               {a.authorHeadline && (
-                <span className="text-xs font-medium text-primary-solid bg-primary-soft px-1.5 py-0.5 rounded-md">
+                <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-solid">
                   {a.authorHeadline}
                 </span>
               )}
               {(a.createdAt || a.time) && (
-                <span className="shrink-0 text-xs text-text-subtle dark:text-text-subtle" title={absoluteTime(a.createdAt, i18n.language)}>
-                  • {relativeTime(a.createdAt, t, i18n.language) || a.time}
+                <span className="shrink-0 text-xs font-medium text-text-subtle" title={absoluteTime(a.createdAt, i18n.language)}>
+                  · {relativeTime(a.createdAt, t, i18n.language) || a.time}
                 </span>
               )}
               {a.edited && (
-                <span className="text-xs text-text-subtle dark:text-text-subtle">• {t('forum.editedBadge')}</span>
+                <span className="text-xs text-text-subtle">· {t('forum.editedBadge')}</span>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
-                  aria-label={t('forum.editAnswerAria')}
-                >
-                  <Pencil size={13} />
-                </button>
-              )}
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => setDeleting(true)}
-                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
-                  aria-label={t('forum.deleteAnswerAria')}
-                >
-                  <Trash2 size={13} />
-                </button>
-              )}
-            </div>
+            {editing ? (
+              <InlineAnswerForm
+                questionId={questionId}
+                mode="edit"
+                answerId={a.id}
+                initialBody={a.body}
+                onDone={() => setEditing(false)}
+              />
+            ) : (
+              (() => {
+                const { mention, cleanText } = cleanAnswerBody(a.body, parentAuthor, threadAuthors)
+                return (
+                  <div className="mt-1 text-[13.5px] sm:text-sm leading-relaxed text-text">
+                    {mention && (
+                      <span className="mr-1.5 font-semibold text-primary-solid">
+                        @{mention}
+                      </span>
+                    )}
+                    <span className="whitespace-pre-wrap break-words">
+                      {cleanText}
+                    </span>
+                  </div>
+                )
+              })()
+            )}
           </div>
 
-          {editing ? (
-            <InlineAnswerForm
-              questionId={questionId}
-              mode="edit"
-              answerId={a.id}
-              initialBody={a.body}
-              onDone={() => setEditing(false)}
-            />
-          ) : (
-            (() => {
-              const { mention, cleanText } = cleanAnswerBody(a.body, parentAuthor)
-              return (
-                <div className="mt-1 text-xs text-text leading-relaxed">
-                  {mention && (
-                    <span className="mr-1.5 font-semibold text-primary-solid">
-                      @{mention}
-                    </span>
-                  )}
-                  <span className="whitespace-pre-wrap break-words">
-                    {cleanText}
-                  </span>
-                </div>
-              )
-            })()
-          )}
-
-          {/* Action Row: vote button & reply button */}
+          {/* Action Row: vote button, reply, edit, delete */}
           {!editing && (
-            <div className="mt-2 flex items-center gap-2.5">
+            <div className="mt-1.5 flex items-center gap-3 pl-1 text-xs">
               <button
                 type="button"
                 onClick={handleVote}
                 aria-pressed={voted}
                 aria-label={voted ? t('forum.unvoteAnswerAria') : t('forum.voteAnswerAria')}
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold transition cursor-pointer',
+                  'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-bold transition',
                   voted
-                    ? 'bg-primary-soft text-primary-solid'
-                    : 'bg-surface-2 text-text-subtle hover:bg-surface-3 hover:text-primary-solid'
+                    ? 'border-primary-soft-border bg-primary-soft text-primary-solid'
+                    : 'border-border bg-surface text-text-subtle hover:border-border-strong hover:text-primary-solid dark:bg-surface-2/80'
                 )}
               >
                 <ChevronUp size={13} strokeWidth={2.5} />
@@ -336,25 +348,47 @@ function AnswerBubble({
                 <button
                   type="button"
                   onClick={() => setReplying((v) => !v)}
-                  className="text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
+                  className="cursor-pointer font-semibold text-text-muted transition-colors hover:text-primary-solid"
                 >
                   {t('forum.reply')}
                 </button>
               )}
+
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  aria-label={t('forum.editAnswerAria')}
+                  className="inline-flex cursor-pointer items-center gap-1 font-medium text-text-subtle transition-colors hover:text-primary-solid"
+                >
+                  <Pencil size={11} />
+                  <span>{t('common.edit')}</span>
+                </button>
+              )}
+
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => setDeleting(true)}
+                  aria-label={t('forum.deleteAnswerAria')}
+                  className="inline-flex cursor-pointer items-center gap-1 font-medium text-text-subtle transition-colors hover:text-danger"
+                >
+                  <Trash2 size={11} />
+                  <span>{t('common.delete')}</span>
+                </button>
+              )}
             </div>
           )}
-        </div>
 
-        {/* Form reply lồng */}
-        {replying && (
-          <div className="relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
-            <div className="rounded-2xl bg-surface-2 p-3">
-              <div className="flex items-center justify-between text-xs text-text-subtle mb-1">
-                <span>
+          {/* Form reply khi bấm Trả lời trực tiếp trên một reply con */}
+          {isReply && replying && (
+            <div className="mt-2.5 rounded-2xl border border-border bg-surface p-3.5 shadow-2xs dark:border-border dark:bg-surface-2/80">
+              <div className="mb-1 flex items-center justify-between text-xs text-text-subtle">
+                <span className="font-medium text-text-muted">
                   <strong className="text-primary-solid">{t('forum.replyingTo', { name: a.author })}</strong>
                 </span>
-                <button aria-label={t('common.close')} type="button" onClick={() => setReplying(false)} className="hover:text-text cursor-pointer">
-                  <X size={13} />
+                <button aria-label={t('common.close')} type="button" onClick={() => setReplying(false)} className="cursor-pointer rounded-md p-0.5 hover:bg-surface-2 hover:text-text">
+                  <X size={14} />
                 </button>
               </div>
               <InlineAnswerForm
@@ -363,52 +397,109 @@ function AnswerBubble({
                 parentId={replyParentId}
                 replyingToName={a.author}
                 initialBody=""
-                onDone={() => {
-                  setReplying(false)
-                  if (!isReply) setShowReplies(true)
-                }}
+                onDone={() => setReplying(false)}
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
 
-        {/* Reply list lồng (2 cấp) */}
-        {replyCount > 0 && (
-          <div className="mt-2 space-y-2.5">
-            {!showReplies ? (
+      {/* Nhánh cây phản hồi (2 cấp) dưới câu trả lời gốc */}
+      {hasRootThread && (
+        <div className="ml-[17px]">
+          {replyCount > 0 && !showReplies && (
+            <div className="relative pl-6 pt-2.5">
+              {replying && (
+                <span
+                  aria-hidden
+                  className="absolute left-0 top-0 bottom-0 w-0.5 bg-border-strong/80 dark:bg-border-strong"
+                />
+              )}
+              <span
+                aria-hidden
+                className="absolute left-0 top-0 h-[20px] w-4 rounded-bl-xl border-b-2 border-l-2 border-border-strong/80 dark:border-border-strong"
+              />
               <button
                 type="button"
                 onClick={() => setShowReplies(true)}
-                className="ml-1 flex items-center gap-1.5 text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
+                className="cursor-pointer text-xs font-semibold text-primary-solid hover:underline"
               >
-                <span className="h-3 w-3.5 shrink-0 rounded-bl-lg border-b-2 border-l-2 border-primary-soft-border" />
                 {t('forum.viewReplies', { count: replyCount })}
               </button>
-            ) : (
-              <div className="space-y-2.5">
-                {a.replies.map((r) => (
-                  <AnswerBubble
-                    key={r.id}
-                    a={{ ...r, replies: [] }}
-                    questionId={questionId}
-                    parentAuthor={a.author}
-                    isReply
-                  />
-                ))}
-                {replyCount > 1 && (
+            </div>
+          )}
+
+          {replyCount > 0 && showReplies && (
+            <>
+              {a.replies.map((r, idx) => {
+                const isLastReplyNode = idx === a.replies.length - 1 && !replying
+                return (
+                  <div key={r.id} className="relative pl-6 pt-2.5">
+                    {!isLastReplyNode && (
+                      <span
+                        aria-hidden
+                        className="absolute left-0 top-0 bottom-0 w-0.5 bg-border-strong/80 dark:bg-border-strong"
+                      />
+                    )}
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-0 h-[27px] w-4 rounded-bl-xl border-b-2 border-l-2 border-border-strong/80 dark:border-border-strong"
+                    />
+                    <AnswerBubble
+                      a={{ ...r, replies: [] }}
+                      questionId={questionId}
+                      parentAuthor={a.author}
+                      knownAuthors={threadAuthors}
+                      isReply
+                    />
+                  </div>
+                )
+              })}
+              {replyCount > 1 && (
+                <div className="pl-6 pt-1.5">
                   <button
                     type="button"
                     onClick={() => setShowReplies(false)}
-                    className="ml-8 text-xs font-semibold text-text-subtle hover:text-text-muted dark:text-text-subtle cursor-pointer"
+                    className="cursor-pointer text-xs font-semibold text-text-subtle hover:text-text-muted"
                   >
                     {t('forum.hideReplies')}
                   </button>
-                )}
+                </div>
+              )}
+            </>
+          )}
+
+          {replying && (
+            <div className="relative pl-6 pt-2.5">
+              <span
+                aria-hidden
+                className="absolute left-0 top-0 h-[24px] w-4 rounded-bl-xl border-b-2 border-l-2 border-border-strong/80 dark:border-border-strong"
+              />
+              <div className="rounded-2xl border border-border bg-surface p-3.5 shadow-2xs dark:border-border dark:bg-surface-2/80">
+                <div className="mb-1 flex items-center justify-between text-xs text-text-subtle">
+                  <span className="font-medium text-text-muted">
+                    <strong className="text-primary-solid">{t('forum.replyingTo', { name: a.author })}</strong>
+                  </span>
+                  <button aria-label={t('common.close')} type="button" onClick={() => setReplying(false)} className="cursor-pointer rounded-md p-0.5 hover:bg-surface-2 hover:text-text">
+                    <X size={14} />
+                  </button>
+                </div>
+                <InlineAnswerForm
+                  questionId={questionId}
+                  mode="reply"
+                  parentId={replyParentId}
+                  replyingToName={a.author}
+                  initialBody=""
+                  onDone={() => {
+                    setReplying(false)
+                    setShowReplies(true)
+                  }}
+                />
               </div>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {deleting && (
         <DeleteAnswerModal
@@ -443,15 +534,17 @@ function AnswerForm({ questionId }: { questionId: string }) {
     )
   }
 
+  const hasText = body.trim().length > 0
+
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       {error && (
         <div className="mb-2 flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-1.5 text-xs font-medium text-danger">
           <AlertTriangle size={14} className="shrink-0" /> {(error as Error).message}
         </div>
       )}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
-        <Avatar src={user?.avatarUrl} name={user?.name ?? t('forum.you')} size={32} verified={user?.verified} className="shrink-0" />
+      <form onSubmit={handleSubmit} className="flex items-center gap-3">
+        <Avatar src={user?.avatarUrl} name={user?.name ?? t('forum.you')} size={36} verified={user?.verified} className="shrink-0" />
         <div className="relative flex-1">
           <input
             aria-label={t('forum.shareAnswerPlaceholder')}
@@ -460,18 +553,23 @@ function AnswerForm({ questionId }: { questionId: string }) {
             onChange={(e) => setBody(e.target.value)}
             maxLength={MAX_BODY}
             placeholder={t('forum.shareAnswerPlaceholder')}
-            className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
+            className="w-full rounded-full border border-border bg-surface py-2.5 pl-4 pr-11 text-sm text-text shadow-2xs transition placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
           />
           <button
             type="submit"
-            disabled={!body.trim() || isPending}
+            disabled={!hasText || isPending}
             aria-label={t('messages.send')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
+            className={cn(
+              'absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 cursor-pointer place-items-center rounded-full transition-all',
+              hasText
+                ? 'bg-primary-solid text-on-primary shadow-2xs hover:bg-primary-hover'
+                : 'text-text-subtle opacity-45 disabled:cursor-not-allowed'
+            )}
           >
             {isPending ? (
-              <Loader2 size={13} className="animate-spin" />
+              <Loader2 size={14} className="animate-spin" />
             ) : (
-              <Send size={13} />
+              <Send size={14} />
             )}
           </button>
         </div>
@@ -555,7 +653,7 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
         </Card>
       ) : (
         <>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {answers.map((a) => (
               <AnswerBubble key={a.id} a={a} questionId={questionId} />
             ))}
