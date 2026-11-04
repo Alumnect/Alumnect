@@ -304,7 +304,7 @@ export function QuestionDetailPage() {
             <QuestionDetailContent q={data} canEdit={canEdit} canVote={canVote} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
           </div>
           {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
-          <div className="border-t border-border bg-surface-2 p-6 sm:p-8">
+          <div className="border-t border-border bg-surface-2/50 px-5 py-6 sm:px-7 sm:py-7 dark:bg-[#1c1d1f]/80">
             <AnswersSection questionId={data.id} count={data.answers} />
           </div>
         </Card>
