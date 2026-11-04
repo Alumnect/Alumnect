@@ -194,6 +194,9 @@ const reporterLabel = (report: AdminReportDto) => report.reporterName ?? 'Hệ t
 /** Dòng phụ của người gửi báo cáo. */
 const reporterDetail = (report: AdminReportDto) => report.reporterEmail ?? 'Tự động phát hiện'
 
+/** Kiểm tra báo cáo này do AI phát hiện ảnh nhạy cảm/bạo lực (nhị phân, không chấm thang điểm). */
+const isImageAiViolation = (report: AdminReportDto) => Boolean(report.detectedKeywords?.includes('[Ảnh vi phạm]'))
+
 export function AdminReportsQueue() {
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | 'DISMISSED'>('PENDING')
   const [reasonFilter, setReasonFilter] = useState<string>('ALL')
@@ -220,6 +223,7 @@ export function AdminReportsQueue() {
 
   // Modal Detail state
   const [selectedReport, setSelectedReport] = useState<AdminReportDto | null>(null)
+  const [revealMedia, setRevealMedia] = useState(false)
 
   // Store local will-hide state mapped by report ID to persist state between modal open/close
   const [willHideMap, setWillHideMap] = useState<Record<number, boolean>>({})
@@ -229,6 +233,10 @@ export function AdminReportsQueue() {
     type: 'RESOLVE' | 'DISMISS'
     id: number
   } | null>(null)
+
+  useEffect(() => {
+    setRevealMedia(false)
+  }, [selectedReport?.id])
 
   useEffect(() => {
     if (selectedReport || confirmAction) {
@@ -332,8 +340,13 @@ export function AdminReportsQueue() {
         client.subscribe('/topic/admin/moderation-alerts', (msg) => {
           try {
             const data = JSON.parse(msg.body)
+            const isImgAlert = Array.isArray(data.detectedKeywords) && data.detectedKeywords.some((k: string) => String(k).includes('[Ảnh vi phạm]'))
             if (data.type === 'CRITICAL_AUTO_HIDDEN') {
-              toast.error(`🚨 CẢNH BÁO: Bài viết #${data.postId || ''} vừa bị tự động ẩn do vi phạm nghiêm trọng (${(data.aiScore * 100).toFixed(0)}%)!`)
+              toast.error(
+                isImgAlert
+                  ? `🚨 CẢNH BÁO: Bài viết #${data.postId || ''} vừa bị AI tự động ẩn do phát hiện hình ảnh nhạy cảm/bạo lực!`
+                  : `🚨 CẢNH BÁO: Bài viết #${data.postId || ''} vừa bị tự động ẩn do vi phạm nghiêm trọng (${(data.aiScore * 100).toFixed(0)}%)!`
+              )
             } else if (data.type === 'REVIEW_REQUIRED') {
               toast.warning(`⚠️ Báo cáo mới cần duyệt: Báo cáo #${data.reportId} có dấu hiệu nghi vấn (${(data.aiScore * 100).toFixed(0)}%)`)
             }
@@ -628,7 +641,19 @@ export function AdminReportsQueue() {
 
                         {/* Đánh giá rủi ro */}
                         <td className="px-5 py-4 text-center">
-                          {r.aiScore !== undefined && r.aiScore !== null ? (
+                          {isImageAiViolation(r) ? (
+                            <div className="inline-flex flex-col items-center gap-1">
+                              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs bg-rose-50 text-rose-700 border-rose-200">
+                                <Sparkles size={11} />
+                                Ảnh vi phạm
+                              </span>
+                              {r.autoModerated && (
+                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100/60 rounded px-1.5 py-0.5">
+                                  Tự động ẩn
+                                </span>
+                              )}
+                            </div>
+                          ) : r.aiScore !== undefined && r.aiScore !== null ? (
                             <div className="inline-flex flex-col items-center gap-1">
                               <span
                                 className={cn(
@@ -802,9 +827,68 @@ export function AdminReportsQueue() {
                 
                 <div className="bg-surface p-4 rounded-xl border border-primary-soft-border space-y-2 max-h-48 overflow-y-auto">
                   <p className="text-xs text-text font-medium whitespace-pre-wrap leading-relaxed">
-                    {selectedReport.postContent}
+                    {selectedReport.postContent || '(Bài viết không có nội dung văn bản)'}
                   </p>
                 </div>
+
+                {/* Hình ảnh đính kèm của bài viết (tự động làm mờ an toàn khi nghi ngờ vi phạm) */}
+                {selectedReport.postMediaUrls && selectedReport.postMediaUrls.length > 0 && (
+                  <div className="rounded-xl border border-primary-soft-border bg-surface p-3 space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-text">
+                        Hình ảnh đính kèm ({selectedReport.postMediaUrls.length})
+                      </span>
+                      {(selectedReport.autoModerated || selectedReport.riskLevel === 'HIGH') && (
+                        <button
+                          type="button"
+                          onClick={() => setRevealMedia((prev) => !prev)}
+                          className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-[11px] font-bold text-text hover:bg-surface-3 transition cursor-pointer"
+                        >
+                          {revealMedia ? (
+                            <>
+                              <EyeOff size={12} /> Làm mờ ảnh
+                            </>
+                          ) : (
+                            <>
+                              <Eye size={12} /> Hiện ảnh để kiểm tra
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {selectedReport.postMediaUrls.map((url, idx) => {
+                        const shouldBlur = (selectedReport.autoModerated || selectedReport.riskLevel === 'HIGH') && !revealMedia
+                        return (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group relative block aspect-video overflow-hidden rounded-lg border border-border bg-surface-2"
+                            title="Mở ảnh gốc trong tab mới"
+                          >
+                            <img
+                              src={url}
+                              alt={`Ảnh bài viết #${idx + 1}`}
+                              className={cn(
+                                'h-full w-full object-cover transition duration-200',
+                                shouldBlur ? 'blur-xl scale-110 select-none' : 'group-hover:scale-105'
+                              )}
+                            />
+                            {shouldBlur && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/35 p-2 text-center">
+                                <span className="rounded-full bg-black/65 px-2.5 py-1 text-[10px] font-bold text-white">
+                                  Đã làm mờ bảo vệ
+                                </span>
+                              </div>
+                            )}
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Khối phân tích kiểm duyệt tự động */}
                 {selectedReport.aiScore !== undefined && selectedReport.aiScore !== null && (
@@ -816,36 +900,44 @@ export function AdminReportsQueue() {
                           Phân tích Kiểm duyệt Tự động
                         </h4>
                       </div>
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border',
-                          selectedReport.riskLevel === 'HIGH' || selectedReport.aiScore >= 0.85
-                            ? 'bg-rose-50 text-rose-700 border-rose-300'
-                            : selectedReport.riskLevel === 'MEDIUM' || selectedReport.aiScore >= 0.40
-                            ? 'bg-amber-50 text-amber-700 border-amber-300'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                        )}
-                      >
-                        Điểm rủi ro: {(selectedReport.aiScore * 100).toFixed(0)}% (
-                        {selectedReport.riskLevel === 'HIGH' ? 'Nguy cơ cao' : selectedReport.riskLevel === 'MEDIUM' ? 'Nghi vấn' : 'An toàn'}
-                        )
-                      </span>
+                      {isImageAiViolation(selectedReport) ? (
+                        <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border bg-rose-50 text-rose-700 border-rose-300">
+                          AI Vision: Phát hiện ảnh vi phạm
+                        </span>
+                      ) : (
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border',
+                            selectedReport.riskLevel === 'HIGH' || selectedReport.aiScore >= 0.85
+                              ? 'bg-rose-50 text-rose-700 border-rose-300'
+                              : selectedReport.riskLevel === 'MEDIUM' || selectedReport.aiScore >= 0.40
+                              ? 'bg-amber-50 text-amber-700 border-amber-300'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                          )}
+                        >
+                          Điểm rủi ro: {(selectedReport.aiScore * 100).toFixed(0)}% (
+                          {selectedReport.riskLevel === 'HIGH' ? 'Nguy cơ cao' : selectedReport.riskLevel === 'MEDIUM' ? 'Nghi vấn' : 'An toàn'}
+                          )
+                        </span>
+                      )}
                     </div>
 
-                    {/* Thanh đo mức độ rủi ro Risk Meter */}
-                    <div className="w-full bg-border/60 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={cn(
-                          'h-full transition-all duration-500',
-                          selectedReport.aiScore >= 0.85
-                            ? 'bg-rose-500'
-                            : selectedReport.aiScore >= 0.40
-                            ? 'bg-amber-500'
-                            : 'bg-emerald-500'
-                        )}
-                        style={{ width: `${Math.min(100, Math.max(5, selectedReport.aiScore * 100))}%` }}
-                      />
-                    </div>
+                    {/* Thanh đo mức độ rủi ro Risk Meter (chỉ áp dụng cho kiểm duyệt văn bản) */}
+                    {!isImageAiViolation(selectedReport) && (
+                      <div className="w-full bg-border/60 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={cn(
+                            'h-full transition-all duration-500',
+                            selectedReport.aiScore >= 0.85
+                              ? 'bg-rose-500'
+                              : selectedReport.aiScore >= 0.40
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
+                          )}
+                          style={{ width: `${Math.min(100, Math.max(5, selectedReport.aiScore * 100))}%` }}
+                        />
+                      </div>
+                    )}
 
                     {/* Đánh giá và từ khóa vi phạm */}
                     <div className="text-xs space-y-1.5 text-text-muted">
@@ -857,7 +949,9 @@ export function AdminReportsQueue() {
                       )}
                       {selectedReport.detectedKeywords && (
                         <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                          <span className="font-bold text-text">Từ khóa vi phạm: </span>
+                          <span className="font-bold text-text">
+                            {isImageAiViolation(selectedReport) ? 'Tệp ảnh vi phạm: ' : 'Từ khóa vi phạm: '}
+                          </span>
                           {selectedReport.detectedKeywords.split(',').map((kw, i) => (
                             <span
                               key={i}
@@ -871,7 +965,9 @@ export function AdminReportsQueue() {
                       {selectedReport.autoModerated && (
                         <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px] flex items-center gap-2">
                           <ShieldAlert size={15} className="shrink-0 text-rose-600" />
-                          Hệ thống đã tự động tạm ẩn bài viết do vi phạm nghiêm trọng quy chuẩn cộng đồng (&gt;= 85%).
+                          {isImageAiViolation(selectedReport)
+                            ? 'Hệ thống AI đã tự động ẩn bài viết do phát hiện hình ảnh nhạy cảm hoặc bạo lực.'
+                            : 'Hệ thống đã tự động tạm ẩn bài viết do vi phạm nghiêm trọng quy chuẩn cộng đồng (>= 85%).'}
                         </div>
                       )}
                     </div>

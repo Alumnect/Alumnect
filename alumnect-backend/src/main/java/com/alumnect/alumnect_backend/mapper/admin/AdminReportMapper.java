@@ -14,6 +14,7 @@ public interface AdminReportMapper {
     @Mapping(target = "id", source = "report.id")
     @Mapping(target = "postId", source = "report.post.id")
     @Mapping(target = "postContent", source = "report.post.content")
+    @Mapping(target = "postMediaUrls", expression = "java(report.getPost() != null && report.getPost().getMediaList() != null ? report.getPost().getMediaList().stream().sorted(java.util.Comparator.comparingInt(com.alumnect.alumnect_backend.entity.post.PostMedia::getSortOrder)).map(com.alumnect.alumnect_backend.entity.post.PostMedia::getUrl).toList() : java.util.List.of())")
     @Mapping(target = "postStatus", expression = "java(report.getPost() != null && report.getPost().getStatus() != null ? report.getPost().getStatus().name() : null)")
     @Mapping(target = "postType", expression = "java(report.getPost() != null && report.getPost().getCategory() != null ? report.getPost().getCategory().name() : null)")
     @Mapping(target = "postAuthorId", source = "report.post.author.id")
