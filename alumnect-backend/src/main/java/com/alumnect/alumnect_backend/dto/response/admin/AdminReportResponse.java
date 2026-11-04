@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * DTO chứa thông tin chi tiết báo cáo vi phạm bài viết dành cho giao diện Quản trị viên (Admin).
@@ -26,6 +27,9 @@ public class AdminReportResponse {
 
     /** Nội dung văn bản của bài viết bị báo cáo */
     private String postContent;
+
+    /** Danh sách URL ảnh đính kèm của bài viết bị báo cáo */
+    private List<String> postMediaUrls;
 
     /** Trạng thái hiện tại của bài viết bị báo cáo */
     private String postStatus;

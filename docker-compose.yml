@@ -61,6 +61,10 @@ services:
       - PAYOS_PAYMENT_EXPIRATION_MINUTES=${PAYOS_PAYMENT_EXPIRATION_MINUTES:-15}
       - PAYOS_RETURN_URL=${PAYOS_RETURN_URL:-}
       - PAYOS_CANCEL_URL=${PAYOS_CANCEL_URL:-}
+      # Biến cấu hình Kiểm duyệt Hình ảnh AI (Google Gemini)
+      - MODERATION_AI_ENABLED=${MODERATION_AI_ENABLED:-true}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
     depends_on:
       postgres-db:
         condition: service_healthy

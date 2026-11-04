@@ -99,6 +99,7 @@ export interface AdminReportDto {
   id: number
   postId: number
   postContent: string
+  postMediaUrls?: string[]
   postStatus: string
   postType?: string
   postAuthorId: number
