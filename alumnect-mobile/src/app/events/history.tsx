@@ -4,13 +4,15 @@ import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import {Card, Chip, Empty, Screen, Txt, Tag } from '@/components/ui'
+import { Image } from 'expo-image'
+import { Card, Chip, Empty, Screen, Txt, Tag } from '@/components/ui'
 import { ListSkeleton } from '@/components/Skeleton'
-import { CalendarDays } from '@/components/icons'
+import { CalendarDays, Globe, MapPin } from '@/components/icons'
 import { Header } from '@/components/Header'
+import { DateBadge, eventEyebrow, isOnlineLocation, locationLabel } from '@/components/EventBits'
 import { eventApi } from '@/api/events'
-import type { HistoryFilter } from '@/api/events'
-import { palette, useTheme } from '@/theme'
+import type { EventHistoryItem, HistoryFilter } from '@/api/events'
+import { radius, useTheme } from '@/theme'
 
 const FILTERS: [HistoryFilter, string][] = [['all', 'Tất cả'], ['upcoming', 'Sắp diễn ra'], ['past', 'Đã qua'], ['cancelled', 'Đã hủy']]
 
@@ -38,32 +40,60 @@ export default function EventHistoryScreen() {
         <FlashList
           data={items}
           keyExtractor={(e) => String(e.registrationId)}
-          contentContainerStyle={{ padding: 12 }}
+          contentContainerStyle={{ padding: 16 }}
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
-          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<CalendarDays size={26} color={palette.primary} />} title="Chưa tham gia sự kiện" text="Sự kiện bạn đăng ký sẽ được lưu lại ở đây." action="Khám phá sự kiện" onAction={() => router.push('/events')} />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<CalendarDays size={26} color={t.primary} />} title="Chưa tham gia sự kiện" text="Sự kiện bạn đăng ký sẽ được lưu lại ở đây." action="Khám phá sự kiện" onAction={() => router.push('/events')} />}
           renderItem={({ item }) => (
-            <Card
-              style={{ marginBottom: 16 }}
-              onPress={() => router.push({ pathname: '/events/[id]', params: { id: String(item.eventId), title: item.title, start: item.startTime ?? '', end: item.endTime ?? '', location: item.location ?? '' } })}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                <Txt weight="800" size={15} style={{ flex: 1 }} numberOfLines={2}>{item.title}</Txt>
-                {item.registrationStatus === 'CANCELLED' || item.eventStatus === 'CANCELLED' ? (
-                  <Tag label="Đã huỷ" tone="danger" />
-                ) : item.attendanceState === 'PAST' ? (
-                  <Tag label="Đã qua" tone="neutral" />
-                ) : (
-                  <Tag label="Sắp diễn ra" tone="success" />
-                )}
-              </View>
-              {item.startTime ? <Txt muted size={13} style={{ marginTop: 6 }}>{new Date(item.startTime).toLocaleString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</Txt> : null}
-              {item.location ? <Txt muted size={13} numberOfLines={1}>{item.location}</Txt> : null}
-            </Card>
+            <HistoryCard item={item} onPress={() => router.push({ pathname: '/events/[id]', params: { id: String(item.eventId) } })} />
           )}
         />
       )}
     </Screen>
+  )
+}
+
+type TagTone = NonNullable<React.ComponentProps<typeof Tag>['tone']>
+
+/** Nhãn theo `attendanceState` do backend tính; phân biệt sự kiện bị hủy với việc tự hủy đăng ký. */
+const STATE_TAG: Record<string, { label: string; tone: TagTone }> = {
+  UPCOMING: { label: 'Sắp diễn ra', tone: 'success' },
+  ONGOING: { label: 'Đang diễn ra', tone: 'primary' },
+  PAST: { label: 'Đã qua', tone: 'neutral' },
+  EVENT_CANCELLED: { label: 'Sự kiện đã hủy', tone: 'danger' },
+  REGISTRATION_CANCELLED: { label: 'Bạn đã hủy đăng ký', tone: 'warning' },
+}
+
+/** Thẻ lịch sử: ảnh bìa hoặc ô lịch, ngày giờ nổi bật, tiêu đề, địa điểm và trạng thái tham gia. */
+function HistoryCard({ item, onPress }: { item: EventHistoryItem; onPress: () => void }) {
+  const t = useTheme()
+  const start = item.startTime ? new Date(item.startTime) : null
+  const state = item.attendanceState
+  const cancelled = state === 'EVENT_CANCELLED' || state === 'REGISTRATION_CANCELLED'
+  const past = state === 'PAST'
+  const tag = STATE_TAG[state] ?? STATE_TAG.UPCOMING
+  const place = locationLabel(item.location)
+  return (
+    <Card style={{ marginBottom: 12, flexDirection: 'row', gap: 12, alignItems: 'center' }} onPress={onPress}>
+      {item.coverUrl ? (
+        <Image source={{ uri: item.coverUrl }} style={{ width: 64, height: 64, borderRadius: radius.md, backgroundColor: t.inputBg, opacity: cancelled ? 0.6 : 1 }} contentFit="cover" cachePolicy="disk" />
+      ) : start ? (
+        <DateBadge date={start} size={56} />
+      ) : null}
+      <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+        {start ? <Txt size={12} weight="700" color={cancelled || past ? t.textMuted : t.primary} numberOfLines={1}>{eventEyebrow(start)}</Txt> : null}
+        <Txt weight="700" size={15} numberOfLines={2}>{item.title}</Txt>
+        {place ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            {isOnlineLocation(item.location) ? <Globe size={13} color={t.textMuted} /> : <MapPin size={13} color={t.textMuted} />}
+            <Txt muted size={13} numberOfLines={1} style={{ flex: 1 }}>{place}</Txt>
+          </View>
+        ) : null}
+        <View style={{ marginTop: 4 }}>
+          <Tag label={tag.label} tone={tag.tone} />
+        </View>
+      </View>
+    </Card>
   )
 }
