@@ -131,4 +131,20 @@ public interface SalaryContributionRepository extends JpaRepository<SalaryContri
             @Param("filterByRegion") boolean filterByRegion, @Param("region") String region,
             @Param("filterByJobTitle") boolean filterByJobTitle, @Param("jobTitle") String jobTitle,
             @Param("filterByLevel") boolean filterByLevel, @Param("level") String level);
+
+    /**
+     * Dải lương nội bộ AlumNect (A1): [min, trung vị, max, số mẫu] của các bản ghi VND khớp bộ lọc. Hàm tổng hợp
+     * không có GROUP BY nên luôn trả đúng 1 hàng (các cột null / count = 0 nếu không có mẫu nào khớp).
+     */
+    @Query(value = "SELECT MIN(gross_amount), "
+            + "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY gross_amount), "
+            + "MAX(gross_amount), COUNT(*) "
+            + "FROM salary_contributions "
+            + "WHERE currency = 'VND' "
+            + "AND " + FILTER_WHERE_CLAUSE, nativeQuery = true)
+    List<Object[]> findInternalRangeVnd(
+            @Param("filterByIndustry") boolean filterByIndustry, @Param("industryId") Long industryId,
+            @Param("filterByRegion") boolean filterByRegion, @Param("region") String region,
+            @Param("filterByJobTitle") boolean filterByJobTitle, @Param("jobTitle") String jobTitle,
+            @Param("filterByLevel") boolean filterByLevel, @Param("level") String level);
 }
