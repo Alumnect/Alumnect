@@ -15,6 +15,7 @@ import type { AuthUser } from '@/store/authStore'
 import { feedApi } from '../api/feedApi'
 import { useCreatePost } from '../hooks/useCreatePost'
 import { useEditPost } from '../hooks/useEditPost'
+import { PostAiStudioPanel } from './PostAiStudioPanel'
 import { PlaceAutocomplete } from '@/features/user/components/PlaceAutocomplete'
 import { createPostSchema, POST_TYPE_LABELS, POST_CONTENT_MAX } from '../model/createPost'
 import type { CreatePostInput } from '../model/createPost'
@@ -291,466 +292,515 @@ export function CreatePostModal({
   /** Xóa ảnh tại vị trí idx khỏi danh sách. */
   const removeImage = (idx: number) => {
     const current = watch('mediaUrls') ?? []
+    if (current.length === 0 && imageUrl) {
+      setValue('imageUrl', undefined)
+      return
+    }
     setValue('mediaUrls', current.filter((_, i) => i !== idx), { shouldValidate: true })
+  }
+
+  /** Tải Poster `.png` lên R2 rồi gắn vào `mediaUrls` (đặt đầu danh sách, thay thế Poster đã đính kèm trước đó). */
+  const attachPoster = async (file: File, previousUrl: string | null, reuseUrl?: string | null): Promise<string> => {
+    const url = reuseUrl || (await feedApi.uploadPostImage(file))
+    const current = (watch('mediaUrls') ?? []).filter((u) => u && u !== previousUrl && u !== url)
+    setValue('mediaUrls', [url, ...current].slice(0, 10), { shouldValidate: true })
+    setValue('imageUrl', undefined)
+    return url
   }
 
   if (!open) return null
 
   return (
     <DialogFrame onClose={close} zIndexClassName="z-[9999]" maxWidthClassName="max-w-xl" className="overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 pb-4 border-b border-border bg-surface shrink-0">
-              <h3 className="text-xl font-bold text-text">
-                {editPost ? t('feed.editPost') : t('feed.createPost')}
-              </h3>
-              <button
-                type="button"
-                onClick={close}
-                aria-label={t('common.close')}
-                className="grid h-9 w-9 place-items-center rounded-xl text-text-subtle hover:bg-surface-2 hover:text-text transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 pb-4 border-b border-border bg-surface shrink-0">
+        <h3 className="text-xl font-bold text-text">
+          {editPost ? t('feed.editPost') : t('feed.createPost')}
+        </h3>
+        <button
+          type="button"
+          onClick={close}
+          aria-label={t('common.close')}
+          className="grid h-9 w-9 place-items-center rounded-xl text-text-subtle hover:bg-surface-2 hover:text-text transition-colors cursor-pointer"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0" noValidate>
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4">
+          {/* Tác giả */}
+          <div className="flex items-center gap-3">
+            <Avatar src={viewer.avatarUrl ?? ''} name={viewer.name} size={44} verified={viewer.verified} />
+            <div className="min-w-0">
+              <p className="truncate font-bold text-text">{viewer.name}</p>
             </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0" noValidate>
-              {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4">
-                {/* Tác giả */}
-                <div className="flex items-center gap-3">
-                  <Avatar src={viewer.avatarUrl ?? ''} name={viewer.name} size={44} verified={viewer.verified} />
-                  <div className="min-w-0">
-                    <p className="truncate font-bold text-text">{viewer.name}</p>
-                  </div>
-                </div>
-                {/* Nội dung (Ẩn đi nếu là Sự kiện, vì Sự kiện sẽ có form mô tả riêng bên trong khối sự kiện) */}
-                {type !== 'event' && (
-                  <div>
-                    <textarea
-                      {...register('content')}
-                      rows={5}
-                      maxLength={POST_CONTENT_MAX}
-                      aria-label={t('feed.contentLabel')}
-                      placeholder={type === 'recruitment' ? t('feed.recruitmentPrompt') : t('feed.sharePrompt')}
-                      className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-4 text-[15px] leading-relaxed text-text outline-none transition-colors placeholder:text-text-subtle focus:border-primary transition duration-300 focus:bg-surface dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                    />
-                    <div className="mt-1 flex items-center justify-between">
-                      {errors.content ? (
-                        <span className="text-xs font-medium text-danger">{errors.content.message}</span>
-                      ) : (
-                        <span />
-                      )}
-                      <span className="text-xs text-text-subtle dark:text-text-muted">
-                        {content.length}/{POST_CONTENT_MAX}
-                      </span>
-                    </div>
-                  </div>
+          </div>
+          {/* Nội dung (Ẩn đi nếu là Sự kiện, vì Sự kiện sẽ có form mô tả riêng bên trong khối sự kiện) */}
+          {type !== 'event' && (
+            <div>
+              <textarea
+                {...register('content')}
+                rows={5}
+                maxLength={POST_CONTENT_MAX}
+                aria-label={t('feed.contentLabel')}
+                placeholder={type === 'recruitment' ? t('feed.recruitmentPrompt') : t('feed.sharePrompt')}
+                className="w-full resize-none rounded-2xl border border-border bg-surface-2 p-4 text-[15px] leading-relaxed text-text outline-none transition-colors placeholder:text-text-subtle focus:border-primary transition duration-300 focus:bg-surface dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
+              />
+              <div className="mt-1 flex items-center justify-between">
+                {errors.content ? (
+                  <span className="text-xs font-medium text-danger">{errors.content.message}</span>
+                ) : (
+                  <span />
                 )}
+                <span className="text-xs text-text-subtle dark:text-text-muted">
+                  {content.length}/{POST_CONTENT_MAX}
+                </span>
+              </div>
+            </div>
+          )}
 
-                {/* Chọn loại bài viết */}
-                <div className="flex flex-wrap gap-2">
-                  {POST_TYPES.map((postType) => {
-                    const Icon = TYPE_ICONS[postType] ?? FileText
-                    const label = postType === 'normal'
-                      ? t('feed.typeNormal')
-                      : postType === 'achievement'
-                      ? t('feed.typeAchievement')
-                      : postType === 'recruitment'
-                      ? t('feed.typeRecruitment')
-                      : postType === 'event'
+          {/* Chọn loại bài viết */}
+          <div className="flex flex-wrap gap-2">
+            {POST_TYPES.map((postType) => {
+              const Icon = TYPE_ICONS[postType] ?? FileText
+              const label = postType === 'normal'
+                ? t('feed.typeNormal')
+                : postType === 'achievement'
+                  ? t('feed.typeAchievement')
+                  : postType === 'recruitment'
+                    ? t('feed.typeRecruitment')
+                    : postType === 'event'
                       ? t('feed.typeEvent')
                       : POST_TYPE_LABELS[postType]
-                    return (
-                      <button
-                        key={postType}
-                        type="button"
-                        disabled={!!editPost}
-                        onClick={() => setValue('type', postType)}
-                        className={cn(
-                          'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed',
-                          type === postType
-                            ? 'bg-primary-solid text-on-primary shadow-sm enabled:hover:bg-brand-700'
-                            : 'bg-surface text-text-muted border border-border enabled:hover:border-brand-300 enabled:hover:text-brand-600 dark:border-border-strong dark:enabled:hover:border-brand-400 dark:enabled:hover:text-brand-400'
-                        )}
-                      >
-                        <Icon size={15} /> {label}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {/* Form Tuyển dụng */}
-                {type === 'recruitment' && (
-                  <div className="space-y-4 rounded-xl border border-brand-500/10 bg-brand-50/40 p-4 animate-fade-in dark:border-brand-500/25 dark:bg-bg">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-primary-solid">
-                      <Briefcase size={16} /> {t('feed.recruitmentInfo')}
-                    </h4>
-                    {/* Chức danh + Công ty */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          {t('feed.jobTitle')} <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          {...register('job.title')}
-                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                          placeholder="VD: Frontend Developer"
-                        />
-                        {errors.job?.title && <p className="mt-1 text-xs text-danger">{errors.job.title.message}</p>}
-                      </div>
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          {t('feed.company')} <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          {...register('job.company')}
-                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                          placeholder="VD: FPT Software"
-                        />
-                        {errors.job?.company && <p className="mt-1 text-xs text-danger">{errors.job.company.message}</p>}
-                      </div>
-                    </div>
-
-                    {/* Địa điểm */}
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <MapPin size={13} /> {t('feed.location')}
-                        </label>
-                        <Controller
-                          control={control}
-                          name="job.location"
-                          render={({ field }) => (
-                            <PlaceAutocomplete
-                              value={field.value || ''}
-                              onChange={(val) => field.onChange(val)}
-                              onSelect={(place) => field.onChange(place?.location || '')}
-                              placeholder={t('feed.locationPlaceholder', 'Hà Nội, Remote...')}
-                              inputClassName="!rounded-lg !py-2 h-[38px] text-sm dark:!border-border-strong dark:!bg-surface dark:!text-text"
-                            />
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Mức lương */}
-                    <div>
-                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                        <Coins size={13} className="text-success" /> {t('feed.salaryVND')} <span className="font-normal text-text-subtle dark:text-text-muted">— {t('feed.salaryNegotiableHint')}</span>
-                      </label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min={0}
-                            step={500000}
-                            {...register('job.salaryMin', { valueAsNumber: true })}
-                            className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                            placeholder={t('feed.salaryPlaceholderMin')}
-                          />
-                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VND</span>
-                        </div>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min={0}
-                            step={500000}
-                            {...register('job.salaryMax', { valueAsNumber: true })}
-                            className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                            placeholder={t('feed.salaryPlaceholderMax')}
-                          />
-                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VND</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Email + Link */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Mail size={13} /> {t('feed.contactEmail')}
-                        </label>
-                        <input
-                          {...register('job.contactEmail')}
-                          type="email"
-                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                          placeholder="hr@company.com"
-                        />
-                        {errors.job?.contactEmail && <p className="mt-1 text-xs text-danger">{errors.job.contactEmail.message}</p>}
-                      </div>
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Link size={13} /> {t('feed.applyUrl')}
-                        </label>
-                        <input
-                          {...register('job.applyUrl')}
-                          type="url"
-                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                          placeholder="https://..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {type === 'event' && (
-                  <div className="space-y-4 rounded-xl border border-info bg-info-soft p-4 animate-fade-in dark:bg-bg">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-info">
-                      <CalendarPlus size={16} /> {t('feed.eventInfo')}
-                    </h4>
-                    {/* Tên sự kiện */}
-                    <div>
-                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                        {t('feed.eventTitle')} <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        {...register('event.title')}
-                        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                        placeholder={t('feed.eventTitlePlaceholder')}
-                      />
-                      {errors.event?.title && <p className="mt-1 text-xs text-danger">{errors.event.title.message}</p>}
-                    </div>
-
-                    {/* Thời gian */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Clock size={13} /> {t('feed.startTime')} <span className="text-danger">*</span>
-                        </label>
-                        <Controller
-                          control={control}
-                          name="event.startTime"
-                          render={({ field }) => (
-                            <DatePicker
-                              selected={field.value ? new Date(field.value) : null}
-                              onChange={(date: Date | null) => field.onChange(date ? date.toISOString() : undefined)}
-                              showTimeSelect
-                              timeFormat="HH:mm"
-                              timeIntervals={15}
-                              dateFormat="dd/MM/yyyy h:mm aa"
-                              showMonthDropdown
-                              showYearDropdown
-                              dropdownMode="select"
-                              minDate={new Date()}
-                              placeholderText={t('feed.selectDateTime')}
-                              wrapperClassName="w-full"
-                              popperPlacement="bottom-start"
-                              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
-                            />
-                          )}
-                        />
-                        {errors.event?.startTime && <p className="mt-1 text-xs text-danger">{errors.event.startTime.message}</p>}
-                      </div>
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Clock size={13} /> {t('feed.endTime')}
-                        </label>
-                        <Controller
-                          control={control}
-                          name="event.endTime"
-                          render={({ field }) => (
-                            <DatePicker
-                              selected={field.value ? new Date(field.value) : null}
-                              onChange={(date: Date | null) => field.onChange(date ? date.toISOString() : undefined)}
-                              showTimeSelect
-                              timeFormat="HH:mm"
-                              timeIntervals={15}
-                              dateFormat="dd/MM/yyyy h:mm aa"
-                              showMonthDropdown
-                              showYearDropdown
-                              dropdownMode="select"
-                              minDate={watch('event.startTime') ? new Date(watch('event.startTime') as string) : new Date()}
-                              placeholderText={t('feed.selectDateTime')}
-                              wrapperClassName="w-full"
-                              popperPlacement="bottom-end"
-                              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
-                            />
-                          )}
-                        />
-                        {errors.event?.endTime && <p className="mt-1 text-xs text-danger">{errors.event.endTime.message}</p>}
-                      </div>
-                    </div>
-
-                    {/* Địa điểm + Sức chứa */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <MapPin size={13} /> {t('feed.eventLocation')}
-                        </label>
-                        <Controller
-                          control={control}
-                          name="event.location"
-                          render={({ field }) => (
-                            <PlaceAutocomplete
-                              value={field.value || ''}
-                              onChange={(val) => field.onChange(val)}
-                              onSelect={(place) => field.onChange(place?.location || '')}
-                              placeholder={t('feed.eventLocationPlaceholder')}
-                              inputClassName="!rounded-lg !py-2 h-[38px] text-sm dark:!border-border-strong dark:!bg-surface dark:!text-text"
-                            />
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                          <Users size={13} /> {t('feed.eventCapacity')}
-                        </label>
-                        <input
-                          type="number"
-                          min={currentAttendees > 0 ? currentAttendees : 1}
-                          {...register('event.capacity', { valueAsNumber: true })}
-                          className="w-full h-[38px] rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:focus:border-primary"
-                        />
-                        {errors.event?.capacity && (
-                          <p className="mt-1 text-xs text-danger">{errors.event.capacity.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Mô tả sự kiện */}
-                    <div className="pt-2 border-t border-info mt-4">
-                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                        <FileText size={13} /> {t('feed.eventDescription')}
-                      </label>
-                      <textarea
-                        {...register('content')}
-                        rows={4}
-                        maxLength={POST_CONTENT_MAX}
-                        placeholder={t('feed.eventDescriptionPlaceholder')}
-                        className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm leading-relaxed text-text outline-none focus:border-primary transition duration-300 focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
-                      />
-                    </div>
-
-                    {/* Ảnh sự kiện */}
-                    <div className="pt-2">
-                      <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
-                        <ImageIcon size={13} /> {t('feed.eventPhotos')}
-                      </label>
-                      {allImages.length > 0 && (
-                        <div className="space-y-2 mb-2">
-                          <ImageCarousel images={allImages} height={180} altPrefix={t('feed.previewAltPrefix')} className="rounded-xl" />
-                          <div className="flex gap-1.5 flex-wrap">
-                            {allImages.map((url, idx) => {
-                              const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
-                              return (
-                                <div key={idx} className="relative group w-10 h-10 rounded-lg overflow-hidden border border-border shrink-0 bg-black/10 dark:border-border-strong">
-                                  {isVid ? (
-                                    <video src={url} className="h-full w-full object-cover" />
-                                  ) : (
-                                    <img src={url} alt={t('common.imageIndex', { index: idx + 1 })} className="h-full w-full object-cover" />
-                                  )}
-                                  <button aria-label={t('common.delete')}
-                                    type="button"
-                                    onClick={() => removeImage(idx)}
-                                    className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <Trash2 size={13} className="text-white" />
-                                  </button>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      {allImages.length < 10 && (
-                        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border-strong px-4 py-2 text-xs font-semibold text-text-subtle transition-colors hover:bg-surface dark:border-border-strong dark:bg-surface dark:hover:bg-[#2a2b2d]">
-                          {isUploading ? (
-                            <><Loader2 size={14} className="animate-spin" /> {t('feed.uploadingMedia', { count: uploadingCount })}</>
-                          ) : (
-                            <><ImageIcon size={14} className="text-info" /> {allImages.length > 0 ? t('feed.uploadMoreMedia') : t('feed.uploadMedia')}</>
-                          )}
-                          <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Ảnh đính kèm (Ẩn nếu là Sự kiện vì đã có ở trên) */}
-                {type !== 'event' && (
-                  <>
-                    {allImages.length > 0 && (
-                      <div className="space-y-2">
-                        <ImageCarousel images={allImages} height={280} altPrefix={t('feed.previewAltPrefix')} className="rounded-xl" />
-                        <div className="flex gap-1.5 flex-wrap">
-                          {allImages.map((url, idx) => {
-                            const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
-                            return (
-                              <div key={idx} className="relative group w-12 h-12 rounded-lg overflow-hidden border border-border shrink-0 bg-black/10">
-                                {isVid ? (
-                                  <video src={url} className="h-full w-full object-cover" />
-                                ) : (
-                                  <img src={url} alt={t('common.imageIndex', { index: idx + 1 })} className="h-full w-full object-cover" />
-                                )}
-                                <button aria-label={t('common.delete')}
-                                  type="button"
-                                  onClick={() => removeImage(idx)}
-                                  className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <Trash2 size={13} className="text-white" />
-                                </button>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
-                    {allImages.length < 10 && (
-                      <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border-strong px-4 py-3 text-sm font-semibold text-text-subtle transition-colors hover:bg-surface-2">
-                        {isUploading ? (
-                          <><Loader2 size={16} className="animate-spin" /> {t('feed.uploadingMedia', { count: uploadingCount })}</>
-                        ) : (
-                          <><ImageIcon size={16} className="text-aqua-500" /> {allImages.length > 0 ? t('feed.uploadMoreMedia') : t('feed.addPhotosVideos')}</>
-                        )}
-                        <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
-                      </label>
-                    )}
-                  </>
-                )}
-                {uploadError && <p className="text-xs font-medium text-danger">{uploadError}</p>}
-
-                {/* Cảnh báo sự kiện đã kết thúc hoặc bị hủy không thể sửa */}
-                {isEventImmutable && (
-                  <div className="flex items-start gap-2 rounded-xl border border-warning-border bg-warning-soft p-3 text-xs text-warning">
-                    <AlertCircle size={15} className="mt-0.5 shrink-0 text-warning" />
-                    <span>
-                      {isEventCancelled
-                        ? t('feed.eventCancelledWarning')
-                        : t('feed.eventEndedWarning')}
-                    </span>
-                  </div>
-                )}
-
-                {/* Thông điệp lỗi nghiệp vụ từ Backend */}
-                {activeMutation.isError && (
-                  <div className="flex items-start gap-2 rounded-xl border border-danger-border bg-danger-soft p-3 text-xs text-danger">
-                    <AlertCircle size={15} className="mt-0.5 shrink-0" />
-                    <span>{(activeMutation.error as Error).message}</span>
-                  </div>
-                )}
-
-              </div>
-
-              {/* Sticky Action Footer */}
-              <div className="shrink-0 border-t border-border bg-surface px-6 md:px-8 py-4 flex items-center justify-end gap-3">
-                <Button type="button" variant="secondary" onClick={close}>
-                  {t('common.cancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={activeMutation.isPending || isUploading || isEventImmutable}
-                  leftIcon={activeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
+              return (
+                <button
+                  key={postType}
+                  type="button"
+                  disabled={!!editPost}
+                  onClick={() => setValue('type', postType)}
+                  className={cn(
+                    'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed',
+                    type === postType
+                      ? 'bg-primary-solid text-on-primary shadow-sm enabled:hover:bg-brand-700'
+                      : 'bg-surface text-text-muted border border-border enabled:hover:border-brand-300 enabled:hover:text-brand-600 dark:border-border-strong dark:enabled:hover:border-brand-400 dark:enabled:hover:text-brand-400'
+                  )}
                 >
-                  {editPost
-                    ? activeMutation.isPending
-                      ? t('feed.savingAction')
-                      : t('feed.saveAction')
-                    : activeMutation.isPending
-                      ? t('feed.postingAction')
-                      : t('feed.postAction')}
-                </Button>
+                  <Icon size={15} /> {label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Form Tuyển dụng */}
+          {type === 'recruitment' && (
+            <div className="space-y-4 rounded-xl border border-brand-500/10 bg-brand-50/40 p-4 animate-fade-in dark:border-brand-500/25 dark:bg-bg">
+              <h4 className="flex items-center gap-2 text-sm font-bold text-primary-solid">
+                <Briefcase size={16} /> {t('feed.recruitmentInfo')}
+              </h4>
+              {/* Chức danh + Công ty */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    {t('feed.jobTitle')} <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    {...register('job.title')}
+                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                    placeholder="VD: Frontend Developer"
+                  />
+                  {errors.job?.title && <p className="mt-1 text-xs text-danger">{errors.job.title.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    {t('feed.company')} <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    {...register('job.company')}
+                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                    placeholder="VD: FPT Software"
+                  />
+                  {errors.job?.company && <p className="mt-1 text-xs text-danger">{errors.job.company.message}</p>}
+                </div>
               </div>
-            </form>
+
+              {/* Địa điểm */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    <MapPin size={13} /> {t('feed.location')}
+                  </label>
+                  <Controller
+                    control={control}
+                    name="job.location"
+                    render={({ field }) => (
+                      <PlaceAutocomplete
+                        value={field.value || ''}
+                        onChange={(val) => field.onChange(val)}
+                        onSelect={(place) => field.onChange(place?.location || '')}
+                        placeholder={t('feed.locationPlaceholder', 'Hà Nội, Remote...')}
+                        inputClassName="!rounded-lg !py-2 h-[38px] text-sm dark:!border-border-strong dark:!bg-surface dark:!text-text"
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Mức lương */}
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                  <Coins size={13} className="text-success" /> {t('feed.salaryVND')} <span className="font-normal text-text-subtle dark:text-text-muted">— {t('feed.salaryNegotiableHint')}</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={500000}
+                      {...register('job.salaryMin', { valueAsNumber: true })}
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                      placeholder={t('feed.salaryPlaceholderMin')}
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VND</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={500000}
+                      {...register('job.salaryMax', { valueAsNumber: true })}
+                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-14 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                      placeholder={t('feed.salaryPlaceholderMax')}
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-text-subtle dark:text-text-muted">VND</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email + Link */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    <Mail size={13} /> {t('feed.contactEmail')}
+                  </label>
+                  <input
+                    {...register('job.contactEmail')}
+                    type="email"
+                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                    placeholder="hr@company.com"
+                  />
+                  {errors.job?.contactEmail && <p className="mt-1 text-xs text-danger">{errors.job.contactEmail.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    <Link size={13} /> {t('feed.applyUrl')}
+                  </label>
+                  <input
+                    {...register('job.applyUrl')}
+                    type="url"
+                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              {/* AI Poster Studio cho bài Tuyển dụng */}
+              {!editPost && (
+                <div className="pt-2">
+                  <PostAiStudioPanel
+                    viewerName={viewer.name}
+                    currentType="recruitment"
+                    title={watch('job.title')}
+                    company={watch('job.company')}
+                    location={watch('job.location')}
+                    salaryMin={watch('job.salaryMin')}
+                    salaryMax={watch('job.salaryMax')}
+                    content={content}
+                    currentMediaUrls={allImages}
+                    onAttachPoster={attachPoster}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {type === 'event' && (
+            <div className="space-y-4 rounded-xl border border-info bg-info-soft p-4 animate-fade-in dark:bg-bg">
+              <h4 className="flex items-center gap-2 text-sm font-bold text-info">
+                <CalendarPlus size={16} /> {t('feed.eventInfo')}
+              </h4>
+              {/* Tên sự kiện */}
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                  {t('feed.eventTitle')} <span className="text-danger">*</span>
+                </label>
+                <input
+                  {...register('event.title')}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                  placeholder={t('feed.eventTitlePlaceholder')}
+                />
+                {errors.event?.title && <p className="mt-1 text-xs text-danger">{errors.event.title.message}</p>}
+              </div>
+
+              {/* Thời gian */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    <Clock size={13} /> {t('feed.startTime')} <span className="text-danger">*</span>
+                  </label>
+                  <Controller
+                    control={control}
+                    name="event.startTime"
+                    render={({ field }) => (
+                      <DatePicker
+                        selected={field.value ? new Date(field.value) : null}
+                        onChange={(date: Date | null) => field.onChange(date ? date.toISOString() : undefined)}
+                        showTimeSelect
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="dd/MM/yyyy h:mm aa"
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
+                        minDate={new Date()}
+                        placeholderText={t('feed.selectDateTime')}
+                        wrapperClassName="w-full"
+                        popperPlacement="bottom-start"
+                        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
+                      />
+                    )}
+                  />
+                  {errors.event?.startTime && <p className="mt-1 text-xs text-danger">{errors.event.startTime.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    <Clock size={13} /> {t('feed.endTime')}
+                  </label>
+                  <Controller
+                    control={control}
+                    name="event.endTime"
+                    render={({ field }) => (
+                      <DatePicker
+                        selected={field.value ? new Date(field.value) : null}
+                        onChange={(date: Date | null) => field.onChange(date ? date.toISOString() : undefined)}
+                        showTimeSelect
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="dd/MM/yyyy h:mm aa"
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
+                        minDate={watch('event.startTime') ? new Date(watch('event.startTime') as string) : new Date()}
+                        placeholderText={t('feed.selectDateTime')}
+                        wrapperClassName="w-full"
+                        popperPlacement="bottom-end"
+                        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text"
+                      />
+                    )}
+                  />
+                  {errors.event?.endTime && <p className="mt-1 text-xs text-danger">{errors.event.endTime.message}</p>}
+                </div>
+              </div>
+
+              {/* Địa điểm + Sức chứa */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    <MapPin size={13} /> {t('feed.eventLocation')}
+                  </label>
+                  <Controller
+                    control={control}
+                    name="event.location"
+                    render={({ field }) => (
+                      <PlaceAutocomplete
+                        value={field.value || ''}
+                        onChange={(val) => field.onChange(val)}
+                        onSelect={(place) => field.onChange(place?.location || '')}
+                        placeholder={t('feed.eventLocationPlaceholder')}
+                        inputClassName="!rounded-lg !py-2 h-[38px] text-sm dark:!border-border-strong dark:!bg-surface dark:!text-text"
+                      />
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                    <Users size={13} /> {t('feed.eventCapacity')}
+                  </label>
+                  <input
+                    type="number"
+                    min={currentAttendees > 0 ? currentAttendees : 1}
+                    {...register('event.capacity', { valueAsNumber: true })}
+                    className="w-full h-[38px] rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:text-text dark:focus:border-primary"
+                  />
+                  {errors.event?.capacity && (
+                    <p className="mt-1 text-xs text-danger">{errors.event.capacity.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Mô tả sự kiện */}
+              <div className="pt-2 border-t border-info mt-4">
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                  <FileText size={13} /> {t('feed.eventDescription')}
+                </label>
+                <textarea
+                  {...register('content')}
+                  rows={4}
+                  maxLength={POST_CONTENT_MAX}
+                  placeholder={t('feed.eventDescriptionPlaceholder')}
+                  className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm leading-relaxed text-text outline-none focus:border-primary transition duration-300 focus:ring-2 focus:ring-primary/20 dark:border-border-strong dark:placeholder-[#9ca3af] dark:focus:border-primary"
+                />
+              </div>
+
+              {/* Ảnh sự kiện */}
+              <div className="pt-2">
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-text">
+                  <ImageIcon size={13} /> {t('feed.eventPhotos')}
+                </label>
+                {allImages.length > 0 && (
+                  <div className="space-y-2 mb-2">
+                    <ImageCarousel images={allImages} height={180} altPrefix={t('feed.previewAltPrefix')} className="rounded-xl" />
+                    <div className="flex gap-1.5 flex-wrap">
+                      {allImages.map((url, idx) => {
+                        const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
+                        return (
+                          <div key={idx} className="relative group w-10 h-10 rounded-lg overflow-hidden border border-border shrink-0 bg-black/10 dark:border-border-strong">
+                            {isVid ? (
+                              <video src={url} className="h-full w-full object-cover" />
+                            ) : (
+                              <img src={url} alt={t('common.imageIndex', { index: idx + 1 })} className="h-full w-full object-cover" />
+                            )}
+                            <button aria-label={t('common.delete')}
+                              type="button"
+                              onClick={() => removeImage(idx)}
+                              className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 size={13} className="text-white" />
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+                {allImages.length < 10 && (
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border-strong px-4 py-2 text-xs font-semibold text-text-subtle transition-colors hover:bg-surface dark:border-border-strong dark:bg-surface dark:hover:bg-[#2a2b2d]">
+                    {isUploading ? (
+                      <><Loader2 size={14} className="animate-spin" /> {t('feed.uploadingMedia', { count: uploadingCount })}</>
+                    ) : (
+                      <><ImageIcon size={14} className="text-info" /> {allImages.length > 0 ? t('feed.uploadMoreMedia') : t('feed.uploadMedia')}</>
+                    )}
+                    <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
+                  </label>
+                )}
+              </div>
+
+              {/* AI Poster Studio cho bài Sự kiện */}
+              {!editPost && (
+                <div className="pt-2">
+                  <PostAiStudioPanel
+                    viewerName={viewer.name}
+                    currentType="event"
+                    title={watch('event.title')}
+                    location={watch('event.location')}
+                    startTime={watch('event.startTime') as string}
+                    endTime={watch('event.endTime') as string}
+                    capacity={watch('event.capacity')}
+                    content={content}
+                    currentMediaUrls={allImages}
+                    onAttachPoster={attachPoster}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Ảnh đính kèm (Ẩn nếu là Sự kiện vì đã có ở trên) */}
+          {type !== 'event' && (
+            <>
+              {allImages.length > 0 && (
+                <div className="space-y-2">
+                  <ImageCarousel images={allImages} height={280} altPrefix={t('feed.previewAltPrefix')} className="rounded-xl" />
+                  <div className="flex gap-1.5 flex-wrap">
+                    {allImages.map((url, idx) => {
+                      const isVid = ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some((ext) => url.toLowerCase().endsWith(ext)) || url.toLowerCase().includes('/video/')
+                      return (
+                        <div key={idx} className="relative group w-12 h-12 rounded-lg overflow-hidden border border-border shrink-0 bg-black/10">
+                          {isVid ? (
+                            <video src={url} className="h-full w-full object-cover" />
+                          ) : (
+                            <img src={url} alt={t('common.imageIndex', { index: idx + 1 })} className="h-full w-full object-cover" />
+                          )}
+                          <button aria-label={t('common.delete')}
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={13} className="text-white" />
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              {allImages.length < 10 && (
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border-strong px-4 py-3 text-sm font-semibold text-text-subtle transition-colors hover:bg-surface-2">
+                  {isUploading ? (
+                    <><Loader2 size={16} className="animate-spin" /> {t('feed.uploadingMedia', { count: uploadingCount })}</>
+                  ) : (
+                    <><ImageIcon size={16} className="text-aqua-500" /> {allImages.length > 0 ? t('feed.uploadMoreMedia') : t('feed.addPhotosVideos')}</>
+                  )}
+                  <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} disabled={isUploading} />
+                </label>
+              )}
+            </>
+          )}
+          {uploadError && <p className="text-xs font-medium text-danger">{uploadError}</p>}
+
+          {/* Cảnh báo sự kiện đã kết thúc hoặc bị hủy không thể sửa */}
+          {isEventImmutable && (
+            <div className="flex items-start gap-2 rounded-xl border border-warning-border bg-warning-soft p-3 text-xs text-warning">
+              <AlertCircle size={15} className="mt-0.5 shrink-0 text-warning" />
+              <span>
+                {isEventCancelled
+                  ? t('feed.eventCancelledWarning')
+                  : t('feed.eventEndedWarning')}
+              </span>
+            </div>
+          )}
+
+          {/* Thông điệp lỗi nghiệp vụ từ Backend */}
+          {activeMutation.isError && (
+            <div className="flex items-start gap-2 rounded-xl border border-danger-border bg-danger-soft p-3 text-xs text-danger">
+              <AlertCircle size={15} className="mt-0.5 shrink-0" />
+              <span>{(activeMutation.error as Error).message}</span>
+            </div>
+          )}
+
+        </div>
+
+        {/* Sticky Action Footer */}
+        <div className="shrink-0 border-t border-border bg-surface px-6 md:px-8 py-4 flex items-center justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={close}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            type="submit"
+            disabled={activeMutation.isPending || isUploading || isEventImmutable}
+            leftIcon={activeMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : undefined}
+          >
+            {editPost
+              ? activeMutation.isPending
+                ? t('feed.savingAction')
+                : t('feed.saveAction')
+              : activeMutation.isPending
+                ? t('feed.postingAction')
+                : t('feed.postAction')}
+          </Button>
+        </div>
+      </form>
     </DialogFrame>
   )
 }

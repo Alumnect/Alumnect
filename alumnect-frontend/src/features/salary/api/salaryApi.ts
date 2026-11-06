@@ -1,6 +1,13 @@
 import http from '@/lib/http'
-import { industrySchema, salaryContributionSchema, salaryStatisticsSchema } from '../model/salary'
-import type { CreateSalaryContributionInput, Industry, SalaryContribution, SalaryStatistics, SalaryStatisticsFilters } from '../model/salary'
+import { industrySchema, salaryAiCheckSchema, salaryContributionSchema, salaryStatisticsSchema } from '../model/salary'
+import type {
+  CreateSalaryContributionInput,
+  Industry,
+  SalaryAiCheck,
+  SalaryContribution,
+  SalaryStatistics,
+  SalaryStatisticsFilters,
+} from '../model/salary'
 
 /**
  * Tầng gọi API cho Salary Board: UC50 (Contribute salary data), UC51 (Edit salary contribution),
@@ -178,5 +185,24 @@ export const salaryApi = {
       totalElements,
       hasMore: inferHasMore(body, items.length),
     }
+  },
+
+  /**
+   * [A1] AI kiểm tra mức lương trước khi đóng góp (KHÔNG lưu dữ liệu): % bất thường so với thị trường, chặn/cảnh báo
+   * và gợi ý sửa nhanh. Gọi `POST /api/v1/salaries/ai-check`; chỉ Cựu sinh viên (BE chặn 403 vai trò khác).
+   */
+  aiCheck: async (input: CreateSalaryContributionInput): Promise<SalaryAiCheck> => {
+    const body = await http.post('/salaries/ai-check', {
+      industryId: input.industryId ?? undefined,
+      jobTitle: input.jobTitle,
+      company: input.company || undefined,
+      region: input.region || undefined,
+      locationCity: input.locationCity || undefined,
+      yearsExperience:
+        typeof input.yearsExperience === 'number' && !Number.isNaN(input.yearsExperience) ? input.yearsExperience : undefined,
+      grossAmount: input.grossAmount,
+    })
+    const b = body as unknown as Record<string, unknown> | undefined
+    return salaryAiCheckSchema.parse((b?.data ?? b) as unknown)
   },
 }

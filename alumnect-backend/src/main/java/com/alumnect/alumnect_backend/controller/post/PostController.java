@@ -4,15 +4,18 @@ import com.alumnect.alumnect_backend.common.api.ApiResponse;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.dto.request.post.CreateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.post.CreatePostRequest;
+import com.alumnect.alumnect_backend.dto.request.post.PostAiStudioRequest;
 import com.alumnect.alumnect_backend.dto.request.post.EditPostRequest;
 import com.alumnect.alumnect_backend.dto.request.post.UpdateCommentRequest;
 import com.alumnect.alumnect_backend.dto.request.report.CreatePostReportRequest;
 import com.alumnect.alumnect_backend.dto.response.post.CommentResponse;
 import com.alumnect.alumnect_backend.dto.response.post.LikeResponse;
+import com.alumnect.alumnect_backend.dto.response.post.PostAiStudioResponse;
 import com.alumnect.alumnect_backend.dto.response.post.PostResponse;
 import com.alumnect.alumnect_backend.dto.response.post.SavePostResponse;
 import com.alumnect.alumnect_backend.dto.response.report.ReportResponse;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
+import com.alumnect.alumnect_backend.service.post.PostAiStudioService;
 import com.alumnect.alumnect_backend.service.post.PostService;
 import com.alumnect.alumnect_backend.service.report.ReportService;
 import jakarta.validation.Valid;
@@ -51,6 +54,9 @@ public class PostController {
 
     @Autowired
     private ReportService reportService;
+
+    @Autowired
+    private PostAiStudioService postAiStudioService;
 
     /**
      * API lấy một trang bài viết trên bảng tin cộng đồng.
@@ -96,6 +102,24 @@ public class PostController {
         PostResponse created = postService.createPost(authentication.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng bài viết thành công", created));
+    }
+
+    /**
+     * API AI Studio [B1]: từ một câu ý tưởng ngắn, trả về bài viết hoàn chỉnh + dữ liệu tự điền form Job/Event +
+     * cấu hình thiết kế Poster trong một lần gọi (~1.5 giây; Gemini chậm/lỗi thì dùng Template cục bộ nên luôn có
+     * kết quả). Yêu cầu đăng nhập; chỉ Sinh viên/Cựu sinh viên được dùng — vai trò khác nhận 403.
+     *
+     * @param request        DTO chứa câu ý tưởng và (tùy chọn) loại bài đang chọn
+     * @param authentication Thông tin xác thực do Spring Security cung cấp
+     * @return Kết quả AI Studio {@link PostAiStudioResponse} bọc trong {@link ApiResponse}, HTTP 200 OK
+     */
+    @PostMapping("/ai-studio")
+    public ResponseEntity<ApiResponse<PostAiStudioResponse>> generateWithAiStudio(
+            @Valid @RequestBody PostAiStudioRequest request,
+            Authentication authentication) {
+
+        PostAiStudioResponse result = postAiStudioService.generate(authentication.getName(), request);
+        return ResponseEntity.ok(ApiResponse.success("AI đã kiến tạo bài viết và poster", result));
     }
 
     /**

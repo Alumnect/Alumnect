@@ -1,10 +1,11 @@
-export { useIndustries, useCreateSalaryContribution, useMyContributions, useUpdateSalaryContribution, useDeleteSalaryContribution, useSalaryStatistics, useSalaryFeed } from './hooks/useSalary'
+export { useIndustries, useCreateSalaryContribution, useMyContributions, useUpdateSalaryContribution, useDeleteSalaryContribution, useSalaryStatistics, useSalaryFeed, useSalaryAiCheck } from './hooks/useSalary'
 export { salaryApi } from './api/salaryApi'
 export {
   industrySchema,
   salaryContributionSchema,
   createSalaryContributionSchema,
   salaryStatisticsSchema,
+  salaryAiCheckSchema,
   MAX_GROSS_AMOUNT,
   SALARY_LEVELS,
   STANDARD_JOB_TITLES,
@@ -14,8 +15,9 @@ export {
   INDUSTRY_ICONS,
   getIndustryIcon,
 } from './model/salary'
-export type { Industry, SalaryContribution, CreateSalaryContributionInput, SalaryStatRow, SalaryStatistics, SalaryLevel, SalaryStatisticsFilters } from './model/salary'
+export type { Industry, SalaryContribution, CreateSalaryContributionInput, SalaryStatRow, SalaryStatistics, SalaryLevel, SalaryStatisticsFilters, SalaryAiCheck } from './model/salary'
 export { ContributeSalaryModal } from './components/ContributeSalaryModal'
 export { MyContributionsModal } from './components/MyContributionsModal'
 export { DeleteSalaryContributionModal } from './components/DeleteSalaryContributionModal'
 export { SalaryContributionsFeed } from './components/SalaryContributionsFeed'
+export { SalaryAiCheckPanel } from './components/SalaryAiCheckPanel'

@@ -25,6 +25,8 @@ import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { useNavigate } from 'react-router-dom'
 import { useCareerPaths, useCareerPathDetail } from '@/features/careerpath/hooks/useCareerPath'
+import { CareerAiCompareModal } from '@/features/careerpath/components/CareerAiCompareModal'
+import { useAuthStore } from '@/store/authStore'
 import { useMajors } from '@/features/auth/hooks/useAuth'
 import type { CareerPathSummaryResponse, ExperienceTimelineResponse } from '@/features/careerpath/api/careerPathApi'
 import { formatPeriodDate } from '@/utils/date'
@@ -104,6 +106,10 @@ export function CareerPage() {
   })
 
   const [selectedAlumni, setSelectedAlumni] = useState<CareerPathSummaryResponse | null>(null)
+  // [C2] AI so sánh lộ trình 1-chạm: chỉ Sinh viên/Cựu sinh viên, và không so sánh với chính mình.
+  const viewer = useAuthStore((s) => s.user)
+  const [compareTarget, setCompareTarget] = useState<CareerPathSummaryResponse | null>(null)
+  const canCompare = (viewer?.role === 'STUDENT' || viewer?.role === 'ALUMNI') && !!selectedAlumni && String(selectedAlumni.userId) !== viewer?.id
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') setSelectedAlumni(null)
@@ -137,7 +143,7 @@ export function CareerPage() {
 
       {/* Search & Filter */}
       <Reveal>
-        <Card hover={false} className="mb-6 p-4 sm:p-5 border border-border shadow-soft bg-surface rounded-3xl">
+        <Card hover={false} className="mb-6 p-4 sm:p-5 border border-border shadow-soft bg-surface rounded-3xl !overflow-visible relative z-20">
           {/* Main search bar + Filter toggle button */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="relative flex-1 w-full">
@@ -187,7 +193,7 @@ export function CareerPage() {
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden"
+                className="!overflow-visible"
               >
                 <div className="mt-4 pt-4 border-t border-border">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -482,6 +488,18 @@ export function CareerPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* [C2] Nút so sánh lộ trình 1-chạm */}
+                  {canCompare && (
+                    <button
+                      type="button"
+                      onClick={() => setCompareTarget(selectedAlumni)}
+                      title={t('career.aiCompareHint')}
+                      className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-primary-solid px-4 py-2.5 text-sm font-bold text-on-primary shadow-raised transition hover:opacity-90 active:scale-[0.99] cursor-pointer"
+                    >
+                      {t('career.aiCompareButton')}
+                    </button>
+                  )}
                 </div>
 
                 {/* ── Scrollable Timeline ── */}
@@ -501,6 +519,15 @@ export function CareerPage() {
           )}
         </AnimatePresence>,
         document.body
+      )}
+
+      {/* [C2] Modal so sánh song song hai lộ trình */}
+      {compareTarget && (
+        <CareerAiCompareModal
+          targetUserId={compareTarget.userId}
+          targetName={compareTarget.fullName}
+          onClose={() => setCompareTarget(null)}
+        />
       )}
     </div>
   )
