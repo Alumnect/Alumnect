@@ -4,8 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { FlashList } from '@shopify/flash-list'
 import { useLocalSearchParams } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MessageCircle } from '@/components/icons'
+
 import { Empty, Loading, Screen, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { Header } from '@/components/Header'
 import { PostCard } from '@/components/PostCard'
 import { ActionSheet } from '@/components/ActionSheet'
@@ -104,7 +105,7 @@ export default function PostDetailScreen() {
             </View>
           }
           ListEmptyComponent={
-            comments.isLoading ? <Loading /> : <Empty icon={<MessageCircle size={26} color={t.primary} />} title="Chưa có bình luận" text="Hãy là người đầu tiên bình luận." />
+            comments.isLoading ? <Loading /> : <Empty icon={<BrandIcon name="chat" size={56} />} title="Chưa có bình luận" text="Hãy là người đầu tiên bình luận." />
           }
           contentContainerStyle={{ paddingBottom: 12 }}
           onEndReached={() => comments.hasNextPage && !comments.isFetchingNextPage && comments.fetchNextPage()}

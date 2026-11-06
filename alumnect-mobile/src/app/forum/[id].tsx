@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BadgeCheck, MessageSquare, MoreHorizontal } from '@/components/icons'
 import { Avatar, Card, Empty, IconButton, Loading, Screen, Tag, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { CommentComposer } from '@/components/Comments'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
@@ -165,7 +166,7 @@ export default function QuestionDetailScreen() {
             </View>
           }
           ListEmptyComponent={
-            answers.isLoading ? <Loading /> : <Empty icon={<MessageSquare size={26} color={t.primary} />} title="Chưa có câu trả lời" text="Chia sẻ kinh nghiệm của bạn để giúp người hỏi." />
+            answers.isLoading ? <Loading /> : <Empty icon={<BrandIcon name="chat" size={56} />} title="Chưa có câu trả lời" text="Chia sẻ kinh nghiệm của bạn để giúp người hỏi." />
           }
           renderItem={({ item }) => (
             <Card style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 8, paddingHorizontal: 0 }}>

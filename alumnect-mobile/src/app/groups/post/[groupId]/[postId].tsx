@@ -3,8 +3,9 @@ import { KeyboardAvoidingView, Platform, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useLocalSearchParams } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MessageCircle } from '@/components/icons'
+
 import { Empty, Loading, Screen, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { CommentBubble, CommentComposer } from '@/components/Comments'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
@@ -72,7 +73,7 @@ export default function GroupPostDetailScreen() {
               <Txt weight="800" size={16} style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>Bình luận</Txt>
             </View>
           }
-          ListEmptyComponent={comments.isLoading ? <Loading /> : <Empty icon={<MessageCircle size={26} color={t.primary} />} title="Chưa có bình luận" text="Hãy là người đầu tiên bình luận." />}
+          ListEmptyComponent={comments.isLoading ? <Loading /> : <Empty icon={<BrandIcon name="chat" size={56} />} title="Chưa có bình luận" text="Hãy là người đầu tiên bình luận." />}
           renderItem={({ item }) => (
             <CommentBubble
               author={item.author.fullName}

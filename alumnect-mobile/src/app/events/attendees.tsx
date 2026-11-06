@@ -3,8 +3,9 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Users } from '@/components/icons'
+
 import { Avatar, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { ListSkeleton } from '@/components/Skeleton'
 import { Header } from '@/components/Header'
 import { eventApi } from '@/api/events'
@@ -59,7 +60,7 @@ export default function AttendeesScreen() {
             <Empty
               error={q.error}
               onRetry={() => { void q.refetch() }}
-              icon={<Users size={28} color={t.primary} />}
+              icon={<BrandIcon name="people" size={56} />}
               title={search ? 'Không tìm thấy' : 'Chưa có người tham gia'}
               text={search ? 'Không có người tham gia nào khớp với tên này.' : 'Những người đăng ký sự kiện sẽ hiển thị ở đây.'}
             />
