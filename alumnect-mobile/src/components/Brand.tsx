@@ -11,7 +11,13 @@ export function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} accessibilityLabel="Alumnect · FPT University">
       {width >= 360 || compact ? <Image source={require('../../assets/fpt-university-logo.png')} style={{ width: 48, height: 30 }} contentFit="contain" /> : null}
-      {!compact ? <Text style={{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: t.text, letterSpacing: -0.7 }}>alumnect<Text style={{ color: t.primary }}>.</Text></Text> : null}
+      {!compact ? (
+        // Giống logo web: chữ viết tay Caveat, "Alum" xanh FPT và "Nect" cam.
+        <Text style={{ fontFamily: 'Caveat_700Bold', fontSize: 30, lineHeight: 34, includeFontPadding: false }}>
+          <Text style={{ fontFamily: 'Caveat_700Bold', color: t.isDark ? '#7CB7FF' : '#004F9E' }}>Alum</Text>
+          <Text style={{ fontFamily: 'Caveat_700Bold', color: t.isDark ? '#FF8C38' : '#C2410C' }}>Nect</Text>
+        </Text>
+      ) : null}
     </View>
   )
 }
