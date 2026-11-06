@@ -5,8 +5,10 @@ import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Bell, Bookmark, BriefcaseBusiness, CalendarDays, Coins, Image as ImageIcon, Map, MessageCircle, Route, Search, Users, X } from '@/components/icons'
-import { Avatar, Empty, IconButton, PillLink, Screen, SearchBar, Segmented, Txt } from '@/components/ui'
+import { Bell, Bookmark, MessageCircle, Plus, Search, X } from '@/components/icons'
+import { Avatar, Empty, IconButton, Screen, SearchBar, Segmented, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
+import type { BrandIconName } from '@/components/BrandIcon'
 import { PostCard } from '@/components/PostCard'
 import { feedApi } from '@/api/feed'
 import type { FeedFilter, Post } from '@/api/feed'
@@ -25,62 +27,50 @@ const FILTERS: [FeedFilter, string][] = [
   ['event', 'Sự kiện'],
 ]
 
-/** Khoảng nền giữa các khối của đầu trang: tách khối bằng khoảng trống thay vì đổ bóng. */
-function Gap() {
+const SHORTCUTS: { key: string; label: string; icon: BrandIconName | 'saved'; href: string }[] = [
+  { key: 'jobs', label: 'Việc làm', icon: 'suitcase', href: '/jobs' },
+  { key: 'events', label: 'Sự kiện', icon: 'calendar', href: '/events' },
+  { key: 'groups', label: 'Hội nhóm', icon: 'people', href: '/groups' },
+  { key: 'map', label: 'Bản đồ', icon: 'pin', href: '/map' },
+  { key: 'career', label: 'Lộ trình', icon: 'list', href: '/career' },
+  { key: 'salary', label: 'Mức lương', icon: 'coin', href: '/salary' },
+  { key: 'saved', label: 'Đã lưu', icon: 'saved', href: '/saved-posts' },
+]
+
+/** Một ô tròn trong dải lối tắt (tương đương story của Instagram): viền cam, nhãn bên dưới. */
+function RailItem({ label, onPress, children, ringColor, badge }: { label: string; onPress: () => void; children: React.ReactNode; ringColor?: string; badge?: boolean }) {
   const t = useTheme()
-  return <View style={{ height: 1, backgroundColor: t.divider }} />
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => ({ width: 72, alignItems: 'center', gap: 6, opacity: pressed ? 0.7 : 1 })}>
+      <View style={{ width: 66, height: 66, borderRadius: 33, borderWidth: 2.5, borderColor: ringColor ?? t.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{children}</View>
+        {badge ? (
+          <View style={{ position: 'absolute', right: -3, bottom: -3, width: 22, height: 22, borderRadius: 11, backgroundColor: t.primary, borderWidth: 2, borderColor: t.card, alignItems: 'center', justifyContent: 'center' }}>
+            <Plus size={13} color={t.onPrimary} weight="bold" />
+          </View>
+        ) : null}
+      </View>
+      <Txt size={11} numberOfLines={1} style={{ maxWidth: 70 }}>{label}</Txt>
+    </Pressable>
+  )
 }
 
-/** Ô soạn bài ở đầu bảng tin (giống Composer trên Web) với lối tắt chọn loại bài. */
-function Composer() {
+/** Dải lối tắt đầu bảng tin: "Bài viết của bạn" + các khu vực của Alumnect, thay cho story. */
+function Rail() {
   const t = useTheme()
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
-  const firstName = user?.name?.trim().split(' ').slice(-1)[0] ?? 'bạn'
-  const go = (type?: string) => router.push(type ? { pathname: '/post/create', params: { type } } : '/post/create')
   return (
-    <View style={{ backgroundColor: t.card, paddingHorizontal: 16, paddingVertical: 12 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <Avatar uri={user?.avatarUrl} name={user?.name} size={44} />
-        <Pressable
-          onPress={() => go()}
-          accessibilityRole="button"
-          accessibilityLabel="Tạo bài viết mới"
-          style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: t.inputBg, justifyContent: 'center', paddingHorizontal: 16 }}
-        >
-          <Txt muted numberOfLines={1}>{`${firstName} ơi, bạn đang nghĩ gì?`}</Txt>
-        </Pressable>
-        <IconButton filled={false} label="Đăng ảnh" icon={<ImageIcon size={24} color={t.primary} weight="duotone" />} onPress={() => go()} />
-      </View>
-    </View>
-  )
-}
-
-function FeedIntro() {
-  const name = useAuthStore((s) => s.user?.name?.trim().split(' ').slice(-1)[0] ?? 'bạn')
-  return (
-    <View style={{ padding: 16, paddingBottom: 8 }}>
-      <Txt heading size={22} weight="500">Chào {name},</Txt>
-      <Txt muted size={13} style={{ marginTop: 4 }}>Câu chuyện mới từ cộng đồng FPTU</Txt>
-    </View>
-  )
-}
-
-/** Hàng lối tắt khám phá: một dòng cuộn ngang thay cho hai hàng ô lớn. */
-function Explore() {
-  const t = useTheme()
-  const router = useRouter()
-  const icon = (Icon: typeof Users) => <Icon size={18} color={t.primary} weight="bold" />
-  return (
-    <View style={{ backgroundColor: t.card }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }}>
-        <PillLink icon={icon(BriefcaseBusiness)} label="Việc làm" onPress={() => router.push('/jobs')} />
-        <PillLink icon={icon(CalendarDays)} label="Sự kiện" onPress={() => router.push('/events')} />
-        <PillLink icon={icon(Users)} label="Hội nhóm" onPress={() => router.push('/groups')} />
-        <PillLink icon={icon(Map)} label="Bản đồ" onPress={() => router.push('/map')} />
-        <PillLink icon={icon(Route)} label="Lộ trình" onPress={() => router.push('/career')} />
-        <PillLink icon={icon(Coins)} label="Mức lương" onPress={() => router.push('/salary')} />
-        <PillLink icon={icon(Bookmark)} label="Đã lưu" onPress={() => router.push('/saved-posts')} />
+    <View style={{ backgroundColor: t.card, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 10, gap: 6 }}>
+        <RailItem label="Bài của bạn" ringColor={t.border} badge onPress={() => router.push('/post/create')}>
+          <Avatar uri={user?.avatarUrl} name={user?.name} size={56} />
+        </RailItem>
+        {SHORTCUTS.map((s) => (
+          <RailItem key={s.key} label={s.label} onPress={() => router.push(s.href as never)}>
+            {s.icon === 'saved' ? <Bookmark size={26} color={t.primary} weight="fill" /> : <BrandIcon name={s.icon} size={38} />}
+          </RailItem>
+        ))}
       </ScrollView>
     </View>
   )
@@ -129,8 +119,7 @@ export default function FeedScreen() {
           data={q.isLoading ? [] : posts}
           keyExtractor={(p) => p.id}
           renderItem={({ item }) => <PostCard post={item} />}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-          contentContainerStyle={{ paddingBottom: 24 }}
+                    contentContainerStyle={{ paddingBottom: 24 }}
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           onEndReachedThreshold={0.5}
           refreshing={q.isRefetching}
@@ -140,14 +129,7 @@ export default function FeedScreen() {
           }}
           ListHeaderComponent={
             <View>
-              {!searching ? (
-                <>
-                  <FeedIntro />
-                  <Composer />
-                  <Explore />
-                  <Gap />
-                </>
-              ) : null}
+              {!searching ? <Rail /> : null}
               <Segmented tabs={FILTERS} value={filter} onChange={setFilter} scrollable />
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
             </View>

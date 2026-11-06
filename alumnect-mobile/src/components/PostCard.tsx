@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
-import { Pressable, View } from 'react-native'
+import React, { useRef, useState } from 'react'
+import { Animated, FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { Image } from 'expo-image'
 import * as Haptics from 'expo-haptics'
 import { useRouter } from 'expo-router'
-import { Bookmark, Building2, Heart, MapPin, MessageCircle, MoreHorizontal, Share2, BadgeCheck } from '@/components/icons'
+import { Bookmark, Building2, Heart, MapPin, MessageCircle, MoreHorizontal, Send, BadgeCheck } from '@/components/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Avatar, Button, Chip, Input, Tag, Txt } from './ui'
 import { ActionSheet } from './ActionSheet'
@@ -62,6 +62,83 @@ export const REPORT_REASONS: [string, string][] = [
   ['SCAM_OR_FRAUD', 'Lừa đảo hoặc gian lận'],
   ['OTHER', 'Lý do khác'],
 ]
+
+/** Ảnh bài viết kiểu Instagram: vuốt ngang nhiều ảnh, chạm đúp để thích (trái tim bung ra), chạm một lần mở bài. */
+function PostMedia({ images, onOpen, onDoubleLike }: { images: string[]; onOpen: () => void; onDoubleLike: () => void }) {
+  const t = useTheme()
+  const { width } = useWindowDimensions()
+  const [index, setIndex] = useState(0)
+  const [burst] = useState(() => new Animated.Value(0))
+  const lastTap = useRef(0)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const height = Math.round(width * 1.0)
+
+  const runBurst = () => {
+    burst.setValue(0)
+    Animated.timing(burst, { toValue: 1, duration: 800, useNativeDriver: true }).start()
+  }
+  const onTap = () => {
+    const now = Date.now()
+    if (now - lastTap.current < 280) {
+      if (timer.current) clearTimeout(timer.current)
+      lastTap.current = 0
+      runBurst()
+      onDoubleLike()
+      return
+    }
+    lastTap.current = now
+    timer.current = setTimeout(onOpen, 280)
+  }
+  const scale = burst.interpolate({ inputRange: [0, 0.25, 0.45, 0.65, 1], outputRange: [0.3, 1.15, 0.98, 1.02, 1.3] })
+  const opacity = burst.interpolate({ inputRange: [0, 0.2, 0.65, 1], outputRange: [0, 1, 1, 0] })
+
+  return (
+    <View>
+    <View style={{ width, height, backgroundColor: t.inputBg }}>
+      <FlatList
+        data={images}
+        keyExtractor={(u, i) => u + i}
+        horizontal
+        pagingEnabled
+        nestedScrollEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
+        getItemLayout={(_d, i) => ({ length: width, offset: width * i, index: i })}
+        renderItem={({ item }) => (
+          <Pressable onPress={onTap} accessibilityRole="imagebutton" accessibilityLabel="Ảnh bài viết, chạm hai lần để thích">
+            <Image source={{ uri: item }} style={{ width, height }} contentFit="cover" cachePolicy="disk" transition={200} />
+          </Pressable>
+        )}
+      />
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', opacity, transform: [{ scale }] }}>
+        <Heart size={96} color="#fff" weight="fill" />
+      </Animated.View>
+      {images.length > 1 ? (
+        <View pointerEvents="none" style={{ position: 'absolute', top: 12, right: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.6)' }}>
+          <Txt size={12} weight="600" color="#fff">{index + 1}/{images.length}</Txt>
+        </View>
+      ) : null}
+    </View>
+    {images.length > 1 ? <View style={{ alignItems: 'center', paddingTop: 10 }}><Dots count={images.length} index={index} /></View> : null}
+    </View>
+  )
+}
+
+/** Chấm phân trang dưới ảnh (như Instagram), chỉ hiện khi có nhiều ảnh. */
+function Dots({ count, index }: { count: number; index: number }) {
+  const t = useTheme()
+  return (
+    <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+      {Array.from({ length: Math.min(count, 6) }).map((_, i) => (
+        <View key={i} style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: i === index ? t.primary : t.controlBorder }} />
+      ))}
+    </View>
+  )
+}
+
+function fmtCount(n: number) {
+  return n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.0', '')}K` : String(n)
+}
 
 function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
   const t = useTheme()
@@ -134,32 +211,33 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
   const typeTag = TYPE_TAG[post.type]
   const eventDate = post.event?.startTime ? new Date(post.event.startTime) : null
 
+  const [expanded, setExpanded] = useState(false)
+  const likeByDoubleTap = () => { if (!liked) toggleLike() }
+  const longText = post.text.length > 110 || post.text.split('\n').length > 3
+
   return (
-    <Pressable onPress={detail ? undefined : openPost} style={{ backgroundColor: t.card, paddingTop: 16, paddingBottom: 4, borderBottomWidth: detail ? 0 : 1, borderBottomColor: t.border }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
+    <View style={{ backgroundColor: t.card, paddingTop: 4, paddingBottom: 14, borderBottomWidth: detail ? 0 : StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', height: 56, paddingLeft: 12, paddingRight: 4 }}>
         <Pressable onPress={openAuthor} accessibilityRole="button" accessibilityLabel={`Trang cá nhân ${post.author}`}>
-          <Avatar uri={post.avatar} name={post.author} size={40} />
+          <Avatar uri={post.avatar} name={post.author} size={36} />
         </Pressable>
         <Pressable onPress={openAuthor} style={{ flex: 1, marginLeft: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Txt weight="700" numberOfLines={1} style={{ flexShrink: 1 }}>{post.author}</Txt>
-            {post.verified ? <BadgeCheck size={16} color={t.info} weight="fill" /> : null}
+            <Txt weight="700" size={14} numberOfLines={1} style={{ flexShrink: 1 }}>{post.author}</Txt>
+            {post.verified ? <BadgeCheck size={14} color={t.info} weight="fill" /> : null}
+            {typeTag ? <Tag label={typeTag[0]} tone={typeTag[1]} style={{ marginLeft: 4 }} /> : null}
           </View>
-          <Txt muted size={12} numberOfLines={1}>{[post.role, post.time].filter(Boolean).join(' · ')}</Txt>
+          <Txt muted size={12} numberOfLines={1}>{post.role}</Txt>
         </Pressable>
         <Pressable onPress={() => setMenu(true)} accessibilityRole="button" accessibilityLabel="Tùy chọn bài viết" style={{ width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
-          <MoreHorizontal size={24} color={t.textMuted} weight="bold" />
+          <MoreHorizontal size={24} color={t.text} weight="bold" />
         </Pressable>
       </View>
 
-      {typeTag ? <Tag label={typeTag[0]} tone={typeTag[1]} style={{ marginTop: 10, marginLeft: 16 }} /> : null}
-
-      {post.text ? (
-        <Txt style={{ marginTop: 10, lineHeight: 22, paddingHorizontal: 16 }} numberOfLines={detail ? undefined : 6}>{post.text}</Txt>
-      ) : null}
+      {images.length ? <PostMedia images={images} onOpen={openPost} onDoubleLike={likeByDoubleTap} /> : null}
 
       {post.job ? (
-        <View style={{ marginTop: 12, marginHorizontal: 16, padding: 16, borderRadius: 12, backgroundColor: t.surface, gap: 6 }}>
+        <View style={{ marginTop: 4, marginBottom: 8, marginHorizontal: 12, padding: 14, borderRadius: 12, backgroundColor: t.surface, gap: 6 }}>
           <Txt weight="800" size={15}>{post.job.title}</Txt>
           {post.job.company ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Building2 size={14} color={t.textMuted} /><Txt muted size={13} numberOfLines={1}>{post.job.company}</Txt></View>
@@ -173,7 +251,7 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
       {post.event ? (
         <Pressable
           onPress={() => post.event?.id && router.push({ pathname: '/events/[id]', params: { id: post.event.id, title: post.event.title ?? '', start: post.event.startTime ?? '', end: post.event.endTime ?? '', location: post.event.location ?? '', hostId: post.authorId ?? '' } })}
-          style={{ marginTop: 12, marginHorizontal: 16, padding: 12, borderRadius: 14, backgroundColor: t.surface, flexDirection: 'row', gap: 12, alignItems: 'center' }}
+          style={{ marginTop: 4, marginBottom: 8, marginHorizontal: 12, padding: 12, borderRadius: 14, backgroundColor: t.surface, flexDirection: 'row', gap: 12, alignItems: 'center' }}
         >
           <View style={{ width: 52, borderRadius: 12, overflow: 'hidden', backgroundColor: t.card, alignItems: 'center' }}>
             <View style={{ alignSelf: 'stretch', backgroundColor: t.primary, paddingVertical: 2 }}>
@@ -189,41 +267,41 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
         </Pressable>
       ) : null}
 
-      {images.length === 1 ? (
-        <Image source={{ uri: images[0] }} style={{ marginTop: 12, width: '100%', aspectRatio: 1.25, backgroundColor: t.inputBg }} contentFit="cover" cachePolicy="disk" transition={200} />
-      ) : null}
-      {images.length > 1 ? (
-        <View style={{ marginTop: 12, flexDirection: 'row', gap: 2 }}>
-          {images.slice(0, 2).map((uri, i) => (
-            <View key={uri + i} style={{ flex: 1 }}>
-              <Image source={{ uri }} style={{ width: '100%', aspectRatio: 0.85, backgroundColor: t.inputBg }} contentFit="cover" cachePolicy="disk" transition={200} />
-              {i === 1 && images.length > 2 ? (
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' }}>
-                  <Txt size={24} weight="800" color="#fff">+{images.length - 2}</Txt>
-                </View>
-              ) : null}
-            </View>
-          ))}
-        </View>
-      ) : null}
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, paddingHorizontal: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, paddingHorizontal: 4 }}>
         <Act
           onPress={toggleLike}
           label={liked ? 'Bỏ thích' : 'Thích'}
-          count={likes}
           active={liked}
-          icon={<Heart size={24} color={liked ? t.danger : t.text} weight={liked ? 'fill' : 'regular'} />}
+          icon={<Heart size={26} color={liked ? t.danger : t.text} weight={liked ? 'fill' : 'regular'} />}
         />
-        <Act onPress={openPost} label="Bình luận" count={post.comments} icon={<MessageCircle size={24} color={t.text} />} />
-        <Act onPress={() => setShareOpen(true)} label="Chia sẻ" icon={<Share2 size={24} color={t.text} />} />
+        <Act onPress={openPost} label="Bình luận" icon={<MessageCircle size={26} color={t.text} />} />
+        <Act onPress={() => setShareOpen(true)} label="Chia sẻ" icon={<Send size={25} color={t.text} />} />
         <View style={{ flex: 1 }} />
         <Act
           onPress={toggleSave}
           label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           active={saved}
-          icon={<Bookmark size={24} color={t.text} weight={saved ? 'fill' : 'regular'} />}
+          icon={<Bookmark size={26} color={t.text} weight={saved ? 'fill' : 'regular'} />}
         />
+      </View>
+
+      <View style={{ paddingHorizontal: 12, gap: 4 }}>
+        {likes > 0 ? <Txt weight="700" size={14}>{fmtCount(likes)} lượt thích</Txt> : null}
+        {post.text ? (
+          <Pressable onPress={!detail && longText && !expanded ? () => setExpanded(true) : undefined}>
+            <Txt size={14} style={{ lineHeight: 20 }} numberOfLines={detail || expanded ? undefined : 3}>
+              {images.length ? <Txt weight="700" size={14} onPress={openAuthor}>{post.author}{'  '}</Txt> : null}
+              {post.text}
+            </Txt>
+            {!detail && longText && !expanded ? <Txt muted size={14}>xem thêm</Txt> : null}
+          </Pressable>
+        ) : null}
+        {!detail ? (
+          <Pressable onPress={openPost} accessibilityRole="button" hitSlop={6}>
+            <Txt muted size={14}>{post.comments > 0 ? `Xem tất cả ${post.comments} bình luận` : 'Thêm bình luận...'}</Txt>
+          </Pressable>
+        ) : null}
+        {post.time ? <Txt size={11} color={t.textSubtle} style={{ textTransform: 'uppercase', letterSpacing: 0.3 }}>{post.time}</Txt> : null}
       </View>
 
       <ShareSheet
@@ -267,7 +345,7 @@ function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
         <Input label={reportReason === 'OTHER' ? 'Mô tả lý do (bắt buộc)' : 'Mô tả thêm (tùy chọn)'} placeholder="Cho biết nội dung cần xem xét..." value={reportDescription} onChangeText={setReportDescription} multiline maxLength={500} />
         <Button title="Gửi báo cáo" loading={reportM.isPending} disabled={reportReason === 'OTHER' && !reportDescription.trim()} onPress={() => reportM.mutate()} />
       </ActionSheet>
-    </Pressable>
+    </View>
   )
 }
 
