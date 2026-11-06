@@ -54,6 +54,7 @@ jobs:
           VITE_MAPTILER_STYLE_ID: ${{ vars.VITE_MAPTILER_STYLE_ID }}
           VITE_VIETMAP_API_KEY: ${{ vars.VITE_VIETMAP_API_KEY }}
           VITE_REQUIRE_AUTH: ${{ vars.VITE_REQUIRE_AUTH }}
+          VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID || 'G-9N1X0D8S0G' }}
 
       - name: Setup SSH
         run: |
