@@ -91,6 +91,9 @@ import { WalletIcon as PhWallet } from 'phosphor-react-native/src/icons/Wallet'
 import { WarningIcon as PhWarning } from 'phosphor-react-native/src/icons/Warning'
 import { XIcon as PhX } from 'phosphor-react-native/src/icons/X'
 import { XCircleIcon as PhXCircle } from 'phosphor-react-native/src/icons/XCircle'
+import { CompassIcon as PhCompass } from 'phosphor-react-native/src/icons/Compass'
+import { SquaresFourIcon as PhSquaresFour } from 'phosphor-react-native/src/icons/SquaresFour'
+import { PlusSquareIcon as PhPlusSquare } from 'phosphor-react-native/src/icons/PlusSquare'
 import { EyeIcon as PhEye } from 'phosphor-react-native/src/icons/Eye'
 import { EyeSlashIcon as PhEyeSlash } from 'phosphor-react-native/src/icons/EyeSlash'
 
@@ -124,6 +127,9 @@ function make(Glyph: PhosphorIcon, name: string) {
   return C
 }
 export const AlertTriangle = make(PhWarning, 'AlertTriangle')
+export const Compass = make(PhCompass, 'Compass')
+export const LayoutGrid = make(PhSquaresFour, 'LayoutGrid')
+export const PlusSquare = make(PhPlusSquare, 'PlusSquare')
 export const Eye = make(PhEye, 'Eye')
 export const EyeOff = make(PhEyeSlash, 'EyeOff')
 export const ArrowBigUp = make(PhArrowFatUp, 'ArrowBigUp')

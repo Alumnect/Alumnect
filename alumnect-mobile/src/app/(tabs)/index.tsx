@@ -5,8 +5,9 @@ import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Bell, Bookmark, MessageCircle, Plus, Search, X } from '@/components/icons'
-import { Avatar, Empty, IconButton, Screen, SearchBar, Segmented, Txt } from '@/components/ui'
+import { Bell, Bookmark, BriefcaseBusiness, CalendarDays, Compass, LayoutGrid, MessageCircle, Search, Trophy, X } from '@/components/icons'
+import { ActionSheet } from '@/components/ActionSheet'
+import { Empty, IconButton, Screen, SearchBar, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
 import type { BrandIconName } from '@/components/BrandIcon'
 import { PostCard } from '@/components/PostCard'
@@ -15,7 +16,6 @@ import type { FeedFilter, Post } from '@/api/feed'
 import { useTheme } from '@/theme'
 import { useDebounced } from '@/lib/hooks'
 import { useUnreadCount } from '@/api/notifications'
-import { useAuthStore } from '@/store/authStore'
 import { ListSkeleton } from '@/components/Skeleton'
 import { Brand } from '@/components/Brand'
 
@@ -27,50 +27,82 @@ const FILTERS: [FeedFilter, string][] = [
   ['event', 'Sự kiện'],
 ]
 
-const SHORTCUTS: { key: string; label: string; icon: BrandIconName | 'saved'; href: string }[] = [
-  { key: 'jobs', label: 'Việc làm', icon: 'suitcase', href: '/jobs' },
-  { key: 'events', label: 'Sự kiện', icon: 'calendar', href: '/events' },
-  { key: 'groups', label: 'Hội nhóm', icon: 'people', href: '/groups' },
-  { key: 'map', label: 'Bản đồ', icon: 'pin', href: '/map' },
-  { key: 'career', label: 'Lộ trình', icon: 'list', href: '/career' },
-  { key: 'salary', label: 'Mức lương', icon: 'coin', href: '/salary' },
-  { key: 'saved', label: 'Đã lưu', icon: 'saved', href: '/saved-posts' },
+const FILTER_ICON: Record<FeedFilter, typeof Bell> = {
+  all: LayoutGrid,
+  normal: MessageCircle,
+  achievement: Trophy,
+  recruitment: BriefcaseBusiness,
+  event: CalendarDays,
+}
+
+const DISCOVER: { label: string; icon: BrandIconName | 'saved'; href: string }[] = [
+  { label: 'Việc làm', icon: 'suitcase', href: '/jobs' },
+  { label: 'Sự kiện', icon: 'calendar', href: '/events' },
+  { label: 'Hội nhóm', icon: 'people', href: '/groups' },
+  { label: 'Bản đồ', icon: 'pin', href: '/map' },
+  { label: 'Lộ trình', icon: 'list', href: '/career' },
+  { label: 'Mức lương', icon: 'coin', href: '/salary' },
+  { label: 'Đã lưu', icon: 'saved', href: '/saved-posts' },
 ]
 
-/** Một ô tròn trong dải lối tắt (tương đương story của Instagram): viền cam, nhãn bên dưới. */
-function RailItem({ label, onPress, children, ringColor, badge }: { label: string; onPress: () => void; children: React.ReactNode; ringColor?: string; badge?: boolean }) {
+/** Bảng "Khám phá": mọi khu vực của Alumnect ngoài bảng tin, gom vào một chỗ thay vì dàn hàng ngang trên feed. */
+function DiscoverSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const t = useTheme()
+  const router = useRouter()
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => ({ width: 72, alignItems: 'center', gap: 6, opacity: pressed ? 0.7 : 1 })}>
-      <View style={{ width: 66, height: 66, borderRadius: 33, borderWidth: 2.5, borderColor: ringColor ?? t.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{children}</View>
-        {badge ? (
-          <View style={{ position: 'absolute', right: -3, bottom: -3, width: 22, height: 22, borderRadius: 11, backgroundColor: t.primary, borderWidth: 2, borderColor: t.card, alignItems: 'center', justifyContent: 'center' }}>
-            <Plus size={13} color={t.onPrimary} weight="bold" />
-          </View>
-        ) : null}
+    <ActionSheet visible={visible} onClose={onClose} title="Khám phá">
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 18 }}>
+        {DISCOVER.map((d) => (
+          <Pressable
+            key={d.label}
+            accessibilityRole="button"
+            accessibilityLabel={d.label}
+            onPress={() => { onClose(); router.push(d.href as never) }}
+            style={({ pressed }) => ({ width: '25%', alignItems: 'center', gap: 8, opacity: pressed ? 0.6 : 1 })}
+          >
+            <View style={{ width: 64, height: 64, borderRadius: 20, backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center' }}>
+              {d.icon === 'saved' ? <Bookmark size={28} color={t.primary} weight="fill" /> : <BrandIcon name={d.icon} size={40} />}
+            </View>
+            <Txt size={12} weight="500" numberOfLines={1}>{d.label}</Txt>
+          </Pressable>
+        ))}
       </View>
-      <Txt size={11} numberOfLines={1} style={{ maxWidth: 70 }}>{label}</Txt>
-    </Pressable>
+    </ActionSheet>
   )
 }
 
-/** Dải lối tắt đầu bảng tin: "Bài viết của bạn" + các khu vực của Alumnect, thay cho story. */
-function Rail() {
+/** Một hàng duy nhất: nút Khám phá + lọc loại bài (chip có icon, chip đang chọn đảo màu). */
+function FeedBar({ filter, onFilter, onDiscover }: { filter: FeedFilter; onFilter: (f: FeedFilter) => void; onDiscover: () => void }) {
   const t = useTheme()
-  const router = useRouter()
-  const user = useAuthStore((s) => s.user)
   return (
     <View style={{ backgroundColor: t.card, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 10, gap: 6 }}>
-        <RailItem label="Bài của bạn" ringColor={t.border} badge onPress={() => router.push('/post/create')}>
-          <Avatar uri={user?.avatarUrl} name={user?.name} size={56} />
-        </RailItem>
-        {SHORTCUTS.map((s) => (
-          <RailItem key={s.key} label={s.label} onPress={() => router.push(s.href as never)}>
-            {s.icon === 'saved' ? <Bookmark size={26} color={t.primary} weight="fill" /> : <BrandIcon name={s.icon} size={38} />}
-          </RailItem>
-        ))}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 10, alignItems: 'center', gap: 8 }}>
+        <Pressable
+          onPress={onDiscover}
+          accessibilityRole="button"
+          accessibilityLabel="Khám phá"
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 14, borderRadius: 18, backgroundColor: t.primary, opacity: pressed ? 0.85 : 1 })}
+        >
+          <Compass size={17} color={t.onPrimary} weight="fill" />
+          <Txt size={13} weight="600" color={t.onPrimary}>Khám phá</Txt>
+        </Pressable>
+        <View style={{ width: StyleSheet.hairlineWidth, height: 20, backgroundColor: t.controlBorder }} />
+        {FILTERS.map(([k, label]) => {
+          const active = k === filter
+          const Icon = FILTER_ICON[k]
+          return (
+            <Pressable
+              key={k}
+              onPress={() => onFilter(k)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18, backgroundColor: active ? t.text : t.inputBg, opacity: pressed ? 0.8 : 1 })}
+            >
+              <Icon size={16} color={active ? t.card : t.textMuted} weight={active ? 'fill' : 'regular'} />
+              <Txt size={13} weight="600" color={active ? t.card : t.text}>{label}</Txt>
+            </Pressable>
+          )
+        })}
       </ScrollView>
     </View>
   )
@@ -82,6 +114,7 @@ export default function FeedScreen() {
   const [filter, setFilter] = useState<FeedFilter>('all')
   const [search, setSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [discoverOpen, setDiscoverOpen] = useState(false)
   const keyword = useDebounced(search, 400)
   const unread = useUnreadCount()
 
@@ -129,8 +162,7 @@ export default function FeedScreen() {
           }}
           ListHeaderComponent={
             <View>
-              {!searching ? <Rail /> : null}
-              <Segmented tabs={FILTERS} value={filter} onChange={setFilter} scrollable />
+              <FeedBar filter={filter} onFilter={setFilter} onDiscover={() => setDiscoverOpen(true)} />
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
             </View>
           }
@@ -147,6 +179,7 @@ export default function FeedScreen() {
           }
         />
       </View>
+      <DiscoverSheet visible={discoverOpen} onClose={() => setDiscoverOpen(false)} />
     </Screen>
   )
 }

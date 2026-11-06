@@ -71,7 +71,9 @@ function PostMedia({ images, onOpen, onDoubleLike }: { images: string[]; onOpen:
   const [burst] = useState(() => new Animated.Value(0))
   const lastTap = useRef(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const height = Math.round(width * 1.0)
+  // Khung theo tỉ lệ ảnh đầu tiên (giới hạn 4:5 → 1.91:1 như Instagram) để banner ngang không bị cắt thành ô vuông.
+  const [ratio, setRatio] = useState(1)
+  const height = Math.round(width / ratio)
 
   const runBurst = () => {
     burst.setValue(0)
@@ -106,7 +108,14 @@ function PostMedia({ images, onOpen, onDoubleLike }: { images: string[]; onOpen:
         getItemLayout={(_d, i) => ({ length: width, offset: width * i, index: i })}
         renderItem={({ item }) => (
           <Pressable onPress={onTap} accessibilityRole="imagebutton" accessibilityLabel="Ảnh bài viết, chạm hai lần để thích">
-            <Image source={{ uri: item }} style={{ width, height }} contentFit="cover" cachePolicy="disk" transition={200} />
+            <Image
+              source={{ uri: item }}
+              style={{ width, height }}
+              contentFit="cover"
+              cachePolicy="disk"
+              transition={200}
+              onLoad={item === images[0] ? (e) => setRatio(Math.min(1.91, Math.max(0.8, e.source.width / e.source.height))) : undefined}
+            />
           </Pressable>
         )}
       />
