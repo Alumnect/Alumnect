@@ -3,8 +3,9 @@ import { Linking, Pressable, StyleSheet, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, CalendarX2, CheckCircle2, ChevronLeft, ChevronRight, Globe, MapPin, MessageCircle, Share2 } from '@/components/icons'
+import { CalendarX2, CheckCircle2, ChevronLeft, ChevronRight, Globe, MessageCircle, Share2 } from '@/components/icons'
 import { Avatar, Button, Empty, IconButton, Loading, Screen, Tag, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { ConfirmSheet } from '@/components/ConfirmSheet'
 import { Header } from '@/components/Header'
 import { BottomBar } from '@/components/DetailBits'
@@ -150,14 +151,14 @@ export default function EventScreen() {
 
           <View style={{ marginTop: 12 }}>
             <MetaRow
-              icon={<CalendarDays size={20} color={t.primary} />}
+              icon={<BrandIcon name="calendar" size={28} />}
               title={eventFullDate(start)}
               subtitle={`${eventTimeRange(start, end)}${when ? ` · ${when}` : ''}`}
             />
             {st.location ? (
               online ? (
                 <MetaRow
-                  icon={<Globe size={20} color={t.primary} />}
+                  icon={<BrandIcon name="world" size={28} />}
                   title={`Trực tuyến · ${onlinePlatform(st.location)}`}
                   subtitle={canOpenLink ? 'Liên kết tham gia đã sẵn sàng' : 'Liên kết dùng được sau khi bạn đăng ký'}
                   action={canOpenLink ? 'Mở' : undefined}
@@ -165,7 +166,7 @@ export default function EventScreen() {
                 />
               ) : (
                 <MetaRow
-                  icon={<MapPin size={20} color={t.primary} />}
+                  icon={<BrandIcon name="pin" size={28} />}
                   title={st.location}
                   subtitle="Xem đường đi trên bản đồ"
                   action="Bản đồ"
