@@ -9,7 +9,7 @@ import { toast, errMsg } from './toast'
 import { requestApi } from '@/api/mentoringFlow'
 import { notificationApi } from '@/api/notifications'
 
-const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? 'ws://10.0.2.2:8080/ws'
+const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? 'wss://alumnect.online/ws'
 
 type Listener = (msg: IMessage) => void
 
