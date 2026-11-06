@@ -47,6 +47,7 @@ import { useFeed, useToggleLike, useToggleSavePost, CreatePostModal, DeletePostM
 import { ReportPostModal } from '@/features/report'
 import { ConnectionSuggestionsWidget } from '@/features/user'
 import type { FeedFilter, Post } from '@/features/feed'
+import { SeoHead } from '@/components/seo'
 
 import type { PostType } from '@/features/feed/model/post'
 
@@ -837,6 +838,11 @@ export function FeedPage() {
   // === Bước 5: Render — cột trái (feed) + cột phải (gợi ý) ===
   return (
     <div className="mx-auto grid max-w-[1216px] grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,0.8fr)_620px_minmax(0,1.2fr)]">
+      <SeoHead
+        title="AlumNect"
+        description="Mạng lưới kết nối cựu sinh viên & sinh viên Đại học FPT: Việc làm, cố vấn, khảo sát mức lương các ngành nghề, diễn đàn hỏi đáp và sự kiện."
+        keywords="AlumNect, cựu sinh viên FPT, FPTU alumni feed, cố vấn, khảo sát lương, việc làm cựu sinh viên FPT, sự kiện"
+      />
       {/* ============ CỘT TRÁI: BẢNG TIN CHÍNH ============ */}
       <div className="mx-auto w-full min-w-0 max-w-[620px] xl:col-start-2">
         <div className="space-y-4">

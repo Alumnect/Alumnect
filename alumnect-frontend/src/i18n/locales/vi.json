@@ -1314,7 +1314,7 @@
     "aiCompareButton": "So sánh lộ trình với tôi",
     "aiCompareHint": "AI đối chiếu hồ sơ của bạn với hành trình thực tế của người này",
     "aiCompareTitle": "So sánh lộ trình với {{name}}",
-    "aiComparing": "AI đang đối chiếu lộ trình của bạn với {{name}}…",
+    "aiComparing": "Đang đối chiếu lộ trình...",
     "aiCompareError": "Không thể so sánh lúc này, vui lòng thử lại.",
     "aiYou": "Bạn",
     "aiStudentFallback": "Sinh viên",

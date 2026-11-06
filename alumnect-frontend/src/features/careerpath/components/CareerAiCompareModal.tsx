@@ -135,7 +135,7 @@ export function CareerAiCompareModal({
       {(isLoading || (isFetching && !data)) && (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-sm text-text-muted">
           <Loader2 size={26} className="animate-spin text-primary-solid" />
-          {t('career.aiComparing', { name: targetName })}
+          {t('career.aiComparing')}
         </div>
       )}
 
