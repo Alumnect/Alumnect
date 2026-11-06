@@ -138,3 +138,4 @@ export function setAnalyticsUser(userId: string | number | null, userProperties?
     window.gtag('set', 'user_properties', userProperties)
   }
 }
+
