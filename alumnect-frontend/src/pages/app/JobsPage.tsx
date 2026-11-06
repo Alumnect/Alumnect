@@ -10,6 +10,7 @@ import { useLoginPrompt } from '@/store/loginPrompt'
 import { cn } from '@/lib/utils'
 import { EntitySelectField, type SelectOption } from '@/features/forum/components/EntitySelectField'
 import { useTranslation } from 'react-i18next'
+import { SeoHead } from '@/components/seo'
 
 /** Bóc tách tên tỉnh/thành phố chuẩn từ chuỗi địa chỉ để gom nhóm lọc thông minh */
 function extractCity(address?: string | null): string {
@@ -107,6 +108,11 @@ export function JobsPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
+      <SeoHead
+        title="Việc làm & Tuyển dụng Cựu sinh viên"
+        description="Khám phá cơ hội nghề nghiệp và việc làm chất lượng cao dành riêng cho sinh viên và cựu sinh viên Đại học FPT."
+        keywords="việc làm FPT, tuyển dụng FPT, việc làm cựu sinh viên FPT, AlumNect tuyển dụng"
+      />
       <PageHeader
         icon={<Briefcase size={20} />}
         title={t('jobs.pageTitle')}

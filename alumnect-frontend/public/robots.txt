@@ -1,0 +1,36 @@
+# =====================================================================
+# AlumNect — FPT University Alumni Network
+# Robots.txt — Hướng dẫn công cụ tìm kiếm (Googlebot, Bingbot, v.v.)
+# =====================================================================
+
+User-agent: *
+
+# Cho phép thu thập dữ liệu các trang công khai
+Allow: /$
+Allow: /app$
+Allow: /app/jobs
+Allow: /app/events
+Allow: /app/forum
+Allow: /app/forum/*
+Allow: /app/posts/*
+Allow: /app/alumni
+Allow: /login
+Allow: /register
+
+# Chặn thu thập các trang quản trị và dữ liệu người dùng riêng tư
+Disallow: /admin/
+Disallow: /admin
+Disallow: /app/messages
+Disallow: /app/messages/*
+Disallow: /app/notifications
+Disallow: /app/saved
+Disallow: /app/change-password
+Disallow: /app/mentoring/deals
+Disallow: /app/mentoring/chats/*
+Disallow: /app/mentoring/earnings
+Disallow: /app/mentoring/refunds
+Disallow: /api/
+Disallow: /ws/
+
+# Tệp chỉ mục trang web (Sitemap)
+Sitemap: https://alumnect.online/sitemap.xml

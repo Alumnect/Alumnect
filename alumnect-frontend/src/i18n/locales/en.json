@@ -1314,7 +1314,7 @@
     "aiCompareButton": "Compare my path with theirs",
     "aiCompareHint": "AI compares your profile with this person's real journey",
     "aiCompareTitle": "Compare path with {{name}}",
-    "aiComparing": "AI is comparing your path with {{name}}…",
+    "aiComparing": "Comparing career paths...",
     "aiCompareError": "Could not compare right now, please try again.",
     "aiYou": "You",
     "aiStudentFallback": "Student",
