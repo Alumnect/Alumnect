@@ -22,6 +22,11 @@ export function MessagesPage() {
   const targetUserId = targetUserIdParam ? Number(targetUserIdParam) : null
   const hasTargetUser = targetUserId !== null && !isNaN(targetUserId) && targetUserId > 0
 
+  const targetConversationIdParam = searchParams.get('conversationId')
+  const targetConversationId = targetConversationIdParam ? Number(targetConversationIdParam) : null
+  const hasTargetConversation =
+    targetConversationId !== null && !isNaN(targetConversationId) && targetConversationId > 0
+
   const [currentTab, setCurrentTab] = useState<'primary' | 'requests'>('primary')
   // Màn rộng: tự mở hội thoại đầu tiên; điện thoại: hiện danh sách trước để người dùng chọn
   const isDesktop = useMediaQuery('(min-width: 768px)', true)
@@ -51,6 +56,16 @@ export function MessagesPage() {
   const sendMessageMutation = useSendMessage()
   const markAsReadMutation = useMarkAsRead()
 
+  // Kiểm tra xem hội thoại mục tiêu (?conversationId=...) có trong danh sách chưa
+  const existingTargetById = useMemo(() => {
+    if (!hasTargetConversation) return null
+    return (
+      conversations.find((c) => Number(c.id) === targetConversationId) ||
+      requestsData.find((c) => Number(c.id) === targetConversationId) ||
+      null
+    )
+  }, [hasTargetConversation, conversations, requestsData, targetConversationId])
+
   // Kiểm tra xem thành viên mục tiêu đã có trong danh sách hội thoại hiện tại chưa
   const existingTargetConv = useMemo(() => {
     if (!hasTargetUser) return null
@@ -72,9 +87,29 @@ export function MessagesPage() {
   })
 
   // Chọn cuộc hội thoại phù hợp:
-  // 1. Khi có ?userId=...: Ưu tiên hội thoại sẵn có, hoặc hội thoại Direct vừa nạp
-  // 2. Khi không có ?userId=...: Tự động chọn cuộc hội thoại đầu tiên trong danh sách
+  // 1. Khi có ?conversationId=...: Mở đúng cuộc hội thoại (vd: nhóm chat từ hội nhóm)
+  // 2. Khi có ?userId=...: Ưu tiên hội thoại sẵn có, hoặc hội thoại Direct vừa nạp
+  // 3. Khi không có tham số đích: Tự động chọn cuộc hội thoại đầu tiên trong danh sách
   useEffect(() => {
+    if (hasTargetConversation) {
+      if (activeConversation && Number(activeConversation.id) === targetConversationId) {
+        return
+      }
+      if (existingTargetById) {
+        if (
+          existingTargetById.isAccepted === false &&
+          currentTab !== 'requests' &&
+          !conversations.some((c) => Number(c.id) === targetConversationId)
+        ) {
+          setCurrentTab('requests')
+        }
+        setActiveConversation(existingTargetById)
+      } else if (!isLoadingConversations && isDesktop && !activeConversation && conversations.length > 0) {
+        setActiveConversation(conversations[0])
+      }
+      return
+    }
+
     if (hasTargetUser) {
       // Nếu đã có cuộc hội thoại đang mở với đúng thành viên này và đã có ID thực tế, không ghi đè lại bằng Draft
       if (activeConversation && activeConversation.recipientId === targetUserId && activeConversation.id) {
@@ -102,6 +137,10 @@ export function MessagesPage() {
       }
     }
   }, [
+    hasTargetConversation,
+    targetConversationId,
+    existingTargetById,
+    currentTab,
     hasTargetUser,
     existingTargetConv,
     directConvData,
@@ -123,13 +162,13 @@ export function MessagesPage() {
       }
       if (
         updated.title !== activeConversation.title ||
-          updated.avatarUrl !== activeConversation.avatarUrl ||
-          updated.recipientName !== activeConversation.recipientName ||
-          updated.recipientAvatar !== activeConversation.recipientAvatar ||
-          updated.memberCount !== activeConversation.memberCount ||
-          updated.unreadCount !== activeConversation.unreadCount ||
-          updated.lastMessage !== activeConversation.lastMessage ||
-          updated.isAccepted !== activeConversation.isAccepted
+        updated.avatarUrl !== activeConversation.avatarUrl ||
+        updated.recipientName !== activeConversation.recipientName ||
+        updated.recipientAvatar !== activeConversation.recipientAvatar ||
+        updated.memberCount !== activeConversation.memberCount ||
+        updated.unreadCount !== activeConversation.unreadCount ||
+        updated.lastMessage !== activeConversation.lastMessage ||
+        updated.isAccepted !== activeConversation.isAccepted
       ) {
         setActiveConversation(updated)
       }
@@ -204,8 +243,8 @@ export function MessagesPage() {
     if (conv.id && conv.unreadCount > 0) {
       markAsReadMutation.mutate(conv.id)
     }
-    // Xóa param ?userId trên URL nếu có
-    if (targetUserIdParam) {
+    // Xóa param ?userId hoặc ?conversationId trên URL nếu có
+    if (targetUserIdParam || targetConversationIdParam) {
       setSearchParams({})
     }
   }
@@ -237,7 +276,7 @@ export function MessagesPage() {
       setActiveConversation((prev) =>
         prev ? { ...prev, id: res.data.conversationId, isAccepted: true } : null
       )
-      if (targetUserIdParam) {
+      if (targetUserIdParam || targetConversationIdParam) {
         setSearchParams({})
       }
     }
@@ -258,7 +297,7 @@ export function MessagesPage() {
             onTabChange={(tab) => {
               setCurrentTab(tab)
               setActiveConversation(null)
-              if (targetUserIdParam) {
+              if (targetUserIdParam || targetConversationIdParam) {
                 setSearchParams({})
               }
             }}
@@ -290,7 +329,7 @@ export function MessagesPage() {
             onConversationUpdated={setActiveConversation}
             onBack={() => {
               setActiveConversation(null)
-              if (targetUserIdParam) setSearchParams({})
+              if (targetUserIdParam || targetConversationIdParam) setSearchParams({})
             }}
           />
         </div>

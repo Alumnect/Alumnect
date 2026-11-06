@@ -10,6 +10,9 @@ export interface MapPoint {
   title: string
   company: string
   location: string
+  locationCity?: string | null
+  locationCountry?: string | null
+  locationCountryCode?: string | null
   latitude: number
   longitude: number
   cohort?: number | null

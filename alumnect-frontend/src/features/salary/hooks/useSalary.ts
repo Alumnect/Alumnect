@@ -117,3 +117,13 @@ export function useSalaryFeed(
     placeholderData: keepPreviousData,
   })
 }
+
+/**
+ * [A1] Hook AI kiểm tra mức lương trước khi đóng góp (không lưu dữ liệu). Là mutation vì được kích hoạt theo thao tác
+ * của người dùng (nút "Kiểm tra & Gửi đóng góp").
+ */
+export function useSalaryAiCheck() {
+  return useMutation({
+    mutationFn: (input: CreateSalaryContributionInput) => salaryApi.aiCheck(input),
+  })
+}

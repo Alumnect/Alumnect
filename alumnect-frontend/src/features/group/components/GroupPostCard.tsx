@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Trash2,
   Loader2,
+  X,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast, ImageViewerModal, ImageCarousel } from '@/components/ui'
@@ -109,10 +110,6 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
   const updateCommentMutation = useUpdateGroupCommentMutation(groupId, post.id)
   const loadedComments = commentsData?.pages.flatMap((page) => page.content) ?? []
   const roots = loadedComments.filter((comment) => !comment.parentId || !loadedComments.some((item) => item.id === comment.parentId))
-  const orderedComments: GroupComment[] = roots.flatMap((root) => [
-    root,
-    ...loadedComments.filter((comment) => comment.parentId === root.id),
-  ])
 
   const handleToggleLike = () => {
     if (!isGroupActive) return
@@ -156,10 +153,15 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
 
   const handleSendReply = async (event: React.FormEvent, parentId: number) => {
     event.preventDefault()
-    const content = replyText.trim()
-    if (!content) return
+    const trimmed = replyText.trim()
+    if (!trimmed) return
     const selectedComment = loadedComments.find((comment) => comment.id === parentId)
     const rootParentId = selectedComment?.parentId ?? parentId
+    const targetName = selectedComment?.author.fullName
+    const content =
+      targetName && !trimmed.toLowerCase().startsWith(`@${targetName.toLowerCase()}`)
+        ? `@${targetName} ${trimmed}`
+        : trimmed
     try {
       await createCommentMutation.mutateAsync({ content, parentId: rootParentId })
       setReplyText('')
@@ -430,14 +432,14 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               data-interactive
               className="-mx-1 overflow-hidden px-1"
             >
-              <div className="mt-4 space-y-3.5 border-t border-border pt-3.5">
+              <div className="mt-4 space-y-4 border-t border-border pt-4">
                 {/* Input gửi bình luận mới (chỉ thành viên) */}
                 {isActiveMember && isGroupActive ? (
-                  <form onSubmit={handleSendComment} className="flex items-center gap-2.5">
+                  <form onSubmit={handleSendComment} className="flex items-center gap-3">
                     <Avatar
                       src={currentUser?.avatarUrl ?? ''}
                       name={currentUser?.name ?? t('groups.memberAvatar')}
-                      size={32}
+                      size={36}
                       className="shrink-0"
                     />
                     <div className="relative flex-1">
@@ -448,18 +450,23 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                         onChange={(e) => setCommentText(e.target.value)}
                         maxLength={1000}
                         placeholder={t('groups.commentInputPlaceholder')}
-                        className="w-full rounded-2xl border border-border bg-surface-2 py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
+                        className="w-full rounded-full border border-border bg-surface-2/60 py-2.5 pl-4 pr-11 text-sm text-text shadow-2xs transition placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
                       />
                       <button
                         type="submit"
                         disabled={!commentText.trim() || createCommentMutation.isPending}
                         aria-label={t('groups.sendCommentAria')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 cursor-pointer place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40"
+                        className={cn(
+                          'absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 cursor-pointer place-items-center rounded-full transition-all',
+                          commentText.trim()
+                            ? 'bg-primary-solid text-on-primary shadow-2xs hover:bg-primary-hover'
+                            : 'text-text-subtle opacity-45 disabled:cursor-not-allowed'
+                        )}
                       >
                         {createCommentMutation.isPending ? (
-                          <Loader2 size={13} className="animate-spin" />
+                          <Loader2 size={14} className="animate-spin" />
                         ) : (
-                          <Send size={13} />
+                          <Send size={14} />
                         )}
                       </button>
                     </div>
@@ -476,124 +483,282 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                     <Loader2 size={18} className="animate-spin text-primary-solid" />
                   </div>
                 ) : loadedComments.length > 0 ? (
-                  <div className="space-y-2.5 pt-1">
-                    {orderedComments.map((c) => {
-                      const parentComment = c.parentId ? loadedComments.find((comment) => comment.id === c.parentId) : undefined
-                      return (
-                      <div key={c.id} className={cn('group flex items-start gap-2.5', c.parentId && 'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20')}>
-                        <Link to={`/app/profile?userId=${c.author.userId}`}>
-                          <Avatar
-                            src={c.author.avatarUrl}
-                            name={c.author.fullName}
-                            size={28}
-                            className="shrink-0"
-                          />
-                        </Link>
+                  <div className="space-y-4 pt-1">
+                    {roots.map((root: GroupComment) => {
+                      const replies = loadedComments.filter((comment) => comment.parentId === root.id)
+                      const threadAuthors = Array.from(
+                        new Set([root.author.fullName, ...replies.map((r) => r.author.fullName)])
+                      ).sort((a, b) => b.length - a.length)
+                      const activeReplyTarget =
+                        replyingTo !== null
+                          ? root.id === replyingTo
+                            ? root
+                            : replies.find((r) => r.id === replyingTo)
+                          : undefined
+                      const hasThread = replies.length > 0 || !!activeReplyTarget
 
-                        <div className="flex-1 rounded-2xl bg-surface-2 p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
+                      const renderGroupCommentItem = (
+                        c: GroupComment,
+                        isReplyItem: boolean,
+                        showSpine?: boolean,
+                        parentAuthorName?: string
+                      ) => {
+                        const isEdited =
+                          c.updatedAt &&
+                          new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime() > 10000
+                        const canReplyHere = isActiveMember && isGroupActive && editingCommentId !== c.id
+                        const canEditHere = isGroupActive && c.canEdit && editingCommentId !== c.id
+                        const canDeleteHere = isGroupActive && c.canDelete && editingCommentId !== c.id
+
+                        let displayMention = parentAuthorName
+                        let displayContent = c.content?.trim() ?? ''
+                        if (isReplyItem && displayContent) {
+                          for (const candidate of threadAuthors) {
+                            const escaped = candidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                            const prefixRegex = new RegExp(`^(@${escaped}(?:\\s+|$))+`, 'i')
+                            if (prefixRegex.test(displayContent)) {
+                              displayMention = candidate
+                              displayContent = displayContent.replace(prefixRegex, '').trim()
+                              break
+                            }
+                          }
+                          if (displayMention) {
+                            const escaped = displayMention.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                            displayContent = displayContent.replace(new RegExp(`^(@${escaped}\\s*)+`, 'i'), '').trim()
+                          }
+                        }
+
+                        return (
+                          <div className="group flex items-start gap-3">
+                            <div className="flex shrink-0 flex-col items-center self-stretch">
                               <Link
                                 to={`/app/profile?userId=${c.author.userId}`}
-                                className="text-xs font-bold text-text hover:underline"
+                                className="mt-0.5 flex shrink-0 rounded-full transition-opacity hover:opacity-85"
                               >
-                                {c.author.fullName}
+                                <Avatar
+                                  src={c.author.avatarUrl}
+                                  name={c.author.fullName}
+                                  size={isReplyItem ? 30 : 36}
+                                  className="shrink-0"
+                                />
                               </Link>
-
-                              {c.author.groupRole === 'OWNER' && (
-                                <span className="text-xs font-semibold text-warning">{t('groups.ownerRole')}</span>
-                              )}
-                              {c.author.groupRole === 'ADMIN' && (
-                                <span className="text-xs font-semibold text-primary-solid">{t('groups.adminRole')}</span>
-                              )}
-
-                              <span className="text-xs text-text-subtle">
-                                • {formatTime(c.createdAt)}
-                              </span>
-                              {c.updatedAt && new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime() > 10000 && (
-                                <span className="text-xs text-text-subtle">• {t('common.edited')}</span>
+                              {!isReplyItem && showSpine && (
+                                <div className="mt-1.5 w-0.5 flex-1 rounded-full bg-border-strong/80 dark:bg-border-strong" />
                               )}
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              {isGroupActive && c.canEdit && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingCommentId(c.id)
-                                    setEditingCommentText(c.content)
-                                  }}
-                                  className="text-text-subtle hover:text-primary-solid"
-                                  aria-label={t('groups.editCommentAria')}
-                                ><Pencil size={13} /></button>
-                              )}
-                              {isGroupActive && c.canDelete && (
-                                <button
-                                  type="button"
-                                  onClick={() => setDeletingCommentId(c.id)}
-                                  className="text-text-subtle hover:text-danger"
-                                  aria-label={t('groups.deleteCommentAria')}
-                                ><Trash2 size={13} /></button>
+                            <div className="min-w-0 flex-1">
+                              <div className="rounded-2xl border border-border bg-surface-2/65 px-4 py-2.5 shadow-2xs transition-colors dark:border-border dark:bg-surface-2/80">
+                                <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                  <Link
+                                    to={`/app/profile?userId=${c.author.userId}`}
+                                    className="text-[13.5px] font-bold leading-5 text-text transition-colors hover:text-primary-solid hover:underline"
+                                  >
+                                    {c.author.fullName}
+                                  </Link>
+
+                                  {c.author.groupRole === 'OWNER' && (
+                                    <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-[11px] font-semibold leading-none text-warning">
+                                      {t('groups.ownerRole')}
+                                    </span>
+                                  )}
+                                  {c.author.groupRole === 'ADMIN' && (
+                                    <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-solid">
+                                      {t('groups.adminRole')}
+                                    </span>
+                                  )}
+
+                                  <span className="shrink-0 text-xs font-medium text-text-subtle">
+                                    · {formatTime(c.createdAt)}
+                                  </span>
+                                  {isEdited && (
+                                    <span className="text-xs text-text-subtle">· {t('common.edited')}</span>
+                                  )}
+                                </div>
+
+                                {editingCommentId === c.id ? (
+                                  <form
+                                    onSubmit={(event) => {
+                                      event.preventDefault()
+                                      saveCommentEdit(c.id)
+                                    }}
+                                    className="mt-2.5 space-y-2"
+                                  >
+                                    <textarea
+                                      value={editingCommentText}
+                                      onChange={(event) => setEditingCommentText(event.target.value)}
+                                      maxLength={1000}
+                                      rows={3}
+                                      autoFocus
+                                      className="w-full rounded-xl border border-border bg-surface p-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    />
+                                    <div className="flex justify-end gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingCommentId(null)}
+                                        disabled={updateCommentMutation.isPending}
+                                        className="cursor-pointer rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle transition-colors hover:bg-surface-2"
+                                      >
+                                        {t('common.cancel')}
+                                      </button>
+                                      <button
+                                        type="submit"
+                                        disabled={!editingCommentText.trim() || updateCommentMutation.isPending}
+                                        className="cursor-pointer rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs transition hover:bg-primary-hover disabled:opacity-50"
+                                      >
+                                        {updateCommentMutation.isPending ? t('common.processing') : t('common.saveChanges')}
+                                      </button>
+                                    </div>
+                                  </form>
+                                ) : (
+                                  <div className="mt-1 text-[13.5px] sm:text-sm leading-relaxed text-text">
+                                    {displayMention && (
+                                      <span className="mr-1.5 font-semibold text-primary-solid">
+                                        @{displayMention}
+                                      </span>
+                                    )}
+                                    <span className="whitespace-pre-wrap break-words">{displayContent || c.content}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {(canReplyHere || canEditHere || canDeleteHere) && (
+                                <div className="mt-1 flex items-center gap-3 pl-2 text-xs">
+                                  {canReplyHere && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setReplyingTo(c.id)
+                                        setReplyText('')
+                                      }}
+                                      className="cursor-pointer font-semibold text-text-muted transition-colors hover:text-primary-solid"
+                                    >
+                                      {t('groups.reply')}
+                                    </button>
+                                  )}
+                                  {canEditHere && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingCommentId(c.id)
+                                        setEditingCommentText(c.content)
+                                      }}
+                                      aria-label={t('groups.editCommentAria')}
+                                      className="inline-flex cursor-pointer items-center gap-1 font-medium text-text-subtle transition-colors hover:text-primary-solid"
+                                    >
+                                      <Pencil size={11} />
+                                      <span>{t('common.edit')}</span>
+                                    </button>
+                                  )}
+                                  {canDeleteHere && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeletingCommentId(c.id)}
+                                      aria-label={t('groups.deleteCommentAria')}
+                                      className="inline-flex cursor-pointer items-center gap-1 font-medium text-text-subtle transition-colors hover:text-danger"
+                                    >
+                                      <Trash2 size={11} />
+                                      <span>{t('common.delete')}</span>
+                                    </button>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
+                        )
+                      }
 
-                          {editingCommentId === c.id ? (
-                            <form
-                              onSubmit={(event) => {
-                                event.preventDefault()
-                                saveCommentEdit(c.id)
-                              }}
-                              className="mt-2 space-y-2"
-                            >
-                              <textarea
-                                value={editingCommentText}
-                                onChange={(event) => setEditingCommentText(event.target.value)}
-                                maxLength={1000}
-                                rows={3}
-                                autoFocus
-                                className="w-full rounded-xl border border-border bg-surface p-2 text-xs text-text focus:border-primary focus:outline-none"
-                              />
-                              <div className="flex justify-end gap-2">
-                                <button type="button" onClick={() => setEditingCommentId(null)} disabled={updateCommentMutation.isPending} className="text-xs text-text-subtle">{t('common.cancel')}</button>
-                                <button type="submit" disabled={!editingCommentText.trim() || updateCommentMutation.isPending} className="text-xs font-bold text-primary-solid disabled:opacity-50">
-                                  {updateCommentMutation.isPending ? t('common.processing') : t('common.saveChanges')}
-                                </button>
-                              </div>
-                            </form>
-                          ) : (
-                            <div className="mt-1">
-                              {parentComment && (
-                                <span className="mr-1 text-xs font-semibold text-primary-solid">
-                                  @{parentComment.author.fullName}
-                                </span>
+                      return (
+                        <div key={root.id}>
+                          {renderGroupCommentItem(root, false, hasThread)}
+
+                          {hasThread && (
+                            <div className="ml-[17px]">
+                              {replies.map((reply, idx) => {
+                                const isLast = idx === replies.length - 1 && !activeReplyTarget
+                                return (
+                                  <div key={reply.id} className="relative pl-6 pt-2.5">
+                                    {!isLast && (
+                                      <span
+                                        aria-hidden
+                                        className="absolute left-0 top-0 bottom-0 w-0.5 bg-border-strong/80 dark:bg-border-strong"
+                                      />
+                                    )}
+                                    <span
+                                      aria-hidden
+                                      className="absolute left-0 top-0 h-[27px] w-4 rounded-bl-xl border-b-2 border-l-2 border-border-strong/80 dark:border-border-strong"
+                                    />
+                                    {renderGroupCommentItem(reply, true, false, root.author.fullName)}
+                                  </div>
+                                )
+                              })}
+
+                              {activeReplyTarget && (
+                                <div className="relative pl-6 pt-2.5">
+                                  <span
+                                    aria-hidden
+                                    className="absolute left-0 top-0 h-[27px] w-4 rounded-bl-xl border-b-2 border-l-2 border-border-strong/80 dark:border-border-strong"
+                                  />
+                                  <form
+                                    onSubmit={(event) => handleSendReply(event, activeReplyTarget.id)}
+                                    className="flex items-start gap-3"
+                                  >
+                                    <Avatar
+                                      src={currentUser?.avatarUrl ?? ''}
+                                      name={currentUser?.name ?? t('groups.memberAvatar')}
+                                      size={30}
+                                      className="mt-0.5 shrink-0"
+                                    />
+                                    <div className="min-w-0 flex-1 space-y-2 rounded-2xl border border-border bg-surface-2/65 p-3.5 shadow-2xs dark:border-border dark:bg-surface-2/80">
+                                      <div className="flex items-center justify-between text-xs text-text-subtle">
+                                        <span className="font-medium text-text-muted">
+                                          {t('groups.replyTo', { name: activeReplyTarget.author.fullName })}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          aria-label={t('common.close')}
+                                          onClick={() => setReplyingTo(null)}
+                                          className="cursor-pointer rounded-md p-0.5 hover:bg-surface-2 hover:text-text"
+                                        >
+                                          <X size={14} />
+                                        </button>
+                                      </div>
+                                      <textarea
+                                        value={replyText}
+                                        onChange={(event) => setReplyText(event.target.value)}
+                                        maxLength={1000}
+                                        rows={2}
+                                        autoFocus
+                                        className="w-full rounded-xl border border-border bg-surface p-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                      />
+                                      <div className="flex justify-end gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => setReplyingTo(null)}
+                                          className="cursor-pointer rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle transition-colors hover:bg-surface-2"
+                                        >
+                                          {t('common.cancel')}
+                                        </button>
+                                        <button
+                                          type="submit"
+                                          disabled={!replyText.trim() || createCommentMutation.isPending}
+                                          className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs transition hover:bg-primary-hover disabled:opacity-50"
+                                        >
+                                          {createCommentMutation.isPending ? (
+                                            <Loader2 size={13} className="animate-spin" />
+                                          ) : (
+                                            <Send size={13} />
+                                          )}
+                                          <span>{t('groups.sendReply')}</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </form>
+                                </div>
                               )}
-                              <span className="whitespace-pre-wrap text-xs text-text">{c.content}</span>
                             </div>
                           )}
-                          {isActiveMember && isGroupActive && editingCommentId !== c.id && (
-                            <button type="button" onClick={() => {
-                              setReplyingTo(c.id)
-                              setReplyText('')
-                            }} className="mt-1.5 text-xs font-semibold text-primary-solid hover:underline">
-                              {t('groups.reply')}
-                            </button>
-                          )}
-                          {replyingTo === c.id && (
-                            <form onSubmit={(event) => handleSendReply(event, c.id)} className="mt-2 space-y-2">
-                              <label className="block text-xs text-text-subtle">{t('groups.replyTo', { name: c.author.fullName })}</label>
-                              <textarea value={replyText} onChange={(event) => setReplyText(event.target.value)}
-                                maxLength={1000} rows={2} autoFocus
-                                className="w-full rounded-xl border border-border bg-surface p-2 text-xs text-text focus:border-primary focus:outline-none" />
-                              <div className="flex justify-end gap-2">
-                                <button type="button" onClick={() => setReplyingTo(null)} className="text-xs text-text-subtle">{t('common.cancel')}</button>
-                                <button type="submit" disabled={!replyText.trim() || createCommentMutation.isPending}
-                                  className="text-xs font-bold text-primary-solid disabled:opacity-50">{t('groups.sendReply')}</button>
-                              </div>
-                            </form>
-                          )}
                         </div>
-                      </div>
                       )
                     })}
                     {hasMoreComments && (

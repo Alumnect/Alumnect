@@ -19,6 +19,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { useQuestionDetail, AnswersSection, AskQuestionModal, DeleteQuestionModal, useToggleVoteQuestion } from '@/features/forum'
 import type { QuestionDetail } from '@/features/forum'
+import { SeoHead, buildQaSchema } from '@/components/seo'
 
 /** Chuyển mốc ISO-8601 sang ngày giờ đọc được, rỗng nếu không hợp lệ. */
 function formatDateTime(iso: string, lang = 'vi'): string {
@@ -298,16 +299,31 @@ export function QuestionDetailPage() {
       ) : isError ? (
         <DetailError message={(error as Error)?.message} onRetry={() => refetch()} />
       ) : data ? (
-        // Câu hỏi + câu trả lời nằm chung MỘT card (như bài viết + bình luận trên Facebook/Reddit)
-        <Card hover={false} className="overflow-hidden p-0">
-          <div className="p-6 sm:p-8">
-            <QuestionDetailContent q={data} canEdit={canEdit} canVote={canVote} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
-          </div>
-          {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
-          <div className="border-t border-border bg-surface-2 p-6 sm:p-8">
-            <AnswersSection questionId={data.id} count={data.answers} />
-          </div>
-        </Card>
+        <>
+          <SeoHead
+            title={data.title}
+            description={data.body ? data.body.slice(0, 160) : data.title}
+            keywords={`hỏi đáp FPT, diễn đàn FPT, ${data.topic || ''}, ${data.major || ''}, AlumNect`}
+            type="article"
+            schema={buildQaSchema({
+              questionTitle: data.title,
+              questionText: data.body || data.title,
+              authorName: data.author,
+              dateCreated: data.createdAt,
+              answerCount: data.answers,
+            })}
+          />
+          {/* Câu hỏi + câu trả lời nằm chung MỘT card (như bài viết + bình luận trên Facebook/Reddit) */}
+          <Card hover={false} className="overflow-hidden p-0">
+            <div className="p-6 sm:p-8">
+              <QuestionDetailContent q={data} canEdit={canEdit} canVote={canVote} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
+            </div>
+            {/* Khu vực câu trả lời (UC41) — nền hơi khác + đường kẻ để tách nhẹ trong cùng card */}
+            <div className="border-t border-border bg-surface-2/50 px-5 py-6 sm:px-7 sm:py-7 dark:bg-[#1c1d1f]/80">
+              <AnswersSection questionId={data.id} count={data.answers} />
+            </div>
+          </Card>
+        </>
       ) : (
         <NotFoundState />
       )}

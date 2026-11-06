@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Send, Loader2, MessageCircle, ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Avatar, Skeleton, toast } from '@/components/ui'
+import { cn } from '@/lib/utils'
 import { useComments, useCreateComment } from '@/features/post'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import type { AuthUser } from '@/store/authStore'
@@ -59,11 +60,13 @@ export function InlineComments({
     )
   }
 
+  const hasText = content.trim().length > 0
+
   return (
-    <div className="border-t border-border bg-surface-2 p-4 space-y-3 dark:bg-[#1f2022]/60">
+    <div className="border-t border-border bg-surface-2/50 px-5 py-4 space-y-3.5 dark:bg-[#1c1d1f]/80">
       {/* Quick Comment Input */}
       {canInteract && viewer ? (
-        <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+        <form onSubmit={handleSubmit} className="flex items-center gap-3">
           <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
           <div className="relative flex-1">
             <input
@@ -73,13 +76,18 @@ export function InlineComments({
               onChange={(e) => setContent(e.target.value)}
               maxLength={1000}
               placeholder={t('feed.writePublicComment')}
-              className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
+              className="w-full rounded-full border border-border bg-surface py-2 pl-4 pr-10 text-[13px] text-text shadow-2xs transition placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
             />
             <button
               type="submit"
-              disabled={!content.trim() || createComment.isPending}
+              disabled={!hasText || createComment.isPending}
               aria-label={t('feed.sendComment')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
+              className={cn(
+                'absolute right-1.5 top-1/2 grid h-7 w-7 -translate-y-1/2 cursor-pointer place-items-center rounded-full transition-all',
+                hasText
+                  ? 'bg-primary-solid text-on-primary shadow-2xs hover:bg-primary-hover'
+                  : 'text-text-subtle opacity-45 disabled:cursor-not-allowed'
+              )}
             >
               {createComment.isPending ? (
                 <Loader2 size={13} className="animate-spin" />
@@ -90,12 +98,12 @@ export function InlineComments({
           </div>
         </form>
       ) : (
-        <div className="flex items-center justify-between rounded-xl bg-surface p-3 border border-border shadow-2xs">
+        <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
           <p className="text-xs text-text-subtle">{t('auth.loginToComment')}</p>
           <button
             type="button"
             onClick={() => promptLogin(t('auth.loginToComment'))}
-            className="text-xs font-bold text-primary-solid hover:underline flex items-center gap-1 cursor-pointer"
+            className="flex cursor-pointer items-center gap-1 text-xs font-bold text-primary-solid hover:underline"
           >
             {t('common.login')} <ArrowRight size={12} />
           </button>
@@ -105,13 +113,13 @@ export function InlineComments({
       {/* Loading state */}
       {isLoading && (
         <div className="space-y-2.5 py-1">
-          <div className="flex gap-2.5 items-center">
-            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
-            <Skeleton className="h-8 flex-1 rounded-2xl" />
+          <div className="flex gap-3 items-start">
+            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+            <Skeleton className="h-12 flex-1 rounded-2xl" />
           </div>
-          <div className="flex gap-2.5 items-center">
-            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
-            <Skeleton className="h-8 flex-1 rounded-2xl" />
+          <div className="flex gap-3 items-start">
+            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+            <Skeleton className="h-12 flex-1 rounded-2xl" />
           </div>
         </div>
       )}
@@ -123,36 +131,34 @@ export function InlineComments({
 
       {/* Comment List (Top 3) */}
       {!isLoading && displayComments.length > 0 && (
-        <div className="space-y-2.5 pt-1">
+        <div className="space-y-3 pt-0.5">
           {displayComments.map((c) => (
-            <div key={c.id} className="flex items-start gap-2.5">
+            <div key={c.id} className="flex items-start gap-3">
               <Link
                 to={c.authorId ? `/app/profile?userId=${c.authorId}` : '/app/profile'}
-                className="shrink-0 hover:opacity-85 transition-opacity"
+                className="mt-0.5 flex shrink-0 rounded-full transition-opacity hover:opacity-85"
               >
-                <Avatar src={c.avatar} name={c.author} size={28} verified={c.verified} />
+                <Avatar src={c.avatar} name={c.author} size={32} verified={c.verified} />
               </Link>
               <div className="min-w-0 flex-1">
-                <div className="rounded-2xl bg-surface-2 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Link
-                        to={c.authorId ? `/app/profile?userId=${c.authorId}` : '/app/profile'}
-                        className="truncate text-xs font-bold text-text hover:underline transition-colors"
-                      >
-                        {c.author}
-                      </Link>
-                      {c.role && (
-                        <span className="text-xs font-medium text-primary-solid bg-primary-soft px-1.5 py-0.2 rounded-md">
-                          {c.role}
-                        </span>
-                      )}
-                      <span className="shrink-0 text-xs text-text-subtle dark:text-text-subtle">
-                        • {c.time}
+                <div className="rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs dark:border-border dark:bg-surface-2/80">
+                  <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <Link
+                      to={c.authorId ? `/app/profile?userId=${c.authorId}` : '/app/profile'}
+                      className="truncate text-[13px] font-bold leading-5 text-text transition-colors hover:text-primary-solid hover:underline"
+                    >
+                      {c.author}
+                    </Link>
+                    {c.role && (
+                      <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-solid">
+                        {c.role}
                       </span>
-                    </div>
+                    )}
+                    <span className="shrink-0 text-xs font-medium text-text-subtle">
+                      · {c.time}
+                    </span>
                   </div>
-                  <p className="mt-1 text-xs text-text whitespace-pre-wrap break-words leading-relaxed">
+                  <p className="mt-1 text-[13px] text-text whitespace-pre-wrap break-words leading-relaxed">
                     {c.text}
                   </p>
                 </div>

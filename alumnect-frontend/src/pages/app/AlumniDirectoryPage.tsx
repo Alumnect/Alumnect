@@ -26,6 +26,7 @@ import {
 } from '@/features/user'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
+import { SeoHead } from '@/components/seo'
 
 const INITIAL_FILTERS: FilterState = {
   query: '',
@@ -149,6 +150,11 @@ export function AlumniDirectoryPage() {
 
   return (
     <div className="mx-auto max-w-6xl pb-12">
+      <SeoHead
+        title="Danh bạ Cựu sinh viên & Mạng lưới kết nối"
+        description="Tra cứu và kết nối với hàng nghìn cựu sinh viên Đại học FPT theo chuyên ngành, khóa học và nơi đang công tác."
+        keywords="danh bạ cựu sinh viên, cựu sinh viên FPT, FPT alumni directory, tìm kiếm cựu sinh viên FPT, kết nối alumni"
+      />
       {/* Page Header */}
       <PageHeader
         icon={<Users size={22} className="text-primary-solid" />}

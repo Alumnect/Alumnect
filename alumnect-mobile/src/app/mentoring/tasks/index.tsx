@@ -5,9 +5,10 @@ import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Card, Chip, Empty, Screen, Tag, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { ListSkeleton } from '@/components/Skeleton'
 import { statusTone } from '@/constants/status'
-import { Clock, ListChecks } from '@/components/icons'
+import { Clock } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { TASK_STAGES, TASK_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
 import { formatVnd } from '@/api/mentoring'
@@ -47,7 +48,7 @@ export default function TasksScreen() {
             onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
             refreshing={q.isRefetching}
             onRefresh={() => q.refetch()}
-            ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<ListChecks size={28} color={t.primary} />} title="Chưa có task" text="Task được tạo sau khi hai bên chốt thỏa thuận." />}
+            ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<BrandIcon name="task" size={56} />} title="Chưa có task" text="Task được tạo sau khi hai bên chốt thỏa thuận." />}
             renderItem={({ item }) => {
               const pct = Math.min(100, item.progressPercentage ?? 0)
               const other = me?.role === 'STUDENT' ? item.mentorName : item.studentName

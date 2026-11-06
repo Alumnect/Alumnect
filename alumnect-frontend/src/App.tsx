@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
 import { ProtectedRoute, RoleRoute } from '@/components/routing/guards'
 import { AppShell, AdminShell, ScrollToTop } from '@/components/layout'
+import { GoogleAnalytics } from '@/components/analytics'
 import { SectionTransition } from '@/components/layout/SectionTransition'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { FeedPage } from '@/pages/app/FeedPage'
@@ -68,6 +69,7 @@ function App() {
       <ToastContainer />
       <BrowserRouter>
         <ScrollToTop />
+        <GoogleAnalytics />
         <SectionTransition>
           {(location) => (
         <Routes location={location}>

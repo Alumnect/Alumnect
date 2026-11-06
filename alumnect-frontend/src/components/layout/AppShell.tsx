@@ -42,6 +42,8 @@ function Popover({
   onToggle,
   onClose,
   button,
+  ariaLabel,
+  alignClass = 'right-0 origin-top-right',
   panelClass,
   children,
 }: {
@@ -49,6 +51,8 @@ function Popover({
   onToggle: () => void
   onClose: () => void
   button: ReactNode
+  ariaLabel?: string
+  alignClass?: string
   panelClass?: string
   children: ReactNode
 }) {
@@ -57,7 +61,13 @@ function Popover({
 
   return (
     <div ref={popoverRef} className="relative">
-      <button onClick={onToggle} className="flex items-center">
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        aria-expanded={isOpen}
+        onClick={onToggle}
+        className="flex items-center cursor-pointer"
+      >
         {button}
       </button>
       <AnimatePresence>
@@ -70,7 +80,8 @@ function Popover({
             style={{ willChange: 'opacity, transform' }}
             onClick={onClose}
             className={cn(
-              'absolute right-0 z-50 mt-2 origin-top-right rounded-2xl border border-border bg-surface p-2 shadow-soft',
+              'absolute z-50 mt-2 rounded-2xl border border-border bg-surface p-2 shadow-soft',
+              alignClass,
               panelClass,
             )}
           >
@@ -176,10 +187,23 @@ export function AppShell() {
     setKeyword('')
   }
 
-  // Đóng popover khi đổi trang
+  // Đóng popover khi đổi trang hoặc nhấn phím Escape
   useEffect(() => {
     setActivePopover(null)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!activePopover && !sheet && !langMenuOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActivePopover(null)
+        setSheet(false)
+        setLangMenuOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activePopover, sheet, langMenuOpen])
 
   const logoutM = useLogout()
   // ADMIN đã được điều hướng về /admin ở trên, nên tại đây role chỉ còn STUDENT/ALUMNI.
@@ -192,17 +216,29 @@ export function AppShell() {
     '/app/jobs': { label: 'nav.jobs', tab: 'nav.jobsShort' },
     '/app/events': { label: 'nav.events' },
     '/app/forum': { label: 'nav.forum', short: 'nav.forumShort', tab: 'nav.forumShort' },
-    '/app/groups': { label: 'nav.groups' },
-    '/app/mentoring': { label: 'nav.mentoring' },
-    '/app/salary': { label: 'nav.salary' },
-    '/app/map': { label: 'nav.map' },
-    '/app/career': { label: 'nav.career' },
+    '/app/groups': { label: 'nav.groups', short: 'nav.groups' },
+    '/app/mentoring': { label: 'nav.mentoring', short: 'nav.mentoringShort' },
+    '/app/salary': { label: 'nav.salary', short: 'nav.salaryShort' },
+    '/app/map': { label: 'nav.map', short: 'nav.mapShort' },
+    '/app/career': { label: 'nav.career', short: 'nav.careerShort' },
     '/app/profile': { label: 'nav.profile' },
     '/app/change-password': { label: 'nav.changePassword' },
     '/admin': { label: 'nav.adminPanel' },
     '/app/messages': { label: 'nav.messages' },
     '/app/notifications': { label: 'nav.notifications' },
   }
+
+  // Bảng sắc thái pastel riêng cho từng tiện ích trong menu "Khám phá thêm" (hỗ trợ cả Light & Dark mode)
+  const MORE_ITEM_TONE: Record<string, string> = {
+    '/app/groups': 'bg-primary-soft text-primary-solid',
+    '/app/mentoring': 'bg-info-soft text-info',
+    '/app/salary': 'bg-success-soft text-success',
+    '/app/map': 'bg-sky-500/12 text-sky-600 dark:bg-sky-400/15 dark:text-sky-300',
+    '/app/career': 'bg-warning-soft text-warning',
+  }
+
+  const isRouteActive = (to: string) =>
+    location.pathname === to || location.pathname.startsWith(`${to}/`)
 
   const getNavLabel = (item: { to: string; label: string }) =>
     NAV_KEY_MAP[item.to]?.label ? t(NAV_KEY_MAP[item.to].label) : item.label
@@ -219,57 +255,104 @@ export function AppShell() {
     [user?.role]
   )
 
+  const isMoreRouteActive = useMemo(
+    () => visibleMoreNav.some((item) => location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)),
+    [visibleMoreNav, location.pathname]
+  )
+
   // Admin dùng khung riêng (đặt SAU mọi Hook để thứ tự Hook luôn cố định giữa các lần render)
   if (user?.role === 'ADMIN') {
     return <Navigate to="/admin" replace />
   }
 
-  // Menu "Khám phá" (desktop)
-  const renderMoreApps = (items: typeof APP_MORE_NAV) => (
-    <div className="hidden lg:block">
-      <Popover
-        isOpen={activePopover === 'apps'}
-        onToggle={() => setActivePopover((prev) => (prev === 'apps' ? null : 'apps'))}
-        onClose={() => setActivePopover(null)}
-        panelClass="w-[184px] p-3"
-        button={
-          <span className="group relative grid h-11 w-11 place-items-center rounded-2xl text-text-subtle transition-colors hover:bg-surface-2 hover:text-text">
-            <span className="transition-transform duration-200 group-hover:-translate-y-0.5">
-              <SquaresFour size={21} weight={activePopover === 'apps' ? 'fill' : 'regular'} />
-            </span>
-            <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-full group-hover:opacity-100">
-              {t('nav.more')}
-            </span>
-          </span>
-        }
-      >
-        <p className="whitespace-nowrap px-2 pb-2 text-xs font-bold uppercase tracking-wider text-text-subtle">{t('nav.moreSheet')}</p>
-        <div className="grid grid-cols-3 justify-items-center gap-2">
-          {items.map((item) => {
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                aria-label={getNavLabel(item)}
-                className="group relative grid h-12 w-12 place-items-center rounded-2xl text-primary-solid transition hover:bg-primary-soft active:scale-95"
-              >
-                {Icon && (
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100/80 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:bg-primary-soft">
-                    <Icon size={20} weight="regular" />
-                  </span>
+  // Menu "Khám phá" (desktop) — dạng thanh Capsule bo tròn thả dọc ở lề phải
+  const renderMoreApps = (items: typeof APP_MORE_NAV) => {
+    const isOpen = activePopover === 'apps'
+    return (
+      <div className="hidden lg:block">
+        <Popover
+          isOpen={isOpen}
+          ariaLabel={t('nav.more')}
+          onToggle={() => setActivePopover((prev) => (prev === 'apps' ? null : 'apps'))}
+          onClose={() => setActivePopover(null)}
+          alignClass="left-1/2 -translate-x-1/2 origin-top"
+          panelClass="w-[96px] rounded-[28px] border-border/85 bg-surface/95 p-1.5 shadow-raised backdrop-blur-md"
+          button={
+            <span
+              className={cn(
+                'group relative grid h-11 w-11 place-items-center rounded-2xl transition-all active:scale-95',
+                isOpen
+                  ? 'bg-surface-2 text-primary-solid'
+                  : isMoreRouteActive
+                    ? 'text-primary-solid hover:bg-surface-2'
+                    : 'text-text-subtle hover:bg-surface-2 hover:text-text',
+              )}
+            >
+              <span
+                className={cn(
+                  'transition-transform duration-200',
+                  isOpen ? 'scale-105' : 'group-hover:-translate-y-0.5',
                 )}
-                {/* Tooltip khi hover giống hệt icon ở ngoài */}
-                <span className="pointer-events-none absolute top-[calc(100%-4px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-[calc(100%+4px)] group-hover:opacity-100">
-                  {getNavLabel(item)}
+              >
+                <SquaresFour size={21} weight={isOpen || isMoreRouteActive ? 'fill' : 'regular'} />
+              </span>
+              {!isOpen && (
+                <span className="pointer-events-none absolute top-[calc(100%-6px)] z-50 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-soft transition duration-200 group-hover:top-full group-hover:opacity-100 dark:bg-black dark:text-white">
+                  {t('nav.more')}
                 </span>
-              </Link>
-            )
-          })}
-        </div>
-      </Popover>
-    </div>
-  )
+              )}
+              {isMoreRouteActive && (
+                <span className="absolute bottom-1.5 h-[3px] w-4 rounded-full bg-primary-solid" />
+              )}
+            </span>
+          }
+        >
+          <div className="flex flex-col items-center gap-1">
+            {items.map((item) => {
+              const Icon = item.icon
+              const itemActive = isRouteActive(item.to)
+              const fullLabel = getNavLabel(item)
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  aria-label={fullLabel}
+                  title={fullLabel}
+                  className={cn(
+                    'group relative flex w-full flex-col items-center gap-1 rounded-[20px] px-1.5 py-1.5 text-center transition-all duration-200 active:scale-95',
+                    itemActive
+                      ? 'bg-primary-soft ring-1 ring-inset ring-primary-soft-border'
+                      : 'hover:bg-surface-2/85',
+                  )}
+                >
+                  {Icon && (
+                    <span
+                      className={cn(
+                        'grid h-9 w-9 place-items-center rounded-full transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:scale-105',
+                        itemActive
+                          ? 'bg-primary text-on-primary shadow-xs'
+                          : (MORE_ITEM_TONE[item.to] ?? 'bg-primary-soft text-primary-solid'),
+                      )}
+                    >
+                      <Icon size={18} weight={itemActive ? 'fill' : 'regular'} />
+                    </span>
+                  )}
+                  <span
+                    className={cn(
+                      'w-full truncate text-2xs font-semibold leading-tight transition-colors',
+                      itemActive ? 'font-bold text-primary-solid' : 'text-text-muted group-hover:text-text',
+                    )}
+                  >
+                    {getNavShortLabel(item)}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </Popover>
+      </div>
+    )
+  }
 
   return (
     <div className="relative min-h-screen bg-surface-2 text-text-muted dark:!bg-bg">
@@ -283,34 +366,36 @@ export function AppShell() {
       <header className="sticky top-0 z-40 border-b border-border bg-surface shadow-xs">
         {/* Top FPT Brand Accent Bar */}
         <div className="h-1 bg-gradient-to-r from-[#F27024] via-[#004F9E] to-[#009A3E]" />
-        <div className="mx-auto flex h-15 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
-          <Logo />
+        <div className="mx-auto flex h-15 w-full max-w-[1536px] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Logo />
 
-          {/* desktop search */}
-          <label className="relative ml-2 hidden items-center md:flex">
-            <MagnifyingGlass size={17} className="pointer-events-none absolute left-3 text-text-subtle" />
-            <input
-              aria-label={t('common.searchPlaceholder')}
-              value={keyword}
-              onChange={handleSearchChange}
-              onKeyDown={handleSearchKeyDown}
-              placeholder={t('common.searchPlaceholder')}
-              className="h-9.5 w-40 rounded-full border border-border bg-surface-2 pl-9 pr-8 text-sm text-text placeholder:text-text-subtle transition focus:border-[#F27024]/80 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 lg:w-44 xl:w-48"
-            />
-            {keyword && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                aria-label={t('common.search')}
-                className="absolute right-2.5 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-text-subtle hover:bg-surface-3 hover:text-text-muted transition-colors"
-              >
-                <X size={12} />
-              </button>
-            )}
-          </label>
+            {/* desktop search */}
+            <label className="relative ml-1 hidden items-center md:flex lg:ml-2">
+              <MagnifyingGlass size={17} className="pointer-events-none absolute left-3 text-text-subtle" />
+              <input
+                aria-label={t('common.searchPlaceholder')}
+                value={keyword}
+                onChange={handleSearchChange}
+                onKeyDown={handleSearchKeyDown}
+                placeholder={t('common.searchPlaceholder')}
+                className="h-9.5 w-40 rounded-full border border-border bg-surface-2 pl-9 pr-8 text-sm text-text placeholder:text-text-subtle transition focus:border-[#F27024]/80 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 lg:w-48 xl:w-56"
+              />
+              {keyword && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  aria-label={t('common.search')}
+                  className="absolute right-2.5 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full text-text-subtle hover:bg-surface-3 hover:text-text-muted transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </label>
+          </div>
 
           {/* primary nav (centre) */}
-          <nav className="hidden h-full min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex xl:gap-1">
+          <nav className="hidden h-full min-w-0 flex-1 items-center justify-center gap-1 lg:flex xl:gap-2">
             {APP_PRIMARY_NAV.map((item) => {
               const Icon = item.icon
               return (
@@ -360,7 +445,7 @@ export function AppShell() {
           </nav>
 
           {/* right actions */}
-          <div className="ml-auto flex items-center gap-1 sm:gap-1.5 lg:ml-0">
+          <div className="ml-auto flex items-center justify-end gap-1 sm:gap-2 lg:ml-0">
             {/* mobile search toggle */}
             <button
               onClick={() => setSearchOpen((v) => !v)}
@@ -545,11 +630,22 @@ export function AppShell() {
             )
           })}
           <button
+            type="button"
             onClick={() => setSheet(true)}
-            className="flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2 text-xs font-semibold tracking-tight text-text-subtle hover:text-text"
+            className={cn(
+              'relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2 text-xs font-semibold tracking-tight transition-colors',
+              sheet || isMoreRouteActive ? 'text-primary-solid' : 'text-text-subtle hover:text-text',
+            )}
           >
-            <SquaresFour size={22} weight={sheet ? 'fill' : 'regular'} />
-            {t('nav.more')}
+            {isMoreRouteActive && !sheet && (
+              <motion.span
+                layoutId="app-tab-mobile"
+                className="absolute left-1/2 top-1.5 h-8 w-14 -translate-x-1/2 rounded-full bg-primary-soft"
+                transition={TRANSITION.indicator}
+              />
+            )}
+            <SquaresFour size={22} weight={sheet || isMoreRouteActive ? 'fill' : 'regular'} className="relative" />
+            <span className="relative">{t('nav.more')}</span>
           </button>
         </div>
       </nav>
@@ -586,11 +682,28 @@ export function AppShell() {
                   : [...visibleMoreNav.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')]
                 ).map((item) => {
                   const Icon = item.icon
+                  const itemActive = isRouteActive(item.to)
                   return (
-                    <Link key={item.to} to={item.to} className="flex flex-col items-center gap-2 rounded-2xl bg-surface p-4 text-center text-xs font-semibold text-text-muted ring-1 ring-inset ring-border">
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className={cn(
+                        'flex flex-col items-center gap-2 rounded-2xl bg-surface p-4 text-center text-xs font-semibold transition-colors ring-1 ring-inset',
+                        itemActive
+                          ? 'bg-primary-soft text-primary-solid ring-primary-soft-border'
+                          : 'text-text-muted ring-border hover:bg-surface-2',
+                      )}
+                    >
                       {Icon && (
-                        <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary-solid">
-                          <Icon size={20} weight="regular" />
+                        <span
+                          className={cn(
+                            'grid h-11 w-11 place-items-center rounded-full',
+                            itemActive
+                              ? 'bg-primary text-on-primary shadow-xs'
+                              : (MORE_ITEM_TONE[item.to] ?? 'bg-primary-soft text-primary-solid'),
+                          )}
+                        >
+                          <Icon size={20} weight={itemActive ? 'fill' : 'regular'} />
                         </span>
                       )}
                       {getNavLabel(item)}

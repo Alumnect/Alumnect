@@ -4,8 +4,9 @@ import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Users } from '@/components/icons'
+import { Plus } from '@/components/icons'
 import { Button, Card, Chip, Empty, Loading, Screen, Txt, Tag } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { Header } from '@/components/Header'
 import { groupApi, isActiveMember } from '@/api/mentoringGroups'
 import type { MentoringGroup } from '@/api/mentoringGroups'
@@ -78,7 +79,7 @@ export default function MentoringGroupsScreen() {
           contentContainerStyle={{ padding: 12 }}
           refreshing={list.isRefetching}
           onRefresh={() => list.refetch()}
-          ListEmptyComponent={<Empty icon={<Users size={26} color={t.primary} />} title={tab === 'INVITATIONS' ? 'Không có lời mời' : 'Chưa có nhóm'} text={tab === 'INVITATIONS' ? 'Lời mời tham gia nhóm mentoring sẽ hiện ở đây.' : 'Tạo nhóm để cùng bạn bè nhận hướng dẫn từ mentor.'} />}
+          ListEmptyComponent={<Empty icon={<BrandIcon name="people2" size={56} />} title={tab === 'INVITATIONS' ? 'Không có lời mời' : 'Chưa có nhóm'} text={tab === 'INVITATIONS' ? 'Lời mời tham gia nhóm mentoring sẽ hiện ở đây.' : 'Tạo nhóm để cùng bạn bè nhận hướng dẫn từ mentor.'} />}
           renderItem={({ item }) => <Item g={item} />}
         />
       )}

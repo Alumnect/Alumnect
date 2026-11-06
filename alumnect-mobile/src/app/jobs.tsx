@@ -4,8 +4,9 @@ import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Bookmark, Building2, BriefcaseBusiness, MapPin, Coins } from '@/components/icons'
+import { Bookmark, Building2, MapPin, Coins } from '@/components/icons'
 import { Avatar, Button, Card, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { SelectField } from '@/components/SelectField'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { VN_CITIES, matchCity, normalize } from '@/constants/filters'
@@ -109,7 +110,7 @@ export default function JobsScreen() {
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<BriefcaseBusiness size={28} color={t.primary} />} title="Chưa có tin phù hợp" text="Thử đổi địa điểm hoặc từ khoá khác." action={countActive(filters) ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
+              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<BrandIcon name="suitcase" size={56} />} title="Chưa có tin phù hợp" text="Thử đổi địa điểm hoặc từ khoá khác." action={countActive(filters) ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
             )
           }
           renderItem={({ item: p }) => {

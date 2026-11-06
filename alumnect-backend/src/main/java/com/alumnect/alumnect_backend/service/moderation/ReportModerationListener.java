@@ -8,6 +8,7 @@ import com.alumnect.alumnect_backend.config.ModerationAsyncConfig;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
 import com.alumnect.alumnect_backend.dao.report.ReportRepository;
 import com.alumnect.alumnect_backend.entity.post.Post;
+import com.alumnect.alumnect_backend.entity.post.PostMedia;
 import com.alumnect.alumnect_backend.entity.report.Report;
 import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,7 @@ import java.util.Map;
 public class ReportModerationListener {
 
     private final ContentModerationService contentModerationService;
+    private final ImageModerationService imageModerationService;
     private final ReportRepository reportRepository;
     private final PostRepository postRepository;
     private final SimpMessagingTemplate messagingTemplate;
@@ -75,7 +78,7 @@ public class ReportModerationListener {
             return;
         }
 
-        ModerationResult result = contentModerationService.evaluateContent(post.getContent());
+        ModerationResult result = evaluatePostModeration(post);
         String keywords = joinKeywords(result);
         applyResult(report, result, keywords);
 
@@ -113,7 +116,7 @@ public class ReportModerationListener {
             return;
         }
 
-        ModerationResult result = contentModerationService.evaluateContent(post.getContent());
+        ModerationResult result = evaluatePostModeration(post);
         if (!result.isAutoHide() && !result.isRequiresReview()) {
             return;
         }
@@ -133,6 +136,70 @@ public class ReportModerationListener {
         reportRepository.save(report);
 
         alertAdminsAfterCommit(hidden ? ALERT_AUTO_HIDDEN : ALERT_REVIEW_REQUIRED, report, result);
+    }
+
+    /**
+     * Đánh giá tổng hợp bài viết: quét văn bản bằng từ điển trước, nếu văn bản chưa bị tự ẩn và bài có ảnh
+     * thì quét tiếp ảnh bằng Gemini AI theo cơ chế nhị phân (vi phạm nhạy cảm/bạo lực -> tự ẩn ngay).
+     */
+    private ModerationResult evaluatePostModeration(Post post) {
+        ModerationResult textResult = contentModerationService.evaluateContent(post.getContent());
+        if (textResult.isAutoHide()) {
+            return textResult;
+        }
+
+        List<String> imageUrls = extractUncheckedImageUrls(post);
+        if (imageUrls.isEmpty()) {
+            return textResult;
+        }
+
+        ImageModerationResult imageResult = imageModerationService.checkImages(imageUrls, post.getContent());
+        if (!imageResult.violated()) {
+            return textResult;
+        }
+
+        String imageKey = (imageResult.flaggedImageKey() != null && !imageResult.flaggedImageKey().isBlank())
+                ? imageResult.flaggedImageKey()
+                : "media";
+        String imageTag = formatImageViolationTag(imageKey);
+
+        String categoryLabel = ImageModerationResult.CATEGORY_VIOLENCE_GORE.equals(imageResult.category())
+                ? "AI phát hiện ảnh bạo lực/máu me"
+                : "AI phát hiện ảnh nhạy cảm (18+)";
+        String flaggedReason = (imageResult.reason() != null && !imageResult.reason().isBlank())
+                ? categoryLabel + " — " + imageResult.reason()
+                : categoryLabel;
+        if (flaggedReason.length() > 245) {
+            flaggedReason = flaggedReason.substring(0, 242) + "...";
+        }
+
+        // Kiểm duyệt ảnh chỉ kiểm tra nhị phân (vi phạm / an toàn), không chấm điểm nhiều mức;
+        // gán score = 1.0 để tương thích cột NOT NULL ai_score và hiển thị cảnh báo tự động ẩn cho Admin.
+        return ModerationResult.builder()
+                .score(1.0)
+                .detectedKeywords(List.of(imageTag))
+                .flaggedReason(flaggedReason)
+                .autoHide(true)
+                .requiresReview(false)
+                .build();
+    }
+
+    /** Trích xuất các URL ảnh chưa từng được Admin xác nhận bỏ qua trên bài viết này. */
+    private List<String> extractUncheckedImageUrls(Post post) {
+        if (post.getMediaList() == null || post.getMediaList().isEmpty()) {
+            return List.of();
+        }
+        return post.getMediaList().stream()
+                .filter(m -> m.getUrl() != null && !m.getUrl().isBlank())
+                .filter(m -> m.getMediaType() == null || "IMAGE".equalsIgnoreCase(m.getMediaType()))
+                .sorted(Comparator.comparingInt(PostMedia::getSortOrder))
+                .map(PostMedia::getUrl)
+                .filter(url -> !isClearedByAdmin(post, formatImageViolationTag(GeminiImageModerationServiceImpl.extractImageKey(url))))
+                .toList();
+    }
+
+    static String formatImageViolationTag(String imageKey) {
+        return "[Ảnh vi phạm] " + imageKey;
     }
 
     /** Ẩn bài viết trừ khi Admin đã xác nhận đúng các từ khóa này không vi phạm; báo cho tác giả khi ẩn. */

@@ -52,6 +52,7 @@ import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, Sha
 import { ReportPostModal } from '@/features/report'
 import { EventRsvpButton, CancelEventModal, useCancelEvent } from '@/features/event'
 import { useNavigate } from 'react-router-dom'
+import { SeoHead, buildJobSchema, buildEventSchema } from '@/components/seo'
 
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
@@ -657,11 +658,43 @@ function PostDetailCard({
       </div>
 
       {/* Khu bình luận */}
-      <div className="border-t border-border bg-surface-2 p-6 sm:p-8">
+      <div className="border-t border-border bg-surface-2/50 px-5 py-6 sm:px-7 sm:py-7 dark:bg-[#1c1d1f]/80">
         <CommentsSection postId={post.id} commentCount={post.comments} isGuest={!canInteract} />
       </div>
     </Card>
   )
+}
+
+function parseCommentMention(
+  rawText: string,
+  parentAuthor?: string,
+  knownAuthors?: string[]
+): { mention?: string; cleanText: string } {
+  if (!rawText) return { cleanText: '' }
+  let text = rawText.trim()
+  let mention: string | undefined
+
+  const candidates = Array.from(
+    new Set([...(knownAuthors ?? []), ...(parentAuthor ? [parentAuthor] : [])].filter(Boolean))
+  ).sort((a, b) => b.length - a.length)
+
+  for (const name of candidates) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const prefixRegex = new RegExp(`^(@${escaped}(?:\\s+|$))+`, 'i')
+    if (prefixRegex.test(text)) {
+      mention = name
+      text = text.replace(prefixRegex, '').trim()
+      break
+    }
+  }
+
+  if (!mention && parentAuthor) {
+    mention = parentAuthor
+    const escaped = parentAuthor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    text = text.replace(new RegExp(`^(@${escaped}\\s*)+`, 'i'), '').trim()
+  }
+
+  return { mention, cleanText: text || rawText }
 }
 
 /**
@@ -671,14 +704,18 @@ function PostDetailCard({
 function CommentItem({
   comment,
   parentAuthor,
+  knownAuthors,
   postId,
+  hasThread,
   canEdit,
   onReply,
   onDelete,
 }: {
   comment: Comment
   parentAuthor?: string
+  knownAuthors?: string[]
   postId: string
+  hasThread?: boolean
   canEdit?: boolean
   onReply?: (id: string, name: string) => void
   onDelete?: (comment: Comment) => void
@@ -688,6 +725,7 @@ function CommentItem({
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(comment.text)
   const updateComment = useUpdateComment(postId)
+  const profileUrl = comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'
 
   const handleStartEdit = () => {
     setEditText(comment.text)
@@ -715,85 +753,62 @@ function CommentItem({
   return (
     <div
       id={`comment-${comment.id}`}
-      className={cn(
-        'group flex items-start gap-2.5 transition duration-300',
-        isReply &&
-          'relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20'
-      )}
+      className="group flex items-start gap-3 rounded-2xl transition duration-300"
     >
-      <Link
-        to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
-        className="shrink-0 hover:opacity-85 transition-opacity"
-      >
-        <Avatar src={comment.avatar} name={comment.author} size={isReply ? 28 : 32} verified={comment.verified} />
-      </Link>
-      <div className="min-w-0 flex-1">
-        <div className="rounded-2xl bg-surface-2 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Link
-                to={comment.authorId ? `/app/profile?userId=${comment.authorId}` : '/app/profile'}
-                className="text-xs font-bold text-text hover:underline transition-colors"
-              >
-                {comment.author}
-              </Link>
-              {comment.role && (
-                <span className="text-xs font-medium text-primary-solid bg-primary-soft px-1.5 py-0.5 rounded-md">
-                  {comment.role}
-                </span>
-              )}
-              <span className="shrink-0 text-xs text-text-subtle dark:text-text-subtle">
-                • {comment.time}
-              </span>
-            </div>
+      <div className="flex shrink-0 flex-col items-center self-stretch">
+        <Link
+          to={profileUrl}
+          className="mt-0.5 flex shrink-0 rounded-full transition-opacity hover:opacity-85"
+        >
+          <Avatar src={comment.avatar} name={comment.author} size={isReply ? 30 : 36} verified={comment.verified} />
+        </Link>
+        {!isReply && hasThread && (
+          <div className="mt-1.5 w-0.5 flex-1 rounded-full bg-border-strong/80 dark:bg-border-strong" />
+        )}
+      </div>
 
-            <div className="flex items-center gap-2">
-              {canEdit && !isEditing && (
-                <button
-                  type="button"
-                  onClick={handleStartEdit}
-                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-surface-2 hover:text-primary-solid"
-                  aria-label={t('feed.editComment', 'Chỉnh sửa bình luận')}
-                >
-                  <Pencil size={13} />
-                </button>
-              )}
-              {onDelete && !isEditing && (
-                <button
-                  type="button"
-                  onClick={() => onDelete(comment)}
-                  className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-text-subtle transition-colors hover:bg-danger-soft hover:text-danger"
-                  aria-label={t('feed.deleteCommentTitle', 'Xóa bình luận')}
-                >
-                  <Trash2 size={13} />
-                </button>
-              )}
-            </div>
+      <div className="min-w-0 flex-1">
+        <div className="rounded-2xl border border-border bg-surface px-4 py-2.5 shadow-2xs transition-colors dark:border-border dark:bg-surface-2/80">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <Link
+              to={profileUrl}
+              className="text-[13.5px] font-bold leading-5 text-text transition-colors hover:text-primary-solid hover:underline"
+            >
+              {comment.author}
+            </Link>
+            {comment.role && (
+              <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-solid">
+                {comment.role}
+              </span>
+            )}
+            <span className="shrink-0 text-xs font-medium text-text-subtle">
+              · {comment.time}
+            </span>
           </div>
 
           {isEditing ? (
-            <form onSubmit={handleSaveEdit} className="mt-2 space-y-2">
+            <form onSubmit={handleSaveEdit} className="mt-2.5 space-y-2">
               <textarea
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
                 maxLength={1000}
                 rows={3}
                 autoFocus
-                className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-xl border border-border bg-surface-2/50 p-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
                   disabled={updateComment.isPending}
-                  className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
+                  className="cursor-pointer rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle transition-colors hover:bg-surface-2"
                 >
                   {t('common.cancel', 'Hủy')}
                 </button>
                 <button
                   type="submit"
                   disabled={!editText.trim() || updateComment.isPending}
-                  className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs transition hover:bg-primary-hover disabled:opacity-50"
                 >
                   {updateComment.isPending ? <Loader2 size={13} className="animate-spin" /> : null}
                   <span>{updateComment.isPending ? t('common.saving', 'Đang lưu...') : t('common.saveChanges', 'Lưu thay đổi')}</span>
@@ -801,30 +816,59 @@ function CommentItem({
               </div>
             </form>
           ) : (
-            <div className="mt-1 text-xs text-text leading-relaxed">
-              {parentAuthor && (
-                <span className="mr-1.5 font-semibold text-primary-solid">
-                  @{parentAuthor}
-                </span>
-              )}
-              <span className="whitespace-pre-wrap break-words">
-                {parentAuthor
-                  ? comment.text.replace(new RegExp(`^(@${parentAuthor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*)+`, 'i'), '').trim()
-                  : comment.text}
-              </span>
-            </div>
-          )}
-
-          {!isEditing && onReply && (
-            <button
-              type="button"
-              onClick={() => onReply(comment.parentId || comment.id, comment.author)}
-              className="mt-1.5 inline-block text-xs font-semibold text-primary-solid hover:underline cursor-pointer"
-            >
-              {t('forum.reply', 'Trả lời')}
-            </button>
+            (() => {
+              const { mention, cleanText } = parseCommentMention(comment.text, parentAuthor, knownAuthors)
+              return (
+                <div className="mt-1 text-[13.5px] sm:text-sm leading-relaxed text-text">
+                  {mention && (
+                    <span className="mr-1.5 font-semibold text-primary-solid">
+                      @{mention}
+                    </span>
+                  )}
+                  <span className="whitespace-pre-wrap break-words">
+                    {cleanText}
+                  </span>
+                </div>
+              )
+            })()
           )}
         </div>
+
+        {!isEditing && (onReply || canEdit || onDelete) && (
+          <div className="mt-1 flex items-center gap-3 pl-2 text-xs">
+            {onReply && (
+              <button
+                type="button"
+                onClick={() => onReply(comment.parentId || comment.id, comment.author)}
+                className="cursor-pointer font-semibold text-text-muted transition-colors hover:text-primary-solid"
+              >
+                {t('forum.reply', 'Trả lời')}
+              </button>
+            )}
+            {canEdit && (
+              <button
+                type="button"
+                onClick={handleStartEdit}
+                aria-label={t('feed.editComment', 'Chỉnh sửa bình luận')}
+                className="inline-flex cursor-pointer items-center gap-1 font-medium text-text-subtle transition-colors hover:text-primary-solid"
+              >
+                <Pencil size={11} />
+                <span>{t('common.edit', 'Chỉnh sửa')}</span>
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(comment)}
+                aria-label={t('feed.deleteCommentTitle', 'Xóa bình luận')}
+                className="inline-flex cursor-pointer items-center gap-1 font-medium text-text-subtle transition-colors hover:text-danger"
+              >
+                <Trash2 size={11} />
+                <span>{t('common.delete', 'Xóa')}</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -833,10 +877,10 @@ function CommentItem({
 /** Khung xương một mục bình luận trong lúc tải. */
 function CommentSkeleton() {
   return (
-    <div className="flex items-start gap-2.5">
-      <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+    <div className="flex items-start gap-3">
+      <Skeleton className="h-9 w-9 rounded-full shrink-0" />
       <div className="flex-1 space-y-1.5">
-        <Skeleton className="h-14 w-full rounded-2xl" />
+        <Skeleton className="h-16 w-full rounded-2xl" />
       </div>
     </div>
   )
@@ -866,8 +910,13 @@ function InlineReplyForm({
     const trimmed = text.trim()
     if (!trimmed || createComment.isPending) return
 
+    const finalContent =
+      replyingTo.name && !trimmed.toLowerCase().startsWith(`@${replyingTo.name.toLowerCase()}`)
+        ? `@${replyingTo.name} ${trimmed}`
+        : trimmed
+
     createComment.mutate(
-      { content: trimmed, parentId: replyingTo.id },
+      { content: finalContent, parentId: replyingTo.id },
       {
         onSuccess: () => {
           setText('')
@@ -882,47 +931,45 @@ function InlineReplyForm({
   }
 
   return (
-    <div className="relative ml-8 border-l-2 border-primary-soft-border pl-4 before:absolute before:-left-0.5 before:top-0 before:h-4 before:w-4 before:-translate-x-full before:rounded-bl-xl before:border-b-2 before:border-l-2 before:border-brand-500/20 pt-1">
-      <form onSubmit={handleSubmit} className="flex items-start gap-2.5 rounded-2xl bg-surface-2 p-3">
-        <Avatar src={viewer?.avatarUrl ?? undefined} name={viewer?.name ?? t('common.you', 'Bạn')} size={28} verified={viewer?.verified} className="shrink-0" />
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex items-center justify-between text-xs text-text-subtle">
-            <span>
-              {t('forum.replyingTo', { name: replyingTo.name })}
-            </span>
-            <button aria-label={t('common.close', 'Đóng')} type="button" onClick={onCancel} className="hover:text-text cursor-pointer">
-              <X size={13} />
-            </button>
-          </div>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            maxLength={1000}
-            rows={2}
-            autoFocus
-            placeholder={t('feed.writeReplyPlaceholder', { name: replyingTo.name })}
-            className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle hover:bg-surface-2 transition-colors cursor-pointer"
-            >
-              {t('common.cancel', 'Hủy')}
-            </button>
-            <button
-              type="submit"
-              disabled={!text.trim() || createComment.isPending}
-              className="rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs hover:bg-primary-hover disabled:opacity-50 transition cursor-pointer inline-flex items-center gap-1.5"
-            >
-              {createComment.isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-              <span>{t('feed.sendReply', 'Gửi phản hồi')}</span>
-            </button>
-          </div>
+    <form onSubmit={handleSubmit} className="flex items-start gap-3">
+      <Avatar src={viewer?.avatarUrl ?? undefined} name={viewer?.name ?? t('common.you', 'Bạn')} size={30} verified={viewer?.verified} className="mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1 space-y-2 rounded-2xl border border-border bg-surface p-3.5 shadow-2xs dark:border-border dark:bg-surface-2/80">
+        <div className="flex items-center justify-between text-xs text-text-subtle">
+          <span className="font-medium text-text-muted">
+            {t('forum.replyingTo', { name: replyingTo.name })}
+          </span>
+          <button aria-label={t('common.close', 'Đóng')} type="button" onClick={onCancel} className="cursor-pointer rounded-md p-0.5 hover:bg-surface-2 hover:text-text">
+            <X size={14} />
+          </button>
         </div>
-      </form>
-    </div>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={1000}
+          rows={2}
+          autoFocus
+          placeholder={t('feed.writeReplyPlaceholder', { name: replyingTo.name })}
+          className="w-full rounded-xl border border-border bg-surface-2/40 p-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="cursor-pointer rounded-xl px-3 py-1.5 text-xs font-medium text-text-subtle transition-colors hover:bg-surface-2"
+          >
+            {t('common.cancel', 'Hủy')}
+          </button>
+          <button
+            type="submit"
+            disabled={!text.trim() || createComment.isPending}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-semibold text-on-primary shadow-2xs transition hover:bg-primary-hover disabled:opacity-50"
+          >
+            {createComment.isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+            <span>{t('feed.sendReply', 'Gửi phản hồi')}</span>
+          </button>
+        </div>
+      </div>
+    </form>
   )
 }
 
@@ -938,14 +985,14 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
 
   if (isGuest || !viewer) {
     return (
-      <div className="flex items-center justify-between rounded-xl bg-surface p-3 border border-border shadow-2xs">
-        <p className="text-xs text-text-subtle">{t('auth.loginToComment')}</p>
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 shadow-2xs">
+        <p className="text-sm text-text-subtle">{t('auth.loginToComment')}</p>
         <button
           type="button"
           onClick={() => promptLogin(t('auth.loginToComment'))}
-          className="text-xs font-bold text-primary-solid hover:underline flex items-center gap-1 cursor-pointer"
+          className="flex cursor-pointer items-center gap-1 text-xs font-bold text-primary-solid hover:underline"
         >
-          {t('common.login')} <ArrowRight size={12} />
+          {t('common.login')} <ArrowRight size={13} />
         </button>
       </div>
     )
@@ -970,9 +1017,11 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
     )
   }
 
+  const hasText = content.trim().length > 0
+
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
-      <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={32} verified={viewer.verified} className="shrink-0" />
+    <form onSubmit={handleSubmit} className="flex items-center gap-3">
+      <Avatar src={viewer.avatarUrl ?? undefined} name={viewer.name} size={36} verified={viewer.verified} className="shrink-0" />
       <div className="relative flex-1">
         <input
           aria-label={t('feed.writePublicComment', 'Viết bình luận công khai...')}
@@ -981,18 +1030,23 @@ function CommentBox({ isGuest, postId }: { isGuest: boolean; postId: string }) {
           onChange={(e) => setContent(e.target.value)}
           maxLength={1000}
           placeholder={t('feed.writePublicComment', 'Viết bình luận công khai...')}
-          className="w-full rounded-2xl border border-border bg-surface py-2 pl-3.5 pr-10 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle transition shadow-2xs"
+          className="w-full rounded-full border border-border bg-surface py-2.5 pl-4 pr-11 text-sm text-text shadow-2xs transition placeholder:text-text-subtle focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 dark:placeholder:text-text-subtle"
         />
         <button
           type="submit"
-          disabled={!content.trim() || createComment.isPending}
+          disabled={!hasText || createComment.isPending}
           aria-label={t('feed.sendCommentAria', 'Gửi bình luận')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 grid h-6 w-6 place-items-center text-primary-solid transition-colors hover:text-primary-solid disabled:opacity-40 cursor-pointer"
+          className={cn(
+            'absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 cursor-pointer place-items-center rounded-full transition-all',
+            hasText
+              ? 'bg-primary-solid text-on-primary shadow-2xs hover:bg-primary-hover'
+              : 'text-text-subtle opacity-45 disabled:cursor-not-allowed'
+          )}
         >
           {createComment.isPending ? (
-            <Loader2 size={13} className="animate-spin" />
+            <Loader2 size={14} className="animate-spin" />
           ) : (
-            <Send size={13} />
+            <Send size={14} />
           )}
         </button>
       </div>
@@ -1046,6 +1100,42 @@ export function PostDetailPage() {
         )
       ) : post ? (
         <>
+          <SeoHead
+            title={
+              post.type === 'recruitment' && post.job?.title
+                ? `${post.job.title} - ${post.job.company || 'Tuyển dụng'}`
+                : post.type === 'event' && post.event?.title
+                  ? `${post.event.title} - Sự kiện`
+                  : post.text
+                    ? `${post.text.slice(0, 70)}...`
+                    : 'Bài viết cộng đồng'
+            }
+            description={post.text ? post.text.slice(0, 160) : 'Chi tiết bài viết trên AlumNect - FPT University Alumni'}
+            image={post.images?.[0] || post.image || undefined}
+            type="article"
+            schema={
+              post.type === 'recruitment' && post.job?.title
+                ? buildJobSchema({
+                    title: post.job.title,
+                    company: post.job.company || 'Đơn vị tuyển dụng',
+                    location: post.job.location,
+                    description: post.text,
+                    salaryMin: post.job.salaryMin,
+                    salaryMax: post.job.salaryMax,
+                    applyUrl: post.job.applyUrl,
+                  })
+                : post.type === 'event' && post.event?.title
+                  ? buildEventSchema({
+                      title: post.event.title,
+                      description: post.text,
+                      location: post.event.location,
+                      startTime: post.event.startTime,
+                      endTime: post.event.endTime,
+                      image: post.images?.[0] || post.image || undefined,
+                    })
+                  : undefined
+            }
+          />
           <Reveal>
             <PostDetailCard
               post={post}
@@ -1234,7 +1324,7 @@ function CommentsSection({
   }, [comments])
 
   return (
-    <section id="comments" className="space-y-4">
+    <section id="comments" className="space-y-5">
       {/* Ô soạn & đăng bình luận gốc (UC18) */}
       <div id="comments-box">
         <CommentBox isGuest={isGuest} postId={postId} />
@@ -1254,65 +1344,106 @@ function CommentsSection({
       ) : comments.length === 0 ? (
         <p className="py-6 text-center text-sm text-text-subtle">{t('feed.noCommentsYet', 'Chưa có bình luận nào — hãy là người đầu tiên bình luận.')}</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {rootComments.map((root) => {
             const replies = repliesByParent[root.id] || []
+            const isReplyingHere = replyingTo?.id === root.id
+            const hasThread = replies.length > 0 || isReplyingHere
+            const threadAuthors = Array.from(new Set([root.author, ...replies.map((r) => r.author)]))
             return (
-              <div key={root.id} className="space-y-2.5">
+              <div key={root.id}>
                 {/* Bình luận gốc */}
                 <CommentItem
                   comment={root}
                   postId={postId}
+                  hasThread={hasThread}
                   canEdit={canManageComment(root)}
                   onReply={!isGuest ? handleReply : undefined}
                   onDelete={canManageComment(root) ? openDeleteComment : undefined}
                 />
-                {/* Các bình luận trả lời */}
-                {replies.map((reply) => (
-                  <CommentItem
-                    key={reply.id}
-                    comment={reply}
-                    postId={postId}
-                    parentAuthor={root.author}
-                    canEdit={canManageComment(reply)}
-                    onReply={!isGuest ? handleReply : undefined}
-                    onDelete={canManageComment(reply) ? openDeleteComment : undefined}
-                  />
-                ))}
 
-                {/* Form soạn trả lời hiển thị inline ngay dưới thread này */}
-                {replyingTo?.id === root.id && (
-                  <InlineReplyForm
-                    postId={postId}
-                    replyingTo={replyingTo}
-                    onCancel={() => setReplyingTo(null)}
-                    onSuccess={() => setReplyingTo(null)}
-                  />
+                {/* Các bình luận trả lời & form soạn trả lời dạng nhánh cây */}
+                {hasThread && (
+                  <div className="ml-[17px]">
+                    {replies.map((reply, idx) => {
+                      const isLast = idx === replies.length - 1 && !isReplyingHere
+                      return (
+                        <div key={reply.id} className="relative pl-6 pt-2.5">
+                          {!isLast && (
+                            <span
+                              aria-hidden
+                              className="absolute left-0 top-0 bottom-0 w-0.5 bg-border-strong/80 dark:bg-border-strong"
+                            />
+                          )}
+                          <span
+                            aria-hidden
+                            className="absolute left-0 top-0 h-[27px] w-4 rounded-bl-xl border-b-2 border-l-2 border-border-strong/80 dark:border-border-strong"
+                          />
+                          <CommentItem
+                            comment={reply}
+                            postId={postId}
+                            parentAuthor={root.author}
+                            knownAuthors={threadAuthors}
+                            canEdit={canManageComment(reply)}
+                            onReply={!isGuest ? handleReply : undefined}
+                            onDelete={canManageComment(reply) ? openDeleteComment : undefined}
+                          />
+                        </div>
+                      )
+                    })}
+
+                    {isReplyingHere && replyingTo && (
+                      <div className="relative pl-6 pt-2.5">
+                        <span
+                          aria-hidden
+                          className="absolute left-0 top-0 h-[27px] w-4 rounded-bl-xl border-b-2 border-l-2 border-border-strong/80 dark:border-border-strong"
+                        />
+                        <InlineReplyForm
+                          postId={postId}
+                          replyingTo={replyingTo}
+                          onCancel={() => setReplyingTo(null)}
+                          onSuccess={() => setReplyingTo(null)}
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )
           })}
 
           {/* Các bình luận mồ côi (nếu có, để đề phòng lỗi dữ liệu) */}
-          {orphanedComments.map((c) => (
-            <div key={c.id} className="space-y-2.5">
-              <CommentItem
-                comment={c}
-                postId={postId}
-                canEdit={canManageComment(c)}
-                onReply={!isGuest ? handleReply : undefined}
-                onDelete={canManageComment(c) ? openDeleteComment : undefined}
-              />
-              {replyingTo?.id === c.id && (
-                <InlineReplyForm
+          {orphanedComments.map((c) => {
+            const isReplyingOrphan = replyingTo?.id === c.id
+            return (
+              <div key={c.id}>
+                <CommentItem
+                  comment={c}
                   postId={postId}
-                  replyingTo={replyingTo}
-                  onCancel={() => setReplyingTo(null)}
-                  onSuccess={() => setReplyingTo(null)}
+                  hasThread={isReplyingOrphan}
+                  canEdit={canManageComment(c)}
+                  onReply={!isGuest ? handleReply : undefined}
+                  onDelete={canManageComment(c) ? openDeleteComment : undefined}
                 />
-              )}
-            </div>
-          ))}
+                {isReplyingOrphan && replyingTo && (
+                  <div className="ml-[17px]">
+                    <div className="relative pl-6 pt-2.5">
+                      <span
+                        aria-hidden
+                        className="absolute left-0 top-0 h-[27px] w-4 rounded-bl-xl border-b-2 border-l-2 border-border-strong/80 dark:border-border-strong"
+                      />
+                      <InlineReplyForm
+                        postId={postId}
+                        replyingTo={replyingTo}
+                        onCancel={() => setReplyingTo(null)}
+                        onSuccess={() => setReplyingTo(null)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
 
           {/* Điều khiển tải thêm bình luận */}
           {hasNextPage && (
