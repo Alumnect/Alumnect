@@ -52,8 +52,16 @@ export async function uploadImage(
     params: { fileName: name, contentType: 'image/jpeg', folder },
   })
   const { uploadUrl, publicUrl } = res.data
-  const blob = await (await fetch(manip.uri)).blob()
+  const read = await fetch(manip.uri)
+  if (!read.ok) throw new Error('Không thể đọc ảnh đã chọn.')
+  const raw = await read.blob()
+  if (!raw.size) throw new Error('Ảnh đã chọn không có nội dung.')
+  // Content-Type của blob phải trùng đúng với loại đã dùng để ký URL, nếu không R2 trả 403 SignatureDoesNotMatch.
+  const blob = raw.slice(0, raw.size, 'image/jpeg')
   const put = await fetch(uploadUrl, { method: 'PUT', body: blob, headers: { 'Content-Type': 'image/jpeg' } })
-  if (!put.ok) throw new Error('Tải ảnh lên thất bại. Vui lòng thử lại.')
+  if (!put.ok) {
+    if (__DEV__) console.warn('[uploadImage] PUT failed', put.status, await put.text().catch(() => ''))
+    throw new Error(`Tải ảnh lên thất bại (${put.status}). Vui lòng thử lại.`)
+  }
   return publicUrl
 }

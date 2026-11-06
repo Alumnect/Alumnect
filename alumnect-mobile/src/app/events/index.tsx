@@ -4,8 +4,9 @@ import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { CalendarDays, Globe, History, MapPin, Users } from '@/components/icons'
+import { Globe, History, MapPin, Users } from '@/components/icons'
 import { Avatar, Card, Chip, Empty, IconButton, Screen, SearchBar, Segmented, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { ListSkeleton } from '@/components/Skeleton'
 import { Header } from '@/components/Header'
 import {
@@ -161,7 +162,7 @@ export default function EventsScreen() {
               <Empty
                 error={q.error}
                 onRetry={() => { void q.refetch() }}
-                icon={<CalendarDays size={28} color={t.primary} />}
+                icon={<BrandIcon name="calendar" size={56} />}
                 title={keyword || quick !== 'all' ? 'Không có sự kiện phù hợp' : 'Chưa có sự kiện'}
                 text={keyword || quick !== 'all' ? 'Thử đổi từ khóa hoặc bộ lọc khác.' : 'Sự kiện mới sẽ xuất hiện ở đây khi được đăng.'}
               />

@@ -3,8 +3,9 @@ import { View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Briefcase, Coins, MapPin, Plus, TrendingUp } from '@/components/icons'
+import { Briefcase, MapPin, Plus, TrendingUp } from '@/components/icons'
 import { Button, Card, Empty, Screen, SearchBar, Segmented, Tag, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { SelectField } from '@/components/SelectField'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { Header } from '@/components/Header'
@@ -146,7 +147,7 @@ export default function SalaryScreen() {
           onRefresh={() => (tab === 'feed' ? feed.refetch() : stats.refetch())}
           ListHeaderComponent={header}
           ListEmptyComponent={
-            tab === 'feed' && !feed.isLoading ? <Empty icon={<Coins size={28} color={t.primary} />} title="Chưa có đóng góp" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." /> : null
+            tab === 'feed' && !feed.isLoading ? <Empty icon={<BrandIcon name="coin" size={56} />} title="Chưa có đóng góp" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." /> : null
           }
           renderItem={({ item }) => (
             <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>

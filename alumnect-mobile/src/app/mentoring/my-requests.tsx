@@ -3,8 +3,9 @@ import { View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { CalendarDays, FilePlus2, FileText, Users } from '@/components/icons'
+import { CalendarDays, FilePlus2, Users } from '@/components/icons'
 import { Button, Card, Empty, Screen, Segmented, Tag, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { Header } from '@/components/Header'
 import { ListSkeleton } from '@/components/Skeleton'
 import { REQUEST_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
@@ -41,7 +42,7 @@ export default function MyRequestsScreen() {
             refreshing={q.isRefetching}
             onRefresh={() => q.refetch()}
             ListEmptyComponent={
-              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<FileText size={28} color={t.primary} />} title="Chưa có yêu cầu" text="Tạo yêu cầu để hệ thống ghép bạn với mentor phù hợp." action="Tạo yêu cầu" onAction={() => router.push('/mentoring/create-request')} />
+              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<BrandIcon name="list" size={56} />} title="Chưa có yêu cầu" text="Tạo yêu cầu để hệ thống ghép bạn với mentor phù hợp." action="Tạo yêu cầu" onAction={() => router.push('/mentoring/create-request')} />
             }
             renderItem={({ item }) => (
               <Card style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => router.push({ pathname: '/mentoring/request/[id]', params: { id: String(item.id) } })}>

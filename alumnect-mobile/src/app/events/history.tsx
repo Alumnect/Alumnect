@@ -6,8 +6,9 @@ import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Image } from 'expo-image'
 import { Card, Chip, Empty, Screen, Txt, Tag } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { ListSkeleton } from '@/components/Skeleton'
-import { CalendarDays, Globe, MapPin } from '@/components/icons'
+import { Globe, MapPin } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { DateBadge, eventEyebrow, isOnlineLocation, locationLabel } from '@/components/EventBits'
 import { eventApi } from '@/api/events'
@@ -44,7 +45,7 @@ export default function EventHistoryScreen() {
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
-          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<CalendarDays size={26} color={t.primary} />} title="Chưa tham gia sự kiện" text="Sự kiện bạn đăng ký sẽ được lưu lại ở đây." action="Khám phá sự kiện" onAction={() => router.push('/events')} />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<BrandIcon name="calendar" size={56} />} title="Chưa tham gia sự kiện" text="Sự kiện bạn đăng ký sẽ được lưu lại ở đây." action="Khám phá sự kiện" onAction={() => router.push('/events')} />}
           renderItem={({ item }) => (
             <HistoryCard item={item} onPress={() => router.push({ pathname: '/events/[id]', params: { id: String(item.eventId) } })} />
           )}
