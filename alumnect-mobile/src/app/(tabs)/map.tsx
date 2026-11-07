@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ActivityIndicator, Pressable, ScrollView as RNScrollView, View } from 'react-native'
+import { ActivityIndicator, Pressable, ScrollView as RNScrollView, StyleSheet, View } from 'react-native'
 import { WebView as RNWebView } from 'react-native-webview'
 import type { WebViewMessageEvent } from 'react-native-webview'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Avatar, Button, Empty, Screen, Tag, Txt, SearchBar } from '@/components/ui'
-import { Header } from '@/components/Header'
+import { Avatar, Button, Empty, PageHeader, Screen, Tag, Txt, SearchBar } from '@/components/ui'
 import { ActionSheet } from '@/components/ActionSheet'
 import { Briefcase, Check, ChevronDown, GraduationCap, MapPin, UserRound, X } from '@/components/icons'
 import { exploreApi } from '@/api/explore'
@@ -157,7 +156,9 @@ export default function MapScreen() {
 
   return (
     <Screen>
-      <Header title="Bản đồ mạng lưới Alumni" subtitle="Khám phá cộng đồng cựu sinh viên FPTU trên toàn cầu." />
+      <View style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
+        <PageHeader title="Bản đồ Alumni" subtitle="Khám phá mạng lưới cựu sinh viên FPTU trên toàn cầu" />
+      </View>
       <View style={{ flex: 1 }}>
         <WebView
           key={reloadKey}
@@ -351,3 +352,4 @@ export default function MapScreen() {
     </Screen>
   )
 }
+

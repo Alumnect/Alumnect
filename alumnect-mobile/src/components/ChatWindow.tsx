@@ -4,7 +4,6 @@ import * as DocumentPicker from 'expo-document-picker'
 import { TextInput } from '@/components/AppText'
 import { FlashList } from '@shopify/flash-list'
 import { Image } from 'expo-image'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ImageIcon, Info, Paperclip, Send, X } from '@/components/icons'
@@ -78,7 +77,6 @@ export function ChatWindow({
   isMentoring?: boolean
 }) {
   const t = useTheme()
-  const insets = useSafeAreaInsets()
   const router = useRouter()
   const qc = useQueryClient()
   const me = useAuthStore((s) => s.user)
@@ -176,7 +174,7 @@ export function ChatWindow({
           </View>
         </View>
       ) : null}
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined} keyboardVerticalOffset={Platform.OS === 'android' ? insets.top : 0}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlashList
           data={messages}
           inverted

@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { KeyboardAvoidingView, Platform, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { FlashList } from '@shopify/flash-list'
 import { useLocalSearchParams } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -25,7 +24,6 @@ function thread(items: Comment[]) {
 
 export default function PostDetailScreen() {
   const t = useTheme()
-  const insets = useSafeAreaInsets()
   const qc = useQueryClient()
   const { id } = useLocalSearchParams<{ id: string }>()
   const me = useAuthStore((s) => s.user)
@@ -84,8 +82,7 @@ export default function PostDetailScreen() {
       <Header title={`Bài viết của ${post.data.author}`} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'android' ? insets.top : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <FlashList
           data={items}
@@ -93,10 +90,8 @@ export default function PostDetailScreen() {
           style={{ backgroundColor: t.card }}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.bg, paddingTop: 10 }}>
-                <View style={{ paddingHorizontal: 16 }}>
-                  <PostCard post={post.data} detail />
-                </View>
+              <View style={{ backgroundColor: t.bg, paddingBottom: 8 }}>
+                <PostCard post={post.data} detail />
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>
                 <Txt weight="800" size={16} style={{ flex: 1 }}>Bình luận</Txt>
