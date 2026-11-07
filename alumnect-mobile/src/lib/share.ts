@@ -5,8 +5,8 @@
  * nên phần nhắn tin trong ứng dụng hoạt động ngay cả khi chưa có domain.
  */
 
-/** Địa chỉ web công khai (để trống nếu chưa deploy). Chỉ cần cho "Sao chép liên kết" / chia sẻ ra ngoài. */
-export const WEB_BASE_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? '').trim().replace(/\/$/, '')
+/** Địa chỉ web công khai, dùng cho "Sao chép liên kết" / chia sẻ ra ngoài. Mặc định là bản Web đang chạy; ghi đè bằng EXPO_PUBLIC_WEB_URL. */
+export const WEB_BASE_URL = (process.env.EXPO_PUBLIC_WEB_URL || 'https://alumnect.online').trim().replace(/\/$/, '')
 export const hasPublicUrl = () => WEB_BASE_URL.length > 0
 
 export const postPath = (id: string | number) => `/app/posts/${id}`

@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/be-vietnam-pro": "^0.4.1",
+    "@expo-google-fonts/caveat": "^0.4.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "9.2.1",
     "@react-native-community/netinfo": "12.0.1",
@@ -48,9 +49,9 @@
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
-    "typescript": "~6.0.3",
     "eslint": "^9.0.0",
-    "eslint-config-expo": "~58.0.4"
+    "eslint-config-expo": "~58.0.4",
+    "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",

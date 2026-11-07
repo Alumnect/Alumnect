@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
@@ -12,7 +12,8 @@ import { chatApi, convAvatar, convName, isGroup } from '@/api/chat'
 import { hasPublicUrl, toUrl } from '@/lib/share'
 import { useDebounced } from '@/lib/hooks'
 import { toast, errMsg } from '@/lib/toast'
-import { useTheme, radius } from '@/theme'
+import { useTheme } from '@/theme'
+import { SheetModal } from './SheetModal'
 
 export interface ShareItem {
   title: string
@@ -110,10 +111,8 @@ export function ShareSheet({ visible, onClose, item }: { visible: boolean; onClo
   }
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
-      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' }} onPress={close} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ backgroundColor: t.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, padding: 16, paddingBottom: insets.bottom + 16, maxHeight: '88%' }}>
+    <SheetModal visible={visible} onClose={close} maxHeight={0.88}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
             {view === 'send' ? <Pressable onPress={() => setView('options')} hitSlop={10} style={{ marginRight: 6 }}><ChevronLeft size={24} color={t.text} /></Pressable> : null}
             <Txt size={17} weight="800" style={{ flex: 1 }}>{view === 'send' ? 'Gửi qua tin nhắn' : `Chia sẻ ${label}`}</Txt>
@@ -165,7 +164,6 @@ export function ShareSheet({ visible, onClose, item }: { visible: boolean; onClo
             </View>
           )}
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    </SheetModal>
   )
 }
