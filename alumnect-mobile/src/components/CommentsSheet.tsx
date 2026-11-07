@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ActivityIndicator, Animated, Easing, FlatList, Keyboard, Modal, PanResponder, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
+import { ActivityIndicator, Animated, FlatList, Keyboard, Modal, PanResponder, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -12,11 +12,10 @@ import { feedApi } from '@/api/feed'
 import type { Comment } from '@/api/feed'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
+import { SHEET_CLOSE_MS, SHEET_EASE_IN, SHEET_EASE_OUT, SHEET_OPEN_MS } from './SheetModal'
 import { toast, errMsg } from '@/lib/toast'
 
 const EMOJIS = ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂']
-const OPEN_MS = 300
-const CLOSE_MS = 220
 
 /** Gom phản hồi ngay dưới bình luận gốc. */
 function group(items: Comment[]) {
@@ -82,7 +81,7 @@ export function CommentsSheet({ postId, visible, onClose }: { postId: string; vi
   const close = useCallback(() => {
     Keyboard.dismiss()
     setClosing(true)
-    Animated.timing(slide, { toValue: sheetH, duration: CLOSE_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => {
+    Animated.timing(slide, { toValue: sheetH, duration: SHEET_CLOSE_MS, easing: SHEET_EASE_IN, useNativeDriver: true }).start(() => {
       setClosing(false)
       onClose()
     })
@@ -92,7 +91,7 @@ export function CommentsSheet({ postId, visible, onClose }: { postId: string; vi
   useEffect(() => {
     if (visible) {
       slide.setValue(sheetH)
-      Animated.timing(slide, { toValue: 0, duration: OPEN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start()
+      Animated.timing(slide, { toValue: 0, duration: SHEET_OPEN_MS, easing: SHEET_EASE_OUT, useNativeDriver: true }).start()
     }
   }, [visible, slide, sheetH])
 
@@ -160,7 +159,7 @@ export function CommentsSheet({ postId, visible, onClose }: { postId: string; vi
   const bottomPad = kb > 0 ? 6 : insets.bottom
 
   return (
-    <Modal visible={mounted} transparent animationType="none" onRequestClose={close} statusBarTranslucent>
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={close} statusBarTranslucent navigationBarTranslucent>
       <View style={{ flex: 1, justifyContent: 'flex-end' }} onLayout={(e) => setRootH(e.nativeEvent.layout.height)}>
         <Animated.View style={{ ...(StyleSheet.absoluteFill as object), backgroundColor: t.overlay, opacity: slide.interpolate({ inputRange: [0, sheetH], outputRange: [1, 0], extrapolate: 'clamp' }) }}>
           <Pressable style={{ flex: 1 }} onPress={close} accessibilityRole="button" accessibilityLabel="Đóng bình luận" />
