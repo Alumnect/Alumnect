@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useLoginPrompt } from '@/store/loginPrompt'
 import { compact, cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { SeoHead } from '@/components/seo'
 
 export function EventsPage() {
   const { t, i18n } = useTranslation()
@@ -69,6 +70,11 @@ export function EventsPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
+      <SeoHead
+        title="Sự kiện Cựu sinh viên"
+        description="Tham gia các sự kiện và buổi gặp gỡ từ cộng đồng cựu sinh viên Đại học FPT."
+        keywords="sự kiện FPT, sự kiện cựu sinh viên, FPT alumni event, AlumNect sự kiện"
+      />
       <PageHeader
         icon={<CalendarDays size={20} />}
         title={t('event.pageTitle')}

@@ -52,6 +52,7 @@ import { useToggleLike, useToggleSavePost, CreatePostModal, DeletePostModal, Sha
 import { ReportPostModal } from '@/features/report'
 import { EventRsvpButton, CancelEventModal, useCancelEvent } from '@/features/event'
 import { useNavigate } from 'react-router-dom'
+import { SeoHead, buildJobSchema, buildEventSchema } from '@/components/seo'
 
 
 /** Nhãn + tông màu badge cho từng loại bài viết (đồng bộ với bảng tin UC15). */
@@ -1099,6 +1100,42 @@ export function PostDetailPage() {
         )
       ) : post ? (
         <>
+          <SeoHead
+            title={
+              post.type === 'recruitment' && post.job?.title
+                ? `${post.job.title} - ${post.job.company || 'Tuyển dụng'}`
+                : post.type === 'event' && post.event?.title
+                  ? `${post.event.title} - Sự kiện`
+                  : post.text
+                    ? `${post.text.slice(0, 70)}...`
+                    : 'Bài viết cộng đồng'
+            }
+            description={post.text ? post.text.slice(0, 160) : 'Chi tiết bài viết trên AlumNect - FPT University Alumni'}
+            image={post.images?.[0] || post.image || undefined}
+            type="article"
+            schema={
+              post.type === 'recruitment' && post.job?.title
+                ? buildJobSchema({
+                    title: post.job.title,
+                    company: post.job.company || 'Đơn vị tuyển dụng',
+                    location: post.job.location,
+                    description: post.text,
+                    salaryMin: post.job.salaryMin,
+                    salaryMax: post.job.salaryMax,
+                    applyUrl: post.job.applyUrl,
+                  })
+                : post.type === 'event' && post.event?.title
+                  ? buildEventSchema({
+                      title: post.event.title,
+                      description: post.text,
+                      location: post.event.location,
+                      startTime: post.event.startTime,
+                      endTime: post.event.endTime,
+                      image: post.images?.[0] || post.image || undefined,
+                    })
+                  : undefined
+            }
+          />
           <Reveal>
             <PostDetailCard
               post={post}

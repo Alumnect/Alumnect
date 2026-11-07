@@ -480,3 +480,44 @@ export function getIndustryIcon(name?: string | null): LucideIcon {
   if (!name) return LayoutGrid
   return INDUSTRY_ICONS[name.trim()] || LayoutGrid
 }
+
+/** Số nguyên (VNĐ) có thể về dạng chuỗi từ API → chuẩn hóa về number. */
+const vndNumber = z.union([z.string(), z.number()]).transform(Number)
+
+/**
+ * Schema Zod cho kết quả AI kiểm tra lương [A1] — khớp `SalaryAiCheckResponse` phía Backend. Quyết định chặn/xác nhận
+ * do Backend tính; Frontend chỉ hiển thị và khóa nút gửi khi `isBlocked`.
+ */
+export const salaryAiCheckSchema = z.object({
+  anomalyPercentage: z.number().default(0),
+  isBlocked: z.boolean().default(false),
+  requiresConfirmation: z.boolean().default(false),
+  status: z
+    .enum(['NORMAL', 'BELOW_MARKET_WARNING', 'HIGH_ANOMALY_ALLOWED', 'EXCESSIVE_ANOMALY_BLOCKED'])
+    .catch('NORMAL'),
+  suggestedCorrectedAmountVnd: vndNumber.nullable().catch(null),
+  realMarketRange: z.object({
+    minVnd: vndNumber,
+    medianVnd: vndNumber,
+    maxVnd: vndNumber,
+    percentileEstimate: z.number().default(50),
+  }),
+  alumnectInternalRange: z
+    .object({
+      minVnd: vndNumber.nullable().catch(null),
+      medianVnd: vndNumber.nullable().catch(null),
+      maxVnd: vndNumber.nullable().catch(null),
+      sampleCount: z.number().default(0),
+    })
+    .nullable()
+    .catch(null),
+  marketComparisonVi: z.string().default(''),
+  advisoryMessageVi: z.string().default(''),
+  source: z.string().default('LOCAL_FALLBACK'),
+})
+export type SalaryAiCheck = z.infer<typeof salaryAiCheckSchema>
+
+/** Triệu VNĐ với tối đa 1 chữ số thập phân (VD 38, 12.5) — dùng hiển thị dải lương A1. */
+export function toMillionText(vnd: number): string {
+  return (vnd / 1_000_000).toFixed(1).replace(/\.0$/, '')
+}

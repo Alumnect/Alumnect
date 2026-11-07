@@ -36,8 +36,9 @@ import {
   OTHER_JOB_TITLE_ID,
   getIndustryIcon,
 } from '../model/salary'
-import type { CreateSalaryContributionInput, SalaryContribution } from '../model/salary'
-import { useCreateSalaryContribution, useUpdateSalaryContribution, useIndustries } from '../hooks/useSalary'
+import type { CreateSalaryContributionInput, SalaryAiCheck, SalaryContribution } from '../model/salary'
+import { useCreateSalaryContribution, useUpdateSalaryContribution, useIndustries, useSalaryAiCheck } from '../hooks/useSalary'
+import { SalaryAiCheckPanel } from './SalaryAiCheckPanel'
 import { EntitySelectField, type SelectOption } from '@/features/forum/components/EntitySelectField'
 
 /** Class dùng chung cho các ô nhập liệu trong form. */
@@ -82,6 +83,10 @@ export function ContributeSalaryModal({
   const updateMut = useUpdateSalaryContribution(editContribution?.id ?? '')
   const { mutate, isPending, error } = isEdit ? updateMut : createMut
 
+  // [A1] AI kiểm tra lương: kết quả gắn với "dấu vân tay" dữ liệu đã kiểm tra; đổi dữ liệu → kết quả cũ tự vô hiệu.
+  const aiCheckMut = useSalaryAiCheck()
+  const [aiCheck, setAiCheck] = useState<{ key: string; result: SalaryAiCheck } | null>(null)
+
   // Xử lý giá trị ban đầu cho Chức danh công việc
   const initialJobTitle = editContribution?.jobTitle?.trim() ?? ''
   const isStandardTitle = (STANDARD_JOB_TITLES as readonly string[]).includes(initialJobTitle)
@@ -102,6 +107,7 @@ export function ContributeSalaryModal({
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<CreateSalaryContributionInput>({
     resolver: zodResolver(createSalaryContributionSchema),
@@ -118,6 +124,13 @@ export function ContributeSalaryModal({
 
   const industryId = watch('industryId')
   const grossAmount = watch('grossAmount')
+  const watchedTitle = watch('jobTitle')
+  const watchedYears = watch('yearsExperience')
+  const watchedCity = watch('locationCity')
+
+  const currentKey = JSON.stringify([grossAmount, watchedTitle, watchedYears, watchedCity, industryId])
+  const activeCheck = aiCheck && aiCheck.key === currentKey ? aiCheck.result : null
+  const isChecking = aiCheckMut.isPending
 
   // Tìm tên ngành nghề đang được chọn
   const selectedIndustryName = useMemo(() => {
@@ -194,32 +207,78 @@ export function ContributeSalaryModal({
     setValue('locationCity', chosen, { shouldDirty: true })
   }
 
-  const onSubmit = (values: CreateSalaryContributionInput) => {
-    mutate(
-      {
-        ...values,
-        company: values.company?.trim() || undefined,
-        region: values.region?.trim() || undefined,
-        locationCity: values.locationCity?.trim() || undefined,
+  const keyOf = (v: CreateSalaryContributionInput) =>
+    JSON.stringify([v.grossAmount, v.jobTitle, v.yearsExperience, v.locationCity, v.industryId])
+
+  const buildPayload = (values: CreateSalaryContributionInput): CreateSalaryContributionInput => ({
+    ...values,
+    company: values.company?.trim() || undefined,
+    region: values.region?.trim() || undefined,
+    locationCity: values.locationCity?.trim() || undefined,
+  })
+
+  const doSave = (values: CreateSalaryContributionInput) => mutate(buildPayload(values), { onSuccess })
+
+  /** Gọi AI kiểm tra. `autoSave`: kết quả NORMAL thì lưu luôn; AI lỗi thì KHÔNG chặn người dùng (lưu như cũ). */
+  const runAiCheck = (values: CreateSalaryContributionInput, autoSave: boolean) => {
+    aiCheckMut.mutate(buildPayload(values), {
+      onSuccess: (result) => {
+        if (autoSave && result.status === 'NORMAL') {
+          doSave(values)
+        } else {
+          setAiCheck({ key: keyOf(values), result })
+        }
       },
-      { onSuccess },
-    )
+      onError: () => {
+        if (autoSave) doSave(values)
+      },
+    })
   }
+
+  const onSubmit = (values: CreateSalaryContributionInput) => {
+    // Đã kiểm tra đúng dữ liệu này và không bị chặn (người dùng vừa bấm "Xác nhận gửi" / "Gửi") → lưu.
+    if (aiCheck && aiCheck.key === keyOf(values) && !aiCheck.result.isBlocked) {
+      doSave(values)
+      return
+    }
+    runAiCheck(values, true)
+  }
+
+  /** Sửa nhanh 1 chạm theo gợi ý của AI rồi kiểm tra lại (không tự lưu để người dùng nhìn kết quả). */
+  const applySuggestion = (amountVnd: number) => {
+    setValue('grossAmount', amountVnd, { shouldDirty: true, shouldValidate: true })
+    runAiCheck({ ...getValues(), grossAmount: amountVnd }, false)
+  }
+
+  const isBlocked = !!activeCheck?.isBlocked
+  const needsConfirm = !!activeCheck && !activeCheck.isBlocked && activeCheck.requiresConfirmation
+  const busy = isPending || isChecking
+  const submitLabel = busy
+    ? (isEdit ? t('common.saving') : t('common.sending'))
+    : isBlocked
+      ? t('salary.aiBlockedCannotSend')
+      : needsConfirm
+        ? (isEdit ? t('salary.aiConfirmSave') : t('salary.aiConfirmSend'))
+        : isEdit
+          ? t('common.saveChanges')
+          : t('salary.submitContribution', 'Gửi đóng góp')
 
   const footer = (
     <div className="flex items-center justify-end gap-2.5">
-      <Button type="button" variant="secondary" onClick={onClose} disabled={isPending} size="md">
+      <Button type="button" variant="secondary" onClick={onClose} disabled={busy} size="md">
         {t('common.cancel')}
       </Button>
       <Button
         type="submit"
         form="contribute-salary-form"
         variant="gold"
-        disabled={isPending}
+        disabled={busy || isBlocked}
         size="md"
-        leftIcon={isPending ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+        leftIcon={
+          busy ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />
+        }
       >
-        {isEdit ? (isPending ? t('common.processing') : t('common.saveChanges')) : isPending ? t('common.processing') : t('salary.contributeData')}
+        {submitLabel}
       </Button>
     </div>
   )
@@ -227,7 +286,7 @@ export function ContributeSalaryModal({
   return (
     <Modal
       isOpen
-      onClose={isPending ? () => {} : onClose}
+      onClose={busy ? () => {} : onClose}
       title={isEdit ? t('salary.editSalaryData') : t('salary.contributeSalaryData')}
       icon={<Coins size={18} className="text-primary-solid" />}
       maxWidthClassName="max-w-lg"
@@ -336,6 +395,17 @@ export function ContributeSalaryModal({
 
           {errors.grossAmount && <p className="mt-1.5 text-xs text-danger">{errors.grossAmount.message}</p>}
         </div>
+
+        {/* [A1] Kết quả AI kiểm tra lương: xanh / vàng (xác nhận) / đỏ (chặn) + sửa nhanh */}
+        {activeCheck && (
+          <SalaryAiCheckPanel
+            result={activeCheck}
+            enteredAmount={watch('grossAmount')}
+            jobTitle={watch('jobTitle')}
+            onApplySuggestion={applySuggestion}
+            disabled={busy}
+          />
+        )}
 
         {/* 4. Phân cách nhẹ cho nhóm thông tin bổ sung */}
         <div className="pt-2 border-t border-border">
