@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { TextInput } from '@/components/AppText'
 import { useRouter } from 'expo-router'
-import { CornerDownRight, Send, X } from '@/components/icons'
+import { BadgeCheck, CornerDownRight, Send, X } from '@/components/icons'
 import { Avatar, Txt } from './ui'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
@@ -17,6 +17,10 @@ export const CommentBubble = React.memo(function CommentBubble({
   reply,
   mine,
   edited,
+  verified,
+  headline,
+  replyLabel = 'Phản hồi',
+  extra,
   onReply,
   onMore,
 }: {
@@ -28,6 +32,13 @@ export const CommentBubble = React.memo(function CommentBubble({
   reply?: boolean
   mine?: boolean
   edited?: boolean
+  /** Dấu tích xác thực cạnh tên (câu trả lời của cựu sinh viên). */
+  verified?: boolean
+  /** Chức danh hiển thị dưới tên, bên trong bong bóng. */
+  headline?: string | null
+  replyLabel?: string
+  /** Phần tử thêm vào hàng hành động (VD: nút bình chọn của Hỏi đáp). */
+  extra?: React.ReactNode
   onReply?: () => void
   onMore?: () => void
 }) {
@@ -41,13 +52,18 @@ export const CommentBubble = React.memo(function CommentBubble({
       </Pressable>
       <View style={{ flex: 1, alignItems: 'flex-start' }}>
         <Pressable onLongPress={onMore} delayLongPress={300} style={{ backgroundColor: t.inputBg, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 8, maxWidth: '100%' }}>
-          <Txt weight="700" size={13} onPress={openAuthor}>{author}</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Txt weight="700" size={13} onPress={openAuthor} numberOfLines={1} style={{ flexShrink: 1 }}>{author}</Txt>
+            {verified ? <BadgeCheck size={13} color={t.info} weight="fill" /> : null}
+          </View>
+          {headline ? <Txt muted size={12} numberOfLines={1}>{headline}</Txt> : null}
           <Txt size={14} style={{ lineHeight: 20 }}>{text}</Txt>
         </Pressable>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, marginTop: 3 }}>
+          {extra}
           {time ? <Txt muted size={12}>{time}</Txt> : null}
           {edited ? <Txt muted size={12}>Đã chỉnh sửa</Txt> : null}
-          {onReply ? <Txt muted size={12} weight="700" onPress={onReply}>Phản hồi</Txt> : null}
+          {onReply ? <Txt muted size={12} weight="700" onPress={onReply}>{replyLabel}</Txt> : null}
           {mine && onMore ? <Txt muted size={12} weight="700" onPress={onMore}>Tuỳ chọn</Txt> : null}
         </View>
       </View>
