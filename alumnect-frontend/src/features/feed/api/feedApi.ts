@@ -5,6 +5,8 @@ import { FEED_POSTS } from '@/lib/constants'
 import { postSchema } from '../model/post'
 import type { FeedFilter, FeedPageResult, Post } from '../model/post'
 import type { CreatePostInput } from '../model/createPost'
+import { aiStudioSchema } from '../model/aiStudio'
+import type { AiStudioResult } from '../model/aiStudio'
 
 /**
  * Tầng gọi API cho UC15 - View community Feed.
@@ -187,6 +189,19 @@ export const feedApi = {
     const body = await http.post('/posts', input)
     const raw = (body as { data?: unknown })?.data ?? body
     return postSchema.parse(raw)
+  },
+
+  /**
+   * AI Studio [B1]: từ một câu ý tưởng ngắn, nhận về loại bài + nội dung hoàn chỉnh + dữ liệu tự điền form
+   * Job/Event + cấu hình Poster trong một lần gọi. Gọi `POST /api/v1/posts/ai-studio` (Bearer do interceptor tự đính).
+   * @param prompt        Câu ý tưởng người dùng nhập
+   * @param preferredType Loại bài đang chọn trên giao diện (tùy chọn, chỉ để gợi ý)
+   * @return Kết quả AI Studio đã chuẩn hóa
+   */
+  aiStudio: async (prompt: string, preferredType?: string): Promise<AiStudioResult> => {
+    const body = await http.post('/posts/ai-studio', { prompt, preferredType }, { timeout: 20000 })
+    const raw = (body as { data?: unknown })?.data ?? body
+    return aiStudioSchema.parse(raw)
   },
 
   /**

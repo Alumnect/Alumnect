@@ -1,12 +1,13 @@
 import React, { useDeferredValue, useMemo, useState } from 'react'
-import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, useWindowDimensions, View } from 'react-native'
+import { Keyboard, Pressable, useWindowDimensions, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { Text } from '@/components/AppText'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Check, ChevronDown, X } from '@/components/icons'
 import { Button, IconButton, SearchBar, Txt } from './ui'
 import { normalize } from '@/constants/filters'
-import { useTheme, radius } from '@/theme'
+import { useTheme } from '@/theme'
+import { SheetModal } from './SheetModal'
 
 export type SelectOption = { value: string; label: string }
 
@@ -80,28 +81,20 @@ function SelectionField({ label, options, placeholder = 'Chọn...', error, clea
     {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
     <SelectTrigger label={label ?? placeholder} summary={summary} placeholder={placeholder} expanded={open} error={error} onPress={() => setOpen(true)} onClear={clearable && values.some(Boolean) ? () => onChange([]) : undefined} />
     {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
-    <Modal visible={open} transparent animationType="slide" onRequestClose={close}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'android' ? insets.top : 0}
-        style={{ flex: 1, justifyContent: 'flex-end' }}
-      >
-        <Pressable accessibilityRole="button" accessibilityLabel="Đóng danh sách lựa chọn" style={{ position: 'absolute', inset: 0, backgroundColor: t.overlay }} onPress={close} />
-        <View style={{ height: sheetHeight, maxHeight: '85%', backgroundColor: t.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingBottom: insets.bottom + 8 }}>
-          <View style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: t.border, marginTop: 10 }} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingLeft: 16, gap: 8 }}>
-            <Txt heading size={18} weight="600" style={{ flex: 1 }}>{label ?? placeholder}</Txt>
-            {multiple && clearable ? <Button title="Bỏ chọn" variant="ghost" size="sm" disabled={!values.length} onPress={() => onChange([])} /> : null}
-            <IconButton filled={false} label="Đóng danh sách" icon={<X size={20} color={t.textMuted} />} onPress={close} />
-          </View>
-          {open ? <SelectOptions options={options} values={values} multiple={multiple} onSelect={(value) => {
-            onChange(multiple ? values.includes(value) ? values.filter((v) => v !== value) : [...values, value] : [value])
-            if (!multiple) close()
-          }} /> : null}
-          {multiple ? <View style={{ paddingHorizontal: 16, paddingTop: 8 }}><Button title="Xong" onPress={close} /></View> : null}
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    <SheetModal visible={open} onClose={close} height={sheetHeight} maxHeight={0.85}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingLeft: 16, gap: 8 }}>
+        <Txt heading size={18} weight="600" style={{ flex: 1 }}>{label ?? placeholder}</Txt>
+        {multiple && clearable ? <Button title="Bỏ chọn" variant="ghost" size="sm" disabled={!values.length} onPress={() => onChange([])} /> : null}
+        <IconButton filled={false} label="Đóng danh sách" icon={<X size={20} color={t.textMuted} />} onPress={close} />
+      </View>
+      <View style={{ flex: 1, paddingBottom: insets.bottom + 8 }}>
+        {open ? <SelectOptions options={options} values={values} multiple={multiple} onSelect={(value) => {
+          onChange(multiple ? values.includes(value) ? values.filter((v) => v !== value) : [...values, value] : [value])
+          if (!multiple) close()
+        }} /> : null}
+        {multiple ? <View style={{ paddingHorizontal: 16, paddingTop: 8 }}><Button title="Xong" onPress={close} /></View> : null}
+      </View>
+    </SheetModal>
   </View>
 }
 

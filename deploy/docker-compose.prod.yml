@@ -60,6 +60,10 @@ services:
       - PAYOS_CANCEL_URL=${PAYOS_CANCEL_URL:-}
       - PAYOS_TASK_RETURN_URL=${PAYOS_TASK_RETURN_URL:-}
       - PAYOS_TASK_CANCEL_URL=${PAYOS_TASK_CANCEL_URL:-}
+      - MODERATION_AI_ENABLED=${MODERATION_AI_ENABLED:-true}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-}
+      - GEMINI_TIMEOUT_MS=${GEMINI_TIMEOUT_MS:-10000}
     depends_on:
       postgres-db:
         condition: service_healthy

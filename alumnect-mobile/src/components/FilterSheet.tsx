@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, useWindowDimensions, View } from 'react-native'
+import { Keyboard, Pressable, useWindowDimensions, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { Text, TextInput } from '@/components/AppText'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, SlidersHorizontal, X } from '@/components/icons'
 import { Button, Txt } from './ui'
 import { useTheme, radius } from '@/theme'
+import { SheetModal } from './SheetModal'
 import { selectionLabel, SelectOptions, SelectTrigger } from './SelectField'
 
 export type FilterOption = { value: string; label: string }
@@ -83,8 +84,7 @@ function SheetBody({ title, fields, initial, defaults, onApply, onClose, picker,
   const selected = (key: string) => { const value = draft[key]; return Array.isArray(value) ? value : value ? [value] : [] }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ maxHeight: '88%', backgroundColor: t.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl }}>
-      <View style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: t.border, marginTop: 10 }} />
+    <View style={{ flexShrink: 1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
         <Pressable onPress={choice ? back : onClose} accessibilityRole="button" accessibilityLabel={choice ? 'Quay lại bộ lọc' : 'Đóng'} style={{ width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           {choice ? <ChevronLeft size={22} color={t.text} /> : <X size={22} color={t.text} />}
@@ -151,7 +151,7 @@ function SheetBody({ title, fields, initial, defaults, onApply, onClose, picker,
           style={{ flex: 2 }}
         /></>}
       </View>
-    </KeyboardAvoidingView>
+    </View>
   )
 }
 
@@ -173,16 +173,12 @@ export function FilterSheet({
   defaults?: FilterValues
   onApply: (v: FilterValues) => void
 }) {
-  const t = useTheme()
   const [picker, setPicker] = useState<string | null>(null)
   const close = () => { Keyboard.dismiss(); setPicker(null); onClose() }
   const dismiss = () => { if (picker) { Keyboard.dismiss(); setPicker(null) } else close() }
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={dismiss}>
-      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: t.overlay }} onPress={dismiss} />
-        {visible ? <SheetBody title={title} fields={fields} initial={values} defaults={defaults} onApply={onApply} onClose={close} picker={picker} setPicker={setPicker} /> : null}
-      </View>
-    </Modal>
+    <SheetModal visible={visible} onClose={dismiss} maxHeight={0.88}>
+      <SheetBody title={title} fields={fields} initial={values} defaults={defaults} onApply={onApply} onClose={close} picker={picker} setPicker={setPicker} />
+    </SheetModal>
   )
 }

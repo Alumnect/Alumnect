@@ -1,5 +1,7 @@
 import http from '@/lib/http'
 import type { ApiResponse } from '@/features/auth/api/authApi'
+import { careerAiCompareSchema } from '../model/aiCompare'
+import type { CareerAiCompare } from '../model/aiCompare'
 
 export interface CareerPreviewItem {
   experienceId: number
@@ -82,4 +84,14 @@ export const careerPathApi = {
    */
   getCareerPathDetail: (userId: number) =>
     http.get<any, ApiResponse<CareerPathDetailResponse>>(`/career-paths/users/${userId}`),
+
+  /**
+   * [C2] AI đối chiếu lộ trình 1-chạm: hồ sơ người xem (từ JWT) vs cựu sinh viên mục tiêu.
+   * Gọi `POST /api/v1/career-paths/ai-compare`; cần đăng nhập (Sinh viên / Cựu sinh viên).
+   */
+  aiCompare: async (targetUserId: number): Promise<CareerAiCompare> => {
+    const body = await http.post('/career-paths/ai-compare', { targetUserId }, { timeout: 20000 })
+    const b = body as unknown as Record<string, unknown> | undefined
+    return careerAiCompareSchema.parse((b?.data ?? b) as unknown)
+  },
 }

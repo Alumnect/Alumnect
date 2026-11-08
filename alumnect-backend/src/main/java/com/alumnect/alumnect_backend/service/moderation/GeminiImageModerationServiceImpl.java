@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -61,9 +62,8 @@ public class GeminiImageModerationServiceImpl implements ImageModerationService 
             "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"
     );
 
-    private static final Set<String> HARD_BLOCK_REASONS = Set.of(
-            "SAFETY", "PROHIBITED_CONTENT", "IMAGE_SAFETY", "BLOCKLIST"
-    );
+    private static final int MAX_SCAN_PASSES = 2;
+    private static final long SCAN_RETRY_DELAY_MS = 3000L;
 
     private static final String SYSTEM_INSTRUCTION = """
             Bạn là hệ thống kiểm duyệt hình ảnh tự động cho mạng xã hội cựu sinh viên đại học AlumNect.
@@ -82,7 +82,7 @@ public class GeminiImageModerationServiceImpl implements ImageModerationService 
 
     private final boolean enabled;
     private final String apiKey;
-    private final String model;
+    private final List<String> models;
     private final String geminiBaseUrl;
     private final HttpClient httpClient;
     private final boolean allowLocalUrls;
@@ -119,7 +119,17 @@ public class GeminiImageModerationServiceImpl implements ImageModerationService 
     ) {
         this.enabled = enabled;
         this.apiKey = apiKey != null ? apiKey.trim() : "";
-        this.model = (model == null || model.isBlank()) ? "gemini-2.5-flash" : model.trim();
+        // GEMINI_MODEL có thể là danh sách ngăn cách bởi dấu phẩy; model cấu hình đứng trước, rồi tới các model dự phòng.
+        Set<String> modelSet = new LinkedHashSet<>();
+        if (model != null) {
+            for (String m : model.split("[,;\\s]+")) {
+                if (!m.isBlank()) {
+                    modelSet.add(m.trim());
+                }
+            }
+        }
+        modelSet.addAll(List.of("gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-3-flash-preview", "gemini-3.5-flash"));
+        this.models = List.copyOf(modelSet);
         this.geminiBaseUrl = geminiBaseUrl.endsWith("/")
                 ? geminiBaseUrl.substring(0, geminiBaseUrl.length() - 1)
                 : geminiBaseUrl;
@@ -158,24 +168,35 @@ public class GeminiImageModerationServiceImpl implements ImageModerationService 
         }
 
         try {
-            String requestJson = buildGeminiRequestPayload(preparedImages, postContextText);
-            URI endpoint = URI.create(geminiBaseUrl + "/" + model + ":generateContent");
-
-            HttpRequest request = HttpRequest.newBuilder(endpoint)
-                    .timeout(GEMINI_TIMEOUT)
-                    .header("Content-Type", "application/json")
-                    .header("x-goog-api-key", apiKey)
-                    .POST(HttpRequest.BodyPublishers.ofString(requestJson))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) {
-                log.warn("Gemini API trả về mã lỗi HTTP {} khi kiểm duyệt ảnh: {}",
-                        response.statusCode(), truncate(response.body(), 200));
-                return ImageModerationResult.safe();
+            // Hết hạn mức theo ngày của một model (429) không hết bằng cách thử lại, nên chuyển sang model dự phòng;
+            // nếu mọi model đều bận thì nghỉ ngắn rồi quét lại một lượt trước khi bỏ cuộc.
+            HttpResponse<String> response = null;
+            for (int pass = 1; pass <= MAX_SCAN_PASSES; pass++) {
+                for (String candidateModel : models) {
+                    HttpRequest request = HttpRequest.newBuilder(
+                                    URI.create(geminiBaseUrl + "/" + candidateModel + ":generateContent"))
+                            .timeout(GEMINI_TIMEOUT)
+                            .header("Content-Type", "application/json")
+                            .header("x-goog-api-key", apiKey)
+                            .POST(HttpRequest.BodyPublishers.ofString(
+                                    buildGeminiRequestPayload(preparedImages, postContextText, candidateModel)))
+                            .build();
+                    response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                    int code = response.statusCode();
+                    if (code == 200) {
+                        log.info("Quét ảnh bằng model {}", candidateModel);
+                        return parseGeminiResponse(response.body(), preparedImages);
+                    }
+                    log.warn("Model {} trả HTTP {} khi quét ảnh (lượt {}/{}) -> thử model kế tiếp",
+                            candidateModel, code, pass, MAX_SCAN_PASSES);
+                }
+                if (pass < MAX_SCAN_PASSES) {
+                    Thread.sleep(SCAN_RETRY_DELAY_MS);
+                }
             }
-
-            return parseGeminiResponse(response.body(), preparedImages);
+            log.error("ẢNH CHƯA ĐƯỢC KIỂM DUYỆT: mọi model Gemini đều lỗi, lần cuối HTTP {}: {}",
+                    response == null ? "?" : response.statusCode(), response == null ? "" : truncate(response.body(), 200));
+            return ImageModerationResult.safe();
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             log.warn("Luồng kiểm duyệt ảnh AI bị ngắt: {}", ex.getMessage());
@@ -315,7 +336,7 @@ public class GeminiImageModerationServiceImpl implements ImageModerationService 
         return out.toByteArray();
     }
 
-    private String buildGeminiRequestPayload(List<PreparedImage> images, String postContextText) throws Exception {
+    private String buildGeminiRequestPayload(List<PreparedImage> images, String postContextText, String model) throws Exception {
         ObjectNode root = objectMapper.createObjectNode();
 
         // System instruction
@@ -385,12 +406,45 @@ public class GeminiImageModerationServiceImpl implements ImageModerationService 
         return objectMapper.writeValueAsString(root);
     }
 
+    /** Gemini có trả điểm an toàn gốc cho nhóm tình dục ở mức HIGH hay không (có cả khi đã đặt BLOCK_NONE). */
+    private static boolean sexuallyExplicitHigh(JsonNode ratings) {
+        if (ratings == null || !ratings.isArray()) {
+            return false;
+        }
+        for (JsonNode rating : ratings) {
+            if ("HARM_CATEGORY_SEXUALLY_EXPLICIT".equals(rating.path("category").asText(""))
+                    && "HIGH".equalsIgnoreCase(rating.path("probability").asText(""))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** AI không đưa được phán quyết cho ảnh: không coi là an toàn mà ẩn tạm để quản trị viên xem lại. */
+    private ImageModerationResult unverifiable(List<PreparedImage> images, String why) {
+        log.warn("Không xác minh được ảnh bằng AI ({}) -> ẩn tạm chờ quản trị viên duyệt", why);
+        return new ImageModerationResult(
+                true,
+                ImageModerationResult.CATEGORY_SENSITIVE_NSFW,
+                "AI không thể xác minh hình ảnh này, tạm ẩn chờ quản trị viên duyệt",
+                images.get(0).key()
+        );
+    }
+
     ImageModerationResult parseGeminiResponse(String responseBody, List<PreparedImage> images) throws Exception {
         JsonNode root = objectMapper.readTree(responseBody);
 
-        // Trường hợp ảnh quá nhạy cảm/bạo lực khiến bộ lọc an toàn gốc của Google chặn cứng ngay từ đầu
         String blockReason = root.path("promptFeedback").path("blockReason").asText("");
-        if (!blockReason.isEmpty() && HARD_BLOCK_REASONS.contains(blockReason.toUpperCase(Locale.ROOT))) {
+        JsonNode candidates = root.path("candidates");
+        JsonNode firstCandidate = (candidates.isArray() && !candidates.isEmpty()) ? candidates.get(0) : null;
+        String finishReason = firstCandidate == null ? "" : firstCandidate.path("finishReason").asText("");
+        boolean sexualHigh = sexuallyExplicitHigh(root.path("promptFeedback").path("safetyRatings"))
+                || (firstCandidate != null && sexuallyExplicitHigh(firstCandidate.path("safetyRatings")));
+        // Ghi lại tín hiệu thô để biết vì sao một ảnh được coi là an toàn hay vi phạm.
+        log.info("Quét ảnh AI: blockReason='{}', finishReason='{}', sexuallyExplicitHigh={}", blockReason, finishReason, sexualHigh);
+
+        // Google từ chối xử lý ảnh (bất kể lý do): gần như luôn là nội dung tình dục/cực đoan -> coi là vi phạm.
+        if (!blockReason.isEmpty()) {
             return new ImageModerationResult(
                     true,
                     ImageModerationResult.CATEGORY_SENSITIVE_NSFW,
@@ -398,15 +452,21 @@ public class GeminiImageModerationServiceImpl implements ImageModerationService 
                     images.get(0).key()
             );
         }
-
-        JsonNode candidates = root.path("candidates");
-        if (!candidates.isArray() || candidates.isEmpty()) {
-            return ImageModerationResult.safe();
+        // Điểm an toàn gốc của Gemini: dù mô hình tự kết luận "không vi phạm", mức tình dục HIGH vẫn bị ẩn.
+        if (sexualHigh) {
+            return new ImageModerationResult(
+                    true,
+                    ImageModerationResult.CATEGORY_SENSITIVE_NSFW,
+                    "Hình ảnh chứa nội dung nhạy cảm (18+) không phù hợp",
+                    images.get(0).key()
+            );
         }
 
-        JsonNode firstCandidate = candidates.get(0);
-        String finishReason = firstCandidate.path("finishReason").asText("");
-        if (!finishReason.isEmpty() && HARD_BLOCK_REASONS.contains(finishReason.toUpperCase(Locale.ROOT))) {
+        if (firstCandidate == null) {
+            return unverifiable(images, "phản hồi không có kết quả");
+        }
+        // Mọi lý do dừng khác STOP/MAX_TOKENS (SAFETY, PROHIBITED_CONTENT, IMAGE_SAFETY, OTHER, ...) nghĩa là không có phán quyết sạch.
+        if (!finishReason.isEmpty() && !"STOP".equalsIgnoreCase(finishReason) && !"MAX_TOKENS".equalsIgnoreCase(finishReason)) {
             return new ImageModerationResult(
                     true,
                     ImageModerationResult.CATEGORY_SENSITIVE_NSFW,
@@ -417,12 +477,12 @@ public class GeminiImageModerationServiceImpl implements ImageModerationService 
 
         JsonNode parts = firstCandidate.path("content").path("parts");
         if (!parts.isArray() || parts.isEmpty()) {
-            return ImageModerationResult.safe();
+            return unverifiable(images, "phản hồi không có nội dung");
         }
 
         String rawText = parts.get(0).path("text").asText("").trim();
         if (rawText.isEmpty()) {
-            return ImageModerationResult.safe();
+            return unverifiable(images, "phản hồi rỗng");
         }
         String cleanJson = stripMarkdownFences(rawText);
         JsonNode verdict = objectMapper.readTree(cleanJson);

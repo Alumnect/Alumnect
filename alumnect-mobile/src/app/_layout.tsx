@@ -4,6 +4,7 @@ import { Text } from '@/components/AppText'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useFonts } from 'expo-font'
+import { Caveat_700Bold } from '@expo-google-fonts/caveat/700Bold'
 import { BeVietnamPro_400Regular } from '@expo-google-fonts/be-vietnam-pro/400Regular'
 import { BeVietnamPro_500Medium } from '@expo-google-fonts/be-vietnam-pro/500Medium'
 import { BeVietnamPro_600SemiBold } from '@expo-google-fonts/be-vietnam-pro/600SemiBold'
@@ -102,6 +103,7 @@ export default function RootLayout() {
   const t = useTheme()
   // Giữ màn hình nền cho tới khi font tải xong để chữ không bị nhảy font; nếu lỗi thì dùng font hệ thống.
   const [fontsLoaded, fontError] = useFonts({
+    Caveat_700Bold,
     [FONT.regular]: BeVietnamPro_400Regular,
     [FONT.medium]: BeVietnamPro_500Medium,
     [FONT.semibold]: BeVietnamPro_600SemiBold,

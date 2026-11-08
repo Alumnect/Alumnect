@@ -24,6 +24,7 @@ import { useQuestions, useTopics, AskQuestionModal, SEARCH_KEYWORD_MAX_LENGTH, u
 import type { Question, SortOption } from '@/features/forum'
 import { FilterMultiSelect } from '@/features/forum/components/FilterMultiSelect'
 import { TopicIcon } from '@/features/forum/lib/topicIcons'
+import { SeoHead } from '@/components/seo'
 
 /** Thẻ hiển thị một câu hỏi trong danh sách. */
 function QuestionCard({ q, canVote }: { q: Question; canVote: boolean }) {
@@ -248,6 +249,11 @@ export function ForumPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
+      <SeoHead
+        title="Diễn đàn & Hỏi đáp Cựu sinh viên FPT"
+        description="Diễn đàn trao đổi học thuật, kinh nghiệm nghề nghiệp, giải đáp thắc mắc và định hướng tương lai dành riêng cho sinh viên và cựu sinh viên Đại học FPT."
+        keywords="diễn đàn FPT, hỏi đáp FPT, Q&A sinh viên FPT, kinh nghiệm phỏng vấn, AlumNect forum"
+      />
       <PageHeader
         icon={<HelpCircle size={20} />}
         title={t('forum.title')}

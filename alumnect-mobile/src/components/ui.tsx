@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View, useWindowDimensions, type TextInputProps, type ViewStyle } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View, useWindowDimensions, type TextInputProps, type ViewStyle } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { Text, TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
@@ -20,13 +20,44 @@ export function Screen({ children, edges, bg, keyboard = false }: { children: Re
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const segments = useSegments()
+  const [kb, setKb] = useState({ height: 0, screenY: 0 })
+  const [baseH, setBaseH] = useState(0)
+  const [rootH, setRootH] = useState(0)
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return
+    const show = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKb({ height: e.endCoordinates.height, screenY: e.endCoordinates.screenY })
+    })
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      setKb({ height: 0, screenY: 0 })
+    })
+    return () => {
+      show.remove()
+      hide.remove()
+    }
+  }, [])
+
   // Tabs own the bottom inset; stack screens must protect their last control too.
   const safeEdges = edges ?? (segments[0] === '(tabs)' ? ['top'] : ['top', 'bottom'])
+  // Trên Android Edge-to-Edge (targetSdk 36), cửa sổ gốc không tự thu nhỏ khi bật bàn phím;
+  // tính chính xác phần đáy bị bàn phím che để đẩy thanh nhập liệu nằm ngay trên bàn phím.
+  const windowResized = baseH > 0 && rootH > 0 && rootH < baseH - 80
+  const kbCover = kb.height > 0 ? Math.max(kb.height, baseH > 0 && kb.screenY > 0 ? baseH - kb.screenY : 0) : 0
+  const bottomInset = kbCover > 0 ? (windowResized ? 0 : kbCover) : safeEdges.includes('bottom') ? insets.bottom : 0
+
   return (
-    <View style={{ flex: 1, backgroundColor: bg ?? t.bg }}>
+    <View
+      style={{ flex: 1, backgroundColor: bg ?? t.bg }}
+      onLayout={(e) => {
+        const h = e.nativeEvent.layout.height
+        setRootH(h)
+        if (kb.height === 0 && h > baseH) setBaseH(h)
+      }}
+    >
       {safeEdges.includes('top') ? <View style={{ height: insets.top, backgroundColor: t.card }} /> : null}
       {keyboard ? <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>{children}</KeyboardAvoidingView> : <View style={{ flex: 1 }}>{children}</View>}
-      {safeEdges.includes('bottom') ? <View style={{ height: insets.bottom, backgroundColor: t.card }} /> : null}
+      {bottomInset > 0 ? <View style={{ height: bottomInset, backgroundColor: t.card }} /> : null}
     </View>
   )
 }

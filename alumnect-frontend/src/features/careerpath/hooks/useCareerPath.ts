@@ -30,3 +30,17 @@ export function useCareerPathDetail(userId: number | null, options?: { enabled?:
     staleTime: 1000 * 60 * 10, // Cache chi tiết 10 phút
   })
 }
+
+/**
+ * [C2] Hook AI đối chiếu lộ trình với một cựu sinh viên. Chạy ngay khi có `targetUserId` (modal vừa mở — không cần gõ
+ * gì); cache 2 phút theo (người xem, mục tiêu), không tự retry để tránh gọi AI lặp.
+ */
+export function useCareerAiCompare(viewerId: string | undefined, targetUserId: number | null) {
+  return useQuery({
+    queryKey: ['career-ai-compare', viewerId, targetUserId],
+    queryFn: () => careerPathApi.aiCompare(targetUserId as number),
+    enabled: !!viewerId && !!targetUserId,
+    staleTime: 2 * 60 * 1000,
+    retry: false,
+  })
+}
