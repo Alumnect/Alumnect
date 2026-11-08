@@ -6,7 +6,8 @@ import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { X } from '@/components/icons'
-import { Button, Chip, Input, Screen, Txt } from './ui'
+import { Button, Input, Screen, Txt } from './ui'
+import { SelectField } from './SelectField'
 import { Header } from './Header'
 import { forumApi } from '@/api/forum'
 import type { QuestionDetail } from '@/api/forum'
@@ -15,6 +16,9 @@ import { pickImage, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 
 const DRAFT_KEY = 'alumnect.draft.question'
+const TITLE_MAX = 250
+const BODY_MAX = 10000
+const IMAGE_MAX = 5
 
 /** Form đặt (UC37) / sửa (UC43) câu hỏi, tự lưu nháp khi đặt mới. */
 export function QuestionForm({ existing }: { existing?: QuestionDetail }) {
@@ -68,7 +72,7 @@ export function QuestionForm({ existing }: { existing?: QuestionDetail }) {
     if (!picked.length) return
     setUploading(true)
     try {
-      const urls = await Promise.all(picked.slice(0, 5 - images.length).map((p) => uploadImage(p, 'common')))
+      const urls = await Promise.all(picked.slice(0, IMAGE_MAX - images.length).map((p) => uploadImage(p, 'common')))
       setImages((x) => [...x, ...urls])
     } catch (e) {
       toast.error(errMsg(e))
@@ -80,9 +84,9 @@ export function QuestionForm({ existing }: { existing?: QuestionDetail }) {
   const submit = () => {
     const e: Record<string, string> = {}
     if (!title.trim()) e.title = 'Tiêu đề câu hỏi không được để trống'
-    else if (title.trim().length > 250) e.title = 'Tiêu đề câu hỏi không được vượt quá 250 ký tự'
+    else if (title.trim().length > TITLE_MAX) e.title = `Tiêu đề câu hỏi không được vượt quá ${TITLE_MAX} ký tự`
     if (!body.trim()) e.body = 'Nội dung câu hỏi không được để trống'
-    else if (body.trim().length > 10000) e.body = 'Nội dung câu hỏi không được vượt quá 10000 ký tự'
+    else if (body.trim().length > BODY_MAX) e.body = `Nội dung câu hỏi không được vượt quá ${BODY_MAX} ký tự`
     setErrors(e)
     if (!Object.keys(e).length) m.mutate()
   }
@@ -92,27 +96,37 @@ export function QuestionForm({ existing }: { existing?: QuestionDetail }) {
       <Header title={existing ? 'Sửa câu hỏi' : 'Đặt câu hỏi'} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-          <Input label="Tiêu đề" value={title} onChangeText={setTitle} error={errors.title} />
-          <Input label="Nội dung" value={body} onChangeText={setBody} multiline error={errors.body} />
-          <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Chủ đề</Txt>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
-            {(topics.data ?? []).map((tp) => <Chip key={tp.id} label={tp.name} active={topicId === tp.id} onPress={() => setTopicId(topicId === tp.id ? null : tp.id)} />)}
-          </View>
-          <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Ngành</Txt>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
-            {(majors.data?.data ?? []).map((mj) => <Chip key={mj.id} label={mj.name} active={majorId === mj.id} onPress={() => setMajorId(majorId === mj.id ? null : mj.id)} />)}
-          </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-            {images.map((u) => (
-              <View key={u}>
-                <Image source={{ uri: u }} style={{ width: 80, height: 80, borderRadius: 10 }} contentFit="cover" />
-                <Pressable onPress={() => setImages((x) => x.filter((i) => i !== u))} style={{ position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 10, padding: 2 }}>
-                  <X size={14} color="#fff" />
-                </Pressable>
-              </View>
-            ))}
-          </View>
-          <Button title="Thêm ảnh (tối đa 5)" variant="outline" onPress={addImages} loading={uploading} disabled={images.length >= 5} style={{ marginBottom: 12 }} />
+          <Input label="Tiêu đề" value={title} onChangeText={setTitle} placeholder="Bạn muốn hỏi điều gì?" error={errors.title} />
+          <Txt muted size={12} style={{ textAlign: 'right', marginTop: -12, marginBottom: 12 }}>{`${title.length}/${TITLE_MAX}`}</Txt>
+          <Input label="Nội dung" value={body} onChangeText={setBody} multiline placeholder="Mô tả chi tiết bối cảnh để mọi người trả lời chính xác hơn..." error={errors.body} />
+          <Txt muted size={12} style={{ textAlign: 'right', marginTop: -12, marginBottom: 12 }}>{`${body.length}/${BODY_MAX}`}</Txt>
+          <SelectField
+            label="Chủ đề"
+            placeholder="Chọn chủ đề"
+            value={topicId == null ? null : String(topicId)}
+            options={(topics.data ?? []).map((tp) => ({ value: String(tp.id), label: tp.name }))}
+            onChange={(v) => setTopicId(v == null ? null : Number(v))}
+          />
+          <SelectField
+            label="Ngành"
+            placeholder="Chọn ngành"
+            value={majorId == null ? null : String(majorId)}
+            options={(majors.data?.data ?? []).map((mj) => ({ value: String(mj.id), label: mj.name }))}
+            onChange={(v) => setMajorId(v == null ? null : Number(v))}
+          />
+          {images.length ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+              {images.map((u) => (
+                <View key={u}>
+                  <Image source={{ uri: u }} style={{ width: 90, height: 90, borderRadius: 10 }} contentFit="cover" />
+                  <Pressable onPress={() => setImages((x) => x.filter((i) => i !== u))} accessibilityRole="button" accessibilityLabel="Bỏ ảnh" hitSlop={6} style={{ position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 10, padding: 2 }}>
+                    <X size={14} color="#fff" />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : null}
+          <Button title={`Thêm ảnh (${images.length}/${IMAGE_MAX})`} variant="outline" onPress={addImages} loading={uploading} disabled={images.length >= IMAGE_MAX} style={{ marginBottom: 12 }} />
           <Button title={existing ? 'Lưu thay đổi' : 'Đăng câu hỏi'} onPress={submit} loading={m.isPending} disabled={uploading} />
         </ScrollView>
       </KeyboardAvoidingView>
