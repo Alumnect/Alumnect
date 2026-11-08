@@ -5,8 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
-  X, Image as ImageIcon, Loader2, Award, Briefcase, CalendarPlus, FileText, AlertCircle, Trash2, MapPin, Users, Coins, Link, Mail, Clock
+  X, Image as ImageIcon, Loader2, Award, Briefcase, CalendarPlus, FileText, AlertCircle, Trash2, MapPin, Users, Coins, Link, Mail, Clock, ShieldAlert, AlertTriangle
 } from 'lucide-react'
+import { evaluateContentModeration, type ModerationResult } from '@/lib/contentModeration'
 import type { LucideIcon } from 'lucide-react'
 import { Avatar, DialogFrame, ImageCarousel, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -62,6 +63,8 @@ export function CreatePostModal({
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadingCount, setUploadingCount] = useState(0)
+  const [moderationWarning, setModerationWarning] = useState<ModerationResult | null>(null)
+  const [flaggedTermsBanner, setFlaggedTermsBanner] = useState<string[] | null>(null)
 
   const {
     register,
@@ -144,6 +147,8 @@ export function CreatePostModal({
   const close = () => {
     reset()
     setUploadError(null)
+    setModerationWarning(null)
+    setFlaggedTermsBanner(null)
     createMutation.reset()
     editMutation.reset()
     onClose()
@@ -168,6 +173,17 @@ export function CreatePostModal({
         } else if (payload.type === 'achievement') {
           payload.content = t('feed.achievementFallback')
         }
+      }
+
+      // Kiểm duyệt tự động: chặn ngôn từ tục tĩu / toxic / gây hiểu lầm (Score >= 20%)
+      const moderation = evaluateContentModeration(payload.content)
+      if (!moderation.allowed) {
+        setModerationWarning(moderation)
+        setFlaggedTermsBanner(moderation.flaggedWords)
+        toast.error(
+          `Nội dung có chứa từ ngữ không phù hợp hoặc có thể gây hiểu lầm (${moderation.flaggedWords.join(', ')}). Vui lòng điều chỉnh lại.`
+        )
+        return
       }
 
       if (payload.type === 'event' && payload.event) {
@@ -311,7 +327,85 @@ export function CreatePostModal({
   if (!open) return null
 
   return (
-    <DialogFrame onClose={close} zIndexClassName="z-[9999]" maxWidthClassName="max-w-xl" className="overflow-hidden">
+    <DialogFrame onClose={close} zIndexClassName="z-[9999]" maxWidthClassName="max-w-xl" className="overflow-hidden relative">
+      {/* Overlay cảnh báo kiểm duyệt vi phạm / từ ngữ gây hiểu lầm (UC123) */}
+      {moderationWarning && (
+        <div className="absolute inset-0 z-50 bg-black/30 flex items-center justify-center p-4 sm:p-6 transition-opacity">
+          <div className="bg-surface border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 text-left">
+            <div className="flex items-start gap-3.5">
+              <div
+                className={cn(
+                  'h-11 w-11 rounded-xl grid place-items-center shrink-0 ring-4',
+                  moderationWarning.riskLevel === 'HIGH'
+                    ? 'bg-rose-50 text-rose-600 ring-rose-50 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/10'
+                    : 'bg-amber-50 text-amber-600 ring-amber-50 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/10'
+                )}
+              >
+                {moderationWarning.riskLevel === 'HIGH' ? <ShieldAlert size={22} /> : <AlertTriangle size={22} />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="font-bold text-base text-text">
+                    Phát hiện từ ngữ nhạy cảm
+                  </h4>
+                  <span
+                    className={cn(
+                      'text-xs px-2.5 py-0.5 rounded-full font-bold border',
+                      moderationWarning.riskLevel === 'HIGH'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30'
+                        : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30'
+                    )}
+                  >
+                    Rủi ro: {moderationWarning.scorePercent}% ({moderationWarning.riskLevel === 'HIGH' ? 'Vi phạm nặng' : 'Nghi vấn'})
+                  </span>
+                </div>
+                <p className="text-xs text-text-subtle mt-1 leading-relaxed">
+                  Bài viết chứa từ ngữ có thể gây hiểu lầm hoặc vi phạm tiêu chuẩn cộng đồng và tạm thời chưa thể đăng lên.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border/70 bg-surface-2/60 p-3.5 space-y-2">
+              <p className="text-xs font-semibold text-text-subtle">Các từ ngữ cần lưu ý chỉnh sửa:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {moderationWarning.flaggedWords.map((word) => (
+                  <span
+                    key={word}
+                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 shadow-2xs"
+                  >
+                    "{word}"
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-text-subtle leading-relaxed">
+              Bạn có thể chọn <strong>"Chỉnh sửa bài viết"</strong> để thay đổi các từ ngữ trên rồi đăng lại, hoặc chọn <strong>"Hủy đăng bài"</strong>.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border/70">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setModerationWarning(null)
+                  close()
+                }}
+              >
+                Hủy đăng bài
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setModerationWarning(null)}
+                className="bg-primary hover:opacity-90 text-white shadow-sm"
+              >
+                Chỉnh sửa bài viết
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4 border-b border-border bg-surface shrink-0">
         <h3 className="text-xl font-bold text-text">
@@ -358,6 +452,22 @@ export function CreatePostModal({
                   {content.length}/{POST_CONTENT_MAX}
                 </span>
               </div>
+              {/* Banner nhắc nhở từ vi phạm khi người dùng đang sửa bài */}
+              {flaggedTermsBanner && flaggedTermsBanner.length > 0 && (
+                <div className="mt-2 flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-500 animate-in fade-in">
+                  <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-amber-500">Phát hiện từ ngữ cần điều chỉnh trước khi đăng bài:</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {flaggedTermsBanner.map((w) => (
+                        <span key={w} className="px-2 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded-md font-bold">
+                          "{w}"
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

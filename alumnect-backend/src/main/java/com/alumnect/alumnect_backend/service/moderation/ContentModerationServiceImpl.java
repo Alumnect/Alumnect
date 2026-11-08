@@ -25,11 +25,11 @@ public class ContentModerationServiceImpl implements ContentModerationService {
 
     private final ProfanityFilterService profanityFilterService;
 
-    /** Ngưỡng tự động ẩn nội dung. */
-    public static final double HIGH_TOXICITY_THRESHOLD = 0.85;
+    /** Ngưỡng tự động ẩn nội dung (>= 60%, từ SEVERE 65% tự động ẩn ngay). */
+    public static final double HIGH_TOXICITY_THRESHOLD = 0.60;
 
-    /** Ngưỡng đưa nội dung vào hàng chờ Admin. */
-    public static final double REVIEW_REQUIRED_THRESHOLD = 0.40;
+    /** Ngưỡng đưa nội dung vào hàng chờ Admin / yêu cầu xem xét (>= 20%). */
+    public static final double REVIEW_REQUIRED_THRESHOLD = 0.20;
 
     private static final double SAFE_SCORE = 0.05;
     private static final double WEAK_BASE_SCORE = 0.20;

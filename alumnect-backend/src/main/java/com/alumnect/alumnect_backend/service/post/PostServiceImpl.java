@@ -36,6 +36,8 @@ import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.post.CommentMapper;
 import com.alumnect.alumnect_backend.mapper.post.PostMapper;
 import com.alumnect.alumnect_backend.service.moderation.ContentModerationService;
+import com.alumnect.alumnect_backend.service.moderation.ContentModerationServiceImpl;
+import com.alumnect.alumnect_backend.service.moderation.ModerationResult;
 import com.alumnect.alumnect_backend.service.moderation.PostCreatedModerationEvent;
 import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import org.slf4j.Logger;
@@ -122,6 +124,13 @@ public class PostServiceImpl implements PostService {
         String roleName = author.getRole() != null ? author.getRole().getName().toUpperCase() : "";
         if (!roleName.equals("STUDENT") && !roleName.equals("ALUMNI")) {
             throw new ForbiddenException("Chỉ sinh viên và cựu sinh viên mới được đăng bài viết");
+        }
+
+        // Kiểm duyệt ngôn từ vi phạm trước khi lưu vào CSDL (UC123)
+        ModerationResult preCheck = contentModerationService.evaluateContent(request.getContent().trim());
+        if (preCheck.getScore() >= ContentModerationServiceImpl.REVIEW_REQUIRED_THRESHOLD && !preCheck.getDetectedKeywords().isEmpty()) {
+            String words = String.join(", ", preCheck.getDetectedKeywords());
+            throw new BadRequestException("Nội dung bài viết chứa từ ngữ không phù hợp hoặc có thể gây hiểu lầm (" + words + "). Vui lòng điều chỉnh lại trước khi đăng.");
         }
 
         PostCategory category = parsePostCategory(request.getType());
@@ -758,6 +767,13 @@ public class PostServiceImpl implements PostService {
                     throw new BadRequestException("Sự kiện đã kết thúc, không thể chỉnh sửa thông tin sự kiện.");
                 }
             }
+        }
+
+        // Kiểm duyệt ngôn từ vi phạm trước khi lưu vào CSDL (UC123)
+        ModerationResult preCheck = contentModerationService.evaluateContent(request.getContent().trim());
+        if (preCheck.getScore() >= ContentModerationServiceImpl.REVIEW_REQUIRED_THRESHOLD && !preCheck.getDetectedKeywords().isEmpty()) {
+            String words = String.join(", ", preCheck.getDetectedKeywords());
+            throw new BadRequestException("Nội dung bài viết chứa từ ngữ không phù hợp hoặc có thể gây hiểu lầm (" + words + "). Vui lòng điều chỉnh lại trước khi đăng.");
         }
 
         post.setContent(request.getContent().trim());
