@@ -658,9 +658,9 @@ export function AdminReportsQueue() {
                               <span
                                 className={cn(
                                   'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs',
-                                  r.riskLevel === 'HIGH' || r.aiScore >= 0.85
+                                  r.riskLevel === 'HIGH' || r.aiScore >= 0.60
                                     ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                    : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
+                                    : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.20
                                     ? 'bg-amber-50 text-amber-700 border-amber-200'
                                     : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 )}
@@ -908,9 +908,9 @@ export function AdminReportsQueue() {
                         <span
                           className={cn(
                             'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border',
-                            selectedReport.riskLevel === 'HIGH' || selectedReport.aiScore >= 0.85
+                            selectedReport.riskLevel === 'HIGH' || selectedReport.aiScore >= 0.60
                               ? 'bg-rose-50 text-rose-700 border-rose-300'
-                              : selectedReport.riskLevel === 'MEDIUM' || selectedReport.aiScore >= 0.40
+                              : selectedReport.riskLevel === 'MEDIUM' || selectedReport.aiScore >= 0.20
                               ? 'bg-amber-50 text-amber-700 border-amber-300'
                               : 'bg-emerald-50 text-emerald-700 border-emerald-300'
                           )}
