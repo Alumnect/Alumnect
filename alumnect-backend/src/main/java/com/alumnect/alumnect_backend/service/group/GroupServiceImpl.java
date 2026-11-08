@@ -133,7 +133,7 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional
     public GroupDetailResponse createGroup(String email, CreateGroupRequest request) {
-        User user = requireMemberUser(email, "Chỉ sinh viên và cựu sinh viên mới được tạo hội nhóm.");
+        User user = requireMemberUser(email, "Chỉ cựu sinh viên mới được tạo hội nhóm.");
         NormalizedInput input = normalizeInput(request.getName(), request.getDescription(), request.getCoverImageUrl(),
                 request.getCategory(), request.getTopics(), request.getJoinRules());
 
@@ -231,7 +231,7 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional
     public GroupMembershipResponse joinGroup(Long groupId, String email) {
-        User user = requireMemberUser(email, "Chỉ sinh viên và cựu sinh viên mới được tham gia hội nhóm.");
+        User user = requireMemberUser(email, "Chỉ cựu sinh viên mới được tham gia hội nhóm.");
         CommunityGroup group = getVisibleGroup(groupId);
         assertGroupActive(group);
 
@@ -719,7 +719,7 @@ public class GroupServiceImpl implements GroupService {
     private User requireMemberUser(String email, String forbiddenMessage) {
         User user = requireUser(email);
         String role = user.getRole() != null ? user.getRole().getName().toUpperCase() : "";
-        if (!role.equals("STUDENT") && !role.equals("ALUMNI")) {
+        if (!role.equals("ALUMNI")) {
             throw new ForbiddenException(forbiddenMessage);
         }
         return user;

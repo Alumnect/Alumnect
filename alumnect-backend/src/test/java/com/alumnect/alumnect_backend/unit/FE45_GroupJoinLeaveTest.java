@@ -122,7 +122,7 @@ class FE45_GroupJoinLeaveTest {
         user = User.builder()
                 .id(USER_ID)
                 .email(USER_EMAIL)
-                .role(studentRole)
+                .role(alumniRole)
                 .accountStatus(AccountStatus.ACTIVE)
                 .build();
 

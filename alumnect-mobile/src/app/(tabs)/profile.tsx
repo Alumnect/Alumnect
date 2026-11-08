@@ -57,7 +57,9 @@ export default function ProfileTab() {
         <Group title="Hoạt động của tôi">
           <MenuRow icon={<Bookmark size={18} color={t.primary} />} label="Bài viết đã lưu" onPress={() => router.push('/saved-posts')} />
           <MenuRow icon={<CalendarCheck size={18} color={t.primary} />} label="Lịch sử sự kiện" hint="Sự kiện đã đăng ký tham gia" onPress={() => router.push('/events/history')} />
-          <MenuRow icon={<Users size={18} color={t.primary} />} label={isAlumni ? 'Hội nhóm cựu sinh viên' : 'Hội nhóm'} onPress={() => router.push('/groups')} />
+          {isAlumni ? (
+            <MenuRow icon={<Users size={18} color={t.primary} />} label="Hội nhóm cựu sinh viên" onPress={() => router.push('/groups')} />
+          ) : null}
           <MenuRow icon={<Coins size={18} color={t.primary} />} label="Khảo sát lương" hint="Đóng góp và xem mức lương" onPress={() => router.push('/salary')} />
           <MenuRow icon={<Route size={18} color={t.primary} />} label="Lộ trình sự nghiệp" onPress={() => router.push('/career')} last />
         </Group>

@@ -460,6 +460,7 @@
     "cancelRsvpSuccess": "Successfully cancelled event registration!",
     "cancelRsvpError": "Failed to cancel registration. Please try again.",
     "promptLoginRsvp": "Log in to register for this event.",
+    "promptLoginViewAttendees": "Log in to view the event attendee list.",
     "promptLoginViewHistory": "Log in to view event participation history.",
     "promptLoginSave": "Log in to bookmark this event.",
     "roleNotEligibleRsvp": "Only student and alumni accounts can register for events.",
