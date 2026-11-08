@@ -64,6 +64,10 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, Endpoints.PUBLIC_GET).permitAll()
                 // Cho phép các request POST công khai (register, login, google)
                 .requestMatchers(HttpMethod.POST, Endpoints.PUBLIC_POST).permitAll()
+                // Bản đồ cựu sinh viên và Lộ trình nghề nghiệp chỉ dành cho STUDENT và ALUMNI
+                .requestMatchers(Endpoints.STUDENT_ALUMNI_ENDPOINT).hasAnyRole("STUDENT", "ALUMNI")
+                // Hội nhóm cộng đồng (UC113–UC128) chỉ dành cho ALUMNI
+                .requestMatchers(Endpoints.ALUMNI_ENDPOINT).hasRole("ALUMNI")
                 // Các endpoint bắt đầu bằng /api/v1/admin yêu cầu quyền ADMIN
                 .requestMatchers(Endpoints.ADMIN_ENDPOINT).hasRole("ADMIN")
                 // Mọi request còn lại đều phải được xác thực bằng JWT

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   AlertCircle,
@@ -33,6 +33,7 @@ import { MentorResponseStatusBadge, RequestStatusBadge } from '@/features/mentor
 import { MentoringBadge } from '@/features/mentorship/components/MentoringUi'
 import { formatVnd } from '@/features/mentorship/model/mentoringFlowLabels'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/store/authStore'
 
 const CARD = 'rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6'
 
@@ -324,6 +325,12 @@ function IncomingMentoringRequestDetailContent() {
 }
 
 export default function IncomingMentoringRequestDetailPage() {
+  const user = useAuthStore((state) => state.user)
+
+  if (user?.role !== 'ALUMNI') {
+    return <Navigate to="/app/mentoring" replace />
+  }
+
   return (
     <MentoringTermsGate>
       <Container className="py-2 sm:py-4">

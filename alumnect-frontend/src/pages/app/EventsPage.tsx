@@ -278,6 +278,10 @@ export function EventsPage() {
                             onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()
+                              if (!isAuthenticated) {
+                                promptLogin(t('event.promptLoginViewAttendees'))
+                                return
+                              }
                               setAttendeeModalTarget({
                                 id: event.id ?? post.eventId ?? post.id,
                                 title: event.title,

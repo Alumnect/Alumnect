@@ -64,8 +64,18 @@ export default function GroupsScreen() {
     initialPageParam: 0,
     queryFn: ({ pageParam }) => (tab === 'mine' ? groupApi.mine(pageParam) : groupApi.list({ page: pageParam, keyword, category })),
     getNextPageParam: (l) => (l.hasMore ? l.page + 1 : undefined),
+    enabled: role === 'ALUMNI',
   })
   const items = q.data?.pages.flatMap((p) => p.items) ?? []
+
+  if (role !== 'ALUMNI') {
+    return (
+      <Screen bg={t.card}>
+        <Header title="Hội nhóm" />
+        <Empty text="Chức năng Hội nhóm chỉ dành cho Cựu sinh viên (Alumni)." />
+      </Screen>
+    )
+  }
 
   return (
     <Screen bg={t.card}>

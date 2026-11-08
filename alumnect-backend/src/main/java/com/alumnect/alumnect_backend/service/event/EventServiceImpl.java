@@ -72,7 +72,7 @@ public class EventServiceImpl implements EventService {
                 .organizerId(event.getOrganizer().getId()).organizerName(organizerName).registered(registered).started(!upcoming)
                 .canRegister(member && active && upcoming && available && !registered)
                 .canCancelRegistration(member && registered && active && upcoming)
-                .canCancel(member && viewer.getId().equals(event.getOrganizer().getId()) && "ALUMNI".equals(viewer.getRole().getName()) && active && upcoming)
+                .canCancel(member && viewer.getId().equals(event.getOrganizer().getId()) && active && upcoming)
                 .build();
     }
 
@@ -283,8 +283,8 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản người dùng"));
 
         String role = user.getRole() != null ? user.getRole().getName().toUpperCase() : "";
-        if (!"ALUMNI".equals(role) && !"ADMIN".equals(role)) {
-            throw new ForbiddenException("Chỉ cựu sinh viên (người tổ chức) mới có quyền hủy sự kiện.");
+        if (!"STUDENT".equals(role) && !"ALUMNI".equals(role) && !"ADMIN".equals(role)) {
+            throw new ForbiddenException("Chỉ người tổ chức sự kiện (sinh viên hoặc cựu sinh viên) mới có quyền hủy sự kiện.");
         }
 
         Event event = eventRepository.findById(eventId)

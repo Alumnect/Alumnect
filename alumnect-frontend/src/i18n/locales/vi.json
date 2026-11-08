@@ -460,6 +460,7 @@
     "cancelRsvpSuccess": "Đã hủy đăng ký tham gia sự kiện thành công!",
     "cancelRsvpError": "Hủy đăng ký không thành công. Vui lòng thử lại.",
     "promptLoginRsvp": "Đăng nhập để đăng ký tham gia sự kiện.",
+    "promptLoginViewAttendees": "Đăng nhập để xem danh sách người tham gia sự kiện.",
     "promptLoginViewHistory": "Đăng nhập để xem lịch sử tham gia sự kiện.",
     "promptLoginSave": "Đăng nhập để lưu sự kiện.",
     "roleNotEligibleRsvp": "Chỉ tài khoản sinh viên và cựu sinh viên mới được đăng ký tham gia.",
