@@ -8,7 +8,7 @@ import { useTheme } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
 
 /** Nút upvote có cập nhật lạc quan, dùng cho câu hỏi và câu trả lời. */
-export function VoteButton({ voted, votes, onVote, onUnvote }: { voted: boolean; votes: number; onVote: () => Promise<unknown>; onUnvote: () => Promise<unknown> }) {
+export function VoteButton({ voted, votes, onVote, onUnvote, compact }: { voted: boolean; votes: number; onVote: () => Promise<unknown>; onUnvote: () => Promise<unknown>; compact?: boolean }) {
   const t = useTheme()
   const [state, setState] = useState({ voted, votes })
   const m = useMutation({
@@ -28,9 +28,16 @@ export function VoteButton({ voted, votes, onVote, onUnvote }: { voted: boolean;
     m.mutate(next)
   }
   return (
-    <Pressable onPress={(e) => { e.stopPropagation(); toggle() }} accessibilityRole="button" accessibilityLabel={state.voted ? 'Bỏ bình chọn' : 'Bình chọn'} accessibilityState={{ selected: state.voted }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, minWidth: 44 }}>
-      <ArrowBigUp size={24} color={state.voted ? t.primary : t.textMuted} fill={state.voted ? t.primary : 'transparent'} />
-      <Txt weight="700" color={state.voted ? t.primary : t.textMuted}>{state.votes}</Txt>
+    <Pressable
+      onPress={(e) => { e.stopPropagation(); toggle() }}
+      hitSlop={compact ? 10 : 0}
+      accessibilityRole="button"
+      accessibilityLabel={state.voted ? 'Bỏ bình chọn' : 'Bình chọn'}
+      accessibilityState={{ selected: state.voted }}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: compact ? 2 : 4, minHeight: compact ? 24 : 44, minWidth: compact ? 0 : 44 }}
+    >
+      <ArrowBigUp size={compact ? 20 : 24} color={state.voted ? t.primary : t.textMuted} fill={state.voted ? t.primary : 'transparent'} />
+      <Txt weight="700" size={compact ? 12 : 15} color={state.voted ? t.primary : t.textMuted}>{state.votes}</Txt>
     </Pressable>
   )
 }
