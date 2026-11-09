@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
-import { View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Chip, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
+import { SelectField } from '@/components/SelectField'
+import { BottomBar } from '@/components/DetailBits'
+import { CommunityIntro, FormSection } from '@/components/SocialUI'
 import { Header } from '@/components/Header'
 import { salaryApi } from '@/api/salary'
 import { toast, errMsg } from '@/lib/toast'
@@ -51,7 +53,7 @@ export default function ContributeScreen() {
     if (!f.amount) e.amount = 'Mức lương không được để trống'
     else if (!(amount > 0)) e.amount = 'Mức lương phải lớn hơn 0'
     else if (amount > 9_999_999_999.99) e.amount = 'Mức lương không hợp lệ'
-    if (f.years && (Number(f.years) < 0 || Number(f.years) > 60)) e.years = 'Số năm kinh nghiệm không hợp lệ'
+    if (f.years && (!Number.isFinite(Number(f.years)) || Number(f.years) < 0 || Number(f.years) > 60)) e.years = 'Số năm kinh nghiệm không hợp lệ'
     setErrors(e)
     if (!Object.keys(e).length) m.mutate()
   }
@@ -63,18 +65,21 @@ export default function ContributeScreen() {
     <Screen keyboard>
       <Header title={id ? 'Sửa đóng góp lương' : 'Đóng góp lương'} />
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-        <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Ngành</Txt>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
-          {(industries.data ?? []).map((i) => <Chip key={i.id} label={i.name} active={industryId === i.id} onPress={() => setIndustryId(industryId === i.id ? null : i.id)} />)}
-        </View>
-        <Input label="Chức danh" value={f.jobTitle} onChangeText={set('jobTitle')} error={errors.jobTitle} />
-        <Input label="Công ty (tùy chọn)" value={f.company} onChangeText={set('company')} />
-        <Input label="Khu vực (tùy chọn)" value={f.region} onChangeText={set('region')} />
-        <Input label="Số năm kinh nghiệm" value={f.years} onChangeText={set('years')} keyboardType="decimal-pad" error={errors.years} />
-        <Input label="Lương gộp / tháng (VND)" value={f.amount} onChangeText={(v) => set('amount')(v.replace(/[^\d.]/g, ''))} keyboardType="number-pad" error={errors.amount} />
-        <Txt muted size={12} style={{ marginBottom: 16 }}>Dữ liệu được hiển thị ẩn danh, không gắn với tên của bạn.</Txt>
-        <Button title={id ? 'Lưu thay đổi' : 'Gửi đóng góp'} onPress={submit} loading={m.isPending} />
+        <CommunityIntro icon="coin" eyebrow="CHIA SẺ ẨN DANH" title="Một chia sẻ, nhiều cơ hội" description="Giúp cộng đồng hiểu hơn về mức lương. Tên của bạn không hiển thị cùng đóng góp." />
+        <FormSection icon="suitcase" title="Công việc của bạn" caption="01 · Vị trí và lĩnh vực đang làm việc">
+          <SelectField label="Ngành nghề" placeholder={industries.isLoading ? 'Đang tải ngành nghề...' : 'Chọn lĩnh vực của bạn'} value={industryId == null ? null : String(industryId)} options={(industries.data ?? []).map((i) => ({ value: String(i.id), label: i.name }))} onChange={(v) => setIndustryId(v ? Number(v) : null)} />
+          {industries.isError ? <Button title="Tải lại ngành nghề" variant="ghost" onPress={() => void industries.refetch()} /> : null}
+          <Input label="Chức danh *" placeholder="Ví dụ: Product Designer" value={f.jobTitle} onChangeText={set('jobTitle')} error={errors.jobTitle} />
+          <Input label="Công ty · Không bắt buộc" placeholder="Tên công ty bạn đang làm việc" value={f.company} onChangeText={set('company')} />
+          <Input label="Khu vực · Không bắt buộc" placeholder="Ví dụ: Thành phố Hồ Chí Minh" value={f.region} onChangeText={set('region')} />
+        </FormSection>
+        <FormSection icon="coin" title="Thu nhập & kinh nghiệm" caption="02 · Mức lương trước thuế mỗi tháng">
+          <Input label="Số năm kinh nghiệm" placeholder="Ví dụ: 3" value={f.years} onChangeText={set('years')} keyboardType="decimal-pad" error={errors.years} />
+          <Input label="Lương gộp / tháng (VND) *" placeholder="Ví dụ: 20000000" value={f.amount} onChangeText={(v) => set('amount')(v.replace(/[^\d.]/g, ''))} keyboardType="number-pad" error={errors.amount} />
+          <Txt muted size={12}>Nhập đầy đủ số tiền bằng đồng Việt Nam, chưa trừ thuế và bảo hiểm.</Txt>
+        </FormSection>
       </ScrollView>
+      <BottomBar><Button variant="brand" title={id ? 'Lưu thay đổi' : 'Gửi đóng góp ẩn danh'} onPress={submit} loading={m.isPending} style={{ flex: 1 }} /></BottomBar>
     </Screen>
   )
 }

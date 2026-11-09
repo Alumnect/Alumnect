@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import * as Haptics from 'expo-haptics'
 import { CheckCircle2, MapPin } from '@/components/icons'
 import { Text } from '@/components/AppText'
-import { Button, Input, Txt } from './ui'
+import { Button, Input } from './ui'
 import {
   placesConfigured,
   resolvePlace,
@@ -36,6 +36,7 @@ export function PlaceField({
   const t = useTheme()
   const [edited, setEdited] = useState(false)
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([])
+  const [suggestionQuery, setSuggestionQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [retry, setRetry] = useState(0)
@@ -44,7 +45,6 @@ export function PlaceField({
 
   useEffect(() => {
     if (!placesConfigured || !edited || value.trim().length < 2) {
-      setSuggestions([])
       return
     }
     const controller = new AbortController()
@@ -57,6 +57,7 @@ export function PlaceField({
         const result = await searchPlaces(value, controller.signal)
         if (current === sequence.current && !controller.signal.aborted) {
           setSuggestions(result)
+          setSuggestionQuery(value)
         }
       } catch (e) {
         if (!controller.signal.aborted && current === sequence.current) {
@@ -155,7 +156,7 @@ export function PlaceField({
       ) : null}
 
       {/* Danh sách gợi ý địa chỉ xổ xuống */}
-      {suggestions.length > 0 ? (
+      {placesConfigured && edited && value.trim().length >= 2 && suggestionQuery === value && suggestions.length > 0 ? (
         <View
           style={{
             marginTop: -8,

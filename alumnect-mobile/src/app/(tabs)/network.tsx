@@ -5,7 +5,7 @@ import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Map, Sparkles, UserCheck, UserSearch, Users } from '@/components/icons'
+import { Map, Sparkles, UserCheck, Users } from '@/components/icons'
 import { Chip, Empty, Screen, SearchBar, Txt } from '@/components/ui'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { UserRow } from '@/components/UserRow'
@@ -343,56 +343,12 @@ export default function NetworkScreen() {
                 </View>
               ) : null}
 
-              {/* Meetup-style Smart Suggestion Banner */}
               {tab === 'suggestions' ? (
-                <View
-                  style={{
-                    marginHorizontal: 16,
-                    marginTop: 8,
-                    marginBottom: 10,
-                    padding: 14,
-                    borderRadius: 16,
-                    backgroundColor: t.isDark ? '#2B1C14' : '#FFF7F2',
-                    borderWidth: 1,
-                    borderColor: t.isDark ? '#4D2F20' : '#FFE2D1',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 12,
-                      backgroundColor: t.isDark ? '#3D2518' : '#FFEADA',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <BrandIcon name="people2" size={32} />
-                  </View>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Txt weight="700" size={14} style={{ color: t.isDark ? '#FFA775' : '#B83A00' }}>
-                        Gợi ý kết nối thông minh
-                      </Txt>
-                      <View
-                        style={{
-                          backgroundColor: t.primary,
-                          paddingHorizontal: 5,
-                          paddingVertical: 1,
-                          borderRadius: 8,
-                        }}
-                      >
-                        <Txt size={8} weight="800" style={{ color: '#fff' }}>
-                          AI MATCH
-                        </Txt>
-                      </View>
-                    </View>
-                    <Txt size={12} style={{ color: t.isDark ? '#D1A38A' : '#7C4A2D', lineHeight: 16 }}>
-                      Ghép nối dựa trên chuyên ngành, niên khóa và nơi công tác của cộng đồng cựu sinh viên.
-                    </Txt>
+                <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <BrandIcon name="people2" size={30} />
+                  <View style={{ flex: 1 }}>
+                    <Txt size={15} weight="600">Có thể bạn quen</Txt>
+                    <Txt size={12} muted>Cùng trường. Thêm kết nối.</Txt>
                   </View>
                 </View>
               ) : null}
