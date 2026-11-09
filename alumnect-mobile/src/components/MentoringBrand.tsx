@@ -1,38 +1,36 @@
 import React from 'react'
 import { View, StyleSheet, Pressable } from 'react-native'
-import Svg, { Path, Circle, Rect, Defs, LinearGradient, Stop } from 'react-native-svg'
+import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg'
 import { Avatar, Txt } from './ui'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 
 /**
- * Biểu tượng Alumnect Mentoring đặc trưng (AM Ribbon x Meetup Style):
- * - Nền viên sỏi hữu cơ (Meetup organic pebble badge) màu Viridian gradient
+ * Biểu tượng Alumnect Mentoring đặc trưng (AM Ribbon x Meetup Style — Tone Cam - Trắng - Đen):
+ * - Nền viên sỏi hữu cơ (Meetup organic pebble badge) màu Cam Alumnect gradient (#FF7A2F -> #CE4A09)
  * - Biểu tượng lồng ghép 'A' (Alumnect) & 'M' (Mentoring) dạng dải ruy-băng thư pháp mập mạp, đầy đặn (chubby & bold)
- * - Nét vắt cong thanh thoát, bay bổng chuẩn theo ảnh mẫu thiết kế
+ * - Nét vắt cong thanh thoát, nổi bật trên cả nền Sáng và Tối
  */
-export function MentoringLogoIcon({ size = 34, color }: { size?: number; color?: string }) {
-  const { viridian } = useMentoringTheme()
-  const baseColor = color || viridian
-
+export function MentoringLogoIcon({ size = 34 }: { size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 56 56" fill="none">
       <Defs>
-        <LinearGradient id="meetupAmGrad" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-          <Stop offset="0%" stopColor="#0094A8" />
-          <Stop offset="100%" stopColor="#005F6C" />
+        <LinearGradient id="alumnectAmOrangeGrad" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+          <Stop offset="0%" stopColor="#FF7A2F" />
+          <Stop offset="55%" stopColor="#E6560F" />
+          <Stop offset="100%" stopColor="#B83B04" />
         </LinearGradient>
       </Defs>
 
-      {/* Meetup organic pebble badge - Viên sỏi hữu cơ đặc trưng phong cách Meetup */}
+      {/* Meetup organic pebble badge - Viên sỏi hữu cơ đặc trưng phong cách Meetup x Alumnect Orange */}
       <Path
-        fill="url(#meetupAmGrad)"
+        fill="url(#alumnectAmOrangeGrad)"
         d="M44.281,3.422C33.911,0.474 19.213,4.268 11.2,7.57C3.881,10.587 -1.247,17.216 1.06,25.47C1.647,27.571 2.59,29.434 3.791,31.001C4.115,31.423 4.216,31.98 4.039,32.481C2.581,36.608 1.303,42.436 3.111,46.442C6.309,53.528 15.78,56.374 22.39,53.615H22.391C28.841,50.928 35.547,48.629 42.415,47.289C49.121,45.98 55.007,41.322 51.255,31.676C51.218,31.58 51.194,31.475 51.187,31.372C51.167,31.079 51.273,30.794 51.472,30.579C54.188,27.648 56.153,21.857 55.384,16.791C54.456,10.677 49.615,4.938 44.281,3.422Z"
       />
 
       {/* Dải bóng đổ nhẹ (Drop shadow) dưới nếp gập tạo độ sâu origami */}
       <Path
-        fill="#002D34"
-        fillOpacity={0.25}
+        fill="#4A1700"
+        fillOpacity={0.28}
         d="M16.5 24.5C19.8 21.8 23.5 24.8 26.2 30.2L24.5 31.0C21.8 26.2 18.5 24.0 15.8 25.2Z"
       />
 
@@ -55,21 +53,25 @@ export function MentoringLogoIcon({ size = 34, color }: { size?: number; color?:
 export const MeetupMIcon = MentoringLogoIcon
 
 /**
- * Meetup x Instagram styled header logo with title
+ * Meetup x Instagram styled header logo with title (Cam - Trắng - Đen)
  */
 export function MentoringHeaderBrand() {
   const { colors, viridian } = useMentoringTheme()
   return (
     <View style={styles.brandRow}>
-      <MentoringLogoIcon size={34} color={viridian} />
+      <MentoringLogoIcon size={36} />
       <View style={{ marginLeft: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Txt weight="800" size={18} style={{ color: colors.text, letterSpacing: -0.3 }}>
-            Cố vấn & Kết nối
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Txt weight="800" size={19} style={{ color: colors.text, letterSpacing: -0.4 }}>
+            Cố vấn
+          </Txt>
+          <View style={[styles.dotBadge, { backgroundColor: viridian }]} />
+          <Txt weight="700" size={14} style={{ color: viridian }}>
+            Mentoring
           </Txt>
         </View>
         <Txt size={11} weight="500" style={{ color: colors.textTertiary, marginTop: 1 }}>
-          Gặp gỡ 1:1 · Mạng lưới Cựu sinh viên
+          Kết nối 1:1 · Mạng lưới Cựu sinh viên FPT
         </Txt>
       </View>
     </View>
@@ -77,7 +79,7 @@ export function MentoringHeaderBrand() {
 }
 
 /**
- * Instagram-style story avatar ring for Spotlight Mentors
+ * Instagram-style story avatar ring for Spotlight Mentors (Orange Ring + Live Dot)
  */
 export function MentorStoryRing({
   uri,
@@ -94,11 +96,11 @@ export function MentorStoryRing({
   size?: number
   onPress?: () => void
 }) {
-  const { colors, viridian, liveGreen } = useMentoringTheme()
-  const ringSize = size + 6
+  const { colors, viridian, viridianSoft, liveGreen, isDark } = useMentoringTheme()
+  const ringSize = size + 7
 
   return (
-    <Pressable onPress={onPress} style={styles.storyContainer}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.storyContainer, { opacity: pressed ? 0.8 : 1 }]}>
       <View
         style={[
           styles.storyRing,
@@ -106,7 +108,8 @@ export function MentorStoryRing({
             width: ringSize,
             height: ringSize,
             borderRadius: ringSize / 2,
-            borderColor: isLive ? liveGreen : viridian,
+            borderColor: viridian,
+            backgroundColor: colors.card,
           },
         ]}
       >
@@ -122,14 +125,22 @@ export function MentorStoryRing({
         numberOfLines={1}
         weight="600"
         size={11}
-        style={{ color: colors.text, textAlign: 'center', width: ringSize + 12, marginTop: 5 }}
+        style={{ color: colors.text, textAlign: 'center', width: ringSize + 14, marginTop: 5 }}
       >
-        {name.split(' ').slice(-1)[0]}
+        {name.split(' ').slice(-2).join(' ')}
       </Txt>
 
       {rating ? (
-        <View style={styles.ratingBadge}>
-          <Txt size={10} weight="700" style={{ color: '#D97706' }}>
+        <View
+          style={[
+            styles.ratingBadge,
+            {
+              backgroundColor: isDark ? '#2E1C10' : viridianSoft,
+              borderColor: isDark ? '#4A2C16' : '#FAD9C2',
+            },
+          ]}
+        >
+          <Txt size={10} weight="700" style={{ color: viridian }}>
             ★ {rating.toFixed(1)}
           </Txt>
         </View>
@@ -143,12 +154,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  dotBadge: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
   storyContainer: {
     alignItems: 'center',
     marginRight: 14,
   },
   storyRing: {
-    padding: 2,
+    padding: 2.5,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
@@ -163,11 +179,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   ratingBadge: {
-    marginTop: 2,
-    paddingHorizontal: 6,
+    marginTop: 3,
+    paddingHorizontal: 7,
     paddingVertical: 1,
     borderRadius: 999,
-    backgroundColor: '#FEF3C7',
+    borderWidth: StyleSheet.hairlineWidth,
   },
 })
-

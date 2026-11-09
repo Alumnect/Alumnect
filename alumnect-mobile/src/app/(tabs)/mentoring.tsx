@@ -12,20 +12,23 @@ import {
   ChevronDown,
   ChevronRight,
   ClipboardList,
+  FilePlus2,
   FileText,
   GraduationCap,
   Handshake,
+  IgMessenger,
   Landmark,
   LayoutGrid,
   ListChecks,
-  MessageCircle,
   RotateCcw,
   Sparkles,
+  Trophy,
   UserCheck,
   Users,
   X,
 } from '@/components/icons'
 import { Empty, IconButton, Screen, SearchBar, Txt } from '@/components/ui'
+import { BrandIcon, type BrandIconName } from '@/components/BrandIcon'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { SheetModal } from '@/components/SheetModal'
 import { MentorCardView } from '@/components/MentorCardView'
@@ -46,10 +49,11 @@ const SORTS: [string, string][] = [
 const DEFAULTS: FilterValues = { sort: 'reputationScore_desc' }
 
 /**
- * Cố vấn & Kết nối: Meetup x Instagram x KakaoStory Design
- * - Meetup Brand & Viridian Accents
- * - Instagram Story Spotlight Rail for Top Mentors
- * - KakaoStory Quick Action Pills & Micro Cards
+ * Cố vấn & Kết nối: Meetup x Instagram x Kakao 2026 Design
+ * - Tone màu chủ đạo: Cam (#CE4A09 / #F27124) - Trắng (#FFFFFF) - Đen (#202329 / #101010)
+ * - Instagram Story Spotlight Rail cho Top Mentors
+ * - Kakao Quick Action Pills & Bento Utility Sheet với BrandIcon
+ * - Meetup Mentor Directory Cards
  */
 export default function MentoringTab() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
@@ -116,6 +120,27 @@ export default function MentoringTab() {
   const items = q.data?.pages.flatMap((p) => p.content) ?? []
   const active = countActive(filters, ['sort'])
 
+  const quickShortcuts: { key: string; label: string; brand: BrandIconName; href: string; primary?: boolean }[] =
+    role === 'STUDENT'
+      ? [
+          { key: 'create', label: 'Tạo yêu cầu', brand: 'pencil', href: '/mentoring/create-request', primary: true },
+          { key: 'my-req', label: 'Yêu cầu của tôi', brand: 'writing', href: '/mentoring/my-requests' },
+          { key: 'tasks', label: 'Nhiệm vụ', brand: 'task', href: '/mentoring/tasks' },
+          { key: 'deals', label: 'Thỏa thuận', brand: 'check', href: '/mentoring/deals' },
+          { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
+          { key: 'rank', label: 'Xếp hạng', brand: 'star', href: '/mentoring/rankings' },
+          { key: 'refunds', label: 'Hoàn tiền', brand: 'coin', href: '/mentoring/refunds' },
+        ]
+      : [
+          { key: 'incoming', label: 'Yêu cầu đến', brand: 'writing', href: '/mentoring/incoming-requests', primary: true },
+          { key: 'tasks', label: 'Nhiệm vụ', brand: 'task', href: '/mentoring/tasks' },
+          { key: 'deals', label: 'Thỏa thuận', brand: 'check', href: '/mentoring/deals' },
+          { key: 'earnings', label: 'Thu nhập', brand: 'coin', href: '/mentoring/earnings' },
+          { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
+          { key: 'rank', label: 'Xếp hạng', brand: 'star', href: '/mentoring/rankings' },
+          { key: 'status', label: 'Hồ sơ Mentor', brand: 'suitcase', href: '/mentoring/status' },
+        ]
+
   return (
     <Screen bg={colors.bg}>
       {/* Top Bar with Brand + Utility & Messages Icon Actions */}
@@ -124,12 +149,12 @@ export default function MentoringTab() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <IconButton
             label="Quản lý & Tiện ích Cố vấn"
-            icon={<LayoutGrid size={22} color={colors.text} />}
+            icon={<LayoutGrid size={21} color={colors.text} />}
             onPress={() => setUtilitySheet(true)}
           />
           <IconButton
             label="Tin nhắn mentoring"
-            icon={<MessageCircle size={22} color={colors.text} />}
+            icon={<IgMessenger size={21} color={colors.text} />}
             onPress={() => router.push('/mentoring/messages')}
           />
         </View>
@@ -148,19 +173,79 @@ export default function MentoringTab() {
           }}
           ListHeaderComponent={
             <View>
+              {/* Kakao / Instagram Quick Flow Strip: 1-Tap Access to All Mentoring Flows */}
+              <View style={[styles.quickFlowBar, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.quickFlowScroll}
+                >
+                  {quickShortcuts.map((s) => (
+                    <Pressable
+                      key={s.key}
+                      onPress={() => router.push(s.href as never)}
+                      style={({ pressed }) => [
+                        styles.quickFlowPill,
+                        s.primary
+                          ? {
+                              backgroundColor: viridian,
+                              borderColor: viridian,
+                            }
+                          : {
+                              backgroundColor: colors.surface,
+                              borderColor: colors.border,
+                            },
+                        { opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
+                      ]}
+                    >
+                      <View
+                        style={
+                          s.primary
+                            ? {
+                                width: 22,
+                                height: 22,
+                                borderRadius: 11,
+                                backgroundColor: '#FFFFFF',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }
+                            : undefined
+                        }
+                      >
+                        <BrandIcon name={s.brand} size={s.primary ? 16 : 19} />
+                      </View>
+                      <Txt
+                        size={12}
+                        weight={s.primary ? '700' : '600'}
+                        style={{ color: s.primary ? '#FFFFFF' : colors.text }}
+                      >
+                        {s.label}
+                      </Txt>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+
               {/* Instagram Story Spotlight Rail: Top Mentors */}
               {spotlightMentors.length > 0 && (
                 <View style={[styles.spotlightSection, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
                   <View style={styles.spotlightTitleRow}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                      <Sparkles size={14} color={viridian} />
-                      <Txt size={12} weight="700" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <BrandIcon name="sparkle" size={18} />
+                      <Txt size={12} weight="800" style={{ color: colors.text, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                         Mentor Tiêu Biểu
                       </Txt>
                     </View>
-                    <Txt size={11} weight="500" style={{ color: colors.textTertiary }}>
-                      Trực tuyến & Sẵn sàng
-                    </Txt>
+                    <Pressable
+                      onPress={() => router.push('/mentoring/rankings')}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                    >
+                      <BrandIcon name="star" size={15} />
+                      <Txt size={12} weight="700" style={{ color: viridian }}>
+                        Bảng xếp hạng
+                      </Txt>
+                      <ChevronRight size={13} color={viridian} weight="bold" />
+                    </Pressable>
                   </View>
                   <ScrollView
                     horizontal
@@ -186,9 +271,8 @@ export default function MentoringTab() {
                 </View>
               )}
 
-              {/* Option 1: Combined Search & Quick Field Dropdown (No horizontal scroll rail) */}
-              <View style={[styles.searchSection, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
-                {/* Search Bar with advanced FilterButton */}
+              {/* Combined Search & Quick Field Dropdown */}
+              <View style={[styles.searchSection, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle, marginBottom: 10 }]}>
                 <SearchBar
                   value={kw}
                   onChangeText={setKw}
@@ -206,8 +290,8 @@ export default function MentoringTab() {
                     style={({ pressed }) => [
                       styles.fieldDropdownBtn,
                       {
-                        backgroundColor: selectedFieldId !== undefined ? viridianSoft : (isDark ? '#2C2C2E' : '#F2F2F7'),
-                        borderColor: selectedFieldId !== undefined ? viridian : 'transparent',
+                        backgroundColor: selectedFieldId !== undefined ? viridianSoft : colors.surface,
+                        borderColor: selectedFieldId !== undefined ? viridian : colors.border,
                         opacity: pressed ? 0.8 : 1,
                       },
                     ]}
@@ -243,7 +327,7 @@ export default function MentoringTab() {
                   </Pressable>
 
                   {items.length > 0 && (
-                    <Txt size={12} weight="500" style={{ color: colors.textTertiary }}>
+                    <Txt size={12} weight="600" style={{ color: colors.textTertiary }}>
                       {items.length} chuyên gia
                     </Txt>
                   )}
@@ -258,7 +342,7 @@ export default function MentoringTab() {
               <Empty
                 error={q.error}
                 onRetry={() => { void q.refetch() }}
-                icon={<GraduationCap size={32} color={viridian} />}
+                icon={<GraduationCap size={34} color={viridian} />}
                 title="Không tìm thấy mentor phù hợp"
                 text="Thử thay đổi từ khóa tìm kiếm hoặc bấm nút 'Tất cả lĩnh vực'."
                 action={active || selectedFieldId !== undefined ? 'Xoá tất cả bộ lọc' : undefined}
@@ -280,22 +364,22 @@ export default function MentoringTab() {
         />
       </View>
 
-      {/* Utility Bottom Sheet: Không gian quản lý & điều hành Cố vấn */}
-      <SheetModal visible={utilitySheet} onClose={() => setUtilitySheet(false)} maxHeight={0.85}>
+      {/* Utility Bottom Sheet: Không gian quản lý & điều hành Cố vấn (Meetup x Kakao Bento) */}
+      <SheetModal visible={utilitySheet} onClose={() => setUtilitySheet(false)} maxHeight={0.86}>
         <View style={[styles.sheetHeader, { borderBottomColor: colors.borderSubtle }]}>
           <View style={{ flex: 1 }}>
-            <Txt weight="800" size={17} style={{ color: colors.text }}>
-              Quản lý & Tiện ích Cố vấn
+            <Txt weight="800" size={18} style={{ color: colors.text }}>
+              Trung tâm Cố vấn & Kết nối
             </Txt>
-            <Txt size={11} weight="500" style={{ color: colors.textTertiary, marginTop: 2 }}>
-              Điều hành kết nối, nhiệm vụ & mạng lưới mở rộng
+            <Txt size={12} weight="500" style={{ color: colors.textTertiary, marginTop: 2 }}>
+              Quản lý toàn bộ yêu cầu, nhiệm vụ, thỏa thuận & cộng đồng
             </Txt>
           </View>
           <Pressable
             onPress={() => setUtilitySheet(false)}
             accessibilityRole="button"
             accessibilityLabel="Đóng"
-            style={styles.sheetCloseBtn}
+            style={[styles.sheetCloseBtn, { backgroundColor: colors.surface }]}
           >
             <X size={18} color={colors.textSecondary} />
           </Pressable>
@@ -303,17 +387,18 @@ export default function MentoringTab() {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 16, paddingBottom: Math.max(20, insets.bottom + 16), gap: 10 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: Math.max(24, insets.bottom + 16), gap: 10 }}
         >
           {/* Section: Tác vụ trọng tâm */}
-          <Txt size={11} weight="700" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4, marginBottom: 2 }}>
-            Tác vụ Cố vấn
+          <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 2, marginBottom: 2 }}>
+            Luồng Cố vấn chính
           </Txt>
 
           {role === 'STUDENT' ? (
             <>
               <UtilityRow
-                icon={<FileText size={20} color="#FFFFFF" />}
+                brandIcon="pencil"
+                icon={<FileText size={20} color="#FFFFFF" weight="bold" />}
                 title="Tạo yêu cầu mới"
                 desc="Đăng bài toán cần mentor hỗ trợ định hướng & giải đáp"
                 primary
@@ -323,6 +408,7 @@ export default function MentoringTab() {
                 }}
               />
               <UtilityRow
+                brandIcon="writing"
                 icon={<ClipboardList size={20} color={viridian} />}
                 title="Yêu cầu của tôi"
                 desc="Theo dõi trạng thái các yêu cầu cố vấn bạn đã tạo"
@@ -332,6 +418,7 @@ export default function MentoringTab() {
                 }}
               />
               <UtilityRow
+                brandIcon="task"
                 icon={<ListChecks size={20} color={viridian} />}
                 title="Nhiệm vụ của tôi"
                 desc="Tiến độ bài tập và nhiệm vụ đang đồng hành cùng mentor"
@@ -341,7 +428,8 @@ export default function MentoringTab() {
                 }}
               />
               <UtilityRow
-                icon={<Handshake size={20} color={viridian} />}
+                brandIcon="check"
+                icon={<Handshake size={20} color={viridian} weight="bold" />}
                 title="Thỏa thuận hợp tác"
                 desc="Hợp đồng và điều khoản hướng dẫn đã xác lập"
                 onPress={() => {
@@ -353,7 +441,8 @@ export default function MentoringTab() {
           ) : (
             <>
               <UtilityRow
-                icon={<ClipboardList size={20} color="#FFFFFF" />}
+                brandIcon="writing"
+                icon={<ClipboardList size={20} color="#FFFFFF" weight="bold" />}
                 title="Yêu cầu đến"
                 desc="Danh sách yêu cầu hướng dẫn mới từ sinh viên chờ duyệt"
                 primary
@@ -363,6 +452,7 @@ export default function MentoringTab() {
                 }}
               />
               <UtilityRow
+                brandIcon="task"
                 icon={<ListChecks size={20} color={viridian} />}
                 title="Nhiệm vụ học viên"
                 desc="Theo dõi tiến độ bài nộp và đánh giá chất lượng sinh viên"
@@ -372,8 +462,9 @@ export default function MentoringTab() {
                 }}
               />
               <UtilityRow
-                icon={<Handshake size={20} color={viridian} />}
-                title="Thỏa thuận hướng dẫn"
+                brandIcon="check"
+                icon={<Handshake size={20} color={viridian} weight="bold" />}
+                title="Thỏa thuận hợp tác"
                 desc="Hợp đồng mentoring và các cam kết đang hoạt động"
                 onPress={() => {
                   setUtilitySheet(false)
@@ -381,18 +472,20 @@ export default function MentoringTab() {
                 }}
               />
               <UtilityRow
+                brandIcon="coin"
                 icon={<Landmark size={20} color={viridian} />}
                 title="Thu nhập Cố vấn"
-                desc="Thống kê thù lao hướng dẫn, số dư ví và rút tiền"
+                desc="Thống kê thù lao hướng dẫn, số dư ví và chi trả tự động"
                 onPress={() => {
                   setUtilitySheet(false)
                   router.push('/mentoring/earnings')
                 }}
               />
               <UtilityRow
+                brandIcon="suitcase"
                 icon={<UserCheck size={20} color={viridian} />}
-                title="Hồ sơ Mentor"
-                desc="Cập nhật chuyên môn, lĩnh vực và trạng thái nhận học viên"
+                title="Hồ sơ & Trạng thái Mentor"
+                desc="Cập nhật chuyên môn, gói đăng ký và trạng thái nhận học viên"
                 onPress={() => {
                   setUtilitySheet(false)
                   router.push('/mentoring/status')
@@ -402,14 +495,15 @@ export default function MentoringTab() {
           )}
 
           {/* Section: Cộng đồng & Mở rộng */}
-          <Txt size={11} weight="700" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12, marginBottom: 2 }}>
-            Cộng đồng & Chính sách
+          <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 12, marginBottom: 2 }}>
+            Cộng đồng, Xếp hạng & Bảo vệ
           </Txt>
 
           <UtilityRow
+            brandIcon="people2"
             icon={<Users size={20} color={viridian} />}
             title="Nhóm Cố vấn"
-            desc="Cộng đồng thảo luận theo ngành nghề và câu lạc bộ chuyên môn"
+            desc="Nhóm học viên cùng nhận cố vấn và thảo luận chuyên môn"
             onPress={() => {
               setUtilitySheet(false)
               router.push('/mentoring/groups')
@@ -417,9 +511,10 @@ export default function MentoringTab() {
           />
 
           <UtilityRow
-            icon={<Award size={20} color={viridian} />}
+            brandIcon="star"
+            icon={<Award size={20} color={viridian} weight="fill" />}
             title="Bảng xếp hạng Mentor"
-            desc="Top các cựu sinh viên tiêu biểu và uy tín nhất hệ thống"
+            desc="Vinh danh Top cựu sinh viên tiêu biểu và uy tín nhất"
             onPress={() => {
               setUtilitySheet(false)
               router.push('/mentoring/rankings')
@@ -427,9 +522,10 @@ export default function MentoringTab() {
           />
 
           <UtilityRow
+            brandIcon="coin"
             icon={<RotateCcw size={20} color={viridian} />}
-            title="Chính sách Hoàn tiền & Tranh chấp"
-            desc="Bảo vệ quyền lợi học viên, giải quyết khiếu nại minh bạch"
+            title="Hoàn tiền & Tranh chấp"
+            desc="Khai báo tài khoản nhận hoàn tiền & tra cứu lịch sử giải ngân"
             onPress={() => {
               setUtilitySheet(false)
               router.push('/mentoring/refunds')
@@ -453,7 +549,7 @@ export default function MentoringTab() {
             onPress={() => setFieldModal(false)}
             accessibilityRole="button"
             accessibilityLabel="Đóng"
-            style={styles.sheetCloseBtn}
+            style={[styles.sheetCloseBtn, { backgroundColor: colors.surface }]}
           >
             <X size={18} color={colors.textSecondary} />
           </Pressable>
@@ -490,7 +586,7 @@ export default function MentoringTab() {
                 Hiển thị toàn bộ chuyên gia & mentor
               </Txt>
             </View>
-            {selectedFieldId === undefined && <Check size={18} color={viridian} />}
+            {selectedFieldId === undefined && <Check size={18} color={viridian} weight="bold" />}
           </Pressable>
 
           {/* List of industries */}
@@ -521,7 +617,7 @@ export default function MentoringTab() {
                     {ind.name}
                   </Txt>
                 </View>
-                {isSelected && <Check size={18} color={viridian} />}
+                {isSelected && <Check size={18} color={viridian} weight="bold" />}
               </Pressable>
             )
           })}
@@ -546,12 +642,14 @@ export default function MentoringTab() {
 
 function UtilityRow({
   icon,
+  brandIcon,
   title,
   desc,
   primary,
   onPress,
 }: {
   icon: React.ReactNode
+  brandIcon?: BrandIconName
   title: string
   desc: string
   primary?: boolean
@@ -564,34 +662,34 @@ function UtilityRow({
       style={({ pressed }) => [
         styles.utilityRow,
         {
-          backgroundColor: colors.card,
-          borderColor: primary ? viridian : colors.borderSubtle,
+          backgroundColor: primary ? viridianSoft : colors.card,
+          borderColor: primary ? viridian : colors.border,
           borderWidth: primary ? 1.5 : 1,
-          opacity: pressed ? 0.8 : 1,
+          opacity: pressed ? 0.85 : 1,
         },
       ]}
     >
-      <View style={[styles.utilityIconWrap, { backgroundColor: primary ? viridian : viridianSoft }]}>
-        {icon}
+      <View style={[styles.utilityIconWrap, { backgroundColor: primary ? '#FFFFFF' : viridianSoft, borderWidth: primary ? 1 : 0, borderColor: viridian }]}>
+        {brandIcon ? <BrandIcon name={brandIcon} size={26} /> : icon}
       </View>
       <View style={{ flex: 1, marginLeft: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Txt weight="700" size={13.5} style={{ color: colors.text }}>
+          <Txt weight="800" size={14} style={{ color: colors.text }}>
             {title}
           </Txt>
           {primary && (
-            <View style={{ backgroundColor: viridian, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+            <View style={{ backgroundColor: viridian, paddingHorizontal: 7, paddingVertical: 1.5, borderRadius: 6 }}>
               <Txt size={10} weight="700" style={{ color: '#FFFFFF' }}>
-                Ưu tiên
+                Trọng tâm
               </Txt>
             </View>
           )}
         </View>
-        <Txt size={11} weight="500" style={{ color: colors.textTertiary, marginTop: 2 }} numberOfLines={1}>
+        <Txt size={12} weight="400" style={{ color: colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
           {desc}
         </Txt>
       </View>
-      <ChevronRight size={16} color={primary ? viridian : colors.textTertiary} />
+      <ChevronRight size={16} color={primary ? viridian : colors.textTertiary} weight="bold" />
     </Pressable>
   )
 }
@@ -602,9 +700,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 14,
+    paddingTop: 12,
     paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  quickFlowBar: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 10,
+  },
+  quickFlowScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+    alignItems: 'center',
+  },
+  quickFlowPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 13,
+    height: 36,
+    borderRadius: 999,
+    borderWidth: 1,
   },
   spotlightSection: {
     paddingVertical: 12,
@@ -655,22 +771,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   sheetCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
   utilityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 14,
+    padding: 13,
+    borderRadius: 16,
   },
   utilityIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },

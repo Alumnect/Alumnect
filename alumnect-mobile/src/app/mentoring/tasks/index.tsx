@@ -8,7 +8,7 @@ import { Empty, Screen, Tag, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
 import { ListSkeleton } from '@/components/Skeleton'
 import { statusTone } from '@/constants/status'
-import { ChevronRight, Clock, ListChecks } from '@/components/icons'
+import { ChevronRight, Clock, ListChecks, UserRound } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { TASK_STAGES, TASK_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
 import { formatVnd } from '@/api/mentoring'
@@ -17,9 +17,9 @@ import { useMentoringTheme } from '@/theme/mentoringTheme'
 
 const isPast = (d: Date) => d.getTime() < Date.now()
 
-/** UC96: danh sách task của tôi theo giai đoạn (Meetup x Instagram Card Design). */
+/** UC96: danh sách task của tôi theo giai đoạn (Meetup Item x Instagram Progress Card — Cam - Trắng - Đen). */
 export default function TasksScreen() {
-  const { colors, viridian, isDark } = useMentoringTheme()
+  const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
   const router = useRouter()
   const me = useAuthStore((s) => s.user)
   const [stage, setStage] = useState<string | undefined>()
@@ -34,9 +34,12 @@ export default function TasksScreen() {
 
   return (
     <Screen bg={colors.bg}>
-      <Header title="Nhiệm vụ (Tasks)" />
-      
-      {/* Stage Filter Rail */}
+      <Header
+        title="Nhiệm vụ của tôi"
+        subtitle="Theo dõi tiến độ, nhật ký & nghiệm thu cố vấn"
+      />
+
+      {/* Stage Filter Rail (Instagram / Meetup Pill Tabs) */}
       <View style={[styles.filterRail, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           {TASK_STAGES.map(([k, l]) => {
@@ -48,14 +51,15 @@ export default function TasksScreen() {
                 style={[
                   styles.filterChip,
                   {
-                    backgroundColor: active ? viridian : (isDark ? '#2C2C2E' : '#F2F2F7'),
+                    backgroundColor: active ? colors.actionBg : colors.surface,
+                    borderColor: active ? colors.actionBg : colors.border,
                   },
                 ]}
               >
                 <Txt
                   size={12}
-                  weight={active ? '700' : '500'}
-                  style={{ color: active ? '#FFFFFF' : colors.textSecondary }}
+                  weight={active ? '700' : '600'}
+                  style={{ color: active ? colors.actionText : colors.textSecondary }}
                 >
                   {l}
                 </Txt>
@@ -82,7 +86,7 @@ export default function TasksScreen() {
                 onRetry={() => { void q.refetch() }}
                 icon={<BrandIcon name="task" size={56} />}
                 title="Chưa có nhiệm vụ nào"
-                text="Nhiệm vụ sẽ được tạo tự động sau khi hai bên thống nhất thỏa thuận cố vấn."
+                text="Nhiệm vụ sẽ được kích hoạt ngay sau khi hai bên thống nhất và thanh toán thỏa thuận cố vấn."
               />
             }
             renderItem={({ item }) => {
@@ -98,27 +102,39 @@ export default function TasksScreen() {
                   style={({ pressed }) => [
                     styles.taskCard,
                     {
-                      backgroundColor: pressed ? (isDark ? '#252628' : '#F9FAFB') : colors.card,
+                      backgroundColor: pressed ? (isDark ? '#222222' : '#FAFAFB') : colors.card,
                       borderColor: colors.border,
                     },
                   ]}
                 >
-                  {/* Top Status & Title */}
-                  <View style={styles.cardHeader}>
-                    <Txt weight="800" size={15} style={{ flex: 1, color: colors.text }} numberOfLines={2}>
-                      {item.taskTitle}
-                    </Txt>
+                  {/* Meetup Eyebrow */}
+                  <View style={styles.eyebrowRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                      <BrandIcon name="task" size={17} />
+                      <Txt size={11} weight="800" style={{ color: viridian, letterSpacing: 0.4 }}>
+                        {`NHIỆM VỤ #${item.id}`}
+                      </Txt>
+                    </View>
                     <Tag label={TASK_STATUS_LABEL[item.status] ?? item.status} tone={statusTone(item.status)} />
                   </View>
 
-                  <Txt size={13} style={{ color: colors.textSecondary, marginTop: 4 }}>
-                    {`${me?.role === 'STUDENT' ? 'Cố vấn' : 'Sinh viên'}: `}
-                    <Txt weight="700" size={13} style={{ color: colors.text }}>
-                      {other}
-                    </Txt>
+                  {/* Title */}
+                  <Txt weight="800" size={16} style={{ color: colors.text, marginTop: 6 }} numberOfLines={2}>
+                    {item.taskTitle}
                   </Txt>
 
-                  {/* Progress Bar (Instagram / Meetup style) */}
+                  {/* Counterpart Row */}
+                  <View style={styles.counterpartRow}>
+                    <UserRound size={13} color={colors.textTertiary} />
+                    <Txt size={12} style={{ color: colors.textSecondary }}>
+                      {`${me?.role === 'STUDENT' ? 'Mentor đồng hành' : 'Học viên'}: `}
+                      <Txt weight="700" size={12} style={{ color: colors.text }}>
+                        {other}
+                      </Txt>
+                    </Txt>
+                  </View>
+
+                  {/* Progress Bar (Instagram / Kakao style) */}
                   <View style={styles.progressRow}>
                     <View style={[styles.progressTrack, { backgroundColor: colors.surface }]}>
                       <View
@@ -126,41 +142,50 @@ export default function TasksScreen() {
                           styles.progressBar,
                           {
                             width: `${pct}%`,
-                            backgroundColor: pct >= 100 ? '#10B981' : viridian,
+                            backgroundColor: pct >= 100 ? '#16A34A' : viridian,
                           },
                         ]}
                       />
                     </View>
-                    <Txt size={12} weight="800" style={{ color: pct >= 100 ? '#10B981' : viridian }}>
+                    <Txt size={12} weight="800" style={{ color: pct >= 100 ? '#16A34A' : viridian }}>
                       {`${pct}%`}
                     </Txt>
                   </View>
 
-                  {/* Footer: Price + Deadline */}
-                  <View style={[styles.cardFooter, { borderTopColor: colors.borderSubtle }]}>
-                    <Txt weight="800" size={14} style={{ color: viridian, flex: 1 }}>
-                      {formatVnd(item.agreedPrice)}
-                    </Txt>
-                    <View style={styles.deadlineContainer}>
-                      <Clock size={13} color={late ? '#EF4444' : colors.textTertiary} />
-                      <Txt
-                        size={12}
-                        weight={late ? '700' : '400'}
-                        style={{ color: late ? '#EF4444' : colors.textTertiary, marginLeft: 4 }}
-                      >
-                        {`Hạn ${deadline.toLocaleDateString('vi-VN')}`}
-                      </Txt>
-                      <ChevronRight size={13} color={colors.textTertiary} style={{ marginLeft: 4 }} />
-                    </View>
-                  </View>
-
+                  {/* Pending Worklog Banner */}
                   {item.pendingWorkLogs ? (
-                    <View style={styles.pendingBadge}>
-                      <Txt size={11} weight="600" style={{ color: '#D97706' }}>
-                        ⏳ {item.pendingWorkLogs} nhật ký tiến độ đang chờ xác nhận
+                    <View
+                      style={[
+                        styles.pendingBadge,
+                        {
+                          backgroundColor: isDark ? '#2E1C10' : viridianSoft,
+                          borderColor: isDark ? '#4A2C16' : '#FAD9C2',
+                        },
+                      ]}
+                    >
+                      <Txt size={11} weight="700" style={{ color: viridian }}>
+                        ● {item.pendingWorkLogs} nhật ký công việc đang chờ xác nhận
                       </Txt>
                     </View>
                   ) : null}
+
+                  {/* Footer: Price + Deadline + CTA */}
+                  <View style={[styles.cardFooter, { borderTopColor: colors.borderSubtle }]}>
+                    <Txt weight="800" size={15} style={{ color: viridian, flex: 1 }}>
+                      {formatVnd(item.agreedPrice)}
+                    </Txt>
+                    <View style={styles.deadlineContainer}>
+                      <Clock size={13} color={late ? '#DC2626' : colors.textTertiary} />
+                      <Txt
+                        size={12}
+                        weight={late ? '700' : '500'}
+                        style={{ color: late ? '#DC2626' : colors.textTertiary, marginLeft: 4 }}
+                      >
+                        {`Hạn ${deadline.toLocaleDateString('vi-VN')}`}
+                      </Txt>
+                      <ChevronRight size={13} color={colors.textTertiary} weight="bold" style={{ marginLeft: 4 }} />
+                    </View>
+                  </View>
                 </Pressable>
               )
             }}
@@ -184,34 +209,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 999,
+    borderWidth: 1,
   },
   taskCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 16,
   },
-  cardHeader: {
+  eyebrowRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 8,
+  },
+  counterpartRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
   },
   progressRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     marginTop: 12,
   },
   progressTrack: {
     flex: 1,
-    height: 7,
+    height: 8,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressBar: {
-    height: 7,
+    height: 8,
     borderRadius: 4,
+  },
+  pendingBadge: {
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -223,12 +263,5 @@ const styles = StyleSheet.create({
   deadlineContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  pendingBadge: {
-    marginTop: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: '#FEF3C7',
   },
 })

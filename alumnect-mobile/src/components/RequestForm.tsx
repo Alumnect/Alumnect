@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Button, Chip, Empty, Input, Loading, Screen, Txt } from './ui'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Button, Empty, Input, Loading, Screen, Txt } from './ui'
+import { BrandIcon, type BrandIconName } from './BrandIcon'
 import * as DocumentPicker from 'expo-document-picker'
 import { Header } from './Header'
 import { DateField } from './DateField'
@@ -14,9 +16,106 @@ import { toast, errMsg } from '@/lib/toast'
 import { groupApi } from '@/api/mentoringGroups'
 import http, { type ApiResponse } from '@/lib/http'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
-import { FileText, Paperclip, Send, Users, Wallet } from '@/components/icons'
+import { Check, FileText, Paperclip, Plus, Send, X } from '@/components/icons'
 
-/** UC90 (mentorId rỗng) và UC91 (gửi trực tiếp cho mentor) - Meetup x KakaoStory Form Design */
+/** Chip lựa chọn theo phong cách MeetupChip (Core.kt) x Kakao (Tone Cam - Đen - Trắng) */
+function FormChip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string
+  active?: boolean
+  onPress: () => void
+}) {
+  const { colors, viridian, isDark } = useMentoringTheme()
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: !!active }}
+      style={({ pressed }) => [
+        styles.formChip,
+        {
+          backgroundColor: active ? (isDark ? viridian : colors.actionBg) : colors.surface,
+          borderColor: active ? (isDark ? viridian : colors.actionBg) : colors.border,
+          opacity: pressed ? 0.82 : 1,
+        },
+      ]}
+    >
+      {active && <Check size={13} color={isDark ? '#FFFFFF' : colors.actionText} weight="bold" />}
+      <Txt
+        size={13}
+        weight={active ? '700' : '500'}
+        style={{ color: active ? (isDark ? '#FFFFFF' : colors.actionText) : colors.text }}
+      >
+        {label}
+      </Txt>
+    </Pressable>
+  )
+}
+
+function StepBadge({
+  step,
+  title,
+  subtitle,
+  brandIcon,
+  done,
+  active,
+}: {
+  step: string
+  title: string
+  subtitle?: string
+  brandIcon: BrandIconName
+  done?: boolean
+  active?: boolean
+}) {
+  const { colors, viridian, viridianSoft } = useMentoringTheme()
+  return (
+    <View style={styles.sectionHeaderRow}>
+      <View
+        style={[
+          styles.brandIconBox,
+          {
+            backgroundColor: viridianSoft,
+            borderWidth: active || done ? 1 : 0,
+            borderColor: viridian,
+          },
+        ]}
+      >
+        <BrandIcon name={brandIcon} size={24} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View
+            style={[
+              styles.stepPill,
+              {
+                backgroundColor: done ? viridian : active ? viridianSoft : colors.surface,
+                borderWidth: active && !done ? 1 : 0,
+                borderColor: viridian,
+              },
+            ]}
+          >
+            <Txt size={10} weight="800" style={{ color: done ? '#FFFFFF' : active ? viridian : colors.textSecondary }}>
+              {done ? `✓ BƯỚC ${step}` : `BƯỚC ${step}`}
+            </Txt>
+          </View>
+          <Txt weight="800" size={15} style={{ color: colors.text, flex: 1 }} numberOfLines={1}>
+            {title}
+          </Txt>
+        </View>
+        {subtitle ? (
+          <Txt size={11} style={{ color: colors.textTertiary, marginTop: 2 }}>
+            {subtitle}
+          </Txt>
+        ) : null}
+      </View>
+    </View>
+  )
+}
+
+/** UC90 (mentorId rỗng) và UC91 (gửi trực tiếp cho mentor) - Meetup x Instagram x Kakao 2026 Form Design */
 export function RequestForm({
   mentorId,
   mentorName,
@@ -28,6 +127,7 @@ export function RequestForm({
 }) {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
   const router = useRouter()
+  const insets = useSafeAreaInsets()
   const terms = useQuery({ queryKey: ['mentoring-terms'], queryFn: mentoringApi.termsStatus })
   const industries = useQuery({ queryKey: ['mentoring-industries'], queryFn: mentoringApi.industries })
   const [f, setF] = useState({ title: '', description: '', budgetMin: '', budgetMax: '' })
@@ -37,6 +137,8 @@ export function RequestForm({
   const [deadline, setDeadline] = useState('')
   const [participation, setParticipation] = useState<'INDIVIDUAL' | 'GROUP'>(initialGroupId ? 'GROUP' : 'INDIVIDUAL')
   const [groupId, setGroupId] = useState<number | null>(initialGroupId ?? null)
+  const [activeStep, setActiveStep] = useState<number>(1)
+
   const groups = useQuery({
     queryKey: ['mentoring-groups', 'managed'],
     queryFn: () => groupApi.mine('MANAGED'),
@@ -81,6 +183,7 @@ export function RequestForm({
   })
 
   const addAttachment = async () => {
+    setActiveStep(5)
     const picked = await DocumentPicker.getDocumentAsync({ multiple: true, copyToCacheDirectory: true })
     if (picked.canceled) return
     if (picked.assets.length + attachments.length > 5) {
@@ -151,231 +254,565 @@ export function RequestForm({
       </Screen>
     )
 
+  const hasContentInput = f.title.trim().length > 0 || f.description.trim().length > 0
+  const isContentComplete = f.title.trim().length > 0 && f.description.trim().length > 0
+
+  const steps = [
+    { num: 1, idx: '01', label: 'Hình thức', done: participation === 'INDIVIDUAL' || Boolean(groupId), active: activeStep === 1 },
+    { num: 2, idx: '02', label: 'Nội dung', done: isContentComplete, active: activeStep === 2 || hasContentInput },
+    { num: 3, idx: '03', label: 'Chuyên môn', done: Boolean(industryId), active: activeStep === 3 },
+    { num: 4, idx: '04', label: 'Ngân sách', done: Boolean(f.budgetMin || f.budgetMax || deadline), active: activeStep === 4 },
+    { num: 5, idx: '05', label: 'Tài liệu', done: attachments.length > 0, active: activeStep === 5 },
+  ]
+
   return (
-    <Screen bg={colors.bg}>
-      <Header title={mentorId ? 'Gửi yêu cầu cho Mentor' : 'Tạo yêu cầu Mentoring'} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-          {/* Target Mentor Header Banner */}
-          {mentorName ? (
-            <View style={[styles.targetCard, { backgroundColor: viridianSoft, borderColor: viridian }]}>
-              <Txt size={12} weight="600" style={{ color: viridian }}>
-                Người nhận yêu cầu:
+    <Screen keyboard bg={colors.bg}>
+      <Header
+        title={mentorId ? 'Gửi yêu cầu trực tiếp' : 'Tạo yêu cầu Cố vấn'}
+        subtitle={mentorName ? `Gửi tới ${mentorName}` : 'Hệ thống tự động ghép nối mentor phù hợp'}
+      />
+
+      {/* Kakao / Instagram 5-Column Connected Stepper (Không bao giờ chèn chữ hay tràn lề) */}
+      <View style={[styles.stepperContainer, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
+        <View style={styles.stepperRow}>
+          {steps.map((s, i) => {
+            const lit = s.done || s.active
+            return (
+              <React.Fragment key={s.idx}>
+                <View style={styles.stepCol}>
+                  <View
+                    style={[
+                      styles.stepCircle,
+                      {
+                        backgroundColor: s.done ? viridian : s.active ? viridianSoft : colors.surface,
+                        borderColor: lit ? viridian : colors.border,
+                        borderWidth: s.active && !s.done ? 2 : 1,
+                      },
+                    ]}
+                  >
+                    {s.done ? (
+                      <Check size={12} color="#FFFFFF" weight="bold" />
+                    ) : (
+                      <Txt size={10} weight="800" style={{ color: lit ? viridian : colors.textTertiary }}>
+                        {s.idx}
+                      </Txt>
+                    )}
+                  </View>
+                  <Txt
+                    size={10}
+                    weight={lit ? '800' : '500'}
+                    numberOfLines={1}
+                    style={{
+                      color: lit ? viridian : colors.textTertiary,
+                      marginTop: 4,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {s.label}
+                  </Txt>
+                </View>
+                {i < steps.length - 1 && (
+                  <View
+                    style={[
+                      styles.stepConnector,
+                      {
+                        backgroundColor: s.done ? viridian : colors.borderSubtle,
+                      },
+                    ]}
+                  />
+                )}
+              </React.Fragment>
+            )
+          })}
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
+        {/* Meetup Hero Banner with BrandIcon (pencil / chat) */}
+        <View
+          style={[
+            styles.heroCard,
+            {
+              backgroundColor: isDark ? '#24180E' : viridianSoft,
+              borderColor: isDark ? '#4A2C16' : '#FAD9C2',
+            },
+          ]}
+        >
+          <View style={[styles.heroIconWrap, { backgroundColor: colors.card, borderColor: colors.borderSubtle }]}>
+            <BrandIcon name={mentorName ? 'chat' : 'pencil'} size={42} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <BrandIcon name="sparkle" size={14} />
+              <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                {mentorName ? 'Yêu cầu trực tiếp 1:1' : 'Đăng bài toán cần cố vấn'}
               </Txt>
-              <Txt size={16} weight="800" style={{ color: viridian, marginTop: 2 }}>
-                {mentorName}
+            </View>
+            <Txt size={15} weight="800" style={{ color: colors.text, marginTop: 3 }}>
+              {mentorName ? `Người nhận: ${mentorName}` : 'Mô tả rõ mục tiêu để kết nối nhanh nhất'}
+            </Txt>
+            <Txt size={12} style={{ color: colors.textSecondary, marginTop: 2 }}>
+              {mentorName
+                ? 'Mentor sẽ nhận thông báo ngay và phản hồi yêu cầu của bạn.'
+                : 'Các mentor cùng lĩnh vực sẽ nhận đề xuất và gửi phản hồi cho bạn.'}
+            </Txt>
+          </View>
+        </View>
+
+        {/* Section 01: Hình thức tham gia */}
+        <View
+          style={[
+            styles.formCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: activeStep === 1 ? viridian : colors.border,
+            },
+          ]}
+        >
+          <StepBadge
+            step="01"
+            title="Hình thức tham gia"
+            subtitle="Chọn học 1 kèm 1 hoặc đại diện cho nhóm học tập"
+            brandIcon="people2"
+            done={steps[0].done}
+            active={steps[0].active}
+          />
+          <View style={styles.chipWrap}>
+            <FormChip
+              label="Cá nhân (1:1)"
+              active={participation === 'INDIVIDUAL'}
+              onPress={() => {
+                setActiveStep(1)
+                setParticipation('INDIVIDUAL')
+              }}
+            />
+            <FormChip
+              label="Theo nhóm học viên"
+              active={participation === 'GROUP'}
+              onPress={() => {
+                setActiveStep(1)
+                setParticipation('GROUP')
+              }}
+            />
+          </View>
+
+          {participation === 'GROUP' ? (
+            <View style={[styles.subBox, { backgroundColor: colors.surface, borderColor: colors.borderSubtle }]}>
+              <Txt weight="700" size={13} style={{ color: colors.text, marginBottom: 8 }}>
+                Chọn nhóm bạn đang đại diện
               </Txt>
+              {groups.isLoading ? (
+                <Loading />
+              ) : groups.isError ? (
+                <Button title="Thử tải lại nhóm" variant="outline" size="sm" onPress={() => void groups.refetch()} />
+              ) : (
+                <View style={styles.chipWrap}>
+                  {(groups.data ?? [])
+                    .filter((g) => g.canManage && g.status === 'ACTIVE')
+                    .map((g) => (
+                      <FormChip
+                        key={g.id}
+                        label={g.name}
+                        active={groupId === g.id}
+                        onPress={() => {
+                          setActiveStep(1)
+                          setGroupId(g.id)
+                        }}
+                      />
+                    ))}
+                </View>
+              )}
+              {errors.group ? <Txt color="#DC2626" size={12} style={{ marginTop: 6 }}>{errors.group}</Txt> : null}
+              <Pressable
+                onPress={() => router.push('/mentoring/groups/create')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10 }}
+              >
+                <Plus size={14} color={viridian} weight="bold" />
+                <Txt size={13} weight="700" style={{ color: viridian }}>
+                  Tạo nhóm Cố vấn mới
+                </Txt>
+              </Pressable>
             </View>
           ) : null}
+        </View>
 
-          {/* Section 1: Hình thức tham gia */}
-          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Users size={16} color={viridian} />
-              <Txt weight="700" size={14} style={{ color: colors.text }}>
-                Hình thức tham gia
-              </Txt>
-            </View>
-            <View style={styles.chipRow}>
-              <Chip label="Cá nhân (1:1)" active={participation === 'INDIVIDUAL'} onPress={() => setParticipation('INDIVIDUAL')} />
-              <Chip label="Theo nhóm" active={participation === 'GROUP'} onPress={() => setParticipation('GROUP')} />
-            </View>
-
-            {participation === 'GROUP' ? (
-              <View style={{ marginTop: 12 }}>
-                <Txt weight="600" size={13} style={{ color: colors.textSecondary, marginBottom: 8 }}>
-                  Chọn nhóm bạn đại diện
-                </Txt>
-                {groups.isLoading ? (
-                  <Loading />
-                ) : groups.isError ? (
-                  <Button title="Thử tải lại nhóm" variant="outline" onPress={() => void groups.refetch()} />
-                ) : (
-                  (groups.data ?? [])
-                    .filter((g) => g.canManage && g.status === 'ACTIVE')
-                    .map((g) => <Chip key={g.id} label={g.name} active={groupId === g.id} onPress={() => setGroupId(g.id)} />)
-                )}
-                {errors.group ? <Txt color="#EF4444" size={12} style={{ marginTop: 4 }}>{errors.group}</Txt> : null}
-                <Button title="+ Tạo nhóm mới" variant="ghost" onPress={() => router.push('/mentoring/groups/create')} />
-              </View>
-            ) : null}
-          </View>
-
-          {/* Section 2: Nội dung & Mục tiêu */}
-          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.sectionHeaderRow}>
-              <FileText size={16} color={viridian} />
-              <Txt weight="700" size={14} style={{ color: colors.text }}>
-                Nội dung trao đổi
-              </Txt>
-            </View>
-            <Input
-              label="Tiêu đề yêu cầu"
-              placeholder="VD: Cố vấn định hướng nghề nghiệp Mobile Developer..."
-              value={f.title}
-              onChangeText={set('title')}
-              error={errors.title}
-            />
-            <Input
-              label="Mô tả chi tiết vấn đề & mong muốn của bạn"
-              placeholder="Chia sẻ rõ hoàn cảnh, khó khăn hiện tại và những gì bạn cần mentor hướng dẫn..."
-              value={f.description}
-              onChangeText={set('description')}
-              multiline
-              numberOfLines={4}
-              error={errors.description}
-            />
-          </View>
-
-          {/* Section 3: Lĩnh vực & Loại hỗ trợ */}
-          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Txt weight="700" size={14} style={{ color: colors.text, marginBottom: 8 }}>
-              Lĩnh vực chuyên môn
-            </Txt>
-            <View style={styles.chipWrap}>
-              {(industries.data ?? []).map((i) => (
-                <Chip key={i.id} label={i.name} active={industryId === i.id} onPress={() => setIndustryId(i.id)} />
-              ))}
-            </View>
-            {errors.industry ? <Txt size={12} color="#EF4444" style={{ marginTop: 4 }}>{errors.industry}</Txt> : null}
-
-            <Txt weight="700" size={14} style={{ color: colors.text, marginTop: 16, marginBottom: 8 }}>
-              Loại hỗ trợ mong muốn
-            </Txt>
-            <View style={styles.chipWrap}>
-              {REQUEST_TASK_TYPES.map((t) => (
-                <Chip key={t.value} label={t.label} active={taskType === t.value} onPress={() => setTaskType(t.value)} />
-              ))}
-            </View>
-
-            <Txt weight="700" size={14} style={{ color: colors.text, marginTop: 16, marginBottom: 8 }}>
-              Hình thức làm việc
-            </Txt>
-            <View style={styles.chipWrap}>
-              {(Object.keys(WORKING_MODE_LABEL) as WorkingMode[]).map((k) => (
-                <Chip key={k} label={WORKING_MODE_LABEL[k]} active={mode === k} onPress={() => setMode(k)} />
-              ))}
-            </View>
-          </View>
-
-          {/* Section 4: Ngân sách & Thời hạn */}
-          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Wallet size={16} color={viridian} />
-              <Txt weight="700" size={14} style={{ color: colors.text }}>
-                Dự toán ngân sách & Thời hạn
-              </Txt>
-            </View>
-            <Input
-              label="Ngân sách tối thiểu (VND)"
-              placeholder="VD: 100000"
-              value={f.budgetMin}
-              onChangeText={(v) => set('budgetMin')(v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-            />
-            <Input
-              label="Ngân sách tối đa (VND)"
-              placeholder="VD: 500000"
-              value={f.budgetMax}
-              onChangeText={(v) => set('budgetMax')(v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              error={errors.budget}
-            />
-            <DateField label="Thời hạn mong muốn hoàn thành (tùy chọn)" value={deadline} onChange={setDeadline} error={errors.deadline} />
-          </View>
-
-          {/* Section 5: Tài liệu đính kèm */}
-          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.sectionHeaderRow}>
-              <Paperclip size={16} color={viridian} />
-              <Txt weight="700" size={14} style={{ color: colors.text }}>
-                Tài liệu đính kèm ({attachments.length}/5)
-              </Txt>
-            </View>
-            {attachments.map((a, i) => (
-              <View key={a.fileUrl} style={[styles.attachmentRow, { backgroundColor: colors.surface }]}>
-                <Txt numberOfLines={1} size={13} style={{ flex: 1, color: colors.text }}>
-                  📎 {a.fileName}
-                </Txt>
-                <Button
-                  title="Xóa"
-                  variant="ghost"
-                  onPress={() => setAttachments((files) => files.filter((_, j) => j !== i))}
-                />
-              </View>
-            ))}
-            <Button
-              title="Thêm tài liệu (CV, bài tập, đề tài)"
-              variant="outline"
-              disabled={attachments.length >= 5 || m.isPending}
-              loading={uploading}
-              onPress={() => void addAttachment()}
-              style={{ marginTop: 6 }}
-            />
-          </View>
-
-          {/* Action CTA: Nút gửi yêu cầu sáng rõ, nổi bật */}
-          <Button
-            title="Gửi yêu cầu Mentoring"
-            textColor="#FFFFFF"
-            icon={<Send size={16} color="#FFFFFF" />}
-            onPress={submit}
-            loading={m.isPending}
-            disabled={uploading || !terms.data?.accepted}
-            style={{
-              backgroundColor: terms.data?.accepted ? (isDark ? '#00A3BA' : '#008294') : colors.border,
-              marginTop: 10,
-              shadowColor: '#00A3BA',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isDark ? 0.4 : 0.25,
-              shadowRadius: 8,
-              elevation: 4,
-            }}
+        {/* Section 02: Nội dung & Mục tiêu */}
+        <View
+          style={[
+            styles.formCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: activeStep === 2 ? viridian : colors.border,
+            },
+          ]}
+        >
+          <StepBadge
+            step="02"
+            title="Nội dung & Mục tiêu trao đổi"
+            subtitle="Nêu rõ bài toán và kết quả mong đợi sau khóa cố vấn"
+            brandIcon="pencil"
+            done={steps[1].done}
+            active={steps[1].active}
           />
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <View style={styles.fieldLabelRow}>
+            <Txt size={13} weight="700" style={{ color: colors.text }}>
+              Tiêu đề yêu cầu
+            </Txt>
+            <Txt size={11} weight="600" style={{ color: f.title.trim().length >= 5 ? viridian : colors.textTertiary }}>
+              {`${f.title.trim().length}/200 ký tự (tối thiểu 5)`}
+            </Txt>
+          </View>
+          <Input
+            placeholder="VD: Cố vấn định hướng lộ trình Backend / Review CV..."
+            value={f.title}
+            onFocus={() => setActiveStep(2)}
+            onChangeText={(v) => {
+              setActiveStep(2)
+              set('title')(v)
+            }}
+            error={errors.title}
+          />
+
+          <View style={styles.fieldLabelRow}>
+            <Txt size={13} weight="700" style={{ color: colors.text }}>
+              Mô tả chi tiết bài toán & mong muốn
+            </Txt>
+            <Txt size={11} weight="600" style={{ color: f.description.trim().length >= 20 ? viridian : colors.textTertiary }}>
+              {`${f.description.trim().length}/3000 ký tự (tối thiểu 20)`}
+            </Txt>
+          </View>
+          <Input
+            placeholder="Chia sẻ rõ hoàn cảnh, khó khăn hiện tại và kết quả bạn kỳ vọng sau buổi cố vấn..."
+            value={f.description}
+            onFocus={() => setActiveStep(2)}
+            onChangeText={(v) => {
+              setActiveStep(2)
+              set('description')(v)
+            }}
+            multiline
+            numberOfLines={4}
+            error={errors.description}
+          />
+        </View>
+
+        {/* Section 03: Lĩnh vực & Loại hỗ trợ */}
+        <View
+          style={[
+            styles.formCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: activeStep === 3 ? viridian : colors.border,
+            },
+          ]}
+        >
+          <StepBadge
+            step="03"
+            title="Lĩnh vực & Phương thức"
+            subtitle="Giúp thuật toán chọn đúng chuyên gia phù hợp nhất"
+            brandIcon="computer"
+            done={steps[2].done}
+            active={steps[2].active}
+          />
+          <Txt weight="700" size={13} style={{ color: colors.textSecondary, marginBottom: 8 }}>
+            Lĩnh vực chuyên môn cần hỗ trợ
+          </Txt>
+          <View style={styles.chipWrap}>
+            {(industries.data ?? []).map((i) => (
+              <FormChip
+                key={i.id}
+                label={i.name}
+                active={industryId === i.id}
+                onPress={() => {
+                  setActiveStep(3)
+                  setIndustryId(i.id)
+                }}
+              />
+            ))}
+          </View>
+          {errors.industry ? <Txt size={12} color="#DC2626" style={{ marginTop: 6 }}>{errors.industry}</Txt> : null}
+
+          <Txt weight="700" size={13} style={{ color: colors.textSecondary, marginTop: 16, marginBottom: 8 }}>
+            Loại hình hỗ trợ mong muốn
+          </Txt>
+          <View style={styles.chipWrap}>
+            {REQUEST_TASK_TYPES.map((t) => (
+              <FormChip
+                key={t.value}
+                label={t.label}
+                active={taskType === t.value}
+                onPress={() => {
+                  setActiveStep(3)
+                  setTaskType(t.value)
+                }}
+              />
+            ))}
+          </View>
+
+          <Txt weight="700" size={13} style={{ color: colors.textSecondary, marginTop: 16, marginBottom: 8 }}>
+            Hình thức làm việc
+          </Txt>
+          <View style={styles.chipWrap}>
+            {(Object.keys(WORKING_MODE_LABEL) as WorkingMode[]).map((k) => (
+              <FormChip
+                key={k}
+                label={WORKING_MODE_LABEL[k]}
+                active={mode === k}
+                onPress={() => {
+                  setActiveStep(3)
+                  setMode(k)
+                }}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Section 04: Ngân sách & Thời hạn */}
+        <View
+          style={[
+            styles.formCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: activeStep === 4 ? viridian : colors.border,
+            },
+          ]}
+        >
+          <StepBadge
+            step="04"
+            title="Dự toán Ngân sách & Thời hạn"
+            subtitle="Khung thù lao dự kiến dành cho Mentor (không bắt buộc)"
+            brandIcon="coin"
+            done={steps[3].done}
+            active={steps[3].active}
+          />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Input
+                label="Tối thiểu (VND)"
+                placeholder="VD: 100000"
+                value={f.budgetMin}
+                onFocus={() => setActiveStep(4)}
+                onChangeText={(v) => {
+                  setActiveStep(4)
+                  set('budgetMin')(v.replace(/\D/g, ''))
+                }}
+                keyboardType="number-pad"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Input
+                label="Tối đa (VND)"
+                placeholder="VD: 500000"
+                value={f.budgetMax}
+                onFocus={() => setActiveStep(4)}
+                onChangeText={(v) => {
+                  setActiveStep(4)
+                  set('budgetMax')(v.replace(/\D/g, ''))
+                }}
+                keyboardType="number-pad"
+                error={errors.budget}
+              />
+            </View>
+          </View>
+          <DateField
+            label="Thời hạn mong muốn hoàn thành (tùy chọn)"
+            value={deadline}
+            onChange={(d) => {
+              setActiveStep(4)
+              setDeadline(d)
+            }}
+            error={errors.deadline}
+          />
+        </View>
+
+        {/* Section 05: Tài liệu đính kèm */}
+        <View
+          style={[
+            styles.formCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: activeStep === 5 ? viridian : colors.border,
+            },
+          ]}
+        >
+          <StepBadge
+            step="05"
+            title={`Tài liệu đính kèm (${attachments.length}/5)`}
+            subtitle="Đính kèm CV, đề cương dự án hoặc câu hỏi chuẩn bị trước"
+            brandIcon="copy"
+            done={steps[4].done}
+            active={steps[4].active}
+          />
+          {attachments.map((a, i) => (
+            <View key={a.fileUrl} style={[styles.attachmentRow, { backgroundColor: colors.surface, borderColor: colors.borderSubtle }]}>
+              <FileText size={16} color={viridian} />
+              <Txt numberOfLines={1} size={13} weight="600" style={{ flex: 1, color: colors.text, marginLeft: 8 }}>
+                {a.fileName}
+              </Txt>
+              <Pressable
+                onPress={() => setAttachments((files) => files.filter((_, j) => j !== i))}
+                hitSlop={8}
+                style={{ padding: 4 }}
+              >
+                <X size={16} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+          ))}
+          <Button
+            title="Đính kèm tệp (CV, đề cương, tài liệu < 10MB)"
+            variant="outline"
+            size="sm"
+            icon={<Paperclip size={15} color={colors.text} />}
+            disabled={attachments.length >= 5 || m.isPending}
+            loading={uploading}
+            onPress={() => void addAttachment()}
+            style={{ marginTop: 4 }}
+          />
+        </View>
+      </ScrollView>
+
+      {/* Meetup Sticky Bottom Action Bar */}
+      <View
+        style={[
+          styles.stickyFooter,
+          {
+            backgroundColor: colors.card,
+            borderTopColor: colors.borderSubtle,
+            paddingBottom: Math.max(12, insets.bottom + 8),
+          },
+        ]}
+      >
+        <Button
+          title={mentorId ? 'Gửi yêu cầu tới Mentor' : 'Đăng yêu cầu Cố vấn'}
+          textColor="#FFFFFF"
+          icon={<Send size={17} color="#FFFFFF" weight="fill" />}
+          onPress={submit}
+          loading={m.isPending}
+          disabled={uploading || !terms.data?.accepted}
+          style={{
+            backgroundColor: terms.data?.accepted ? viridian : colors.border,
+            borderColor: terms.data?.accepted ? viridian : colors.border,
+            minHeight: 50,
+          }}
+        />
+      </View>
     </Screen>
   )
 }
 
 const styles = StyleSheet.create({
+  stepperContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stepCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  stepCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepConnector: {
+    height: 2,
+    width: 14,
+    marginBottom: 14,
+    borderRadius: 1,
+  },
   scrollContainer: {
     padding: 16,
-    paddingBottom: 48,
+    paddingBottom: 36,
   },
-  targetCard: {
-    padding: 14,
-    borderRadius: 14,
+  heroCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 18,
     borderWidth: 1,
     marginBottom: 14,
   },
+  heroIconWrap: {
+    width: 58,
+    height: 58,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   formCard: {
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     marginBottom: 14,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 14,
   },
-  chipRow: {
+  brandIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  fieldLabelRow: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  subBox: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
   },
   chipWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
+  formChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
   attachmentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
     marginBottom: 8,
+  },
+  stickyFooter: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
 })
