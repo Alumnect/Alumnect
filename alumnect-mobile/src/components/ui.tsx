@@ -112,6 +112,7 @@ export function Button({
   size = 'md',
   icon,
   style,
+  textColor,
 }: {
   title: string
   accessibilityLabel?: string
@@ -122,10 +123,11 @@ export function Button({
   size?: 'sm' | 'md' | 'lg'
   icon?: React.ReactNode
   style?: ViewStyle
+  textColor?: string
 }) {
   const t = useTheme()
   const bg = { primary: t.action, secondary: t.inputBg, outline: t.card, ghost: 'transparent', danger: t.danger }[variant]
-  const fg = { primary: t.onAction, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
+  const fg = textColor ?? { primary: t.onAction, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
   const height = { sm: 44, md: 48, lg: 52 }[size]
   return (
     <Pressable
