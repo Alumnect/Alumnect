@@ -1,0 +1,41 @@
+-- Gỡ toàn bộ dữ liệu mẫu mentoring do seed_mentoring_demo.sql tạo (theo email @seed.alumnect.vn)
+BEGIN;
+CREATE TEMP TABLE _seed_users AS SELECT id FROM users WHERE email LIKE '%@seed.alumnect.vn';
+CREATE TEMP TABLE _seed_reqs AS SELECT id FROM mentoring_requests WHERE student_id IN (SELECT id FROM _seed_users);
+CREATE TEMP TABLE _seed_tasks AS SELECT id FROM mentoring_tasks WHERE request_id IN (SELECT id FROM _seed_reqs);
+CREATE TEMP TABLE _seed_deals AS SELECT id FROM mentoring_deals WHERE request_id IN (SELECT id FROM _seed_reqs);
+CREATE TEMP TABLE _seed_convs AS SELECT id FROM conversations WHERE mentoring_request_id IN (SELECT id FROM _seed_reqs);
+
+DELETE FROM notifications WHERE recipient_id IN (SELECT id FROM _seed_users) OR sender_id IN (SELECT id FROM _seed_users);
+DELETE FROM mentor_reviews WHERE student_id IN (SELECT id FROM _seed_users);
+DELETE FROM mentoring_payment_ledgers WHERE request_id IN (SELECT id FROM _seed_reqs);
+DELETE FROM mentoring_task_payments WHERE request_id IN (SELECT id FROM _seed_reqs);
+DELETE FROM mentoring_task_completions WHERE task_id IN (SELECT id FROM _seed_tasks);
+DELETE FROM mentoring_work_log_feedbacks WHERE work_log_id IN (SELECT id FROM mentoring_work_logs WHERE task_id IN (SELECT id FROM _seed_tasks));
+DELETE FROM mentoring_work_logs WHERE task_id IN (SELECT id FROM _seed_tasks);
+UPDATE conversations SET mentoring_task_id = NULL WHERE id IN (SELECT id FROM _seed_convs);
+UPDATE mentoring_requests SET selected_mentor_id = NULL, confirmed_deal_id = NULL WHERE id IN (SELECT id FROM _seed_reqs);
+DELETE FROM mentoring_tasks WHERE id IN (SELECT id FROM _seed_tasks);
+DELETE FROM mentoring_deal_snapshots WHERE deal_id IN (SELECT id FROM _seed_deals);
+DELETE FROM mentoring_deals WHERE id IN (SELECT id FROM _seed_deals);
+DELETE FROM messages WHERE conversation_id IN (SELECT id FROM _seed_convs);
+DELETE FROM conversation_participants WHERE conversation_id IN (SELECT id FROM _seed_convs);
+DELETE FROM conversations WHERE id IN (SELECT id FROM _seed_convs);
+DELETE FROM mentoring_request_members WHERE request_id IN (SELECT id FROM _seed_reqs);
+DELETE FROM mentoring_request_distributions WHERE request_id IN (SELECT id FROM _seed_reqs);
+DELETE FROM mentoring_requests WHERE id IN (SELECT id FROM _seed_reqs);
+DELETE FROM mentoring_group_member_events WHERE group_id IN (SELECT id FROM mentoring_groups WHERE leader_id IN (SELECT id FROM _seed_users));
+DELETE FROM mentoring_group_members WHERE group_id IN (SELECT id FROM mentoring_groups WHERE leader_id IN (SELECT id FROM _seed_users));
+DELETE FROM mentoring_groups WHERE leader_id IN (SELECT id FROM _seed_users);
+DELETE FROM user_terms_acceptances WHERE user_id IN (SELECT id FROM _seed_users);
+DELETE FROM mentor_subscriptions WHERE mentor_profile_id IN (SELECT id FROM mentor_profiles WHERE user_id IN (SELECT id FROM _seed_users));
+DELETE FROM mentor_payout_accounts WHERE mentor_profile_id IN (SELECT id FROM mentor_profiles WHERE user_id IN (SELECT id FROM _seed_users));
+DELETE FROM mentor_topics WHERE mentor_profile_id IN (SELECT id FROM mentor_profiles WHERE user_id IN (SELECT id FROM _seed_users));
+DELETE FROM mentor_supported_fields WHERE mentor_profile_id IN (SELECT id FROM mentor_profiles WHERE user_id IN (SELECT id FROM _seed_users));
+DELETE FROM mentor_profiles WHERE user_id IN (SELECT id FROM _seed_users);
+DELETE FROM experiences WHERE user_id IN (SELECT id FROM _seed_users);
+DELETE FROM user_settings WHERE user_id IN (SELECT id FROM _seed_users);
+DELETE FROM user_profiles WHERE user_id IN (SELECT id FROM _seed_users);
+DELETE FROM users WHERE id IN (SELECT id FROM _seed_users);
+COMMIT;
+\echo 'Đã gỡ dữ liệu mẫu mentoring.'
