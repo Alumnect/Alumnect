@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native'
 import { Text } from '@/components/AppText'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import * as SystemUI from 'expo-system-ui'
 import { useFonts } from 'expo-font'
 import { Caveat_700Bold } from '@expo-google-fonts/caveat/700Bold'
 import { BeVietnamPro_400Regular } from '@expo-google-fonts/be-vietnam-pro/400Regular'
@@ -110,15 +111,27 @@ export default function RootLayout() {
     [FONT.bold]: BeVietnamPro_700Bold,
     [FONT.extrabold]: BeVietnamPro_800ExtraBold,
   })
+
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(t.bg).catch(() => {})
+  }, [t.bg])
+
   if (!fontsLoaded && !fontError) return <View style={{ flex: 1, backgroundColor: t.bg }} />
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.bg }}>
+      <SafeAreaProvider style={{ backgroundColor: t.bg }}>
         <QueryClientProvider client={queryClient}>
           <StatusBar style={t.isDark ? 'light' : 'dark'} />
           <AuthGate>
             <OfflineBanner />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg }, animation: 'slide_from_right' }} />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: t.bg },
+                animation: 'ios_from_right',
+                animationDuration: 240,
+              }}
+            />
           </AuthGate>
           <Toast config={toastConfig} topOffset={50} />
         </QueryClientProvider>

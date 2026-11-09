@@ -16,6 +16,21 @@ const SOURCES = {
   chat: require('../../assets/brand/chat.webp'),
   task: require('../../assets/brand/task.webp'),
   list: require('../../assets/brand/list.webp'),
+  pencil: require('../../assets/brand/pencil.webp'),
+  writing: require('../../assets/brand/writing.webp'),
+  megaphone: require('../../assets/brand/megaphone.webp'),
+  check: require('../../assets/brand/check.webp'),
+  fist: require('../../assets/brand/fist.webp'),
+  star: require('../../assets/brand/star.webp'),
+  sparkle: require('../../assets/brand/sparkle.webp'),
+  gift: require('../../assets/brand/gift.webp'),
+  heart: require('../../assets/brand/heart.webp'),
+  computer: require('../../assets/brand/computer.webp'),
+  copy: require('../../assets/brand/copy.webp'),
+  lock: require('../../assets/brand/lock.webp'),
+  building: require('../../assets/brand/building.webp'),
+  video: require('../../assets/brand/video.webp'),
+  pray: require('../../assets/brand/pray.webp'),
 } as const
 
 export type BrandIconName = keyof typeof SOURCES

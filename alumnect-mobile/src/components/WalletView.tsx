@@ -1,57 +1,200 @@
 import React from 'react'
-import { View } from 'react-native'
-import { Card, Empty, Tag, Txt } from '@/components/ui'
+import { StyleSheet, View } from 'react-native'
+import { Empty, Tag, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
 import { ArrowDownLeft, Clock, Receipt, XCircle } from '@/components/icons'
 import { WALLET_STATUS_LABEL } from '@/api/mentoringWallet'
 import type { Wallet } from '@/api/mentoringWallet'
 import { formatVnd } from '@/api/mentoring'
-import { useTheme } from '@/theme'
+import { useMentoringTheme } from '@/theme/mentoringTheme'
 
-/** Tổng quan + danh sách khoản thù lao / hoàn tiền (dùng chung cho Thu nhập và Hoàn tiền). */
+/** Tổng quan + danh sách khoản thù lao / hoàn tiền (KakaoPay x Meetup Ledger 2026 — Cam - Trắng - Đen). */
 export function WalletView({ wallet, counterpartLabel, emptyText }: { wallet?: Wallet; counterpartLabel: string; emptyText: string }) {
-  const t = useTheme()
+  const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
   const total = (wallet?.totalReceived ?? 0) + (wallet?.totalProcessing ?? 0)
+
   return (
     <View>
-      <View style={{ borderRadius: 16, padding: 20, backgroundColor: t.surface, marginBottom: 24 }}>
-        <Txt size={14} muted>Tổng giá trị</Txt>
-        <Txt size={30} weight="500" style={{ marginTop: 8, fontVariant: ['tabular-nums'] }}>{formatVnd(total)}</Txt>
-        <View style={{ marginTop: 20, borderTopWidth: 1, borderTopColor: t.border }}>
-          {[
-            ['Đã nhận', wallet?.totalReceived ?? 0],
-            ['Đang xử lý', wallet?.totalProcessing ?? 0],
-            ['Thất bại', wallet?.totalFailed ?? 0],
-          ].map(([l, v]) => (
-            <View key={String(l)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 14 }}>
-              <Txt size={13} muted style={{ flex: 1 }}>{String(l)}</Txt>
-              <Txt weight="500" size={14} style={{ fontVariant: ['tabular-nums'], textAlign: 'right', flexShrink: 1 }}>{formatVnd(Number(v))}</Txt>
+      {/* Hero Wallet Card */}
+      <View
+        style={[
+          styles.heroCard,
+          {
+            backgroundColor: isDark ? '#1E140C' : viridianSoft,
+            borderColor: isDark ? '#4A2C16' : '#FAD9C2',
+          },
+        ]}
+      >
+        <View style={styles.heroHeader}>
+          <View>
+            <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Tổng giá trị giao dịch
+            </Txt>
+            <Txt size={30} weight="800" style={{ color: colors.text, marginTop: 4, fontVariant: ['tabular-nums'] }}>
+              {formatVnd(total)}
+            </Txt>
+          </View>
+          <BrandIcon name="coin" size={46} />
+        </View>
+
+        <View style={[styles.statGrid, { backgroundColor: colors.card, borderColor: colors.borderSubtle }]}>
+          <View style={styles.statCol}>
+            <Txt size={11} weight="600" style={{ color: colors.textTertiary }}>
+              Đã nhận
+            </Txt>
+            <Txt weight="800" size={14} style={{ color: '#16A34A', marginTop: 2, fontVariant: ['tabular-nums'] }}>
+              {formatVnd(wallet?.totalReceived ?? 0)}
+            </Txt>
+          </View>
+          <View style={[styles.vDivider, { backgroundColor: colors.borderSubtle }]} />
+          <View style={styles.statCol}>
+            <Txt size={11} weight="600" style={{ color: colors.textTertiary }}>
+              Đang xử lý
+            </Txt>
+            <Txt weight="800" size={14} style={{ color: viridian, marginTop: 2, fontVariant: ['tabular-nums'] }}>
+              {formatVnd(wallet?.totalProcessing ?? 0)}
+            </Txt>
+          </View>
+          <View style={[styles.vDivider, { backgroundColor: colors.borderSubtle }]} />
+          <View style={styles.statCol}>
+            <Txt size={11} weight="600" style={{ color: colors.textTertiary }}>
+              Thất bại
+            </Txt>
+            <Txt weight="800" size={14} style={{ color: '#DC2626', marginTop: 2, fontVariant: ['tabular-nums'] }}>
+              {formatVnd(wallet?.totalFailed ?? 0)}
+            </Txt>
+          </View>
+        </View>
+      </View>
+
+      <Txt weight="800" size={16} style={{ color: colors.text, marginBottom: 10 }}>
+        Lịch sử dòng tiền & giải ngân
+      </Txt>
+
+      {(wallet?.items ?? []).length === 0 ? (
+        <Empty icon={<Receipt size={30} color={viridian} />} title="Chưa có giao dịch" text={emptyText} />
+      ) : (
+        <View style={[styles.ledgerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {(wallet?.items ?? []).map((it, i, arr) => (
+            <View
+              key={it.ledgerId}
+              style={[
+                styles.ledgerRow,
+                i < arr.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSubtle },
+              ]}
+            >
+              <View
+                style={[
+                  styles.txIconBox,
+                  {
+                    backgroundColor:
+                      it.status === 'SUCCEEDED'
+                        ? isDark
+                          ? '#142E1F'
+                          : '#EAFBF0'
+                        : it.status === 'FAILED'
+                          ? isDark
+                            ? '#2B1414'
+                            : '#FEF2F2'
+                          : viridianSoft,
+                  },
+                ]}
+              >
+                {it.status === 'SUCCEEDED' ? (
+                  <ArrowDownLeft size={18} color="#16A34A" weight="bold" />
+                ) : it.status === 'FAILED' ? (
+                  <XCircle size={18} color="#DC2626" weight="bold" />
+                ) : (
+                  <Clock size={18} color={viridian} weight="bold" />
+                )}
+              </View>
+
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Txt weight="700" size={14} style={{ color: colors.text }} numberOfLines={2}>
+                  {it.taskTitle || `Task #${it.taskId ?? '—'}`}
+                </Txt>
+                <Txt size={12} style={{ color: colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
+                  {[
+                    it.counterpartName ? `${counterpartLabel}: ${it.counterpartName}` : null,
+                    new Date(it.transactedAt ?? it.createdAt).toLocaleDateString('vi-VN'),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Txt>
+                {it.note ? (
+                  <Txt size={12} style={{ color: colors.textTertiary, marginTop: 2 }} numberOfLines={2}>
+                    {it.note}
+                  </Txt>
+                ) : null}
+              </View>
+
+              <View style={{ alignItems: 'flex-end', gap: 5, maxWidth: '44%' }}>
+                <Txt weight="800" size={14} style={{ color: viridian, fontVariant: ['tabular-nums'], textAlign: 'right' }}>
+                  {formatVnd(it.amount)}
+                </Txt>
+                <Tag
+                  label={WALLET_STATUS_LABEL[it.status] ?? itemStatus(it.status)}
+                  tone={it.status === 'SUCCEEDED' ? 'success' : it.status === 'FAILED' ? 'danger' : 'warning'}
+                />
+              </View>
             </View>
           ))}
         </View>
-      </View>
-      <Txt weight="800" size={16} style={{ marginBottom: 8 }}>Giao dịch</Txt>
-      {(wallet?.items ?? []).length === 0 ? (
-        <Empty icon={<Receipt size={26} color={t.primary} />} title="Chưa có giao dịch" text={emptyText} />
-      ) : (
-        <Card style={{ paddingVertical: 2 }}>
-          {(wallet?.items ?? []).map((it, i, arr) => (
-            <View key={it.ledgerId} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: i < arr.length - 1 ? 1 : 0, borderBottomColor: t.divider }}>
-              <View style={{ width: 20, alignItems: 'center', justifyContent: 'center' }}>
-                {it.status === 'SUCCEEDED' ? <ArrowDownLeft size={18} color={t.success} /> : it.status === 'FAILED' ? <XCircle size={18} color={t.danger} /> : <Clock size={18} color={t.warning} />}
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt weight="600" size={14} numberOfLines={2}>{it.taskTitle || `Task #${it.taskId ?? '—'}`}</Txt>
-                <Txt muted size={12} numberOfLines={1}>{[it.counterpartName ? `${counterpartLabel}: ${it.counterpartName}` : null, new Date(it.transactedAt ?? it.createdAt).toLocaleDateString('vi-VN')].filter(Boolean).join(' · ')}</Txt>
-                {it.note ? <Txt muted size={12} numberOfLines={2}>{it.note}</Txt> : null}
-              </View>
-              <View style={{ alignItems: 'flex-end', gap: 6, maxWidth: '46%' }}>
-                <Txt weight="600" size={14} style={{ fontVariant: ['tabular-nums'], textAlign: 'right' }}>{formatVnd(it.amount)}</Txt>
-                <Tag label={WALLET_STATUS_LABEL[it.status] ?? it.status} tone={it.status === 'SUCCEEDED' ? 'success' : it.status === 'FAILED' ? 'danger' : 'warning'} />
-              </View>
-            </View>
-          ))}
-        </Card>
       )}
     </View>
   )
 }
+
+function itemStatus(s: string) {
+  return s
+}
+
+const styles = StyleSheet.create({
+  heroCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 18,
+  },
+  heroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  statCol: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  vDivider: {
+    width: 1,
+    height: 26,
+  },
+  ledgerCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+  },
+  ledgerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+  },
+  txIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+})
