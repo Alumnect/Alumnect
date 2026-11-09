@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from 'react'
-import { View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
+import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Map, Sparkles, UserSearch } from '@/components/icons'
-import { Chip, Empty, IconButton, PageHeader, Screen, SearchBar, Segmented, Txt } from '@/components/ui'
+import { Map, Sparkles, UserCheck, UserSearch, Users } from '@/components/icons'
+import { Chip, Empty, Screen, SearchBar, Txt } from '@/components/ui'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { UserRow } from '@/components/UserRow'
+import { BrandIcon } from '@/components/BrandIcon'
 import { userApi } from '@/api/users'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/authStore'
@@ -24,7 +26,7 @@ const SORTS: Record<string, [string, 'ASC' | 'DESC', string]> = {
   cohort: ['cohort', 'DESC', 'Khóa học'],
 }
 
-/** Mạng lưới: danh bạ có bộ lọc đầy đủ như Web, gợi ý kết nối, và danh sách đang theo dõi. */
+/** Mạng lưới cựu sinh viên & sinh viên: Danh bạ, Gợi ý kết nối thông minh & Đang theo dõi. */
 export default function NetworkScreen() {
   const t = useTheme()
   const router = useRouter()
@@ -73,7 +75,13 @@ export default function NetworkScreen() {
     queryFn: ({ pageParam }) => userApi.search({ ...params, page: pageParam }),
     getNextPageParam: (l) => (l.data.last ? undefined : l.data.pageNumber + 1),
   })
-  const suggestions = useQuery({ queryKey: ['suggestions', 30], enabled: tab === 'suggestions', queryFn: () => userApi.suggestions(30) })
+
+  const suggestions = useQuery({
+    queryKey: ['suggestions', 30],
+    enabled: tab === 'suggestions',
+    queryFn: () => userApi.suggestions(30),
+  })
+
   const following = useInfiniteQuery({
     queryKey: ['following', meId],
     enabled: tab === 'following' && !!meId,
@@ -94,14 +102,188 @@ export default function NetworkScreen() {
   const loading = tab === 'directory' ? results.isLoading : tab === 'suggestions' ? suggestions.isLoading : following.isLoading
   const total = tab === 'directory' ? results.data?.pages[0]?.data.totalElements : undefined
 
+  const handleTabChange = (nextTab: Tab) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setTab(nextTab)
+  }
+
   return (
     <Screen bg={t.card}>
-      <PageHeader title="Mạng lưới" right={<IconButton label="Bản đồ cựu sinh viên" icon={<Map size={20} color={t.text} />} onPress={() => router.push('/map')} />} />
-      <Segmented<Tab>
-        tabs={[['directory', 'Danh bạ'], ['suggestions', 'Gợi ý'], ['following', 'Đang theo dõi']]}
-        value={tab}
-        onChange={setTab}
-      />
+      {/* Top Header: Meetup illustration + Title + Map button */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          paddingBottom: 8,
+          backgroundColor: t.card,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <BrandIcon name="people2" size={32} />
+          <View>
+            <Txt weight="800" size={20} style={{ color: t.text, letterSpacing: -0.3 }}>
+              Mạng lưới
+            </Txt>
+            <Txt size={12} weight="500" style={{ color: t.textMuted }}>
+              Kết nối cựu sinh viên & sinh viên
+            </Txt>
+          </View>
+        </View>
+
+        <Pressable
+          onPress={() => router.push('/map')}
+          accessibilityRole="button"
+          accessibilityLabel="Bản đồ cựu sinh viên"
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 5,
+            paddingHorizontal: 12,
+            paddingVertical: 7,
+            borderRadius: 20,
+            backgroundColor: t.isDark ? '#262626' : '#FFF3EB',
+            borderWidth: 1,
+            borderColor: t.isDark ? '#3D3D3D' : '#FFDFCC',
+            opacity: pressed ? 0.75 : 1,
+          })}
+        >
+          <Map size={15} color={t.primary} weight="bold" />
+          <Txt size={12} weight="700" style={{ color: t.primary }}>
+            Bản đồ
+          </Txt>
+        </Pressable>
+      </View>
+
+      {/* Kakao & Instagram style Segmented Pill Tabs */}
+      <View
+        style={{
+          marginHorizontal: 16,
+          marginVertical: 8,
+          padding: 4,
+          borderRadius: 14,
+          backgroundColor: t.isDark ? '#202022' : '#F1F3F5',
+          flexDirection: 'row',
+        }}
+      >
+        <Pressable
+          onPress={() => handleTabChange('directory')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: tab === 'directory' }}
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            paddingVertical: 9,
+            borderRadius: 11,
+            backgroundColor: tab === 'directory' ? t.card : 'transparent',
+            elevation: tab === 'directory' ? 2 : 0,
+            shadowColor: '#000',
+            shadowOpacity: tab === 'directory' ? 0.08 : 0,
+            shadowRadius: 3,
+            shadowOffset: { width: 0, height: 1 },
+          }}
+        >
+          <Users
+            size={16}
+            color={tab === 'directory' ? t.primary : t.textMuted}
+            weight={tab === 'directory' ? 'bold' : 'regular'}
+          />
+          <Txt
+            size={13}
+            weight={tab === 'directory' ? '700' : '500'}
+            style={{ color: tab === 'directory' ? t.text : t.textMuted }}
+          >
+            Danh bạ
+          </Txt>
+        </Pressable>
+
+        <Pressable
+          onPress={() => handleTabChange('suggestions')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: tab === 'suggestions' }}
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            paddingVertical: 9,
+            borderRadius: 11,
+            backgroundColor: tab === 'suggestions' ? t.card : 'transparent',
+            elevation: tab === 'suggestions' ? 2 : 0,
+            shadowColor: '#000',
+            shadowOpacity: tab === 'suggestions' ? 0.08 : 0,
+            shadowRadius: 3,
+            shadowOffset: { width: 0, height: 1 },
+          }}
+        >
+          <Sparkles
+            size={16}
+            color={tab === 'suggestions' ? t.primary : t.textMuted}
+            weight={tab === 'suggestions' ? 'bold' : 'regular'}
+          />
+          <Txt
+            size={13}
+            weight={tab === 'suggestions' ? '700' : '500'}
+            style={{ color: tab === 'suggestions' ? t.text : t.textMuted }}
+          >
+            Gợi ý
+          </Txt>
+          <View
+            style={{
+              backgroundColor: t.primary,
+              paddingHorizontal: 4.5,
+              paddingVertical: 1,
+              borderRadius: 6,
+            }}
+          >
+            <Txt size={9} weight="800" style={{ color: '#fff' }}>
+              AI
+            </Txt>
+          </View>
+        </Pressable>
+
+        <Pressable
+          onPress={() => handleTabChange('following')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: tab === 'following' }}
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            paddingVertical: 9,
+            borderRadius: 11,
+            backgroundColor: tab === 'following' ? t.card : 'transparent',
+            elevation: tab === 'following' ? 2 : 0,
+            shadowColor: '#000',
+            shadowOpacity: tab === 'following' ? 0.08 : 0,
+            shadowRadius: 3,
+            shadowOffset: { width: 0, height: 1 },
+          }}
+        >
+          <UserCheck
+            size={16}
+            color={tab === 'following' ? t.primary : t.textMuted}
+            weight={tab === 'following' ? 'bold' : 'regular'}
+          />
+          <Txt
+            size={13}
+            weight={tab === 'following' ? '700' : '500'}
+            style={{ color: tab === 'following' ? t.text : t.textMuted }}
+          >
+            Đang theo dõi
+          </Txt>
+        </Pressable>
+      </View>
+
+      {/* Main FlashList Content */}
       <View style={{ flex: 1, backgroundColor: t.card }}>
         <FlashList
           data={loading ? [] : data}
@@ -116,30 +298,105 @@ export default function NetworkScreen() {
           ListHeaderComponent={
             <View>
               {tab === 'directory' ? (
-                <View style={{ backgroundColor: t.card, paddingTop: 12 }}>
+                <View style={{ backgroundColor: t.card, paddingTop: 4 }}>
                   <SearchBar
                     value={query}
                     onChangeText={setQuery}
-                    placeholder="Tên, chức danh, kỹ năng, công ty, mã SV..."
+                    placeholder="Tên, chức danh, kỹ năng, công ty..."
                     style={{ paddingHorizontal: 16 }}
                     right={<FilterButton count={active} onPress={() => setSheet(true)} />}
                   />
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12 }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10 }}
+                  >
                     <Chip label="Tất cả" active={!filters.role} onPress={() => setRole(undefined)} />
                     <Chip label="Cựu sinh viên" active={filters.role === 'ALUMNI'} onPress={() => setRole('ALUMNI')} />
                     <Chip label="Sinh viên" active={filters.role === 'STUDENT'} onPress={() => setRole('STUDENT')} />
                   </ScrollView>
+
+                  {total != null ? (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingHorizontal: 16,
+                        paddingVertical: 6,
+                        borderBottomWidth: StyleSheet.hairlineWidth,
+                        borderBottomColor: t.divider,
+                      }}
+                    >
+                      <Txt size={12} weight="600" style={{ color: t.textMuted }}>
+                        {`${total.toLocaleString('vi-VN')} thành viên trong cộng đồng`}
+                      </Txt>
+                      {active > 0 ? (
+                        <Pressable onPress={() => setFilters({ sort: 'newest' })}>
+                          <Txt size={12} weight="700" style={{ color: t.primary }}>
+                            Xóa bộ lọc ({active})
+                          </Txt>
+                        </Pressable>
+                      ) : null}
+                    </View>
+                  ) : null}
                 </View>
               ) : null}
-              {tab === 'directory' && total != null ? (
-                <Txt muted size={13} style={{ paddingHorizontal: 16, paddingBottom: 8 }}>{`${total} thành viên`}</Txt>
-              ) : null}
+
+              {/* Meetup-style Smart Suggestion Banner */}
               {tab === 'suggestions' ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, paddingBottom: 8 }}>
-                  <Sparkles size={16} color={t.primary} />
-                  <Txt muted size={13}>Dựa trên ngành học, khóa và mối quan hệ chung</Txt>
+                <View
+                  style={{
+                    marginHorizontal: 16,
+                    marginTop: 8,
+                    marginBottom: 10,
+                    padding: 14,
+                    borderRadius: 16,
+                    backgroundColor: t.isDark ? '#2B1C14' : '#FFF7F2',
+                    borderWidth: 1,
+                    borderColor: t.isDark ? '#4D2F20' : '#FFE2D1',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 12,
+                      backgroundColor: t.isDark ? '#3D2518' : '#FFEADA',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <BrandIcon name="people2" size={32} />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Txt weight="700" size={14} style={{ color: t.isDark ? '#FFA775' : '#B83A00' }}>
+                        Gợi ý kết nối thông minh
+                      </Txt>
+                      <View
+                        style={{
+                          backgroundColor: t.primary,
+                          paddingHorizontal: 5,
+                          paddingVertical: 1,
+                          borderRadius: 8,
+                        }}
+                      >
+                        <Txt size={8} weight="800" style={{ color: '#fff' }}>
+                          AI MATCH
+                        </Txt>
+                      </View>
+                    </View>
+                    <Txt size={12} style={{ color: t.isDark ? '#D1A38A' : '#7C4A2D', lineHeight: 16 }}>
+                      Ghép nối dựa trên chuyên ngành, niên khóa và nơi công tác của cộng đồng cựu sinh viên.
+                    </Txt>
+                  </View>
                 </View>
               ) : null}
+
               {loading ? <ListSkeleton variant="row" /> : null}
             </View>
           }
@@ -148,11 +405,40 @@ export default function NetworkScreen() {
               <Empty
                 error={tab === 'directory' ? results.error : tab === 'suggestions' ? suggestions.error : following.error}
                 onRetry={() => { void (tab === 'directory' ? results.refetch() : tab === 'suggestions' ? suggestions.refetch() : following.refetch()) }}
-                icon={<UserSearch size={28} color={t.primary} />}
-                title={tab === 'following' ? 'Bạn chưa theo dõi ai' : 'Không tìm thấy thành viên'}
-                text={tab === 'following' ? 'Theo dõi cựu sinh viên để cập nhật hoạt động của họ.' : 'Thử bỏ bớt bộ lọc hoặc đổi từ khoá.'}
-                action={tab === 'directory' && active > 0 ? 'Xoá bộ lọc' : undefined}
-                onAction={() => setFilters({ sort: 'newest' })}
+                icon={
+                  tab === 'directory' ? (
+                    <BrandIcon name="people2" size={56} />
+                  ) : tab === 'suggestions' ? (
+                    <BrandIcon name="world" size={56} />
+                  ) : (
+                    <BrandIcon name="people" size={56} />
+                  )
+                }
+                title={
+                  tab === 'following'
+                    ? 'Bạn chưa theo dõi ai'
+                    : tab === 'suggestions'
+                      ? 'Chưa có thêm gợi ý mới'
+                      : 'Không tìm thấy thành viên'
+                }
+                text={
+                  tab === 'following'
+                    ? 'Hãy khám phá mục Gợi ý hoặc Danh bạ để kết nối với cựu sinh viên và bạn học.'
+                    : tab === 'suggestions'
+                      ? 'Cập nhật thêm ngành học, khoá và công ty trong hồ sơ của bạn để nhận thêm gợi ý kết nối chuẩn xác.'
+                      : 'Thử bỏ bớt bộ lọc hoặc tìm kiếm theo họ tên, kỹ năng khác.'
+                }
+                action={
+                  tab === 'directory' && active > 0
+                    ? 'Xoá bộ lọc'
+                    : tab === 'following'
+                      ? 'Khám phá gợi ý'
+                      : undefined
+                }
+                onAction={() => {
+                  if (tab === 'directory') setFilters({ sort: 'newest' })
+                  else if (tab === 'following') handleTabChange('suggestions')
+                }}
               />
             )
           }
