@@ -203,7 +203,7 @@ export function IconButton({
 /* Ô nhập                                                             */
 /* ------------------------------------------------------------------ */
 
-export function Input({ label, error, ...props }: TextInputProps & { label?: string; error?: string }) {
+export function Input({ label, error, hint, inputRef, ...props }: TextInputProps & { label?: string; error?: string; hint?: string; inputRef?: React.ComponentProps<typeof TextInput>['ref'] }) {
   const t = useTheme()
   const [focus, setFocus] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -212,6 +212,7 @@ export function Input({ label, error, ...props }: TextInputProps & { label?: str
       {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
       <View style={{ justifyContent: 'center' }}>
       <TextInput
+        ref={inputRef}
         placeholderTextColor={t.textSubtle}
         accessibilityLabel={label ?? props.placeholder}
         {...props}
@@ -235,7 +236,7 @@ export function Input({ label, error, ...props }: TextInputProps & { label?: str
       />
       {props.secureTextEntry ? <Pressable onPress={() => setRevealed(!revealed)} accessibilityRole="button" accessibilityLabel={revealed ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} style={{ position: 'absolute', right: 2, width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>{revealed ? <EyeOff size={20} color={t.textMuted} /> : <Eye size={20} color={t.textMuted} />}</Pressable> : null}
       </View>
-      {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
+      {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : hint ? <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 4 }}>{hint}</Text> : null}
     </View>
   )
 }
