@@ -7,6 +7,7 @@ import com.alumnect.alumnect_backend.dao.user.ExperienceRepository;
 import com.alumnect.alumnect_backend.dao.user.FollowRepository;
 import com.alumnect.alumnect_backend.dao.user.MajorRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
+import com.alumnect.alumnect_backend.dao.auth.RefreshTokenRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dao.user.UserSkillRepository;
 import com.alumnect.alumnect_backend.dto.request.auth.ForgotPasswordRequest;
@@ -51,7 +52,7 @@ import static org.mockito.Mockito.when;
 /**
  * FE-04 Manage Password (Change / Forgot).
  * Report sheet : FE-04 (Report5_Unit_Test.xlsx)
- * Functions    : AuthServiceImpl.forgotPassword(), verifyResetOtp(), resetPassword(), UserServiceImpl.changePassword()
+ * Functions    : AuthServiceImpl.forgotPassword(), verifyResetOtp(), resetPassword(), UserServiceImpl.changePassword(), AuthServiceImpl.logoutAllDevices()
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FE-04 Manage Password (Change / Forgot)")
@@ -63,6 +64,7 @@ class FE04_PasswordTest {
     @Mock VerificationTokenRepository tokenRepository;
     @Mock BCryptPasswordEncoder passwordEncoder;
     @Mock MailService mailService;
+    @Mock RefreshTokenRepository refreshTokenRepository;
 
     @Mock UserProfileMapper userProfileMapper;
     @Mock ExperienceRepository experienceRepository;
@@ -582,5 +584,33 @@ class FE04_PasswordTest {
         // Then
         assertThat(violations).extracting(ConstraintViolation::getMessage)
                 .contains("Mã xác thực phải đúng 6 chữ số");
+    }
+
+    // ================= logoutAllDevices() =================
+
+    @Test
+    @DisplayName("UTCID25 - Existing account -> all refresh tokens of the user are deleted")
+    void utcid25_logoutAllDevices_ok() {
+        // Given
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(activeUser));
+
+        // When
+        authService.logoutAllDevices(EMAIL);
+
+        // Then
+        verify(refreshTokenRepository).deleteByUser(activeUser);
+    }
+
+    @Test
+    @DisplayName("UTCID26 - Unknown email -> ResourceNotFoundException and no token deleted")
+    void utcid26_logoutAllDevices_userNotFound() {
+        // Given
+        when(userRepository.findByEmail("unknown@fpt.edu.vn")).thenReturn(Optional.empty());
+
+        // When + Then
+        assertThatThrownBy(() -> authService.logoutAllDevices("unknown@fpt.edu.vn"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Không tìm thấy tài khoản người dùng với email: unknown@fpt.edu.vn");
+        verify(refreshTokenRepository, never()).deleteByUser(any());
     }
 }

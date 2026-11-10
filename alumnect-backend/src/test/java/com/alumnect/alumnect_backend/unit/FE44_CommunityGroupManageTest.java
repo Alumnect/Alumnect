@@ -116,7 +116,7 @@ class FE44_CommunityGroupManageTest {
         user = User.builder()
                 .id(USER_ID)
                 .email(USER_EMAIL)
-                .role(studentRole)
+                .role(alumniRole)
                 .accountStatus(AccountStatus.ACTIVE)
                 .build();
 

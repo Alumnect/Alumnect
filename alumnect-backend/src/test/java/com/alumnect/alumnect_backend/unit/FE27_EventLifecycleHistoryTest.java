@@ -190,15 +190,16 @@ class FE27_EventLifecycleHistoryTest {
     }
 
     @Test
-    @DisplayName("UTCID03 - Logged-in user is STUDENT -> ForbiddenException")
-    void utcid03_cancelEvent_forbiddenStudent() {
+    @DisplayName("UTCID03 - Logged-in STUDENT (not organiser) tries to cancel event 70 -> ForbiddenException")
+    void utcid03_cancelEvent_forbiddenStudentNotOwner() {
         // Given
         when(userRepository.findByEmail(STUDENT_EMAIL)).thenReturn(Optional.of(student));
+        when(eventRepository.findById(EVENT_ID)).thenReturn(Optional.of(upcomingEvent));
 
         // When + Then
         assertThatThrownBy(() -> eventService.cancelEvent(EVENT_ID, STUDENT_EMAIL))
                 .isInstanceOf(ForbiddenException.class)
-                .hasMessage("Chỉ cựu sinh viên (người tổ chức) mới có quyền hủy sự kiện.");
+                .hasMessage("Bạn không có quyền hủy sự kiện này vì không phải là người tổ chức.");
         verify(eventRepository, never()).save(any());
         verify(eventRegistrationRepository, never()).cancelAllByEventId(anyLong());
     }

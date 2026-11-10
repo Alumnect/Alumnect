@@ -272,4 +272,19 @@ public interface NotificationService {
             com.alumnect.alumnect_backend.entity.user.User mentor,
             com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket ticket
     );
+
+    /**
+     * Gửi thông báo cho Sinh viên khi Quản trị viên phê duyệt hoặc từ chối yêu cầu nâng cấp lên Cựu sinh viên (UC08).
+     *
+     * @param admin     Quản trị viên thực hiện xét duyệt
+     * @param recipient Sinh viên nhận kết quả xét duyệt
+     * @param request   Phiếu yêu cầu xác minh/nâng cấp Cựu sinh viên
+     * @param approved  true nếu được phê duyệt (APPROVED), false nếu bị từ chối (REJECTED)
+     */
+    void sendAlumniVerificationResultNotification(
+            com.alumnect.alumnect_backend.entity.user.User admin,
+            com.alumnect.alumnect_backend.entity.user.User recipient,
+            com.alumnect.alumnect_backend.entity.verification.VerificationRequest request,
+            boolean approved
+    );
 }

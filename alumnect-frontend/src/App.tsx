@@ -104,8 +104,8 @@ function App() {
             <Route path="salary" element={<ProtectedRoute><SalaryPage /></ProtectedRoute>} />
             <Route path="messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
             <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-            <Route path="map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
-            <Route path="career" element={<ProtectedRoute><CareerPage /></ProtectedRoute>} />
+            <Route path="map" element={<RoleRoute role={['STUDENT', 'ALUMNI']}><MapPage /></RoleRoute>} />
+            <Route path="career" element={<RoleRoute role={['STUDENT', 'ALUMNI']}><CareerPage /></RoleRoute>} />
             <Route path="change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
             <Route path="mentoring" element={<ProtectedRoute><MentoringHomePage /></ProtectedRoute>} />
             <Route path="mentoring/terms" element={<ProtectedRoute><MentoringTermsPage /></ProtectedRoute>} />

@@ -44,6 +44,14 @@ export default defineConfig({
   },
   // Pre-bundle các thư viện nặng để tăng tốc HMR trong dev
   optimizeDeps: {
-    include: ['framer-motion', 'react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    include: [
+      'framer-motion',
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query',
+      'docx-preview',
+      'date-fns',
+    ],
   },
 })

@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { View, ScrollView } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { MessageCircle, SquarePen, Users } from '@/components/icons'
-import { Avatar, Empty, IconButton, Screen, SearchBar, Segmented, Txt } from '@/components/ui'
+import { SquarePen, Users } from '@/components/icons'
+import { Avatar, Empty, Screen, SearchBar, Txt } from '@/components/ui'
 import { ListSkeleton } from '@/components/Skeleton'
 import { Header } from '@/components/Header'
 import { chatApi, convAvatar, convName, isGroup } from '@/api/chat'
@@ -12,6 +12,8 @@ import type { Conversation } from '@/api/chat'
 import { messagePreview } from '@/lib/share'
 import { normalize } from '@/constants/filters'
 import { useTheme } from '@/theme'
+import { BrandIcon } from '@/components/BrandIcon'
+import { MotionPressable } from '@/components/Motion'
 
 type Tab = 'primary' | 'requests' | 'mentoring'
 
@@ -49,24 +51,38 @@ export default function InboxScreen() {
         title="Tin nhắn"
         right={
           <>
-            <IconButton label="Tạo nhóm chat" icon={<Users size={19} color={t.text} />} onPress={() => router.push('/chat/create-group')} />
-            <IconButton label="Tin nhắn mới" icon={<SquarePen size={19} color={t.text} />} onPress={() => router.push('/chat/search-users')} />
+            <MotionPressable accessibilityRole="button" accessibilityLabel="Tạo nhóm chat" style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push('/chat/create-group')}><Users size={24} color={t.text} /></MotionPressable>
+            <MotionPressable accessibilityRole="button" accessibilityLabel="Tin nhắn mới" style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push('/chat/search-users')}><SquarePen size={26} color={t.text} /></MotionPressable>
           </>
         }
       />
       <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
-        <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm cuộc trò chuyện..." />
+        <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm kiếm" />
       </View>
-      <Segmented<Tab> tabs={[['primary', 'Hộp thư'], ['requests', 'Tin nhắn chờ'], ['mentoring', 'Mentoring']]} value={tab} onChange={setTab} style={{ marginTop: 4 }} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, gap: 22 }}>
+        {([['primary', 'Hộp thư'], ['mentoring', 'Mentoring']] as const).map(([key, label]) => <MotionPressable key={key} accessibilityRole="tab" accessibilityState={{ selected: tab === key }} onPress={() => setTab(key)} style={{ minHeight: 48, justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: tab === key ? t.text : 'transparent' }}><Txt size={14} weight={tab === key ? '700' : '500'} muted={tab !== key}>{label}</Txt></MotionPressable>)}
+        <MotionPressable accessibilityRole="tab" accessibilityState={{ selected: tab === 'requests' }} onPress={() => setTab('requests')} style={{ marginLeft: 'auto', minHeight: 48, justifyContent: 'center' }}><Txt size={12} weight="600" color={tab === 'requests' ? t.text : t.primary}>Tin nhắn chờ</Txt></MotionPressable>
+      </View>
       {q.isLoading ? <ListSkeleton variant="row" /> : (
         <FlashList
           data={list}
+          contentContainerStyle={{ paddingBottom: 24 }}
           keyExtractor={(c, i) => String(c.id ?? `d${i}`)}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
+          maintainVisibleContentPosition={{ disabled: true }}
+          ListHeaderComponent={tab === 'primary' && !kw.trim() && list.length > 0 ? <View style={{ paddingTop: 18, paddingBottom: 10 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, gap: 18 }}>
+              {list.slice(0, 7).map((c, i) => <MotionPressable key={c.id ?? `recent-${i}`} accessibilityRole="button" accessibilityLabel={`Mở trò chuyện với ${convName(c)}`} onPress={() => open(c)} style={{ width: 64, alignItems: 'center', gap: 7 }}>
+                <Avatar uri={convAvatar(c)} name={convName(c)} size={62} />
+                <Txt size={12} numberOfLines={1} style={{ textAlign: 'center' }}>{convName(c)}</Txt>
+              </MotionPressable>)}
+            </ScrollView>
+            <Txt size={15} weight="700" style={{ marginHorizontal: 20, marginTop: 24, marginBottom: 2 }}>Cuộc trò chuyện</Txt>
+          </View> : null}
           ListEmptyComponent={
             <Empty error={q.error} onRetry={() => { void q.refetch() }}
-              icon={<MessageCircle size={28} color={t.primary} />}
+              icon={<BrandIcon name="chat" size={64} />}
               title={tab === 'requests' ? 'Không có tin nhắn chờ' : 'Chưa có cuộc trò chuyện'}
               text={tab === 'requests' ? 'Tin nhắn từ người chưa kết nối sẽ nằm ở đây.' : 'Bắt đầu nhắn tin với bạn bè và cựu sinh viên.'}
               action={tab === 'primary' ? 'Nhắn tin mới' : undefined}
@@ -76,34 +92,31 @@ export default function InboxScreen() {
           renderItem={({ item }) => {
             const unread = item.unreadCount > 0
             return (
-              <Pressable
+              <MotionPressable
                 onPress={() => open(item)}
                 accessibilityRole="button"
-                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: pressed ? t.inputBg : t.card })}
+                accessibilityLabel={`${convName(item)}${unread ? `, ${item.unreadCount} tin nhắn chưa đọc` : ''}`}
+                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 12, backgroundColor: pressed ? t.inputBg : t.card })}
               >
                 <View>
-                  <Avatar uri={convAvatar(item)} name={convName(item)} size={56} />
+                  <Avatar uri={convAvatar(item)} name={convName(item)} size={60} />
                   {isGroup(item) ? (
-                    <View style={{ position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: t.card }}>
-                      <Users size={11} color="#fff" />
+                    <View style={{ position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: t.card }}>
+                      <Users size={12} color={t.textMuted} />
                     </View>
                   ) : null}
                 </View>
-                <View style={{ flex: 1, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.divider, paddingBottom: 10, paddingTop: 4 }}>
+                <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Txt weight={unread ? '800' : '600'} numberOfLines={1} style={{ flex: 1 }}>{convName(item)}</Txt>
-                    <Txt size={12} color={unread ? t.primary : t.textSubtle} weight={unread ? '700' : '400'}>{timeLabel(item.lastMessageAt)}</Txt>
+                    <Txt size={14} weight={unread ? '700' : '500'} numberOfLines={1} style={{ flex: 1 }}>{convName(item)}</Txt>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
                     <Txt muted={!unread} weight={unread ? '600' : '400'} size={13} numberOfLines={1} style={{ flex: 1 }}>{messagePreview(item.lastMessage)}</Txt>
-                    {unread ? (
-                      <View style={{ minWidth: 20, height: 20, borderRadius: 10, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 }}>
-                        <Txt size={11} weight="800" color="#fff">{item.unreadCount > 99 ? '99+' : item.unreadCount}</Txt>
-                      </View>
-                    ) : null}
+                    <Txt size={12} muted>· {timeLabel(item.lastMessageAt)}</Txt>
                   </View>
                 </View>
-              </Pressable>
+                {unread ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.primary }} /> : null}
+              </MotionPressable>
             )
           }}
         />

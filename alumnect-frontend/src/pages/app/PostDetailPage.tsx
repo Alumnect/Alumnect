@@ -643,14 +643,15 @@ function PostDetailCard({
           </button>
         ) : null)}
         <button
+          disabled={!canInteract}
           aria-label={saved ? t('feed.unsavePost', 'Bỏ lưu bài viết') : t('feed.save', 'Lưu bài viết')}
           onClick={handleSave}
           className={cn(
-            'inline-flex items-center justify-center rounded-xl p-2 transition duration-200 cursor-pointer',
+            'inline-flex items-center justify-center rounded-xl p-2 transition duration-200 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
             isAuthor ? 'ml-auto' : '',
             saved
-              ? 'text-primary-solid dark:text-primary bg-primary-soft dark:bg-[#F27024]/15 hover:bg-[#F27024]/20'
-              : 'text-text-subtle dark:text-text-subtle hover:bg-surface-2 hover:text-primary-solid dark:hover:text-primary',
+              ? 'text-primary-solid dark:text-primary bg-primary-soft dark:bg-[#F27024]/15 enabled:hover:bg-[#F27024]/20'
+              : 'text-text-subtle dark:text-text-subtle enabled:hover:bg-surface-2 enabled:hover:text-primary-solid dark:enabled:hover:text-primary',
           )}
         >
           <Bookmark size={16} className={cn(saved && 'fill-[#F27024] text-primary-solid dark:fill-[#FF8C38] dark:text-primary')} />

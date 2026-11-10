@@ -3,7 +3,9 @@ import { ActivityIndicator, Pressable, View } from 'react-native'
 import { Text } from '@/components/AppText'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import * as SystemUI from 'expo-system-ui'
 import { useFonts } from 'expo-font'
+import { Caveat_700Bold } from '@expo-google-fonts/caveat/700Bold'
 import { BeVietnamPro_400Regular } from '@expo-google-fonts/be-vietnam-pro/400Regular'
 import { BeVietnamPro_500Medium } from '@expo-google-fonts/be-vietnam-pro/500Medium'
 import { BeVietnamPro_600SemiBold } from '@expo-google-fonts/be-vietnam-pro/600SemiBold'
@@ -21,6 +23,7 @@ import { useTheme, FONT } from '@/theme'
 import { AlertTriangle, CheckCircle2, Info, XCircle } from '@/components/icons'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { startRealtime } from '@/lib/socket'
+import { MotionProvider, useReducedMotion } from '@/components/Motion'
 
 export { ErrorFallback as ErrorBoundary } from '@/components/ErrorFallback'
 
@@ -98,27 +101,50 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function AppStack() {
+  const t = useTheme()
+  const reduced = useReducedMotion()
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: t.bg },
+        animation: reduced ? 'none' : 'ios_from_right',
+        animationDuration: 240,
+      }}
+    />
+  )
+}
+
 export default function RootLayout() {
   const t = useTheme()
   // Giữ màn hình nền cho tới khi font tải xong để chữ không bị nhảy font; nếu lỗi thì dùng font hệ thống.
   const [fontsLoaded, fontError] = useFonts({
+    Caveat_700Bold,
     [FONT.regular]: BeVietnamPro_400Regular,
     [FONT.medium]: BeVietnamPro_500Medium,
     [FONT.semibold]: BeVietnamPro_600SemiBold,
     [FONT.bold]: BeVietnamPro_700Bold,
     [FONT.extrabold]: BeVietnamPro_800ExtraBold,
   })
+
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(t.bg).catch(() => {})
+  }, [t.bg])
+
   if (!fontsLoaded && !fontError) return <View style={{ flex: 1, backgroundColor: t.bg }} />
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.bg }}>
+      <SafeAreaProvider style={{ backgroundColor: t.bg }}>
         <QueryClientProvider client={queryClient}>
+          <MotionProvider>
           <StatusBar style={t.isDark ? 'light' : 'dark'} />
           <AuthGate>
             <OfflineBanner />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg }, animation: 'slide_from_right' }} />
+            <AppStack />
           </AuthGate>
           <Toast config={toastConfig} topOffset={50} />
+          </MotionProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

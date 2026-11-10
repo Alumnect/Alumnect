@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Platform, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Chip, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { DateField } from '@/components/DateField'
 import { DEAL_TASK_TYPES, dealApi } from '@/api/mentoringFlow'
@@ -11,9 +11,33 @@ import type { DealPayload } from '@/api/mentoringFlow'
 import { WORKING_MODE_LABEL } from '@/api/mentoring'
 import type { WorkingMode } from '@/api/mentoring'
 import { toast, errMsg } from '@/lib/toast'
+import { useMentoringTheme } from '@/theme/mentoringTheme'
+import { Check, Handshake, Send } from '@/components/icons'
 
-/** UC94: đề xuất deal mới (conversationId) hoặc chỉnh sửa điều khoản (dealId). */
+function DealChip({ label, active, onPress }: { label: string; active?: boolean; onPress: () => void }) {
+  const { colors, viridian, isDark } = useMentoringTheme()
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.chip,
+        {
+          backgroundColor: active ? (isDark ? viridian : colors.actionBg) : colors.surface,
+          borderColor: active ? (isDark ? viridian : colors.actionBg) : colors.border,
+        },
+      ]}
+    >
+      {active && <Check size={13} color={isDark ? '#FFFFFF' : colors.actionText} weight="bold" />}
+      <Txt size={13} weight={active ? '700' : '500'} style={{ color: active ? (isDark ? '#FFFFFF' : colors.actionText) : colors.text }}>
+        {label}
+      </Txt>
+    </Pressable>
+  )
+}
+
+/** UC94: đề xuất deal mới (conversationId) hoặc chỉnh sửa điều khoản (dealId) — Meetup x Kakao Form. */
 export default function DealFormScreen() {
+  const { colors, viridian } = useMentoringTheme()
   const router = useRouter()
   const qc = useQueryClient()
   const { conversationId, dealId, renegotiate } = useLocalSearchParams<{ conversationId?: string; dealId?: string; renegotiate?: string }>()
@@ -30,14 +54,28 @@ export default function DealFormScreen() {
   if (d && !loaded) {
     setLoaded(true)
     setF({ taskScope: d.taskScope, expectedResult: d.expectedResult, price: String(d.agreedPrice), changeNote: '' })
-    setDeadline(d.deadline.slice(0, 19)); setMode(d.workingMode); setParticipation(d.participationType); setTaskType(d.taskType)
+    setDeadline(d.deadline.slice(0, 19))
+    setMode(d.workingMode)
+    setParticipation(d.participationType)
+    setTaskType(d.taskType)
   }
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }))
 
   const m = useMutation({
     mutationFn: () => {
-      const p: DealPayload = { taskScope: f.taskScope.trim(), agreedPrice: Number(f.price), deadline, workingMode: mode, participationType: participation, taskType, expectedResult: f.expectedResult.trim(), changeNote: f.changeNote.trim() || undefined }
-      return dealId ? dealApi.update(Number(dealId), p) : dealApi.propose({ ...p, conversationId: Number(conversationId), proposalSource: renegotiate ? 'RENEGOTIATION' : 'REQUEST_ACCEPTANCE' })
+      const p: DealPayload = {
+        taskScope: f.taskScope.trim(),
+        agreedPrice: Number(f.price),
+        deadline,
+        workingMode: mode,
+        participationType: participation,
+        taskType,
+        expectedResult: f.expectedResult.trim(),
+        changeNote: f.changeNote.trim() || undefined,
+      }
+      return dealId
+        ? dealApi.update(Number(dealId), p)
+        : dealApi.propose({ ...p, conversationId: Number(conversationId), proposalSource: renegotiate ? 'RENEGOTIATION' : 'REQUEST_ACCEPTANCE' })
     },
     onSuccess: (deal) => {
       toast.success(dealId ? 'Đã cập nhật điều khoản deal.' : 'Đã gửi đề xuất deal.')
@@ -60,34 +98,140 @@ export default function DealFormScreen() {
     if (!Object.keys(e).length) m.mutate()
   }
 
-  if (dealId && existing.isLoading) return <Screen><Header title="Chỉnh sửa deal" /><Loading /></Screen>
-  if (dealId && !d) return <Screen><Header title="Chỉnh sửa deal" /><Empty text="Không tìm thấy thỏa thuận." error={existing.error} onRetry={() => { void existing.refetch() }} /></Screen>
+  if (dealId && existing.isLoading)
+    return (
+      <Screen bg={colors.bg}>
+        <Header title="Chỉnh sửa thỏa thuận" />
+        <Loading />
+      </Screen>
+    )
+  if (dealId && !d)
+    return (
+      <Screen bg={colors.bg}>
+        <Header title="Chỉnh sửa thỏa thuận" />
+        <Empty text="Không tìm thấy thỏa thuận." error={existing.error} onRetry={() => { void existing.refetch() }} />
+      </Screen>
+    )
 
   return (
-    <Screen>
-      <Header title={dealId ? 'Chỉnh sửa deal' : 'Đề xuất deal'} />
+    <Screen bg={colors.bg}>
+      <Header
+        title={dealId ? 'Chỉnh sửa thỏa thuận' : 'Đề xuất thỏa thuận hợp tác'}
+        subtitle="Xác lập phạm vi, ngân sách & thời hạn cố vấn"
+      />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-          <Input label="Phạm vi công việc" value={f.taskScope} onChangeText={set('taskScope')} multiline error={errors.taskScope} />
-          <Input label="Kết quả kỳ vọng" value={f.expectedResult} onChangeText={set('expectedResult')} multiline error={errors.expectedResult} />
-          <Input label="Giá thỏa thuận (VND)" value={f.price} onChangeText={(v) => set('price')(v.replace(/\D/g, ''))} keyboardType="number-pad" error={errors.price} />
-          <DateField label="Hạn chót" value={deadline} onChange={setDeadline} error={errors.deadline} />
-          <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Hình thức</Txt>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
-            {(Object.keys(WORKING_MODE_LABEL) as WorkingMode[]).map((k) => <Chip key={k} label={WORKING_MODE_LABEL[k]} active={mode === k} onPress={() => setMode(k)} />)}
+          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Handshake size={18} color={viridian} weight="bold" />
+              <Txt weight="800" size={16} style={{ color: colors.text }}>
+                Nội dung & Cam kết bàn giao
+              </Txt>
+            </View>
+            <Input
+              label="Phạm vi công việc (10 - 5000 ký tự)"
+              placeholder="Mô tả rõ các hạng mục cố vấn, số buổi trao đổi..."
+              value={f.taskScope}
+              onChangeText={set('taskScope')}
+              multiline
+              error={errors.taskScope}
+            />
+            <Input
+              label="Kết quả kỳ vọng đầu ra (10 - 3000 ký tự)"
+              placeholder="Sản phẩm hoặc mục tiêu học viên đạt được sau khóa cố vấn..."
+              value={f.expectedResult}
+              onChangeText={set('expectedResult')}
+              multiline
+              error={errors.expectedResult}
+            />
           </View>
-          <View style={{ flexDirection: 'row', marginBottom: 12 }}>
-            <Chip label="Cá nhân" active={participation === 'INDIVIDUAL'} onPress={() => setParticipation('INDIVIDUAL')} />
-            <Chip label="Nhóm" active={participation === 'GROUP'} onPress={() => setParticipation('GROUP')} />
+
+          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Txt weight="800" size={16} style={{ color: colors.text, marginBottom: 12 }}>
+              Chi phí & Thời hạn
+            </Txt>
+            <Input
+              label="Giá trị thỏa thuận (VND)"
+              placeholder="VD: 300000"
+              value={f.price}
+              onChangeText={(v) => set('price')(v.replace(/\D/g, ''))}
+              keyboardType="number-pad"
+              error={errors.price}
+            />
+            <DateField label="Hạn chót hoàn thành (Deadline)" value={deadline} onChange={setDeadline} error={errors.deadline} />
           </View>
-          <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Loại nhiệm vụ</Txt>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 12 }}>
-            {DEAL_TASK_TYPES.map((tt) => <Chip key={tt.value} label={tt.label} active={taskType === tt.value} onPress={() => setTaskType(tt.value)} />)}
+
+          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Txt weight="700" size={13} style={{ color: colors.textSecondary, marginBottom: 8 }}>
+              Hình thức làm việc
+            </Txt>
+            <View style={styles.chipWrap}>
+              {(Object.keys(WORKING_MODE_LABEL) as WorkingMode[]).map((k) => (
+                <DealChip key={k} label={WORKING_MODE_LABEL[k]} active={mode === k} onPress={() => setMode(k)} />
+              ))}
+            </View>
+
+            <Txt weight="700" size={13} style={{ color: colors.textSecondary, marginTop: 14, marginBottom: 8 }}>
+              Quy mô tham gia
+            </Txt>
+            <View style={styles.chipWrap}>
+              <DealChip label="Cá nhân (1:1)" active={participation === 'INDIVIDUAL'} onPress={() => setParticipation('INDIVIDUAL')} />
+              <DealChip label="Theo nhóm" active={participation === 'GROUP'} onPress={() => setParticipation('GROUP')} />
+            </View>
+
+            <Txt weight="700" size={13} style={{ color: colors.textSecondary, marginTop: 14, marginBottom: 8 }}>
+              Loại nhiệm vụ cố vấn
+            </Txt>
+            <View style={styles.chipWrap}>
+              {DEAL_TASK_TYPES.map((tt) => (
+                <DealChip key={tt.value} label={tt.label} active={taskType === tt.value} onPress={() => setTaskType(tt.value)} />
+              ))}
+            </View>
+
+            <View style={{ marginTop: 16 }}>
+              <Input
+                label="Ghi chú thay đổi / thương lượng (tùy chọn)"
+                placeholder="Ghi chú thêm cho đối phương..."
+                value={f.changeNote}
+                onChangeText={set('changeNote')}
+                error={errors.changeNote}
+              />
+            </View>
           </View>
-          <Input label="Ghi chú thay đổi (tùy chọn)" value={f.changeNote} onChangeText={set('changeNote')} error={errors.changeNote} />
-          <Button title={dealId ? 'Lưu thay đổi' : 'Gửi đề xuất'} onPress={submit} loading={m.isPending} />
+
+          <Button
+            title={dealId ? 'Lưu cập nhật thỏa thuận' : 'Gửi đề xuất thỏa thuận'}
+            textColor="#FFFFFF"
+            icon={<Send size={16} color="#FFFFFF" weight="fill" />}
+            onPress={submit}
+            loading={m.isPending}
+            style={{ backgroundColor: viridian, borderColor: viridian, minHeight: 52 }}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   )
 }
+
+const styles = StyleSheet.create({
+  formCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 14,
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+})
