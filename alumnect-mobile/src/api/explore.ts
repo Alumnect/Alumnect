@@ -39,6 +39,12 @@ export interface CareerDetail {
   experiences: { id: number; title: string; company: string; location?: string | null; startDate: string; endDate?: string | null; isCurrent: boolean; isPrimary: boolean; description?: string | null }[]
 }
 
+// CareerPreviewItem uses Lombok's boolean getter, so older responses expose
+// `current`; full ExperienceResponse explicitly exposes `isCurrent`.
+type CareerSummaryResponse = Omit<CareerSummary, 'careerPreview'> & {
+  careerPreview: (Omit<CareerSummary['careerPreview'][number], 'isCurrent'> & { isCurrent?: boolean; current?: boolean })[]
+}
+
 export interface ExperienceLocation {
   latitude?: number | null
   longitude?: number | null
@@ -75,7 +81,10 @@ export const exploreApi = {
   map: (f: { search?: string; cohort?: number; majorId?: number }) =>
     http.get<unknown, ApiResponse<MapPoint[]>>('/alumni-map', { params: f }).then((r) => r.data ?? []),
   careerPaths: (f: { search?: string; title?: string; company?: string; location?: string; cohort?: number; majorId?: number; page?: number }) =>
-    http.get<unknown, ApiResponse<PageResponse<CareerSummary>>>('/career-paths', { params: { size: 10, ...f } }).then((r) => r.data),
+    http.get<unknown, ApiResponse<PageResponse<CareerSummaryResponse>>>('/career-paths', { params: { size: 10, ...f } }).then((r): PageResponse<CareerSummary> => ({
+      ...r.data,
+      content: r.data.content.map((person) => ({ ...person, careerPreview: person.careerPreview.map((step) => ({ ...step, isCurrent: step.isCurrent ?? step.current ?? false })) })),
+    })),
   careerDetail: (userId: number) => http.get<unknown, ApiResponse<CareerDetail>>(`/career-paths/users/${userId}`).then((r) => r.data),
 }
 

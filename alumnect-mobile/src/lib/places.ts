@@ -13,7 +13,8 @@ export interface PlaceSuggestion {
   place?: GeocodedPlace
 }
 
-const vietmapKey = (process.env.EXPO_PUBLIC_VIETMAP_API_KEY ?? '').trim()
+const DEFAULT_VIETMAP_KEY = '5ccc4cd6f70448296dcc3ce29a3d34958dd4b86eef43fa46'
+const vietmapKey = (process.env.EXPO_PUBLIC_VIETMAP_API_KEY || DEFAULT_VIETMAP_KEY).trim()
 const maptilerKey = (process.env.EXPO_PUBLIC_MAPTILER_API_KEY ?? '').trim()
 export const placesConfigured = !!(vietmapKey || maptilerKey)
 
