@@ -39,13 +39,14 @@ export function MotionPressable({ style, onPressIn, onPressOut, disabled, ...pro
     style={[resolved, { transform: [...(Array.isArray(resolved?.transform) ? resolved.transform : []), { scale }] }]} />
 }
 
-export function Enter({ children, style, ...props }: ViewProps) {
+/** Fade + rise on mount. `delay` staggers siblings (list rows, form sections). */
+export function Enter({ children, style, delay = 0, ...props }: ViewProps & { delay?: number }) {
   const reduced = useReducedMotion()
   const [progress] = useState(() => new Animated.Value(0))
   useEffect(() => {
-    const animation = Animated.timing(progress, { toValue: 1, duration: reduced ? 0 : 220, easing: Easing.out(Easing.cubic), useNativeDriver: true })
+    const animation = Animated.timing(progress, { toValue: 1, duration: reduced ? 0 : 220, delay: reduced ? 0 : delay, easing: Easing.out(Easing.cubic), useNativeDriver: true })
     animation.start()
     return () => animation.stop()
-  }, [progress, reduced])
+  }, [progress, reduced, delay])
   return <Animated.View {...props} style={[style, { opacity: reduced ? 1 : progress, transform: [{ translateY: reduced ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>{children}</Animated.View>
 }

@@ -8,8 +8,7 @@ import { Button, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
 import type { MentoringType, WorkingMode } from '@/api/mentoring'
-import http from '@/lib/http'
-import type { ApiResponse } from '@/lib/http'
+import { uploadFile } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { Briefcase, Check, FileText, Landmark, UserRound } from '@/components/icons'
@@ -98,14 +97,8 @@ export default function RegisterMentorScreen() {
     const file = res.assets[0]
     setUploading(true)
     try {
-      const mime = file.mimeType ?? 'application/pdf'
-      const p = await http.get<unknown, ApiResponse<{ uploadUrl: string; publicUrl: string }>>('/files/presigned-url', {
-        params: { fileName: file.name, contentType: mime, folder: 'mentorship/cvs' },
-      })
-      const blob = await (await fetch(file.uri)).blob()
-      const put = await fetch(p.data.uploadUrl, { method: 'PUT', body: blob, headers: { 'Content-Type': mime } })
-      if (!put.ok) throw new Error('Tải CV thất bại, vui lòng thử lại.')
-      setCv(p.data.publicUrl)
+      const uploaded = await uploadFile(file, 'mentorship/cvs')
+      setCv(uploaded.url)
       setCvName(file.name)
       toast.success('Đã tải CV lên')
     } catch (e) {

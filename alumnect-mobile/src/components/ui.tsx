@@ -112,6 +112,7 @@ export function Button({
   variant = 'primary',
   size = 'md',
   icon,
+  textColor,
   style,
 }: {
   title: string
@@ -122,11 +123,13 @@ export function Button({
   variant?: ButtonVariant
   size?: 'sm' | 'md' | 'lg'
   icon?: React.ReactNode
+  textColor?: string
   style?: ViewStyle
 }) {
   const t = useTheme()
   const bg = { primary: t.action, brand: t.primary, secondary: t.inputBg, outline: t.card, ghost: 'transparent', danger: t.danger }[variant]
-  const fg = { primary: t.onAction, brand: t.onPrimary, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
+  const baseFg = { primary: t.onAction, brand: t.onPrimary, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
+  const fg = textColor ?? baseFg
   const height = { sm: 44, md: 48, lg: 52 }[size]
   return (
     <MotionPressable
