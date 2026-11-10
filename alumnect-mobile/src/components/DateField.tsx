@@ -6,10 +6,11 @@ import { Calendar } from '@/components/icons'
 import { useTheme } from '@/theme'
 
 /** Chọn ngày + giờ (Android: hiện lần lượt hộp ngày rồi giờ). Giá trị là chuỗi ISO local 'YYYY-MM-DDTHH:mm:ss'. */
-export function DateField({ label, value, onChange, error, minimumDate = new Date() }: { label?: string; value: string; onChange: (iso: string) => void; error?: string; minimumDate?: Date | null }) {
+export function DateField({ label, value, onChange, error, minimumDate = new Date(), dateOnly = false }: { label?: string; value: string; onChange: (iso: string) => void; error?: string; minimumDate?: Date | null; dateOnly?: boolean }) {
   const t = useTheme()
   const [step, setStep] = useState<'date' | 'time' | null>(null)
-  const date = value ? new Date(value) : new Date()
+  const parsed = value ? new Date(dateOnly ? `${value}T12:00:00` : value) : new Date()
+  const date = Number.isNaN(parsed.getTime()) ? new Date() : parsed
   const [draft, setDraft] = useState(date)
   const pad = (n: number) => String(n).padStart(2, '0')
   const toIso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`
@@ -20,11 +21,11 @@ export function DateField({ label, value, onChange, error, minimumDate = new Dat
       <Pressable
         onPress={() => { setDraft(date); setStep('date') }}
         accessibilityRole="button"
-        accessibilityLabel={label ?? 'Chọn ngày giờ'}
+        accessibilityLabel={label ?? (dateOnly ? 'Chọn ngày' : 'Chọn ngày giờ')}
         style={{ minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.card, borderRadius: 12, borderWidth: 1, borderColor: error ? t.danger : t.controlBorder, paddingHorizontal: 14, paddingVertical: 12 }}
       >
         <Calendar size={18} color={t.textMuted} />
-        <Text style={{ color: value ? t.text : t.textMuted, fontSize: 15 }}>{value ? new Date(value).toLocaleString('vi-VN') : 'Chọn ngày giờ'}</Text>
+        <Text style={{ color: value ? t.text : t.textMuted, fontSize: 15 }}>{value ? dateOnly ? date.toLocaleDateString('vi-VN') : date.toLocaleString('vi-VN') : dateOnly ? 'Chọn ngày' : 'Chọn ngày giờ'}</Text>
       </Pressable>
       {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
       {step ? (
@@ -35,6 +36,7 @@ export function DateField({ label, value, onChange, error, minimumDate = new Dat
           minimumDate={step === 'date' ? minimumDate ?? undefined : undefined}
           onChange={(e, d) => {
             if (e.type === 'dismissed' || !d) return setStep(null)
+            if (dateOnly) { setStep(null); onChange(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`); return }
             if (step === 'date') {
               const next = new Date(d)
               next.setHours(draft.getHours(), draft.getMinutes())

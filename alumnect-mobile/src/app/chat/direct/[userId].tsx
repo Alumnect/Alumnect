@@ -16,5 +16,5 @@ export default function DirectChatScreen() {
   if (q.isLoading) return <Screen><Header title="Tin nhắn" /><Loading /></Screen>
   if (!q.data) return <Screen><Header title="Tin nhắn" /><Empty text="Không mở được cuộc trò chuyện." error={q.error} onRetry={() => { void q.refetch() }} /></Screen>
   const c = q.data.data
-  return <ChatWindow conversationId={c.id} recipientId={Number(userId)} title={c.recipientName} />
+  return <ChatWindow conversationId={c.id} recipientId={Number(userId)} avatarUrl={c.recipientAvatar} title={c.recipientName} />
 }

@@ -2,7 +2,7 @@ import React from 'react'
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bookmark, Briefcase, CalendarCheck, Coins, KeyRound, LogOut, MessageCircle, Pencil, Route, Users } from '@/components/icons'
+import { Briefcase, KeyRound, LogOut, MessageCircle, Pencil } from '@/components/icons'
 import { Button, Card, Empty, IconButton, Loading, MenuRow, PageHeader, Screen, Txt } from '@/components/ui'
 import { ProfileView } from '@/components/ProfileView'
 import { userApi } from '@/api/users'
@@ -10,6 +10,8 @@ import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
 import { toast } from '@/lib/toast'
+import { BrandIcon } from '@/components/BrandIcon'
+import { MotionPressable } from '@/components/Motion'
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -48,20 +50,23 @@ export default function ProfileTab() {
   return (
     <Screen bg={t.card}>
       <PageHeader title="Cá nhân" right={<IconButton label="Tin nhắn" icon={<MessageCircle size={20} color={t.text} />} onPress={() => router.push('/chat')} />} />
-      <ProfileView profile={q.data.data} isMe>
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
-          <Button title="Sửa hồ sơ" size="sm" icon={<Pencil size={15} color={t.onPrimary} />} onPress={() => router.push('/profile/edit')} style={{ flex: 1, height: 40 }} />
+      <ProfileView profile={q.data.data} isMe actions={
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Button title="Sửa hồ sơ" variant="brand" size="sm" icon={<Pencil size={15} color={t.onPrimary} />} onPress={() => router.push('/profile/edit')} style={{ flex: 1 }} />
           <Button title="Kinh nghiệm" size="sm" variant="secondary" icon={<Briefcase size={15} color={t.primary} />} onPress={() => router.push('/profile/experience')} style={{ flex: 1, height: 40 }} />
         </View>
-
-        <Group title="Hoạt động của tôi">
-          <MenuRow icon={<Bookmark size={18} color={t.primary} />} label="Bài viết đã lưu" onPress={() => router.push('/saved-posts')} />
-          <MenuRow icon={<CalendarCheck size={18} color={t.primary} />} label="Lịch sử sự kiện" hint="Sự kiện đã đăng ký tham gia" onPress={() => router.push('/events/history')} />
+      }>
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 22 }}>
+          {([{ icon: 'coin', title: 'Khảo sát lương', hint: 'Hiểu giá trị của bạn', route: '/salary' }, { icon: 'suitcase', title: 'Lộ trình sự nghiệp', hint: 'Cảm hứng từ cộng đồng', route: '/career' }] as const).map((item) => <MotionPressable key={item.route} accessibilityRole="button" onPress={() => router.push(item.route)} style={({ pressed }) => ({ flex: 1, padding: 14, borderRadius: 20, backgroundColor: pressed ? t.inputBg : t.card, borderWidth: 1, borderColor: t.border, gap: 6 })}>
+            <BrandIcon name={item.icon} size={38} /><Txt size={13} weight="600">{item.title}</Txt><Txt size={11} muted>{item.hint}</Txt>
+          </MotionPressable>)}
+        </View>
+        <Group title="Không gian của tôi">
+          <MenuRow icon={<BrandIcon name="list" size={28} />} label="Bài viết đã lưu" onPress={() => router.push('/saved-posts')} />
+          <MenuRow icon={<BrandIcon name="calendar" size={28} />} label="Lịch sử sự kiện" hint="Những cuộc hẹn và trải nghiệm đã đăng ký" onPress={() => router.push('/events/history')} last={!isAlumni} />
           {isAlumni ? (
-            <MenuRow icon={<Users size={18} color={t.primary} />} label="Hội nhóm cựu sinh viên" onPress={() => router.push('/groups')} />
+            <MenuRow icon={<BrandIcon name="people" size={28} />} label="Hội nhóm của tôi" hint="Cùng sở thích, cùng kết nối" onPress={() => router.push('/groups')} last />
           ) : null}
-          <MenuRow icon={<Coins size={18} color={t.primary} />} label="Khảo sát lương" hint="Đóng góp và xem mức lương" onPress={() => router.push('/salary')} />
-          <MenuRow icon={<Route size={18} color={t.primary} />} label="Lộ trình sự nghiệp" onPress={() => router.push('/career')} last />
         </Group>
 
         <Group title="Tài khoản">

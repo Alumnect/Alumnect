@@ -4,7 +4,9 @@ import { WebView as RNWebView } from 'react-native-webview'
 import type { WebViewMessageEvent } from 'react-native-webview'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Avatar, Button, Empty, PageHeader, Screen, Tag, Txt, SearchBar } from '@/components/ui'
+import { Avatar, Button, Empty, Screen, Tag, Txt, SearchBar } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
+import { Enter, MotionPressable } from '@/components/Motion'
 import { ActionSheet } from '@/components/ActionSheet'
 import { Briefcase, Check, ChevronDown, GraduationCap, MapPin, UserRound, X } from '@/components/icons'
 import { exploreApi } from '@/api/explore'
@@ -63,7 +65,8 @@ export default function MapScreen() {
   const [search, setSearch] = useState('')
   const [majorId, setMajorId] = useState<number | null>(null)
   const [mapTheme, setMapTheme] = useState<MapTheme>('DEFAULT')
-  const [sheet, setSheet] = useState<'none' | 'list' | 'major'>('none')
+  const [sheet, setSheet] = useState<'none' | 'list' | 'major' | 'style'>('none')
+  const [hub, setHub] = useState<string | null>(null)
   const [listTab, setListTab] = useState<'alumni' | 'hubs'>('alumni')
   const [selId, setSelId] = useState<string | null>(null)
   const keyword = useDebounced(search.trim(), 400)
@@ -107,6 +110,8 @@ export default function MapScreen() {
   }, [points])
 
   const sel = useMemo(() => points.find((p) => String(p.userId) === selId) ?? null, [points, selId])
+  const visiblePoints = hub ? points.filter((p) => getHubCity(p.location, p.locationCity, p.locationCountry) === hub) : points
+  const cityHubs = topHubs.filter((h) => h.city !== UNDETERMINED)
 
   const html = useMemo(() => buildAlumniMapHtml({ maptilerKey: process.env.EXPO_PUBLIC_MAPTILER_API_KEY }), [])
   const source = useMemo(() => ({ html, baseUrl: 'https://alumnect.local' }), [html])
@@ -156,8 +161,9 @@ export default function MapScreen() {
 
   return (
     <Screen>
-      <View style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
-        <PageHeader title="Bản đồ Alumni" subtitle="Khám phá mạng lưới cựu sinh viên FPTU trên toàn cầu" />
+      <View style={{ backgroundColor: t.card, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, gap: 12 }}>
+        <BrandIcon name="world" size={42} />
+        <View style={{ flex: 1 }}><Txt size={21} weight="700">Bản đồ Alumni</Txt><Txt muted size={12}>Cùng một trường. Muôn nơi kết nối.</Txt></View>
       </View>
       <View style={{ flex: 1 }}>
         <WebView
@@ -179,7 +185,7 @@ export default function MapScreen() {
 
         {/* Tìm kiếm + lọc ngành, nổi trên bản đồ (như bộ lọc nổi của web) */}
         <View pointerEvents="box-none" style={{ position: 'absolute', top: 10, left: 12, right: 12, gap: 8 }}>
-          <View style={[floating, { borderRadius: 16, padding: 4 }]}>
+          <View style={[floating, { borderRadius: 20, padding: 4 }]}>
             <SearchBar value={search} onChangeText={setSearch} placeholder="Tìm theo tên, công ty, vị trí..." />
           </View>
           <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -188,7 +194,7 @@ export default function MapScreen() {
                 onPress={() => setSheet('major')}
                 accessibilityRole="button"
                 accessibilityLabel="Lọc theo ngành học"
-                style={{ flexShrink: 1, minHeight: 36, maxWidth: 230, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: majorId ? t.action : t.inputBg }}
+                style={{ flexShrink: 1, minHeight: 40, maxWidth: 205, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, borderRadius: 12, backgroundColor: majorId ? t.action : t.inputBg }}
               >
                 <GraduationCap size={16} color={majorId ? t.onAction : t.textMuted} />
                 <Txt size={13} weight="700" numberOfLines={1} color={majorId ? t.onAction : t.textMuted} style={{ flexShrink: 1 }}>{selectedMajor ? selectedMajor.name : 'Tất cả chuyên ngành'}</Txt>
@@ -198,12 +204,9 @@ export default function MapScreen() {
                 <Txt size={12} weight="800" color={t.textSubtle}>{points.length}</Txt>
               </View>
             </View>
-            {switching ? (
-              <View style={[floating, { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8 }]}>
-                <ActivityIndicator size="small" color={t.primary} />
-                <Txt size={12} weight="600" muted>Đang tải bản đồ...</Txt>
-              </View>
-            ) : null}
+            <MotionPressable accessibilityRole="button" accessibilityLabel="Đổi giao diện bản đồ" onPress={() => setSheet('style')} style={[floating, { minHeight: 48, borderRadius: 16, paddingHorizontal: 12, justifyContent: 'center', alignItems: 'center' }]}>
+              {switching ? <ActivityIndicator size="small" color={t.primary} /> : <Txt size={12} weight="600">{MAP_THEMES.find((m) => m.theme === mapTheme)?.name}</Txt>}
+            </MotionPressable>
           </View>
         </View>
 
@@ -220,11 +223,12 @@ export default function MapScreen() {
       </View>
 
       {/* Dải dưới: thẻ thông tin alumni được chọn, hoặc chủ đề bản đồ + danh sách */}
-      <View style={{ backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border, borderTopLeftRadius: 20, borderTopRightRadius: 20, marginTop: -16, paddingTop: 12, paddingBottom: 12, gap: 10 }}>
+      <View style={{ backgroundColor: t.card, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border, borderTopLeftRadius: 26, borderTopRightRadius: 26, marginTop: -8, paddingTop: 6, paddingBottom: 12, gap: 8 }}>
+        <View style={{ width: 32, height: 4, borderRadius: 2, backgroundColor: t.border, alignSelf: 'center', marginVertical: 4 }} />
         {sel ? (
-          <View style={{ paddingHorizontal: 16, gap: 12 }}>
+          <Enter key={sel.userId} style={{ paddingHorizontal: 20, gap: 14 }}>
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-              <Avatar uri={sel.avatarUrl} name={sel.fullName} size={60} />
+              <Avatar uri={sel.avatarUrl} name={sel.fullName} size={60} ring />
               <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
                 <Txt weight="700" size={17} numberOfLines={1}>{sel.fullName}</Txt>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
@@ -243,37 +247,40 @@ export default function MapScreen() {
               </Pressable>
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Button title="Xem hồ sơ" size="sm" icon={<UserRound size={15} color={t.onAction} />} style={{ flex: 1 }} onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(sel.userId) } })} />
+              <Button title="Xem hồ sơ" variant="brand" size="sm" icon={<UserRound size={15} color={t.onPrimary} />} style={{ flex: 1 }} onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(sel.userId) } })} />
               <Button title="Lộ trình sự nghiệp" size="sm" variant="outline" icon={<GraduationCap size={15} color={t.text} />} style={{ flex: 1 }} onPress={() => router.push({ pathname: '/career', params: { userId: String(sel.userId), name: sel.fullName } })} />
             </View>
-          </View>
+          </Enter>
         ) : (
           <>
-            <RNScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: 'center' }}>
-              <Txt size={12} weight="800" color={t.textSubtle} style={{ textTransform: 'uppercase', letterSpacing: 0.8 }}>Chủ đề:</Txt>
-              {MAP_THEMES.map((entry) => {
-                const active = mapTheme === entry.theme
-                return (
-                  <Pressable
-                    key={entry.theme}
-                    disabled={switching}
-                    onPress={() => setMapTheme(entry.theme)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    style={{ minHeight: 36, paddingHorizontal: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? t.action : t.inputBg, opacity: switching ? 0.6 : 1 }}
-                  >
-                    <Txt size={13} weight="700" color={active ? t.onAction : t.textMuted}>{entry.name}</Txt>
-                  </Pressable>
-                )
-              })}
-            </RNScrollView>
-            <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <Txt size={13} weight="600" muted>{q.isLoading ? 'Đang tải...' : `${points.length} kết quả`}</Txt>
-              <Button title="Danh sách & thành phố" size="sm" variant="outline" disabled={q.isLoading || q.isError} onPress={() => setSheet('list')} />
+            <View style={{ paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <View style={{ flex: 1 }}><Txt size={15} weight="700">Khám phá cộng đồng</Txt><Txt size={12} muted>{q.isLoading ? 'Đang tìm alumni...' : `${points.length} alumni · ${cityHubs.length} thành phố`}</Txt></View>
+              <MotionPressable accessibilityRole="button" disabled={q.isLoading || q.isError} onPress={() => { setHub(null); setListTab('alumni'); setSheet('list') }} style={{ minHeight: 44, justifyContent: 'center' }}><Txt size={12} weight="600" color={t.primary}>Xem tất cả</Txt></MotionPressable>
             </View>
+            <RNScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
+              {cityHubs.slice(0, 8).map((h, i) => <MotionPressable key={h.city} accessibilityRole="button" accessibilityLabel={`${h.city}, ${h.count} alumni`} onPress={() => { setHub(h.city); setListTab('alumni'); setSheet('list') }} style={{ width: 144, padding: 12, borderRadius: 17, backgroundColor: t.isDark ? t.surface : i % 2 ? '#F0EDF8' : '#FDF0E7', gap: 5 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><MapPin size={16} color={i % 2 ? (t.isDark ? '#C8ADEB' : '#806291') : t.primary} /><Txt size={12} muted>{h.count} alumni</Txt></View>
+                <Txt size={13} weight="600" numberOfLines={1}>{h.city.split(',')[0]}</Txt>
+              </MotionPressable>)}
+            </RNScrollView>
+            {!q.isLoading && !q.isError && !points.length ? <Txt size={12} muted style={{ paddingHorizontal: 20 }}>Thử tên khác hoặc chọn lại chuyên ngành.</Txt> : null}
           </>
         )}
       </View>
+
+      <ActionSheet visible={sheet === 'style'} title="Một góc nhìn mới" onClose={() => setSheet('none')}>
+        <Txt muted size={13} style={{ marginBottom: 16 }}>Chọn phong cách cho hành trình khám phá của bạn.</Txt>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          {MAP_THEMES.map((entry, i) => <MotionPressable key={entry.theme} disabled={switching} onPress={() => { setMapTheme(entry.theme); setSheet('none') }} accessibilityRole="radio" accessibilityState={{ checked: mapTheme === entry.theme }} style={{ width: '47%', padding: 6, borderRadius: 18, borderWidth: 2, borderColor: mapTheme === entry.theme ? t.primary : t.border }}>
+            <View style={{ height: 68, borderRadius: 12, overflow: 'hidden', backgroundColor: ['#E1EBD9', '#ECEEEB', '#242D3B', '#E6DCEE', '#425C46'][i], alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ position: 'absolute', width: 200, height: 12, backgroundColor: i === 2 || i === 4 ? '#75818C' : '#FFFFFF', transform: [{ rotate: '-30deg' }] }} />
+              <View style={{ position: 'absolute', width: 12, height: 130, backgroundColor: i === 2 || i === 4 ? '#75818C' : '#FFFFFF', transform: [{ rotate: '-30deg' }] }} />
+              <BrandIcon name="pin" size={34} />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 8 }}><Txt size={13} weight="600">{entry.name}</Txt>{mapTheme === entry.theme ? <Check size={16} color={t.primary} /> : null}</View>
+          </MotionPressable>)}
+        </View>
+      </ActionSheet>
 
       {/* Chọn ngành (kèm số người, sắp theo số người giảm dần như web) */}
       <ActionSheet visible={sheet === 'major'} title="Lọc theo ngành học" onClose={() => setSheet('none')}>
@@ -295,17 +302,17 @@ export default function MapScreen() {
       </ActionSheet>
 
       {/* Danh sách alumni + thành phố tập trung */}
-      <ActionSheet visible={sheet === 'list'} title="Danh sách Alumni" onClose={() => setSheet('none')}>
+      <ActionSheet visible={sheet === 'list'} title={hub ? hub.split(',')[0] : 'Danh sách Alumni'} onClose={() => setSheet('none')}>
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {([['alumni', `Danh sách · ${points.length}`], ['hubs', 'Thành phố tập trung']] as const).map(([k, label]) => (
+            {([['alumni', `Alumni · ${visiblePoints.length}`], ['hubs', 'Thành phố']] as const).map(([k, label]) => (
               <Pressable key={k} onPress={() => setListTab(k)} accessibilityRole="tab" accessibilityState={{ selected: listTab === k }} style={{ flex: 1, minHeight: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: listTab === k ? t.action : t.inputBg }}>
                 <Txt size={13} weight="700" color={listTab === k ? t.onAction : t.textMuted}>{label}</Txt>
               </Pressable>
             ))}
           </View>
           {listTab === 'alumni' ? (
-            points.length ? points.map((p) => {
+            visiblePoints.length ? visiblePoints.map((p) => {
               const active = String(p.userId) === selId
               return (
                 <Pressable key={p.userId} onPress={() => { setSheet('none'); choose(String(p.userId)) }} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 10, borderRadius: 16, borderWidth: 1, borderColor: active ? t.primary : 'transparent', backgroundColor: active ? t.primaryTint : pressed ? t.inputBg : 'transparent' })}>

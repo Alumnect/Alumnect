@@ -4,7 +4,7 @@ import { ScrollView } from '@/components/ScrollView'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Briefcase, Camera, GraduationCap, Link2, Phone, Plus, Sparkles, Star, UserRound, X } from '@/components/icons'
+import { Briefcase, Camera, Link2, Plus, Star, X } from '@/components/icons'
 import { Avatar, Button, Card, Empty, Input, Loading, Screen, Tag, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { BottomBar, BrandCover, SectionCard } from '@/components/DetailBits'
@@ -18,6 +18,8 @@ import { FPT_CAMPUSES, VN_CITIES } from '@/constants/filters'
 import { pickImage, uploadImage } from '@/lib/upload'
 import { useTheme } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
+import { BrandIcon } from '@/components/BrandIcon'
+import { MotionPressable } from '@/components/Motion'
 
 type Form = {
   fullName: string
@@ -162,33 +164,33 @@ export default function EditProfileScreen() {
         <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
           {/* Ảnh bìa + ảnh đại diện */}
           <View style={{ backgroundColor: t.card, marginBottom: 16, paddingBottom: 16 }}>
-            <Pressable onPress={() => changeImage('cover')} accessibilityRole="button" accessibilityLabel="Đổi ảnh bìa">
-              {cover ? <Image source={{ uri: cover }} style={{ height: 140, backgroundColor: t.inputBg }} contentFit="cover" /> : <BrandCover height={140} />}
+            <MotionPressable disabled={!!uploading} onPress={() => changeImage('cover')} accessibilityRole="button" accessibilityLabel="Đổi ảnh bìa" style={{ marginHorizontal: 16, marginTop: 12, borderRadius: 20, overflow: 'hidden' }}>
+              {cover ? <Image source={{ uri: cover }} style={{ height: 132, backgroundColor: t.inputBg }} contentFit="cover" transition={180} /> : <BrandCover height={132} />}
               <View style={{ position: 'absolute', right: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 7, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.55)' }}>
                 <Camera size={14} color="#fff" />
                 <Txt size={12} weight="700" color="#fff">{uploading === 'cover' ? 'Đang tải...' : 'Đổi ảnh bìa'}</Txt>
               </View>
-            </Pressable>
-            <View style={{ alignItems: 'center', marginTop: -50 }}>
-              <Pressable onPress={() => changeImage('avatar')} accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện">
+            </MotionPressable>
+            <View style={{ alignItems: 'flex-start', marginTop: -36, paddingHorizontal: 28 }}>
+              <MotionPressable disabled={!!uploading} onPress={() => changeImage('avatar')} accessibilityRole="button" accessibilityLabel="Đổi ảnh đại diện">
                 <View style={{ borderWidth: 4, borderColor: t.card, borderRadius: 60 }}>
-                  <Avatar uri={avatar} name={f.fullName} size={100} />
+                  <Avatar uri={avatar} name={f.fullName} size={80} />
                 </View>
                 <View style={{ position: 'absolute', right: 2, bottom: 6, width: 34, height: 34, borderRadius: 17, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: t.card }}>
                   <Camera size={15} color="#fff" />
                 </View>
-              </Pressable>
+              </MotionPressable>
               <Txt muted size={12} style={{ marginTop: 6 }}>{uploading === 'avatar' ? 'Đang tải ảnh...' : 'Chạm để đổi ảnh đại diện'}</Txt>
             </View>
           </View>
 
-          <SectionCard title="Thông tin cá nhân" icon={<UserRound size={18} color={t.primary} />}>
+          <SectionCard title="Thông tin cá nhân" icon={<BrandIcon name="people2" size={32} />}>
             <Input label="Họ và tên hiển thị *" value={f.fullName} onChangeText={set('fullName')} error={errors.fullName} placeholder="Nhập họ và tên..." />
             <Input label="Giới thiệu bản thân" value={f.biography} onChangeText={set('biography')} multiline error={errors.biography} placeholder="Mô tả bản thân, phong cách làm việc, sở thích..." />
             <Txt muted size={12} style={{ alignSelf: 'flex-end', marginTop: -10 }} color={f.biography.length > BIO_MAX ? t.danger : undefined}>{`${f.biography.length}/${BIO_MAX}`}</Txt>
           </SectionCard>
 
-          <SectionCard title="Học tập tại FPTU" icon={<GraduationCap size={18} color={t.primary} />}>
+          <SectionCard title="Học tập tại FPTU" icon={<BrandIcon name="list" size={32} />}>
             <SelectField label="Cơ sở đào tạo" value={f.campus} options={FPT_CAMPUSES.map((c) => ({ value: c, label: c }))} onChange={set('campus')} placeholder="-- Chọn cơ sở --" />
             <SelectField
               label="Chuyên ngành"
@@ -208,12 +210,12 @@ export default function EditProfileScreen() {
             {p?.studentCode ? <Txt muted size={12}>{`Mã sinh viên: ${p.studentCode} (không thể thay đổi)`}</Txt> : null}
           </SectionCard>
 
-          <SectionCard title="Liên hệ" icon={<Phone size={18} color={t.primary} />}>
+          <SectionCard title="Liên hệ" icon={<BrandIcon name="chat" size={32} />}>
             <Input label="Số điện thoại" value={f.phone} onChangeText={set('phone')} keyboardType="phone-pad" placeholder="VD: 0905123456" error={errors.phone} />
             <SelectField label="Tỉnh / thành phố hiện tại" value={f.city} options={VN_CITIES.map((c) => ({ value: c, label: c }))} onChange={set('city')} placeholder="-- Chọn tỉnh / thành --" />
           </SectionCard>
 
-          <SectionCard title="Liên kết cá nhân" icon={<Link2 size={18} color={t.primary} />}>
+          <SectionCard title="Liên kết cá nhân" icon={<BrandIcon name="world" size={32} />}>
             <Txt muted size={12} style={{ marginBottom: 8 }}>LinkedIn, GitHub, Portfolio...</Txt>
             {links.map((l, i) => (
               <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: t.divider }}>
@@ -232,7 +234,7 @@ export default function EditProfileScreen() {
             </View>
           </SectionCard>
 
-          <SectionCard title="Kỹ năng chuyên môn" icon={<Sparkles size={18} color={t.primary} />}>
+          <SectionCard title="Kỹ năng chuyên môn" icon={<BrandIcon name="task" size={32} />}>
             {groups.length === 0 ? <Txt muted size={13} style={{ marginBottom: 16 }}>Chưa có kỹ năng nào. Thêm kỹ năng để mentor và nhà tuyển dụng dễ tìm thấy bạn.</Txt> : null}
             {groups.map((g) => (
               <View key={g} style={{ marginBottom: 16 }}>
@@ -292,7 +294,7 @@ export default function EditProfileScreen() {
         </ScrollView>
         <BottomBar>
           <Button title="Huỷ" variant="outline" onPress={() => router.back()} style={{ flex: 1 }} />
-          <Button title="Lưu thay đổi" onPress={submit} loading={save.isPending} disabled={!!uploading} style={{ flex: 2 }} />
+          <Button title="Lưu thay đổi" variant="brand" onPress={submit} loading={save.isPending} disabled={!!uploading} style={{ flex: 2 }} />
         </BottomBar>
       </KeyboardAvoidingView>
     </Screen>
