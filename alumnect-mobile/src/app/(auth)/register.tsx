@@ -3,10 +3,10 @@ import { Pressable, View } from 'react-native'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { AuthScaffold, AuthSwitch } from '@/components/AuthScaffold'
+import { AuthButton, AuthScaffold } from '@/components/AuthScaffold'
 import { Button, Input, Txt } from '@/components/ui'
 import { SelectField } from '@/components/SelectField'
-import { Check, GraduationCap, ImagePlus, Info, Student, X } from '@/components/icons'
+import { Check, GraduationCap, IdCard, ImagePlus, Lock, MailIcon, UserRound, X } from '@/components/icons'
 import { authApi } from '@/api/auth'
 import { toast, errMsg } from '@/lib/toast'
 import { useAuthStore } from '@/store/authStore'
@@ -16,35 +16,47 @@ import { radius, useTheme } from '@/theme'
 
 const PASS_RE = /^(?=.*[A-Za-z])(?=.*\d).+$/
 
-/** Thẻ chọn vai trò: biểu tượng, tên vai trò, mô tả ngắn và dấu chọn. */
-function RoleCard({ icon, title, desc, active, onPress }: { icon: React.ReactNode; title: string; desc: string; active: boolean; onPress: () => void }) {
+/** Công tắc hai lựa chọn Sinh viên / Cựu sinh viên, gọn một hàng. */
+function RoleSwitch({ value, onChange }: { value: 'STUDENT' | 'ALUMNI'; onChange: (v: 'STUDENT' | 'ALUMNI') => void }) {
   const t = useTheme()
+  const items: ['STUDENT' | 'ALUMNI', string][] = [['STUDENT', 'Sinh viên'], ['ALUMNI', 'Cựu sinh viên']]
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ selected: active, checked: active }}
-      accessibilityLabel={`${title}. ${desc}`}
-      style={({ pressed }) => ({
-        flex: 1,
-        minHeight: 112,
-        padding: 14,
-        borderRadius: radius.lg,
-        borderWidth: active ? 2 : 1,
-        borderColor: active ? t.text : t.controlBorder,
-        backgroundColor: active ? t.surface : t.card,
-        opacity: pressed ? 0.85 : 1,
+    <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', padding: 4, borderRadius: 999, backgroundColor: t.inputBg, marginBottom: 16 }}>
+      {items.map(([k, label]) => {
+        const active = value === k
+        return (
+          <Pressable
+            key={k}
+            onPress={() => onChange(k)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active, checked: active }}
+            style={{ flex: 1, minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? t.card : 'transparent', borderWidth: active ? 1 : 0, borderColor: t.controlBorder }}
+          >
+            <Txt weight={active ? '600' : '400'} color={active ? t.text : t.textMuted}>{label}</Txt>
+          </Pressable>
+        )
       })}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        {icon}
-        <View style={{ width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? t.text : 'transparent', borderWidth: active ? 0 : 1, borderColor: t.controlBorder }}>
-          {active ? <Check size={12} color={t.card} weight="bold" /> : null}
+    </View>
+  )
+}
+
+/** Yêu cầu mật khẩu: vòng rỗng khi chưa đạt, chuyển xanh lá kèm dấu tích khi đạt. */
+function PasswordRules({ password }: { password: string }) {
+  const t = useTheme()
+  const rules: [string, boolean][] = [
+    ['Từ 8 ký tự', password.length >= 8],
+    ['Có chữ cái', /[A-Za-z]/.test(password)],
+    ['Có chữ số', /\d/.test(password)],
+  ]
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 4, marginTop: -4, marginBottom: 14 }}>
+      {rules.map(([label, ok]) => (
+        <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          {ok ? <Check size={13} color={t.success} weight="bold" /> : <View style={{ width: 11, height: 11, borderRadius: 6, borderWidth: 1.5, borderColor: t.controlBorder, marginHorizontal: 1 }} />}
+          <Txt size={12} color={ok ? t.success : t.textMuted}>{label}</Txt>
         </View>
-      </View>
-      <Txt weight="600" style={{ marginTop: 10 }}>{title}</Txt>
-      <Txt muted size={12}>{desc}</Txt>
-    </Pressable>
+      ))}
+    </View>
   )
 }
 
@@ -137,55 +149,57 @@ export default function RegisterScreen() {
     if (Object.keys(e).length === 0) (isGoogle ? googleMutation : mutation).mutate()
   }
 
+  const back = () => (router.canGoBack() ? router.back() : router.replace('/(auth)/login'))
   const majorOptions = (majors.data?.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))
 
   return (
-    <AuthScaffold title="Tạo tài khoản" subtitle="Tham gia mạng lưới cựu sinh viên FPTU" compact>
-      {isGoogle ? (
-        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: radius.md, backgroundColor: t.infoTint, marginBottom: 20 }}>
-          <Info size={18} color={t.info} />
-          <Txt size={13} style={{ flex: 1 }}>Bạn đang đăng ký bằng tài khoản Google. Hoàn tất vài thông tin bên dưới để tiếp tục.</Txt>
+    <AuthScaffold
+      hero="short"
+      title="Tạo tài khoản"
+      subtitle={isGoogle ? 'Bạn đang đăng ký bằng tài khoản Google.' : 'Tham gia mạng lưới cựu sinh viên FPTU'}
+      footer={
+        <View>
+          <AuthButton title="Đăng ký" onPress={submit} loading={mutation.isPending || googleMutation.isPending} disabled={uploading} />
+          <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 4 }}>
+            <Txt muted size={14}>Đã có tài khoản? </Txt>
+            <Pressable onPress={back} accessibilityRole="link" hitSlop={8} style={{ paddingVertical: 12 }}>
+              <Txt color={t.primary} weight="700" size={14}>Đăng nhập</Txt>
+            </Pressable>
+          </View>
         </View>
-      ) : null}
-      <Txt weight="500" size={14} style={{ marginBottom: 8 }}>Bạn là</Txt>
-      <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-        <RoleCard icon={<Student size={26} color={t.text} />} title="Sinh viên" desc="Đang học tại FPTU" active={role === 'STUDENT'} onPress={() => setRole('STUDENT')} />
-        <RoleCard icon={<GraduationCap size={26} color={t.text} />} title="Cựu sinh viên" desc="Đã tốt nghiệp FPTU" active={role === 'ALUMNI'} onPress={() => setRole('ALUMNI')} />
-      </View>
-      <Input label="Họ và tên" value={f.fullName} onChangeText={set('fullName')} autoComplete="name" textContentType="name" autoCapitalize="words" returnKeyType="next" error={errors.fullName} placeholder="Nguyễn Văn A" />
+      }
+    >
+      <RoleSwitch value={role} onChange={setRole} />
+      {role === 'ALUMNI' ? <Txt muted size={13} style={{ marginTop: -6, marginBottom: 14 }}>Tài khoản cựu sinh viên cần được quản trị viên xác minh trước khi dùng đầy đủ.</Txt> : null}
+
+      <Input variant="float" icon={<UserRound size={20} />} label="Họ và tên" value={f.fullName} onChangeText={set('fullName')} autoComplete="name" textContentType="name" autoCapitalize="words" returnKeyType="next" error={errors.fullName} />
       {isGoogle ? (
-        <Input label="Email (từ Google)" value={f.email} onChangeText={() => {}} editable={false} autoCapitalize="none" />
+        <Input variant="float" icon={<MailIcon size={20} />} label="Email (từ Google)" value={f.email} onChangeText={() => {}} editable={false} autoCapitalize="none" />
       ) : (
         <>
-          <Input label="Email" value={f.email} onChangeText={set('email')} autoCapitalize="none" autoCorrect={false} autoComplete="email" textContentType="username" keyboardType="email-address" returnKeyType="next" error={errors.email} placeholder="you@fpt.edu.vn" />
-          <Input label="Mật khẩu" value={f.password} onChangeText={set('password')} secureTextEntry autoCapitalize="none" autoCorrect={false} autoComplete="new-password" textContentType="newPassword" error={errors.password} hint="Từ 8 ký tự, gồm ít nhất 1 chữ cái và 1 chữ số" placeholder="Tạo mật khẩu" />
+          <Input variant="float" icon={<MailIcon size={20} />} label="Email" value={f.email} onChangeText={set('email')} autoCapitalize="none" autoCorrect={false} autoComplete="email" textContentType="username" keyboardType="email-address" returnKeyType="next" error={errors.email} />
+          <Input variant="float" icon={<Lock size={20} />} label="Mật khẩu" value={f.password} onChangeText={set('password')} secureTextEntry autoCapitalize="none" autoCorrect={false} autoComplete="new-password" textContentType="newPassword" error={errors.password} />
+          <PasswordRules password={f.password} />
         </>
       )}
-      <SelectField
-        label="Chuyên ngành"
-        placeholder="Chọn chuyên ngành"
-        value={majorId == null ? null : String(majorId)}
-        options={majorOptions}
-        onChange={(v) => setMajorId(v == null ? null : Number(v))}
-        clearable={false}
-        error={errors.majorId}
-      />
+      <SelectField variant="float" icon={<GraduationCap size={20} />} label="Chuyên ngành" placeholder="Chọn chuyên ngành" value={majorId == null ? null : String(majorId)} options={majorOptions} onChange={(v) => setMajorId(v == null ? null : Number(v))} clearable={false} error={errors.majorId} />
       {majors.isError ? (
-        <Pressable onPress={() => { void majors.refetch() }} accessibilityRole="button" style={{ marginTop: -8, marginBottom: 14, minHeight: 44, justifyContent: 'center' }}>
+        <Pressable onPress={() => { void majors.refetch() }} accessibilityRole="button" style={{ marginTop: -6, marginBottom: 10, minHeight: 44, justifyContent: 'center' }}>
           <Txt size={13} color={t.danger}>Không tải được danh sách chuyên ngành. <Txt size={13} weight="700" color={t.primary}>Thử lại</Txt></Txt>
         </Pressable>
       ) : null}
-      <Input label="Mã số sinh viên" value={f.studentCode} onChangeText={set('studentCode')} autoCapitalize="characters" autoCorrect={false} error={errors.studentCode} placeholder="VD: SE123456" />
+      <Input variant="float" icon={<IdCard size={20} />} label="Mã số sinh viên" value={f.studentCode} onChangeText={set('studentCode')} autoCapitalize="characters" autoCorrect={false} error={errors.studentCode} hint={errors.studentCode ? undefined : 'Ví dụ SE123456'} />
+
       {role === 'ALUMNI' ? (
-        <View style={{ marginBottom: 18 }}>
+        <View style={{ marginTop: 2, marginBottom: 8 }}>
           <Txt weight="500" size={14} style={{ marginBottom: 8 }}>Ảnh minh chứng</Txt>
           {proofUrl ? (
             <View>
-              <Image source={{ uri: proofUrl }} style={{ height: 180, borderRadius: radius.md, backgroundColor: t.inputBg }} contentFit="cover" />
+              <Image source={{ uri: proofUrl }} style={{ height: 160, borderRadius: radius.lg, backgroundColor: t.inputBg }} contentFit="cover" />
               <Pressable onPress={() => setProofUrl('')} accessibilityRole="button" accessibilityLabel="Bỏ ảnh minh chứng" hitSlop={6} style={{ position: 'absolute', top: 8, right: 8, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.6)' }}>
                 <X size={16} color="#fff" />
               </Pressable>
-              <Button title="Chọn ảnh khác" variant="outline" onPress={pickProof} loading={uploading} style={{ marginTop: 10 }} />
+              <Button title="Chọn ảnh khác" variant="outline" onPress={pickProof} loading={uploading} style={{ marginTop: 10, borderRadius: 999 }} />
             </View>
           ) : (
             <Pressable
@@ -193,29 +207,16 @@ export default function RegisterScreen() {
               disabled={uploading}
               accessibilityRole="button"
               accessibilityLabel="Chọn ảnh minh chứng"
-              style={({ pressed }) => ({
-                alignItems: 'center',
-                gap: 6,
-                paddingVertical: 22,
-                paddingHorizontal: 16,
-                borderRadius: radius.md,
-                borderWidth: 1.5,
-                borderStyle: 'dashed',
-                borderColor: errors.proofUrl ? t.danger : t.controlBorder,
-                backgroundColor: t.surface,
-                opacity: pressed || uploading ? 0.7 : 1,
-              })}
+              style={({ pressed }) => ({ alignItems: 'center', gap: 6, paddingVertical: 18, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: errors.proofUrl ? t.danger : t.controlBorder, backgroundColor: t.surface, opacity: pressed || uploading ? 0.7 : 1 })}
             >
-              <ImagePlus size={28} color={t.textMuted} />
+              <ImagePlus size={26} color={t.textMuted} />
               <Txt weight="600" size={14}>{uploading ? 'Đang tải ảnh lên...' : 'Chọn ảnh minh chứng'}</Txt>
-              <Txt muted size={12} style={{ textAlign: 'center' }}>Bằng tốt nghiệp hoặc thẻ sinh viên để quản trị viên xác minh</Txt>
+              <Txt muted size={12} style={{ textAlign: 'center' }}>Bằng tốt nghiệp hoặc thẻ sinh viên</Txt>
             </Pressable>
           )}
           {errors.proofUrl ? <Txt size={12} color={t.danger} style={{ marginTop: 4 }}>{errors.proofUrl}</Txt> : null}
         </View>
       ) : null}
-      <Button title="Đăng ký" size="lg" onPress={submit} loading={mutation.isPending || googleMutation.isPending} style={{ marginTop: 6 }} />
-      <AuthSwitch question="Đã có tài khoản?" action="Đăng nhập" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(auth)/login'))} />
     </AuthScaffold>
   )
 }

@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { View } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
 import { useRouter } from 'expo-router'
 import { useMutation } from '@tanstack/react-query'
 import * as LocalAuthentication from 'expo-local-authentication'
 import * as SecureStore from 'expo-secure-store'
-import { AuthScaffold, AuthSwitch, OrDivider } from '@/components/AuthScaffold'
-import { Button, Input, Txt } from '@/components/ui'
-import { Fingerprint } from '@/components/icons'
+import { AuthButton, AuthFooterButton, AuthLink, AuthScaffold, OrDivider } from '@/components/AuthScaffold'
+import { Button, Input } from '@/components/ui'
+import { Fingerprint, Lock, MailIcon } from '@/components/icons'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/authStore'
 import { queryClient } from '@/lib/queryClient'
@@ -121,8 +121,10 @@ export default function LoginScreen() {
   const googleOn = isGoogleConfigured()
 
   return (
-    <AuthScaffold title="Đăng nhập" subtitle="Chào mừng trở lại cộng đồng cựu sinh viên FPTU">
+    <AuthScaffold footer={<AuthFooterButton title="Tạo tài khoản mới" onPress={() => router.push('/(auth)/register')} />}>
       <Input
+        variant="float"
+        icon={<MailIcon size={20} />}
         label="Email"
         value={email}
         onChangeText={setEmail}
@@ -135,9 +137,10 @@ export default function LoginScreen() {
         onSubmitEditing={() => passwordRef.current?.focus()}
         submitBehavior="submit"
         error={errors.email}
-        placeholder="you@fpt.edu.vn"
       />
       <Input
+        variant="float"
+        icon={<Lock size={20} />}
         label="Mật khẩu"
         value={password}
         onChangeText={setPassword}
@@ -150,18 +153,18 @@ export default function LoginScreen() {
         onSubmitEditing={() => submit()}
         inputRef={(r) => { passwordRef.current = r }}
         error={errors.password}
-        placeholder="Nhập mật khẩu"
       />
-      <Pressable onPress={() => router.push('/(auth)/forgot-password')} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'flex-end', minHeight: 44, justifyContent: 'center', marginTop: -10, marginBottom: 8 }}>
-        <Txt color={t.primary} weight="600" size={13}>Quên mật khẩu?</Txt>
-      </Pressable>
-      <Button title="Đăng nhập" size="lg" onPress={() => submit()} loading={mutation.isPending} />
+      <View style={{ marginTop: 4 }}>
+        <AuthButton title="Đăng nhập" onPress={() => submit()} loading={mutation.isPending} />
+      </View>
+      <View style={{ marginTop: 4 }}>
+        <AuthLink title="Quên mật khẩu?" onPress={() => router.push('/(auth)/forgot-password')} />
+      </View>
       {googleOn || hasBio ? <OrDivider /> : null}
       <View style={{ gap: 12 }}>
-        {googleOn ? <Button title="Tiếp tục với Google" variant="outline" size="lg" icon={<GoogleMark />} onPress={() => google.mutate()} loading={google.isPending} /> : null}
-        {hasBio ? <Button title="Đăng nhập bằng vân tay / khuôn mặt" variant="outline" size="lg" icon={<Fingerprint size={20} color={t.text} />} onPress={biometric} /> : null}
+        {googleOn ? <Button title="Tiếp tục với Google" variant="outline" size="lg" icon={<GoogleMark />} onPress={() => google.mutate()} loading={google.isPending} style={{ borderRadius: 999 }} /> : null}
+        {hasBio ? <Button title="Đăng nhập bằng vân tay / khuôn mặt" variant="outline" size="lg" icon={<Fingerprint size={20} color={t.text} />} onPress={biometric} style={{ borderRadius: 999 }} /> : null}
       </View>
-      <AuthSwitch question="Chưa có tài khoản?" action="Đăng ký" onPress={() => router.push('/(auth)/register')} />
     </AuthScaffold>
   )
 }

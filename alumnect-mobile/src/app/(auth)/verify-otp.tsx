@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation } from '@tanstack/react-query'
-import { AuthScaffold } from '@/components/AuthScaffold'
+import { AuthButton, AuthScaffold } from '@/components/AuthScaffold'
 import { Button, Input, Txt } from '@/components/ui'
 import { authApi } from '@/api/auth'
 import { toast, errMsg } from '@/lib/toast'
@@ -46,9 +46,9 @@ export default function VerifyOtpScreen() {
   }
 
   return (
-    <AuthScaffold title="Xác thực email" subtitle={`Nhập mã OTP 6 chữ số đã gửi tới ${email ?? 'email của bạn'}`}>
-      <Input label="Mã OTP" value={otp} onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))} keyboardType="number-pad" maxLength={6} error={error} placeholder="••••••" />
-      <Button title="Xác nhận" onPress={submit} loading={verify.isPending} />
+    <AuthScaffold hero="short" onBack={() => router.replace('/(auth)/login')} title="Xác thực email" subtitle={`Nhập mã OTP 6 chữ số đã gửi tới ${email ?? 'email của bạn'}`}>
+      <Input variant="float" label="Mã OTP" value={otp} onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))} keyboardType="number-pad" maxLength={6} error={error} />
+      <AuthButton title="Xác nhận" onPress={submit} loading={verify.isPending} />
       <Button
         title={cooldown > 0 ? `Gửi lại mã (${cooldown}s)` : 'Gửi lại mã'}
         variant="ghost"
