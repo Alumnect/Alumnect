@@ -15,6 +15,7 @@ export type NotificationType =
   | 'MENTORING_GROUP'
   | 'MENTORING_ACCOUNT'
   | 'CONTENT_MODERATED'
+  | 'ALUMNI_VERIFICATION'
 
 /**
  * Interface cấu trúc dữ liệu của một thông báo trả về từ máy chủ.

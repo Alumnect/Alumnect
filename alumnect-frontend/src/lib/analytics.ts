@@ -6,8 +6,8 @@
 
 declare global {
   interface Window {
-    dataLayer: any[]
-    gtag: (...args: any[]) => void
+    dataLayer?: any[]
+    gtag?: (...args: any[]) => void
   }
 }
 
@@ -51,7 +51,7 @@ export function initGA(): void {
   if (typeof window.gtag !== 'function') {
     window.gtag = function () {
       // eslint-disable-next-line prefer-rest-params
-      window.dataLayer.push(arguments)
+      window.dataLayer?.push(arguments)
     }
   }
 

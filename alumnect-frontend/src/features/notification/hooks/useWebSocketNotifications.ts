@@ -53,6 +53,12 @@ export function useWebSocketNotifications() {
               })
             }
 
+            // Khi có kết quả xét duyệt nâng cấp Cựu sinh viên (UC08), tự động làm mới trạng thái xác minh và hồ sơ cá nhân
+            if (notification.type === 'ALUMNI_VERIFICATION' || notification.targetType === 'ALUMNI_VERIFICATION') {
+              queryClient.invalidateQueries({ queryKey: ['verification-request'] })
+              queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+            }
+
             if (notification.targetType === 'MENTORING_INCOMING_REQUEST' && notification.targetId) {
               const requestId = Number(notification.targetId)
               if (Number.isInteger(requestId) && requestId > 0) {

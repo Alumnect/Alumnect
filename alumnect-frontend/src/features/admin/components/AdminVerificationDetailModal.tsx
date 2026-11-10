@@ -369,7 +369,11 @@ export function AdminVerificationDetailModal({
                 </p>
                 <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-primary-solid">
                   <User className="h-3 w-3 shrink-0" />
-                  <span>Cựu sinh viên FPTU</span>
+                  <span>
+                    {request.currentRole === 'STUDENT'
+                      ? 'Sinh viên nâng cấp lên Cựu sinh viên'
+                      : 'Cựu sinh viên FPTU'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -389,6 +393,15 @@ export function AdminVerificationDetailModal({
                   </span>
                 </div>
 
+                {request.studentCode && (
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-text-subtle dark:text-text-muted">Mã số sinh viên:</span>
+                    <span className="font-mono font-bold text-text text-right">
+                      {request.studentCode}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-text-subtle dark:text-text-muted">Email tài khoản:</span>
                   <span className="font-semibold text-text dark:text-text text-right break-all">
@@ -404,6 +417,15 @@ export function AdminVerificationDetailModal({
                       : request.majorCode || 'Chưa cung cấp'}
                   </span>
                 </div>
+
+                {request.graduationYear && (
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-text-subtle dark:text-text-muted">Năm tốt nghiệp:</span>
+                    <span className="font-bold text-text text-right">
+                      {request.graduationYear}
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-text-subtle dark:text-text-muted">Mã người dùng:</span>
