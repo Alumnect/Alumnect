@@ -13,6 +13,7 @@ import type { WorkingMode } from '@/api/mentoring'
 import { toast, errMsg } from '@/lib/toast'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { Check, Handshake, Send } from '@/components/icons'
+import { BrandIcon } from '@/components/BrandIcon'
 
 function DealChip({ label, active, onPress }: { label: string; active?: boolean; onPress: () => void }) {
   const { colors, viridian, isDark } = useMentoringTheme()
@@ -43,8 +44,13 @@ export default function DealFormScreen() {
   const { conversationId, dealId, renegotiate } = useLocalSearchParams<{ conversationId?: string; dealId?: string; renegotiate?: string }>()
   const existing = useQuery({ queryKey: ['mentoring-deal', dealId], queryFn: () => dealApi.detail(Number(dealId)), enabled: !!dealId })
 
-  const [f, setF] = useState({ taskScope: '', expectedResult: '', price: '', changeNote: '' })
-  const [deadline, setDeadline] = useState('')
+  const [f, setF] = useState({
+    taskScope: 'Cố vấn chuyên sâu kiến trúc Backend Microservices, thiết kế cơ sở dữ liệu và tích hợp message broker.',
+    expectedResult: 'Hệ thống vận hành ổn định, tài liệu API đầy đủ và hướng dẫn thực hành 1:1 qua video call.',
+    price: '2500000',
+    changeNote: '',
+  })
+  const [deadline, setDeadline] = useState(new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 19))
   const [mode, setMode] = useState<WorkingMode>('ONLINE')
   const [participation, setParticipation] = useState<'INDIVIDUAL' | 'GROUP'>('INDIVIDUAL')
   const [taskType, setTaskType] = useState('CONSULTATION')

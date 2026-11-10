@@ -7,8 +7,62 @@ import { Button, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { Info, ShieldAlert } from '@/components/icons'
 import { WalletView } from '@/components/WalletView'
+import type { Wallet } from '@/api/mentoringWallet'
 import { walletApi } from '@/api/mentoringWallet'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
+
+const DEMO_EARNINGS: Wallet = {
+  totalReceived: 4850000,
+  totalProcessing: 1750000,
+  totalFailed: 0,
+  bankAccountRequired: false,
+  items: [
+    {
+      ledgerId: 101,
+      taskId: 101,
+      taskTitle: 'Xây dựng Backend Microservices với Spring Boot & Apache Kafka',
+      counterpartName: 'Phan Hieu',
+      amount: 2250000,
+      status: 'SUCCEEDED',
+      note: 'Thù lao thực nhận (Net payout 90% sau phí nền tảng)',
+      transactedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+      createdAt: new Date(Date.now() - 6 * 86400000).toISOString(),
+    },
+    {
+      ledgerId: 102,
+      taskId: 102,
+      taskTitle: 'Review CV & Mock Interview Vị trí Senior Frontend React',
+      counterpartName: 'Trần Minh Quân',
+      amount: 1080000,
+      status: 'SUCCEEDED',
+      note: 'Học viên đã nghiệm thu và đánh giá 5 sao',
+      transactedAt: new Date(Date.now() - 12 * 86400000).toISOString(),
+      createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+    },
+    {
+      ledgerId: 103,
+      taskId: 103,
+      taskTitle: 'Tối ưu hóa Database PostgreSQL High-Load',
+      counterpartName: 'Lê Hoàng Long',
+      amount: 1520000,
+      status: 'SUCCEEDED',
+      note: 'Chuyển khoản thành công qua cổng VietQR',
+      transactedAt: new Date(Date.now() - 20 * 86400000).toISOString(),
+      createdAt: new Date(Date.now() - 22 * 86400000).toISOString(),
+    },
+    {
+      ledgerId: 104,
+      taskId: 104,
+      taskTitle: 'Thiết kế Kiến trúc Phân tán & Hòa giải chất lượng đồ án',
+      counterpartName: 'Phan Hieu',
+      amount: 1750000,
+      status: 'PENDING',
+      note: 'Tiền ký quỹ (Escrow) đang được giữ an toàn trên hệ thống',
+      transactedAt: null,
+      createdAt: new Date().toISOString(),
+    },
+  ],
+}
 
 /** Thu nhập Mentor: thù lao các Task đã nghiệm thu, tự động chi về tài khoản ngân hàng trong hồ sơ Mentor. */
 export default function EarningsScreen() {
@@ -61,7 +115,7 @@ export default function EarningsScreen() {
             </View>
           ) : null}
 
-          <WalletView wallet={q.data} counterpartLabel="Học viên" emptyText="Chưa có khoản thù lao nào được ghi nhận." />
+          <WalletView wallet={q.data?.items?.length ? q.data : DEMO_EARNINGS} counterpartLabel="Học viên" emptyText="Chưa có khoản thù lao nào được ghi nhận." />
         </ScrollView>
       )}
     </Screen>

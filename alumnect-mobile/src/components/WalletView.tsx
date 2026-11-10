@@ -110,10 +110,10 @@ export function WalletView({ wallet, counterpartLabel, emptyText }: { wallet?: W
               </View>
 
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt weight="700" size={14} style={{ color: colors.text }} numberOfLines={2}>
+                <Txt weight="700" size={14} style={{ color: colors.text, lineHeight: 20 }}>
                   {it.taskTitle || `Task #${it.taskId ?? '—'}`}
                 </Txt>
-                <Txt size={12} style={{ color: colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
+                <Txt size={12} style={{ color: colors.textSecondary, marginTop: 2, lineHeight: 18 }}>
                   {[
                     it.counterpartName ? `${counterpartLabel}: ${it.counterpartName}` : null,
                     new Date(it.transactedAt ?? it.createdAt).toLocaleDateString('vi-VN'),

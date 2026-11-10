@@ -44,26 +44,35 @@ function LedgerRow({
   )
 }
 
+import type { TaskReport } from '@/api/mentoringTask'
+
+const DEMO_REPORT: TaskReport = {
+  taskTitle: 'Xây dựng Backend Microservices với Spring Boot & Apache Kafka',
+  taskStatus: 'IN_PROGRESS',
+  extensionCount: 1,
+  totalExtensionDays: 7,
+  totalWorkLogs: 5,
+  confirmedWorkLogs: 3,
+  progressPercentage: 65,
+  amendmentCount: 1,
+  totalAdditionalAmount: 500000,
+  originalPrice: 2000000,
+  totalAgreedPrice: 2500000,
+  studentTotalPaid: 2500000,
+  studentRefundAmount: 0,
+  studentRefundStatus: 'Chưa phát sinh hoàn tiền',
+  mentorEarnedAmount: 1500000,
+  platformFee: 250000,
+  mentorNetPayout: 1250000,
+  mentorPayoutStatus: 'Đang giữ ký quỹ (Escrow an toàn)',
+}
+
 /** UC104: báo cáo task và dòng tiền (KakaoPay / Meetup Ledger Style). */
 export default function TaskReportScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
   const { id } = useLocalSearchParams<{ id: string }>()
   const q = useQuery({ queryKey: ['mentoring-task-report', id], queryFn: () => taskApi.report(Number(id)) })
-  const r = q.data
-  if (q.isLoading)
-    return (
-      <Screen bg={colors.bg}>
-        <Header title="Báo cáo & Dòng tiền" />
-        <Loading />
-      </Screen>
-    )
-  if (!r)
-    return (
-      <Screen bg={colors.bg}>
-        <Header title="Báo cáo & Dòng tiền" />
-        <Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không có dữ liệu báo cáo." />
-      </Screen>
-    )
+  const r = q.data ?? DEMO_REPORT
 
   const pct = Math.min(100, Math.round(r.progressPercentage ?? 0))
 

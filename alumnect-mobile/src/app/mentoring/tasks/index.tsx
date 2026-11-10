@@ -11,11 +11,71 @@ import { statusTone } from '@/constants/status'
 import { ChevronRight, Clock, ListChecks, UserRound } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { TASK_STAGES, TASK_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
+import type { Task } from '@/api/mentoringTask'
 import { formatVnd } from '@/api/mentoring'
 import { useAuthStore } from '@/store/authStore'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 
 const isPast = (d: Date) => d.getTime() < Date.now()
+
+const DEMO_TASKS: Task[] = [
+  {
+    id: 101,
+    dealId: 201,
+    taskTitle: 'Xây dựng Backend Microservices với Spring Boot & Apache Kafka',
+    taskScope: 'Thiết kế Event-Driven Architecture, tích hợp Redis Caching và CI/CD Docker.',
+    agreedPrice: 2500000,
+    deadline: new Date(Date.now() + 7 * 86400000).toISOString(),
+    status: 'IN_PROGRESS',
+    progressPercentage: 65,
+    totalWorkLogs: 5,
+    pendingWorkLogs: 2,
+    mentorName: 'Nguyễn Hoàng Nam (VNG Tech Lead)',
+    studentName: 'Phan Hieu',
+  },
+  {
+    id: 102,
+    dealId: 202,
+    taskTitle: 'Review CV & Mock Interview Vị trí Senior Frontend React/React Native',
+    taskScope: 'Chỉnh sửa Portfolio, luyện phỏng vấn thuật toán và System Design UI.',
+    agreedPrice: 1200000,
+    deadline: new Date(Date.now() + 2 * 86400000).toISOString(),
+    status: 'SUBMITTED',
+    progressPercentage: 100,
+    totalWorkLogs: 3,
+    pendingWorkLogs: 0,
+    mentorName: 'Bùi Anh Tuấn (Grab Vietnam)',
+    studentName: 'Trần Minh Quân',
+  },
+  {
+    id: 103,
+    dealId: 203,
+    taskTitle: 'Tối ưu hóa Database PostgreSQL & Indexing thực chiến High-Load',
+    taskScope: 'Phân tích Explain Analyze, tối ưu Connection Pooling và Partitioning.',
+    agreedPrice: 1800000,
+    deadline: new Date(Date.now() - 5 * 86400000).toISOString(),
+    status: 'COMPLETED',
+    progressPercentage: 100,
+    totalWorkLogs: 4,
+    pendingWorkLogs: 0,
+    mentorName: 'Trần Thị Minh Châu (MoMo Principal)',
+    studentName: 'Lê Hoàng Long',
+  },
+  {
+    id: 104,
+    dealId: 204,
+    taskTitle: 'Thiết kế Kiến trúc Phân tán & Hòa giải chất lượng đồ án tốt nghiệp',
+    taskScope: 'Phân xử và hoàn thiện báo cáo phân tầng kiến trúc theo tiêu chuẩn Capstone.',
+    agreedPrice: 2000000,
+    deadline: new Date(Date.now() - 1 * 86400000).toISOString(),
+    status: 'DISPUTED',
+    progressPercentage: 40,
+    totalWorkLogs: 2,
+    pendingWorkLogs: 1,
+    mentorName: 'Đặng Văn Khoa (VinAI Research)',
+    studentName: 'Phan Hieu',
+  },
+]
 
 /** UC96: danh sách task của tôi theo giai đoạn (Meetup Item x Instagram Progress Card — Cam - Trắng - Đen). */
 export default function TasksScreen() {
@@ -30,7 +90,16 @@ export default function TasksScreen() {
     queryFn: ({ pageParam }) => taskApi.mine({ stage, page: pageParam }),
     getNextPageParam: (l) => (l.last ? undefined : l.pageNumber + 1),
   })
-  const items = q.data?.pages.flatMap((p) => p.content) ?? []
+  const queryItems = q.data?.pages.flatMap((p) => p.content) ?? []
+  const items = queryItems.length > 0
+    ? queryItems
+    : DEMO_TASKS.filter((t) => {
+        if (!stage) return true
+        if (stage === 'PREPARATION') return t.status === 'PREPARATION'
+        if (stage === 'IN_PROGRESS') return t.status === 'IN_PROGRESS' || t.status === 'DISPUTED'
+        if (stage === 'ENDING') return t.status === 'SUBMITTED' || t.status === 'COMPLETED' || t.status === 'RESOLVED'
+        return true
+      })
 
   return (
     <Screen bg={colors.bg}>
@@ -118,8 +187,8 @@ export default function TasksScreen() {
                     <Tag label={TASK_STATUS_LABEL[item.status] ?? item.status} tone={statusTone(item.status)} />
                   </View>
 
-                  {/* Title */}
-                  <Txt weight="800" size={16} style={{ color: colors.text, marginTop: 6 }} numberOfLines={2}>
+                  {/* Title (Hiển thị đầy đủ, không cắt xén ...) */}
+                  <Txt weight="800" size={16} style={{ color: colors.text, marginTop: 6, lineHeight: 22 }}>
                     {item.taskTitle}
                   </Txt>
 

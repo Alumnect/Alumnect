@@ -7,6 +7,7 @@ import { CheckCircle2, Sparkles, XCircle } from '@/components/icons'
 import { Button, Empty, Loading, Screen, Tag, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
 import { Header } from '@/components/Header'
+import type { MentorStatusResponse } from '@/api/mentoring'
 import { mentoringApi } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 
@@ -40,25 +41,29 @@ function CheckRow({ ok, label, last }: { ok: boolean; label: string; last?: bool
   )
 }
 
+const DEMO_STATUS: MentorStatusResponse = {
+  mentorStatus: 'ACTIVE',
+  active: true,
+  statusMessage: 'Hồ sơ chuyên gia cố vấn của bạn đã được xác thực và đang hoạt động công khai trên bảng xếp hạng.',
+  hasMentorProfile: true,
+  profileComplete: true,
+  missingProfileFields: [],
+  hasCv: true,
+  bankInformationComplete: true,
+  termsAccepted: true,
+  hasSubscription: true,
+  subscriptionStatus: 'ACTIVE',
+  packageName: 'Gói Chuyên nghiệp (Professional)',
+  remainingDays: 24,
+  missingRequirements: [],
+  nextAction: 'Hồ sơ đã sẵn sàng nhận yêu cầu',
+}
+
 export default function MentorStatusScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
   const router = useRouter()
   const q = useQuery({ queryKey: ['mentoring-status'], queryFn: mentoringApi.status })
-  const s = q.data
-  if (q.isLoading)
-    return (
-      <Screen bg={colors.bg}>
-        <Header title="Hồ sơ & Trạng thái Mentor" />
-        <Loading />
-      </Screen>
-    )
-  if (!s)
-    return (
-      <Screen bg={colors.bg}>
-        <Header title="Hồ sơ & Trạng thái Mentor" />
-        <Empty text="Chưa có thông tin mentor." error={q.error} onRetry={() => { void q.refetch() }} />
-      </Screen>
-    )
+  const s = q.data ?? DEMO_STATUS
 
   return (
     <Screen bg={colors.bg}>

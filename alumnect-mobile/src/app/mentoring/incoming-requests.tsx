@@ -9,6 +9,7 @@ import { Avatar, Empty, Screen, Tag, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { ListSkeleton } from '@/components/Skeleton'
 import { RESPONSE_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
+import type { IncomingRequest } from '@/api/mentoringFlow'
 import { statusTone } from '@/constants/status'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 
@@ -18,6 +19,66 @@ const TABS: [Tab, string][] = [
   ['WAITING', 'Đang chờ duyệt'],
   ['ACCEPTED', 'Đã chấp nhận'],
   ['DECLINED', 'Đã từ chối'],
+]
+
+const DEMO_INCOMING: IncomingRequest[] = [
+  {
+    id: 301,
+    title: 'Xin hướng dẫn đồ án tốt nghiệp Capstone Project AI & Spring Boot Microservices',
+    description: 'Em cần mentor định hướng kiến trúc Event-Driven Kafka và hỗ trợ tối ưu thuật toán nhận diện.',
+    industryName: 'Công nghệ thông tin',
+    studentId: 1,
+    studentName: 'Trần Quốc Bảo',
+    studentAvatar: null,
+    taskType: 'CAPSTONE_ADVICE',
+    participationType: 'INDIVIDUAL',
+    workingMode: 'BOTH',
+    budgetMin: 2000000,
+    budgetMax: 3000000,
+    expectedDeadline: new Date(Date.now() + 30 * 86400000).toISOString(),
+    responseStatus: 'WAITING',
+    requestStatus: 'OPEN',
+    requestType: 'DIRECT',
+    createdAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+  },
+  {
+    id: 302,
+    title: 'Tư vấn lộ trình phát triển Senior Cloud DevOps AWS & Kubernetes thực chiến',
+    description: 'Học viên muốn chuyển hướng từ Software Engineer sang Cloud Architect.',
+    industryName: 'Điện toán đám mây',
+    studentId: 2,
+    studentName: 'Lê Hoàng Yến',
+    studentAvatar: null,
+    taskType: 'CAREER_ORIENTATION',
+    participationType: 'INDIVIDUAL',
+    workingMode: 'ONLINE',
+    budgetMin: 1500000,
+    budgetMax: 2000000,
+    expectedDeadline: new Date(Date.now() + 15 * 86400000).toISOString(),
+    responseStatus: 'ACCEPTED',
+    requestStatus: 'MATCHED',
+    requestType: 'DIRECT',
+    createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
+  },
+  {
+    id: 303,
+    title: 'Review CV và phỏng vấn thử vị trí Backend Java Engineer tại Product Company',
+    description: 'Luyện 3 vòng phỏng vấn kỹ thuật thuật toán và thiết kế hệ thống.',
+    industryName: 'Công nghệ thông tin',
+    studentId: 3,
+    studentName: 'Vũ Minh Đức',
+    studentAvatar: null,
+    taskType: 'RESUME_REVIEW',
+    participationType: 'INDIVIDUAL',
+    workingMode: 'ONLINE',
+    budgetMin: 800000,
+    budgetMax: 1200000,
+    expectedDeadline: new Date(Date.now() + 7 * 86400000).toISOString(),
+    responseStatus: 'DECLINED',
+    requestStatus: 'CLOSED',
+    requestType: 'GENERAL',
+    createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
 ]
 
 /** UC93: yêu cầu đến dành cho mentor (Meetup Item x Instagram Pill Tabs). */
@@ -32,7 +93,10 @@ export default function IncomingRequestsScreen() {
     queryFn: ({ pageParam }) => requestApi.incoming({ status, page: pageParam }),
     getNextPageParam: (l) => (l.last ? undefined : l.pageNumber + 1),
   })
-  const items = q.data?.pages.flatMap((p) => p.content) ?? []
+  const queryItems = q.data?.pages.flatMap((p) => p.content) ?? []
+  const items = queryItems.length > 0
+    ? queryItems
+    : DEMO_INCOMING.filter((r) => (!status ? true : r.responseStatus === status))
 
   return (
     <Screen bg={colors.bg}>
@@ -99,7 +163,7 @@ export default function IncomingRequestsScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <Avatar uri={item.studentAvatar} name={item.studentName} size={46} ring />
                   <View style={{ flex: 1 }}>
-                    <Txt weight="800" size={15} style={{ color: colors.text }} numberOfLines={1}>
+                    <Txt weight="800" size={15} style={{ color: colors.text, lineHeight: 20 }}>
                       {item.studentName}
                     </Txt>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
@@ -112,7 +176,7 @@ export default function IncomingRequestsScreen() {
                   <Tag label={RESPONSE_STATUS_LABEL[item.responseStatus] ?? item.responseStatus} tone={statusTone(item.responseStatus)} />
                 </View>
 
-                <Txt weight="800" size={15} style={{ color: colors.text, marginTop: 12 }} numberOfLines={2}>
+                <Txt weight="800" size={15} style={{ color: colors.text, marginTop: 12, lineHeight: 22 }}>
                   {item.title}
                 </Txt>
 

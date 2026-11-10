@@ -7,10 +7,31 @@ import { Button, Empty, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { PaymentSheet } from '@/components/PaymentSheet'
 import { formatVnd, mentoringApi } from '@/api/mentoring'
-import type { CheckoutResponse } from '@/api/mentoring'
+import type { CheckoutResponse, MentorPackage } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
 import { CheckCircle2, CreditCard, Sparkles } from '@/components/icons'
+
+const DEMO_PACKAGES: MentorPackage[] = [
+  {
+    id: 1,
+    code: 'STANDARD_1M',
+    name: 'Gói Tiêu Chuẩn (Standard)',
+    durationMonths: 1,
+    price: 199000,
+    status: 'ACTIVE',
+    description: 'Dành cho mentor khởi đầu: nhận tối đa 5 yêu cầu cố vấn/tháng và hiển thị trên danh bạ trường.',
+  },
+  {
+    id: 2,
+    code: 'PRO_3M',
+    name: 'Gói Chuyên Nghiệp (Professional)',
+    durationMonths: 3,
+    price: 499000,
+    status: 'ACTIVE',
+    description: 'Dành cho mentor tích cực: không giới hạn yêu cầu, ưu tiên hiển thị Top 10 Bảng vàng.',
+  },
+]
 
 /** UC82–83: chọn gói mentor và thanh toán PayOS (Meetup x Kakao Pricing Cards — Cam - Trắng - Đen). */
 export default function PlansScreen() {
@@ -19,6 +40,7 @@ export default function PlansScreen() {
   const qc = useQueryClient()
   const [checkout, setCheckout] = useState<CheckoutResponse | null>(null)
   const q = useQuery({ queryKey: ['mentor-packages'], queryFn: mentoringApi.packages })
+  const packages = (q.data && q.data.length > 0) ? q.data : DEMO_PACKAGES
 
   const pay = useMutation({
     mutationFn: async (packageId: number) => {
@@ -47,7 +69,7 @@ export default function PlansScreen() {
         <Loading />
       ) : (
         <FlashList
-          data={q.data ?? []}
+          data={packages}
           keyExtractor={(p) => String(p.id)}
           contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
           ListHeaderComponent={

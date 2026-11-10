@@ -22,6 +22,30 @@ import { WORKING_MODE_LABEL, formatVnd } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
 
+const DEMO_INCOMING_DETAIL = (rid: number) => ({
+  id: rid || 301,
+  title: 'Xin hướng dẫn đồ án tốt nghiệp Capstone Project AI & Spring Boot Microservices',
+  description: 'Em hiện đang là sinh viên năm cuối ngành Kỹ thuật Phần mềm. Đồ án của nhóm em hướng tới xây dựng sàn thương mại điện tử chịu tải lớn tích hợp gợi ý sản phẩm thông minh bằng AI. Em mong muốn được mentor đồng hành để định hướng thiết kế kiến trúc sạch, cấu hình Kafka topic chuẩn và review code định kỳ hàng tuần.',
+  industryName: 'Công nghệ thông tin',
+  studentId: 1,
+  studentName: 'Trần Quốc Bảo',
+  studentAvatar: null,
+  taskType: 'CAPSTONE_ADVICE',
+  participationType: 'ONE_ON_ONE' as const,
+  workingMode: 'HYBRID' as const,
+  budgetMin: 2000000,
+  budgetMax: 3000000,
+  expectedDeadline: new Date(Date.now() + 30 * 86400000).toISOString(),
+  responseStatus: 'WAITING',
+  createdAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+  attachments: [
+    { id: 1, fileName: 'De_cuong_do_an_capstone_v1.pdf', fileUrl: 'https://alumnect.online/docs/sample.pdf' },
+  ],
+  canRespond: true,
+  canMessage: true,
+  conversationId: 301,
+})
+
 /** UC93: mentor xem chi tiết, chấp nhận / từ chối yêu cầu (Meetup x Kakao 2026). */
 export default function IncomingDetailScreen() {
   const { colors, viridian } = useMentoringTheme()
@@ -51,21 +75,7 @@ export default function IncomingDetailScreen() {
     },
     onError: (e) => toast.error(errMsg(e)),
   })
-  const r = q.data
-  if (q.isLoading)
-    return (
-      <Screen keyboard bg={colors.bg}>
-        <Header title="Chi tiết yêu cầu đến" />
-        <Loading />
-      </Screen>
-    )
-  if (!r)
-    return (
-      <Screen keyboard bg={colors.bg}>
-        <Header title="Chi tiết yêu cầu đến" />
-        <Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy yêu cầu." />
-      </Screen>
-    )
+  const r = q.data ?? DEMO_INCOMING_DETAIL(Number(id))
 
   return (
     <Screen keyboard bg={colors.bg}>

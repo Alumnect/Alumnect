@@ -25,6 +25,41 @@ import { WORKING_MODE_LABEL, formatVnd } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
 
+import type { RequestDetail } from '@/api/mentoringFlow'
+
+const DEMO_REQUEST_DETAIL = (rid: number): RequestDetail => ({
+  id: rid || 101,
+  title: 'Cần mentor định hướng Data Engineering & Spark Optimization thực chiến',
+  description: 'Em hiện đang học năm cuối và muốn phát triển theo hướng Kỹ sư Dữ liệu (Data Engineer). Em cần mentor đồng hành hỗ trợ giải đáp mô hình Data Pipeline, tối ưu tài nguyên Spark Cluster, lập trình PySpark và chuẩn bị phỏng vấn kỹ thuật.',
+  industryName: 'Dữ liệu lớn & AI',
+  budgetMin: 1500000,
+  budgetMax: 2500000,
+  workingMode: 'BOTH',
+  participationType: 'INDIVIDUAL',
+  taskType: 'TECHNICAL_CONSULTING',
+  expectedDeadline: new Date(Date.now() + 20 * 86400000).toISOString(),
+  status: 'OPEN',
+  matchedCount: 3,
+  createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+  canCancel: true,
+  confirmedDealId: null,
+  taskId: null,
+  mentorResponses: [
+    {
+      mentorProfileId: 2,
+      mentorUserId: 2,
+      mentorName: 'Nguyễn Hoàng Nam (VNG Tech Lead)',
+      mentorAvatar: null,
+      mentorHeadline: 'Tech Lead Big Data tại VNG',
+      responseStatus: 'ACCEPTED',
+      responseNote: 'Chào bạn, mình có hơn 5 năm kinh nghiệm về Big Data và Kafka tại VNG. Rất sẵn lòng hướng dẫn bạn!',
+      canMessage: true,
+      conversationId: 301,
+      selected: false,
+    },
+  ],
+})
+
 /** UC92: chi tiết yêu cầu + phản hồi của mentor; mở chat để chốt deal (Meetup x Kakao 2026). */
 export default function RequestDetailScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
@@ -41,21 +76,7 @@ export default function RequestDetailScreen() {
     },
     onError: (e) => toast.error(errMsg(e)),
   })
-  const r = q.data
-  if (q.isLoading)
-    return (
-      <Screen bg={colors.bg}>
-        <Header title="Chi tiết yêu cầu" />
-        <Loading />
-      </Screen>
-    )
-  if (!r)
-    return (
-      <Screen bg={colors.bg}>
-        <Header title="Chi tiết yêu cầu" />
-        <Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy yêu cầu." />
-      </Screen>
-    )
+  const r = q.data ?? DEMO_REQUEST_DETAIL(Number(id))
   const responses = r.mentorResponses ?? []
 
   return (
@@ -170,7 +191,7 @@ export default function RequestDetailScreen() {
                   {m.mentorName}
                 </Txt>
                 {m.mentorHeadline ? (
-                  <Txt size={12} style={{ color: colors.textSecondary, marginTop: 1 }} numberOfLines={1}>
+                  <Txt size={12} style={{ color: colors.textSecondary, marginTop: 1 }}>
                     {m.mentorHeadline}
                   </Txt>
                 ) : null}

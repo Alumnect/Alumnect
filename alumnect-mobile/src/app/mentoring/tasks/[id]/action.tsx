@@ -13,6 +13,7 @@ import type { WorkLogPayload } from '@/api/mentoringTask'
 import { pickImage, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
+import { buildDemoTaskDetail } from './index'
 
 const TITLES: Record<string, string> = {
   worklog: 'Nhật ký công việc',
@@ -54,7 +55,9 @@ export default function TaskActionScreen() {
   const set = (k: string) => (v: string) => setF((p) => ({ ...p, [k]: v }))
   const num = (k: string) => (f[k] ? Number(f[k]) : 0)
 
-  const existing = workLogId ? task.data?.workLogs.find((w) => w.id === Number(workLogId)) : undefined
+  const currentTask = task.data ?? buildDemoTaskDetail(tid, false)
+
+  const existing = workLogId ? currentTask?.workLogs.find((w) => w.id === Number(workLogId)) : undefined
   if (existing && !loaded) {
     setLoaded(true)
     setF({
@@ -209,14 +212,14 @@ export default function TaskActionScreen() {
     <Input label={label} value={f[k] ?? ''} onChangeText={set(k)} multiline={multiline} error={errors[k]} />
   )
 
-  if (task.isLoading)
+  if (task.isLoading && !currentTask)
     return (
       <Screen bg={colors.bg}>
         <Header title={TITLES[type!] ?? 'Task'} />
         <Loading />
       </Screen>
     )
-  if (!task.data)
+  if (!currentTask)
     return (
       <Screen bg={colors.bg}>
         <Header title={TITLES[type!] ?? 'Task'} />
@@ -233,7 +236,7 @@ export default function TaskActionScreen() {
 
   return (
     <Screen bg={colors.bg}>
-      <Header title={TITLES[type!] ?? 'Thao tác nhiệm vụ'} subtitle={task.data.overview.taskTitle} />
+      <Header title={TITLES[type!] ?? 'Thao tác nhiệm vụ'} subtitle={currentTask.overview.taskTitle} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>

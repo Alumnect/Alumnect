@@ -10,8 +10,62 @@ import { BrandIcon } from '@/components/BrandIcon'
 import { Header } from '@/components/Header'
 import { ListSkeleton } from '@/components/Skeleton'
 import { REQUEST_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
+import type { MentoringRequest } from '@/api/mentoringFlow'
 import { statusTone } from '@/constants/status'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
+
+const DEMO_MY_REQUESTS: MentoringRequest[] = [
+  {
+    id: 101,
+    requestType: 'GENERAL',
+    title: 'Cần mentor định hướng Data Engineering & Spark Optimization thực chiến',
+    description: 'Em muốn tìm hiểu lộ trình xây dựng Data Lakehouse, tối ưu Spark Job và thiết kế Data Pipeline bằng Airflow.',
+    industryName: 'Dữ liệu lớn & AI',
+    budgetMin: 1500000,
+    budgetMax: 2500000,
+    workingMode: 'BOTH',
+    participationType: 'INDIVIDUAL',
+    taskType: 'TECHNICAL_CONSULTING',
+    expectedDeadline: new Date(Date.now() + 20 * 86400000).toISOString(),
+    status: 'OPEN',
+    matchedCount: 4,
+    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: 102,
+    requestType: 'DIRECT',
+    targetMentorName: 'Bùi Anh Tuấn (Grab Vietnam)',
+    title: 'Review CV & Mock Interview Vị trí Senior Frontend React/React Native',
+    description: 'Chỉnh sửa Portfolio, luyện phỏng vấn thuật toán và System Design UI.',
+    industryName: 'Công nghệ thông tin',
+    budgetMin: 1000000,
+    budgetMax: 1500000,
+    workingMode: 'ONLINE',
+    participationType: 'INDIVIDUAL',
+    taskType: 'RESUME_REVIEW',
+    expectedDeadline: new Date(Date.now() + 5 * 86400000).toISOString(),
+    status: 'MATCHED',
+    matchedCount: 1,
+    createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+    directMentorResponseStatus: 'ACCEPTED',
+  },
+  {
+    id: 103,
+    requestType: 'GENERAL',
+    title: 'Cố vấn Tối ưu hóa Database PostgreSQL & Indexing High-Load',
+    description: 'Phân tích truy vấn chậm, cấu hình Partitioning cho hệ thống thanh toán.',
+    industryName: 'Công nghệ thông tin',
+    budgetMin: 1800000,
+    budgetMax: 2000000,
+    workingMode: 'BOTH',
+    participationType: 'INDIVIDUAL',
+    taskType: 'TECHNICAL_CONSULTING',
+    expectedDeadline: new Date(Date.now() - 10 * 86400000).toISOString(),
+    status: 'CLOSED',
+    matchedCount: 2,
+    createdAt: new Date(Date.now() - 15 * 86400000).toISOString(),
+  },
+]
 
 type Tab = 'ALL' | 'OPEN' | 'MATCHED' | 'DONE'
 const TABS: [Tab, string][] = [
@@ -32,7 +86,8 @@ export default function MyRequestsScreen() {
     queryFn: ({ pageParam }) => requestApi.mine(pageParam),
     getNextPageParam: (l) => (l.last ? undefined : l.pageNumber + 1),
   })
-  const all = q.data?.pages.flatMap((p) => p.content) ?? []
+  const queryAll = q.data?.pages.flatMap((p) => p.content) ?? []
+  const all = queryAll.length > 0 ? queryAll : DEMO_MY_REQUESTS
   const openCount = all.filter((r) => r.status === 'OPEN').length
   const matchedCount = all.filter((r) => r.status === 'MATCHED').length
   const doneCount = all.filter((r) => ['CLOSED', 'CANCELLED', 'EXPIRED'].includes(r.status)).length
@@ -213,7 +268,7 @@ export default function MyRequestsScreen() {
                 </View>
 
                 {/* Title */}
-                <Txt weight="800" size={16} style={{ color: colors.text, marginTop: 6 }} numberOfLines={2}>
+                <Txt weight="800" size={16} style={{ color: colors.text, marginTop: 6, lineHeight: 22 }}>
                   {item.title}
                 </Txt>
 
@@ -237,7 +292,7 @@ export default function MyRequestsScreen() {
                 <View style={[styles.footerRow, { borderTopColor: colors.borderSubtle }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                     <BrandIcon name="people" size={16} />
-                    <Txt size={12} weight="600" style={{ color: colors.text }} numberOfLines={1}>
+                    <Txt size={12} weight="600" style={{ color: colors.text, lineHeight: 18 }}>
                       {item.requestType === 'DIRECT'
                         ? `Mentor: ${item.targetMentorName ?? '—'}`
                         : `${item.matchedCount} mentor phù hợp`}

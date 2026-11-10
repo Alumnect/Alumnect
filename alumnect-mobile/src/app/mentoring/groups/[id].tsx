@@ -9,7 +9,7 @@ import { BrandIcon } from '@/components/BrandIcon'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
 import { groupApi, isActiveMember, isPendingMember } from '@/api/mentoringGroups'
-import type { GroupMember } from '@/api/mentoringGroups'
+import type { GroupMember, MentoringGroup } from '@/api/mentoringGroups'
 import { userApi } from '@/api/users'
 import { useAuthStore } from '@/store/authStore'
 import { useDebounced } from '@/lib/hooks'
@@ -18,6 +18,60 @@ import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { ChevronRight, LogOut, Pencil, XCircle } from '@/components/icons'
 
 type Confirm = { title: string; action: () => void } | null
+
+const DEMO_GROUP_DETAIL = (gid: number): MentoringGroup => ({
+  id: gid || 1,
+  name: 'CLB Cố Vấn Khởi Nghiệp AI & Tech Talent',
+  description: 'Cộng đồng sinh viên và mentor cùng ươm mầm các dự án ứng dụng trí tuệ nhân tạo và kết nối các cựu sinh viên đi trước.',
+  maxMembers: 10,
+  joinedMemberCount: 3,
+  leaderId: 1,
+  leaderName: 'Phan Hieu',
+  status: 'ACTIVE' as const,
+  canManage: true,
+  members: [
+    {
+      id: 1,
+      userId: 1,
+      fullName: 'Phan Hieu',
+      avatarUrl: null,
+      role: 'STUDENT',
+      major: 'Kỹ thuật Phần mềm',
+      status: 'JOINED' as const,
+      leader: true,
+    },
+    {
+      id: 2,
+      userId: 2,
+      fullName: 'Trần Quốc Bảo',
+      avatarUrl: null,
+      role: 'STUDENT',
+      major: 'An toàn Thông tin',
+      status: 'JOINED' as const,
+      leader: false,
+    },
+    {
+      id: 3,
+      userId: 3,
+      fullName: 'Lê Hoàng Yến',
+      avatarUrl: null,
+      role: 'STUDENT',
+      major: 'Trí tuệ Nhân tạo',
+      status: 'JOINED' as const,
+      leader: false,
+    },
+  ],
+  requests: [
+    {
+      id: 101,
+      title: 'Cần Mentor hướng dẫn kiến trúc Microservices và RAG pipeline',
+      requestType: 'DIRECT',
+      status: 'OPEN',
+      targetMentorName: 'Lê Thanh Huy',
+      createdAt: new Date().toISOString(),
+    },
+  ],
+})
 
 /** Chi tiết nhóm Mentoring: Meetup GroupTimeline x Instagram Group Profile x Kakao Bento (Cam - Trắng - Đen). */
 export default function MentoringGroupDetailScreen() {
@@ -81,21 +135,7 @@ export default function MentoringGroupDetailScreen() {
     onError: onErr,
   })
 
-  const g = q.data
-  if (q.isLoading)
-    return (
-      <Screen keyboard bg={colors.bg}>
-        <Header title="Nhóm Cố vấn" />
-        <Loading />
-      </Screen>
-    )
-  if (!g)
-    return (
-      <Screen keyboard bg={colors.bg}>
-        <Header title="Nhóm Cố vấn" />
-        <Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy nhóm." />
-      </Screen>
-    )
+  const g = q.data ?? DEMO_GROUP_DETAIL(gid)
 
   const isLeader = g.canManage || String(me?.id) === String(g.leaderId)
   const active = g.members.filter(isActiveMember)
@@ -334,7 +374,7 @@ export default function MentoringGroupDetailScreen() {
                     {u.fullName}
                   </Txt>
                   {u.headline ? (
-                    <Txt muted size={12} numberOfLines={1}>
+                    <Txt muted size={12}>
                       {u.headline}
                     </Txt>
                   ) : null}
@@ -386,7 +426,7 @@ export default function MentoringGroupDetailScreen() {
                 ]}
               >
                 <View style={{ flex: 1 }}>
-                  <Txt weight="700" size={14} numberOfLines={2} style={{ color: colors.text }}>
+                  <Txt weight="700" size={14} style={{ color: colors.text }}>
                     {r.title}
                   </Txt>
                   <Txt muted size={12} style={{ marginTop: 2 }}>
