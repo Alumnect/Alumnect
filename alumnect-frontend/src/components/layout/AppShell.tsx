@@ -15,6 +15,7 @@ import {
   Sun,
   Moon,
   GlobeSimple,
+  GraduationCap,
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
@@ -34,6 +35,7 @@ import { Button } from '@/components/ui/Button'
 import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { MentorshipLayout } from '@/features/mentorship/components/MentorshipLayout'
+import { UpgradeAlumniModal, useMyVerificationStatus } from '@/features/verification'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 /* ----------------------------- small popover ----------------------------- */
@@ -124,8 +126,12 @@ export function AppShell() {
   const [sheet, setSheet] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [activePopover, setActivePopover] = useState<'apps' | 'account' | null>(null)
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
+  const { data: verificationStatus } = useMyVerificationStatus({
+    enabled: isAuthenticated && user?.role === 'STUDENT',
+  })
   const keyword = useSearchStore((s) => s.keyword)
   const setKeyword = useSearchStore((s) => s.setKeyword)
   const { theme, setTheme } = useThemeStore()
@@ -516,6 +522,19 @@ export function AppShell() {
                         </Link>
                       )
                     })}
+                  {user?.role === 'STUDENT' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActivePopover(null)
+                        setUpgradeModalOpen(true)
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text cursor-pointer"
+                    >
+                      <GraduationCap size={18} weight="regular" className="shrink-0 text-text-subtle" />
+                      <span>Nâng cấp Cựu sinh viên</span>
+                    </button>
+                  )}
                   <div className="my-1 h-px bg-border" />
                   <button
                     type="button"
@@ -828,6 +847,15 @@ export function AppShell() {
 
       {/* Popup mời đăng nhập (kiểu Facebook) — hiện khi Guest cố tương tác */}
       <LoginPromptModal />
+
+      {/* Modal Nâng cấp lên Cựu sinh viên (mở từ Menu Tài khoản góc trên phải) */}
+      {isAuthenticated && user?.role === 'STUDENT' && (
+        <UpgradeAlumniModal
+          isOpen={upgradeModalOpen}
+          onClose={() => setUpgradeModalOpen(false)}
+          verificationStatus={verificationStatus}
+        />
+      )}
 
       {/* Nút Cuộn nhanh lên đầu trang (Back to top) */}
       <AnimatePresence>

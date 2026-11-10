@@ -3,11 +3,13 @@ package com.alumnect.alumnect_backend.service.verification;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.AccountStatus;
 import com.alumnect.alumnect_backend.common.enums.VerificationStatus;
+import com.alumnect.alumnect_backend.dao.user.RoleRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dao.verification.VerificationRequestRepository;
 import com.alumnect.alumnect_backend.dto.request.verification.AdminReviewVerificationDto;
 import com.alumnect.alumnect_backend.dto.response.verification.AdminVerificationRequestDto;
+import com.alumnect.alumnect_backend.entity.user.Role;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
 import com.alumnect.alumnect_backend.entity.verification.VerificationRequest;
@@ -43,6 +45,7 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
     private final VerificationRequestRepository verificationRequestRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final RoleRepository roleRepository;
     private final AdminVerificationMapper adminVerificationMapper;
     private final NotificationService notificationService;
 
@@ -126,6 +129,7 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
         }
 
         User user = verificationRequest.getUser();
+        boolean isStudentUpgrade = user.getRole() != null && "STUDENT".equalsIgnoreCase(user.getRole().getName());
 
         verificationRequest.setStatus(decision);
         verificationRequest.setReviewedBy(adminUser);
@@ -133,14 +137,32 @@ public class AdminVerificationServiceImpl implements AdminVerificationService {
         verificationRequest.setReviewedAt(Instant.now());
 
         if (decision == VerificationStatus.APPROVED) {
+            if (isStudentUpgrade) {
+                Role alumniRole = roleRepository.findByName("ALUMNI")
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vai trò ALUMNI trong hệ thống"));
+                user.setRole(alumniRole);
+            }
             user.setAccountVerified(true);
             user.setAccountStatus(AccountStatus.ACTIVE);
             userRepository.save(user);
-            notificationService.sendWelcomeNotification(user);
+            if (isStudentUpgrade) {
+                notificationService.sendAlumniVerificationResultNotification(adminUser, user, verificationRequest, true);
+            } else {
+                notificationService.sendWelcomeNotification(user);
+            }
         } else if (decision == VerificationStatus.REJECTED) {
-            user.setAccountVerified(false);
-            user.setAccountStatus(AccountStatus.LOCKED);
-            userRepository.save(user);
+            if (isStudentUpgrade) {
+                // Sinh viên đang hoạt động xin nâng cấp bị từ chối: giữ nguyên vai trò STUDENT và trạng thái ACTIVE
+                user.setAccountStatus(AccountStatus.ACTIVE);
+                user.setAccountVerified(true);
+                userRepository.save(user);
+                notificationService.sendAlumniVerificationResultNotification(adminUser, user, verificationRequest, false);
+            } else {
+                // Cựu sinh viên đăng ký mới (WAITING_APPROVAL) bị từ chối: khóa tài khoản
+                user.setAccountVerified(false);
+                user.setAccountStatus(AccountStatus.LOCKED);
+                userRepository.save(user);
+            }
         }
 
         verificationRequestRepository.save(verificationRequest);

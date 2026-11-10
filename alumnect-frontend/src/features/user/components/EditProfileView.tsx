@@ -19,6 +19,7 @@ import { Card, toast, SelectDropdown, FadeSwitch } from '@/components/ui'
 import { ProvinceSelect } from './ProvinceSelect'
 import { CampusSelect } from './CampusSelect'
 import { useMajors } from '@/features/auth/hooks/useAuth'
+import { AlumniUpgradeBanner } from '@/features/verification'
 
 import { useUpdateOwnProfile } from '../hooks/useUserMutations'
 import type { UserProfileResponse, UpdateProfileRequest, UserSkillRequest } from '../model/userTypes'
@@ -365,6 +366,12 @@ export function EditProfileView({ profile, onCancel, onSuccess }: EditProfileVie
                   />
                 </div>
               </div>
+
+              {profile.role === 'STUDENT' && (
+                <div className="pt-2 border-t border-border">
+                  <AlumniUpgradeBanner profile={profile} compact />
+                </div>
+              )}
             </Card>
           )}
 

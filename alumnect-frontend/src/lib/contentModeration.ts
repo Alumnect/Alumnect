@@ -46,7 +46,7 @@ const WEAK_TERMS: string[] = [
 ]
 
 /** Khử dấu tiếng Việt để kiểm tra đồng dạng. */
-function removeAccents(str: string): string {
+export function removeAccents(str: string): string {
   return str
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
