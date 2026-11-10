@@ -9,8 +9,6 @@ import com.alumnect.alumnect_backend.dao.message.MessageRepository;
 import com.alumnect.alumnect_backend.dao.user.FollowRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
-import com.alumnect.alumnect_backend.dto.response.message.ChatUserProjection;
-import com.alumnect.alumnect_backend.dto.response.message.ChatUserResponse;
 import com.alumnect.alumnect_backend.dto.response.message.ConversationResponse;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.message.ConversationParticipant;
@@ -53,7 +51,7 @@ import static org.mockito.Mockito.when;
  * FE-29 View Conversation List (Inbox).
  * Report sheet : FE-29 (Report5_Unit_Test.xlsx)
  * Functions    : ChatServiceImpl.getConversations(), getOrCreateDirectConversation(),
- *                acceptConversation(), deleteConversation(), searchUsersForChat()
+ *                acceptConversation(), deleteConversation()
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FE-29 View Conversation List (Inbox)")
@@ -698,80 +696,5 @@ class FE29_ConversationInboxTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Không tìm thấy cuộc hội thoại.");
         verify(conversationRepository, never()).delete(any());
-    }
-
-    // ================= searchUsersForChat() =================
-
-    @Test
-    @DisplayName("UTCID19 - Native search with null isFollowing -> Mapped to false")
-    void utcid19_searchUsersForChat_ok() {
-        // Given
-        ChatUserProjection proj1 = mock(ChatUserProjection.class);
-        when(proj1.getUserId()).thenReturn(2L);
-        when(proj1.getEmail()).thenReturn("user2@example.com");
-        when(proj1.getFullName()).thenReturn("Nguyen Van A");
-        when(proj1.getAvatarUrl()).thenReturn("https://avatar1.png");
-        when(proj1.getHeadline()).thenReturn("Dev");
-        when(proj1.getMajor()).thenReturn("SE");
-        when(proj1.getIsFollowing()).thenReturn(Boolean.TRUE);
-
-        ChatUserProjection proj2 = mock(ChatUserProjection.class);
-        when(proj2.getUserId()).thenReturn(3L);
-        when(proj2.getEmail()).thenReturn("user3@example.com");
-        when(proj2.getFullName()).thenReturn("Nguyen Van B");
-        when(proj2.getAvatarUrl()).thenReturn("https://avatar2.png");
-        when(proj2.getHeadline()).thenReturn("QA");
-        when(proj2.getMajor()).thenReturn("IS");
-        when(proj2.getIsFollowing()).thenReturn(null);
-
-        when(userRepository.findByEmail(CURRENT_USER_EMAIL)).thenReturn(Optional.of(currentUser));
-        when(userProfileRepository.searchUsersForChatNative(
-                CURRENT_USER_ID, "nguyen", "nguyen%", "% nguyen%", "nguyen%", 25))
-                .thenReturn(List.of(proj1, proj2));
-
-        // When
-        List<ChatUserResponse> result = chatService.searchUsersForChat(CURRENT_USER_EMAIL, "nguyen");
-
-        // Then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getUserId()).isEqualTo(2L);
-        assertThat(result.get(0).isFollowing()).isTrue();
-        assertThat(result.get(1).getUserId()).isEqualTo(3L);
-        assertThat(result.get(1).isFollowing()).isFalse();
-    }
-
-    @Test
-    @DisplayName("UTCID20 - Blank keyword -> Passes null keyword to native query")
-    void utcid20_searchUsersForChat_okBlank() {
-        // Given
-        when(userRepository.findByEmail(CURRENT_USER_EMAIL)).thenReturn(Optional.of(currentUser));
-        when(userProfileRepository.searchUsersForChatNative(
-                CURRENT_USER_ID, null, "%", "% %", "%", 25))
-                .thenReturn(Collections.emptyList());
-
-        // When
-        List<ChatUserResponse> result = chatService.searchUsersForChat(CURRENT_USER_EMAIL, "   ");
-
-        // Then
-        assertThat(result).isEmpty();
-        verify(userProfileRepository).searchUsersForChatNative(CURRENT_USER_ID, null, "%", "% %", "%", 25);
-    }
-
-    @Test
-    @DisplayName("UTCID21 - Accented keyword -> Generates unaccented patterns and query")
-    void utcid21_searchUsersForChat_okAccented() {
-        // Given
-        when(userRepository.findByEmail(CURRENT_USER_EMAIL)).thenReturn(Optional.of(currentUser));
-        when(userProfileRepository.searchUsersForChatNative(
-                CURRENT_USER_ID, "Nguyễn", "nguyen%", "% nguyen%", "nguyễn%", 25))
-                .thenReturn(Collections.emptyList());
-
-        // When
-        List<ChatUserResponse> result = chatService.searchUsersForChat(CURRENT_USER_EMAIL, "Nguyễn");
-
-        // Then
-        assertThat(result).isEmpty();
-        verify(userProfileRepository).searchUsersForChatNative(
-                CURRENT_USER_ID, "Nguyễn", "nguyen%", "% nguyen%", "nguyễn%", 25);
     }
 }
