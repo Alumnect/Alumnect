@@ -1,5 +1,6 @@
 package com.alumnect.alumnect_backend.unit;
 
+import com.alumnect.alumnect_backend.common.enums.MentoringAmendmentStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringDealStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringLedgerStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringLedgerTransactionType;
@@ -21,6 +22,7 @@ import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTaskPaymen
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDeal;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringRequest;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskAmendment;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskPayment;
 import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.user.User;
@@ -39,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -430,5 +433,205 @@ class FE56_TaskPaymentTest {
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Chữ ký Webhook PayOS không hợp lệ.");
         verify(paymentRepository, never()).findForUpdateByOrderCode(any());
+    }
+
+    // ================= createTaskPayment() - top-up for an accepted amendment =================
+
+    private static final Long AMENDMENT_ID = 300L;
+
+    private MentoringTask topUpTask(MentoringTaskStatus status) {
+        return MentoringTask.builder()
+                .id(400L)
+                .deal(deal)
+                .request(mentoringRequest)
+                .student(studentUser)
+                .mentor(mentorUser)
+                .status(status)
+                .agreedPrice(BigDecimal.valueOf(500000))
+                .deadline(Instant.now().plus(7, ChronoUnit.DAYS))
+                .build();
+    }
+
+    private MentoringTaskAmendment topUpAmendment(MentoringTask task, MentoringAmendmentStatus status, long extra) {
+        return MentoringTaskAmendment.builder()
+                .id(AMENDMENT_ID)
+                .task(task)
+                .status(status)
+                .additionalAmount(BigDecimal.valueOf(extra))
+                .newScope("Mở rộng phạm vi: thêm module báo cáo")
+                .build();
+    }
+
+    private CreateTaskPaymentRequest topUpRequest() {
+        CreateTaskPaymentRequest dto = new CreateTaskPaymentRequest();
+        dto.setDealId(DEAL_ID);
+        dto.setAmendmentId(AMENDMENT_ID);
+        return dto;
+    }
+
+    @Test
+    @DisplayName("UTCID14 - Amendment AWAITING_TOPUP with extra 150,000; caller is the student -> createTaskPayment(amendmentId) -> PayOS link for 150,000 and transaction PENDING linked to the amendment")
+    void utcid14_createTopUpPayment_ok() {
+        // Given
+        MentoringTask task = topUpTask(MentoringTaskStatus.IN_PROGRESS);
+        MentoringTaskAmendment amendment = topUpAmendment(task, MentoringAmendmentStatus.AWAITING_TOPUP, 150000);
+        when(dealRepository.findById(DEAL_ID)).thenReturn(Optional.of(deal));
+        when(amendmentRepository.findByIdForUpdate(AMENDMENT_ID)).thenReturn(Optional.of(amendment));
+        when(paymentRepository.findFirstByAmendmentIdAndPaymentStatusOrderByCreatedAtDesc(AMENDMENT_ID, PaymentStatus.PENDING))
+                .thenReturn(Optional.empty());
+        CreatePaymentLinkResponse payOsResp = org.mockito.Mockito.mock(CreatePaymentLinkResponse.class);
+        when(payOSGateway.createPaymentLink(any(CreatePaymentLinkRequest.class))).thenReturn(payOsResp);
+        when(paymentRepository.save(any(MentoringTaskPayment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(taskMapper.toCheckoutResponse(any(MentoringTaskPayment.class))).thenReturn(new MentoringTaskPaymentCheckoutResponse());
+
+        // When
+        MentoringTaskPaymentCheckoutResponse response = taskPaymentService.createTaskPayment(STUDENT_USER_ID, topUpRequest());
+
+        // Then
+        assertThat(response).isNotNull();
+        ArgumentCaptor<CreatePaymentLinkRequest> payOsCaptor = ArgumentCaptor.forClass(CreatePaymentLinkRequest.class);
+        verify(payOSGateway).createPaymentLink(payOsCaptor.capture());
+        assertThat(payOsCaptor.getValue().getAmount()).isEqualTo(150000L);
+        ArgumentCaptor<MentoringTaskPayment> saved = ArgumentCaptor.forClass(MentoringTaskPayment.class);
+        verify(paymentRepository).save(saved.capture());
+        assertThat(saved.getValue().getPaymentStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(saved.getValue().getAmendment()).isSameAs(amendment);
+        assertThat(saved.getValue().getAmount()).isEqualByComparingTo(BigDecimal.valueOf(150000));
+    }
+
+    @Test
+    @DisplayName("UTCID15 - Caller is the mentor -> createTaskPayment(amendmentId) -> ForbiddenException; amendment not loaded")
+    void utcid15_createTopUpPayment_forbiddenNotStudent() {
+        // Given
+        when(dealRepository.findById(DEAL_ID)).thenReturn(Optional.of(deal));
+
+        // When + Then
+        assertThatThrownBy(() -> taskPaymentService.createTaskPayment(MENTOR_USER_ID, topUpRequest()))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("Chỉ có Học viên (Student) tham gia Deal mới có quyền thực hiện thanh toán nhiệm vụ này.");
+        verify(amendmentRepository, never()).findByIdForUpdate(any());
+        verify(payOSGateway, never()).createPaymentLink(any());
+    }
+
+    @Test
+    @DisplayName("UTCID16 - Amendment AWAITING_TOPUP with extra amount 0 -> createTaskPayment(amendmentId) -> BadRequestException")
+    void utcid16_createTopUpPayment_badRequestNoExtraAmount() {
+        // Given
+        MentoringTask task = topUpTask(MentoringTaskStatus.IN_PROGRESS);
+        MentoringTaskAmendment amendment = topUpAmendment(task, MentoringAmendmentStatus.AWAITING_TOPUP, 0);
+        when(dealRepository.findById(DEAL_ID)).thenReturn(Optional.of(deal));
+        when(amendmentRepository.findByIdForUpdate(AMENDMENT_ID)).thenReturn(Optional.of(amendment));
+
+        // When + Then
+        assertThatThrownBy(() -> taskPaymentService.createTaskPayment(STUDENT_USER_ID, topUpRequest()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Ticket điều chỉnh này không có khoản tiền cần thanh toán bổ sung.");
+        verify(payOSGateway, never()).createPaymentLink(any());
+    }
+
+    @Test
+    @DisplayName("UTCID17 - Amendment already APPLIED -> createTaskPayment(amendmentId) -> ConflictException")
+    void utcid17_createTopUpPayment_conflictWrongState() {
+        // Given
+        MentoringTask task = topUpTask(MentoringTaskStatus.IN_PROGRESS);
+        MentoringTaskAmendment amendment = topUpAmendment(task, MentoringAmendmentStatus.APPLIED, 150000);
+        when(dealRepository.findById(DEAL_ID)).thenReturn(Optional.of(deal));
+        when(amendmentRepository.findByIdForUpdate(AMENDMENT_ID)).thenReturn(Optional.of(amendment));
+
+        // When + Then
+        assertThatThrownBy(() -> taskPaymentService.createTaskPayment(STUDENT_USER_ID, topUpRequest()))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("không còn ở trạng thái chờ thanh toán bổ sung")
+                .hasMessageContaining("APPLIED");
+        verify(payOSGateway, never()).createPaymentLink(any());
+    }
+
+    @Test
+    @DisplayName("UTCID18 - A PENDING top-up transaction not yet expired -> createTaskPayment(amendmentId) -> Same transaction returned; no new PayOS link")
+    void utcid18_createTopUpPayment_okReusePending() {
+        // Given
+        MentoringTask task = topUpTask(MentoringTaskStatus.IN_PROGRESS);
+        MentoringTaskAmendment amendment = topUpAmendment(task, MentoringAmendmentStatus.AWAITING_TOPUP, 150000);
+        MentoringTaskPayment pending = MentoringTaskPayment.builder()
+                .id(11L)
+                .deal(deal)
+                .task(task)
+                .amendment(amendment)
+                .student(studentUser)
+                .orderCode(ORDER_CODE)
+                .amount(BigDecimal.valueOf(150000))
+                .paymentStatus(PaymentStatus.PENDING)
+                .paymentExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES))
+                .build();
+        when(dealRepository.findById(DEAL_ID)).thenReturn(Optional.of(deal));
+        when(amendmentRepository.findByIdForUpdate(AMENDMENT_ID)).thenReturn(Optional.of(amendment));
+        when(paymentRepository.findFirstByAmendmentIdAndPaymentStatusOrderByCreatedAtDesc(AMENDMENT_ID, PaymentStatus.PENDING))
+                .thenReturn(Optional.of(pending));
+        MentoringTaskPaymentCheckoutResponse existingResponse = new MentoringTaskPaymentCheckoutResponse();
+        when(taskMapper.toCheckoutResponse(pending)).thenReturn(existingResponse);
+
+        // When
+        MentoringTaskPaymentCheckoutResponse response = taskPaymentService.createTaskPayment(STUDENT_USER_ID, topUpRequest());
+
+        // Then
+        assertThat(response).isSameAs(existingResponse);
+        verify(payOSGateway, never()).createPaymentLink(any());
+        verify(paymentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UTCID19 - Amendment belongs to a task of another deal -> createTaskPayment(amendmentId) -> BadRequestException")
+    void utcid19_createTopUpPayment_badRequestAmendmentOfOtherDeal() {
+        // Given
+        MentoringDeal otherDeal = MentoringDeal.builder().id(999L).student(studentUser).mentor(mentorUser).build();
+        MentoringTask task = topUpTask(MentoringTaskStatus.IN_PROGRESS);
+        task.setDeal(otherDeal);
+        MentoringTaskAmendment amendment = topUpAmendment(task, MentoringAmendmentStatus.AWAITING_TOPUP, 150000);
+        when(dealRepository.findById(DEAL_ID)).thenReturn(Optional.of(deal));
+        when(amendmentRepository.findByIdForUpdate(AMENDMENT_ID)).thenReturn(Optional.of(amendment));
+
+        // When + Then
+        assertThatThrownBy(() -> taskPaymentService.createTaskPayment(STUDENT_USER_ID, topUpRequest()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Ticket điều chỉnh không thuộc thỏa thuận này.");
+        verify(payOSGateway, never()).createPaymentLink(any());
+    }
+
+    // ================= handleVerifiedWebhook() - top-up payment =================
+
+    @Test
+    @DisplayName("UTCID20 - Valid PAID webhook of a top-up of 150,000 -> handleVerifiedWebhook -> Task fund 650,000, amendment APPLIED, escrow ledger saved")
+    void utcid20_handleVerifiedWebhook_okTopUp() {
+        // Given
+        MentoringTask task = topUpTask(MentoringTaskStatus.IN_PROGRESS);
+        MentoringTaskAmendment amendment = topUpAmendment(task, MentoringAmendmentStatus.AWAITING_TOPUP, 150000);
+        MentoringTaskPayment topUp = MentoringTaskPayment.builder()
+                .id(12L)
+                .deal(deal)
+                .task(task)
+                .amendment(amendment)
+                .student(studentUser)
+                .orderCode(ORDER_CODE)
+                .amount(BigDecimal.valueOf(150000))
+                .paymentStatus(PaymentStatus.PENDING)
+                .paymentExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES))
+                .build();
+        WebhookData data = org.mockito.Mockito.mock(WebhookData.class);
+        when(data.getOrderCode()).thenReturn(ORDER_CODE);
+        when(data.getCode()).thenReturn("00");
+        when(data.getAmount()).thenReturn(150000L);
+        when(paymentRepository.findForUpdateByOrderCode(ORDER_CODE)).thenReturn(Optional.of(topUp));
+        when(amendmentRepository.findByIdForUpdate(AMENDMENT_ID)).thenReturn(Optional.of(amendment));
+
+        // When
+        taskPaymentService.handleVerifiedWebhook(data);
+
+        // Then
+        assertThat(topUp.getPaymentStatus()).isEqualTo(PaymentStatus.PAID);
+        assertThat(task.getAgreedPrice()).isEqualByComparingTo(BigDecimal.valueOf(650000));
+        assertThat(task.getTaskScope()).isEqualTo("Mở rộng phạm vi: thêm module báo cáo");
+        assertThat(amendment.getStatus()).isEqualTo(MentoringAmendmentStatus.APPLIED);
+        verify(taskRepository).save(task);
+        verify(ledgerRepository).save(any());
     }
 }

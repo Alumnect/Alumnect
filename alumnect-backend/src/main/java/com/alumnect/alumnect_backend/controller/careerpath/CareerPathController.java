@@ -52,8 +52,8 @@ public class CareerPathController {
     }
 
     /**
-     * [C2] AI đối chiếu lộ trình 1-chạm giữa người xem (từ JWT) và một cựu sinh viên bất kỳ. Cần đăng nhập
-     * (Sinh viên / Cựu sinh viên); khác với 2 endpoint GET công khai ở trên.
+     * [C2] AI đối chiếu lộ trình 1-chạm giữa người xem (từ JWT) và một cựu sinh viên bất kỳ.
+     * Toàn bộ các API Career Path chỉ cho phép Sinh viên (STUDENT) và Cựu sinh viên (ALUMNI) truy cập.
      */
     @PostMapping("/ai-compare")
     public ResponseEntity<ApiResponse<CareerAiCompareResponse>> aiCompare(

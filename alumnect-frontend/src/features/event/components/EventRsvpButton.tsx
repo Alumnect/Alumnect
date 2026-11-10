@@ -187,6 +187,10 @@ export function EventRsvpButton({
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
+            if (!isAuthenticated) {
+              promptLogin(t('event.promptLoginViewAttendees'))
+              return
+            }
             if (eventId) setIsAttendeesOpen(true)
           }}
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-text-subtle hover:bg-surface-2 hover:text-primary-solid transition-colors"

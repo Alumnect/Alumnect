@@ -23,6 +23,7 @@ import { useTheme, FONT } from '@/theme'
 import { AlertTriangle, CheckCircle2, Info, XCircle } from '@/components/icons'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { startRealtime } from '@/lib/socket'
+import { MotionProvider, useReducedMotion } from '@/components/Motion'
 
 export { ErrorFallback as ErrorBoundary } from '@/components/ErrorFallback'
 
@@ -100,6 +101,21 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function AppStack() {
+  const t = useTheme()
+  const reduced = useReducedMotion()
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: t.bg },
+        animation: reduced ? 'none' : 'ios_from_right',
+        animationDuration: 240,
+      }}
+    />
+  )
+}
+
 export default function RootLayout() {
   const t = useTheme()
   // Giữ màn hình nền cho tới khi font tải xong để chữ không bị nhảy font; nếu lỗi thì dùng font hệ thống.
@@ -121,19 +137,14 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.bg }}>
       <SafeAreaProvider style={{ backgroundColor: t.bg }}>
         <QueryClientProvider client={queryClient}>
+          <MotionProvider>
           <StatusBar style={t.isDark ? 'light' : 'dark'} />
           <AuthGate>
             <OfflineBanner />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: t.bg },
-                animation: 'ios_from_right',
-                animationDuration: 240,
-              }}
-            />
+            <AppStack />
           </AuthGate>
           <Toast config={toastConfig} topOffset={50} />
+          </MotionProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

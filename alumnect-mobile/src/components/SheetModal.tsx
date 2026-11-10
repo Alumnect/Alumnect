@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Animated, Easing, Keyboard, Modal, PanResponder, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/theme'
+import { useReducedMotion } from './Motion'
 
 /** Thông số chuyển động dùng chung cho mọi popup dạng bảng trượt để các popup mở/đóng giống hệt nhau. */
 export const SHEET_OPEN_MS = 320
@@ -36,6 +37,7 @@ export function SheetModal({
   handle?: boolean
 }) {
   const t = useTheme()
+  const reduced = useReducedMotion()
   const insets = useSafeAreaInsets()
   const { height: screenH } = useWindowDimensions()
   const [mounted, setMounted] = useState(visible)
@@ -44,20 +46,21 @@ export function SheetModal({
   const [kb, setKb] = useState(0)
   const [rootH, setRootH] = useState(0)
   const visibleRef = useRef(visible)
+  const reducedRef = useRef(reduced)
   const closeRef = useRef(onClose)
-  useEffect(() => { visibleRef.current = visible; closeRef.current = onClose })
+  useEffect(() => { visibleRef.current = visible; closeRef.current = onClose; reducedRef.current = reduced })
 
   useEffect(() => {
     if (visible) {
       slide.setValue(screenH)
-      Animated.timing(slide, { toValue: 0, duration: SHEET_OPEN_MS, easing: SHEET_EASE_OUT, useNativeDriver: true }).start()
+      Animated.timing(slide, { toValue: 0, duration: reduced ? 0 : SHEET_OPEN_MS, easing: SHEET_EASE_OUT, useNativeDriver: true }).start()
     } else {
       Keyboard.dismiss()
-      Animated.timing(slide, { toValue: screenH, duration: SHEET_CLOSE_MS, easing: SHEET_EASE_IN, useNativeDriver: true }).start(({ finished }) => {
+      Animated.timing(slide, { toValue: screenH, duration: reduced ? 0 : SHEET_CLOSE_MS, easing: SHEET_EASE_IN, useNativeDriver: true }).start(({ finished }) => {
         if (finished && !visibleRef.current) setMounted(false)
       })
     }
-  }, [visible, slide, screenH])
+  }, [visible, slide, screenH, reduced])
 
   useEffect(() => {
     const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', (e) => setKb(e.endCoordinates.height))
@@ -72,14 +75,14 @@ export function SheetModal({
       onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dy) > 4,
       onPanResponderMove: (_e, g) => slide.setValue(Math.max(0, g.dy)),
       onPanResponderRelease: (_e, g) => {
-        const back = () => Animated.spring(slide, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start()
+        const back = () => reducedRef.current ? slide.setValue(0) : Animated.spring(slide, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start()
         if (g.dy > 100 || g.vy > 0.8) {
           closeRef.current()
           // Cha có thể từ chối đóng (đang xử lý): khi đó bật bảng về chỗ cũ.
           setTimeout(() => { if (visibleRef.current) back() }, 60)
         } else back()
       },
-      onPanResponderTerminate: () => Animated.spring(slide, { toValue: 0, useNativeDriver: true }).start(),
+      onPanResponderTerminate: () => { if (reducedRef.current) slide.setValue(0); else Animated.spring(slide, { toValue: 0, useNativeDriver: true }).start() },
     }),
   )
 

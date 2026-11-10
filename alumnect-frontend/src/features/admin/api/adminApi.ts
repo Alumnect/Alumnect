@@ -51,6 +51,9 @@ export interface AdminVerificationRequestDto {
   email?: string
   fullName: string
   avatarUrl?: string
+  currentRole?: string
+  studentCode?: string
+  graduationYear?: number
   majorCode: string
   majorName?: string
   proofUrl: string

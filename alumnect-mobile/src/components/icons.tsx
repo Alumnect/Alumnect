@@ -91,6 +91,10 @@ import { UsersThreeIcon as PhUsersThree } from 'phosphor-react-native/src/icons/
 import { WalletIcon as PhWallet } from 'phosphor-react-native/src/icons/Wallet'
 import { WarningIcon as PhWarning } from 'phosphor-react-native/src/icons/Warning'
 import { XIcon as PhX } from 'phosphor-react-native/src/icons/X'
+import { FingerprintIcon as PhFingerprint } from 'phosphor-react-native/src/icons/Fingerprint'
+import { StudentIcon as PhStudent } from 'phosphor-react-native/src/icons/Student'
+import { EnvelopeSimpleIcon as PhEnvelopeSimple } from 'phosphor-react-native/src/icons/EnvelopeSimple'
+import { IdentificationCardIcon as PhIdentificationCard } from 'phosphor-react-native/src/icons/IdentificationCard'
 import { XCircleIcon as PhXCircle } from 'phosphor-react-native/src/icons/XCircle'
 import { CompassIcon as PhCompass } from 'phosphor-react-native/src/icons/Compass'
 import { SquaresFourIcon as PhSquaresFour } from 'phosphor-react-native/src/icons/SquaresFour'
@@ -224,6 +228,10 @@ export const UserSearch = make(PhUserFocus, 'UserSearch')
 export const Users = make(PhUsersThree, 'Users')
 export const Wallet = make(PhWallet, 'Wallet')
 export const X = make(PhX, 'X')
+export const Fingerprint = make(PhFingerprint, 'Fingerprint')
+export const Student = make(PhStudent, 'Student')
+export const MailIcon = make(PhEnvelopeSimple, 'MailIcon')
+export const IdCard = make(PhIdentificationCard, 'IdCard')
 export const XCircle = make(PhXCircle, 'XCircle')
 export const Zap = make(PhLightning, 'Zap')
 

@@ -2,8 +2,9 @@ import React from 'react'
 import { Image } from 'expo-image'
 
 /**
- * Bộ minh họa màu (nét cọ) lấy từ Meetup, chỉ dùng cho các chỗ hiển thị lớn:
- * dòng thông tin sự kiện và màn hình trống. Icon chức năng (tab, nút, tag) vẫn dùng Phosphor đơn sắc.
+ * Minh họa màu từ bộ Meetup trong E:/Clone UIUX: dùng cho tiêu đề mục,
+ * lối tắt cộng đồng, thông tin sự kiện và trạng thái trống.
+ * Icon thao tác nhỏ (quay lại, tìm kiếm, đóng) dùng Phosphor để giữ nét rõ.
  */
 const SOURCES = {
   calendar: require('../../assets/brand/calendar.webp'),
@@ -36,5 +37,5 @@ const SOURCES = {
 export type BrandIconName = keyof typeof SOURCES
 
 export function BrandIcon({ name, size = 48 }: { name: BrandIconName; size?: number }) {
-  return <Image source={SOURCES[name]} style={{ width: size, height: size }} contentFit="contain" accessible={false} />
+  return <Image source={SOURCES[name]} style={{ width: size, height: size }} contentFit="contain" cachePolicy="none" recyclingKey={name} accessible={false} />
 }

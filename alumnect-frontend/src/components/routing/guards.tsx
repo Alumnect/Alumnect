@@ -24,10 +24,14 @@ export function ProtectedOutlet() {
 }
 
 /** Yêu cầu vai trò cụ thể — chuyển hướng nếu không có quyền. */
-export function RoleRoute({ role, children }: { role: Role; children: ReactNode }) {
+export function RoleRoute({ role, children }: { role: Role | Role[]; children: ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
-  if (!isAuthenticated) return <Navigate to="/login" replace />
-  if (user?.role !== role) return <Navigate to="/app" replace />
+  const location = useLocation()
+  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  const allowedRoles = Array.isArray(role) ? role : [role]
+  if (!user?.role || !allowedRoles.includes(user.role)) {
+    return <Navigate to={user?.role === 'ADMIN' ? '/admin' : '/app'} replace />
+  }
   return <>{children}</>
 }
