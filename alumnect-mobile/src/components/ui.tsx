@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View, useWindowDimensions, type TextInputProps, type ViewStyle } from 'react-native'
+import { ActivityIndicator, Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View, useWindowDimensions, type TextInputProps, type ViewStyle } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { Text, TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
@@ -203,40 +203,100 @@ export function IconButton({
 /* Ô nhập                                                             */
 /* ------------------------------------------------------------------ */
 
-export function Input({ label, error, hint, inputRef, ...props }: TextInputProps & { label?: string; error?: string; hint?: string; inputRef?: React.ComponentProps<typeof TextInput>['ref'] }) {
+export function Input({ label, error, hint, inputRef, icon, variant = 'outline', ...props }: TextInputProps & { label?: string; error?: string; hint?: string; inputRef?: React.ComponentProps<typeof TextInput>['ref']; icon?: React.ReactNode; variant?: 'outline' | 'float' }) {
   const t = useTheme()
   const [focus, setFocus] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  const float = variant === 'float' && !props.multiline
+  const up = focus || !!props.value
+  // Nhãn trượt lên khi có chữ / đang chọn (chỉ dùng transform nên chạy bằng luồng native).
+  const [lift] = useState(() => new Animated.Value(up ? 1 : 0))
+  useEffect(() => {
+    Animated.timing(lift, { toValue: up ? 1 : 0, duration: 140, useNativeDriver: true }).start()
+  }, [up, lift])
+  const handlers = {
+    onFocus: (e: Parameters<NonNullable<TextInputProps['onFocus']>>[0]) => {
+      setFocus(true)
+      props.onFocus?.(e)
+    },
+    onBlur: (e: Parameters<NonNullable<TextInputProps['onBlur']>>[0]) => {
+      setFocus(false)
+      props.onBlur?.(e)
+    },
+  }
+  const eye = props.secureTextEntry ? (
+    <Pressable onPress={() => setRevealed(!revealed)} accessibilityRole="button" accessibilityLabel={revealed ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} style={{ position: 'absolute', right: 2, top: 0, bottom: 0, width: 48, alignItems: 'center', justifyContent: 'center' }}>
+      {revealed ? <EyeOff size={20} color={t.textMuted} /> : <Eye size={20} color={t.textMuted} />}
+    </Pressable>
+  ) : null
+  const note = error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : hint ? <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 4 }}>{hint}</Text> : null
+
+  if (float) {
+    // Kiểu "float": ô trắng bo 16, viền mảnh, icon bên trái, viền xanh khi chọn, nhãn trượt lên.
+    const accent = error ? t.danger : focus ? t.info : t.controlBorder
+    const labelColor = error ? t.danger : focus ? t.info : t.textMuted
+    const left = icon ? 48 : 16
+    return (
+      <View style={{ marginBottom: 14 }}>
+        <View style={{ justifyContent: 'center', minHeight: 58, borderRadius: 16, backgroundColor: t.card, borderWidth: focus || error ? 2 : 1, borderColor: accent }}>
+          {icon ? <View pointerEvents="none" style={{ position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center' }}>{React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: focus ? t.info : t.textMuted }) : icon}</View> : null}
+          {label ? (
+            <Animated.Text
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left,
+                top: 17,
+                fontSize: 15,
+                lineHeight: 20,
+                color: labelColor,
+                transformOrigin: 'left center',
+                transform: [{ translateY: lift.interpolate({ inputRange: [0, 1], outputRange: [0, -11] }) }, { scale: lift.interpolate({ inputRange: [0, 1], outputRange: [1, 0.78] }) }],
+              }}
+            >
+              {label}
+            </Animated.Text>
+          ) : null}
+          <TextInput
+            ref={inputRef}
+            accessibilityLabel={label ?? props.placeholder}
+            {...props}
+            placeholder={undefined}
+            secureTextEntry={props.secureTextEntry && !revealed}
+            selectionColor={t.info}
+            {...handlers}
+            style={[{ minHeight: 56, paddingLeft: left, paddingRight: props.secureTextEntry ? 52 : 16, paddingTop: label ? 22 : 0, paddingBottom: label ? 6 : 0, fontSize: 15, color: t.text }, props.style]}
+          />
+          {eye}
+        </View>
+        {note}
+      </View>
+    )
+  }
+
   return (
     <View style={{ marginBottom: 18 }}>
       {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
       <View style={{ justifyContent: 'center' }}>
-      <TextInput
-        ref={inputRef}
-        placeholderTextColor={t.textSubtle}
-        accessibilityLabel={label ?? props.placeholder}
-        {...props}
-        secureTextEntry={props.secureTextEntry && !revealed}
-        selectionColor={t.primary}
-        onFocus={(e) => {
-          setFocus(true)
-          props.onFocus?.(e)
-        }}
-        onBlur={(e) => {
-          setFocus(false)
-          props.onBlur?.(e)
-        }}
-        style={[
-          styles.input,
-          { backgroundColor: t.card, color: t.text, borderColor: error ? t.danger : focus ? t.primary : t.controlBorder },
-          props.multiline ? { minHeight: 110, textAlignVertical: 'top' } : null,
-          props.secureTextEntry ? { paddingRight: 52 } : null,
-          props.style,
-        ]}
-      />
-      {props.secureTextEntry ? <Pressable onPress={() => setRevealed(!revealed)} accessibilityRole="button" accessibilityLabel={revealed ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} style={{ position: 'absolute', right: 2, width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>{revealed ? <EyeOff size={20} color={t.textMuted} /> : <Eye size={20} color={t.textMuted} />}</Pressable> : null}
+        <TextInput
+          ref={inputRef}
+          placeholderTextColor={t.textSubtle}
+          accessibilityLabel={label ?? props.placeholder}
+          {...props}
+          secureTextEntry={props.secureTextEntry && !revealed}
+          selectionColor={t.primary}
+          {...handlers}
+          style={[
+            styles.input,
+            { backgroundColor: t.card, color: t.text, borderColor: error ? t.danger : focus ? t.primary : t.controlBorder },
+            props.multiline ? { minHeight: 110, textAlignVertical: 'top' } : null,
+            props.secureTextEntry ? { paddingRight: 52 } : null,
+            props.style,
+          ]}
+        />
+        {eye}
       </View>
-      {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : hint ? <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 4 }}>{hint}</Text> : null}
+      {note}
     </View>
   )
 }

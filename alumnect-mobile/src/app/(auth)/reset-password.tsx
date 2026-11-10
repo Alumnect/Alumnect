@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation } from '@tanstack/react-query'
-import { AuthScaffold } from '@/components/AuthScaffold'
-import { Button, Input } from '@/components/ui'
+import { AuthButton, AuthScaffold } from '@/components/AuthScaffold'
+import { Input } from '@/components/ui'
 import { authApi } from '@/api/auth'
 import { toast, errMsg } from '@/lib/toast'
 
@@ -34,10 +34,10 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <AuthScaffold title="Đặt lại mật khẩu" subtitle="Tạo mật khẩu mới cho tài khoản của bạn">
-      <Input label="Mật khẩu mới" value={pw} onChangeText={setPw} secureTextEntry error={errors.pw} />
-      <Input label="Xác nhận mật khẩu" value={confirm} onChangeText={setConfirm} secureTextEntry error={errors.confirm} />
-      <Button title="Đặt lại mật khẩu" onPress={submit} loading={reset.isPending} />
+    <AuthScaffold hero="short" onBack={() => router.replace('/(auth)/login')} title="Đặt lại mật khẩu" subtitle="Tạo mật khẩu mới cho tài khoản của bạn">
+      <Input variant="float" label="Mật khẩu mới" value={pw} onChangeText={setPw} secureTextEntry error={errors.pw} />
+      <Input variant="float" label="Xác nhận mật khẩu" value={confirm} onChangeText={setConfirm} secureTextEntry error={errors.confirm} />
+      <AuthButton title="Đặt lại mật khẩu" onPress={submit} loading={reset.isPending} />
     </AuthScaffold>
   )
 }
