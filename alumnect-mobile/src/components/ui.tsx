@@ -5,9 +5,9 @@ import { Text, TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSegments } from 'expo-router'
-import { ChevronRight, Search, X, Eye, EyeOff } from '@/components/icons'
+import { ChevronRight, Search, X, Eye, EyeOff, AlertTriangle } from '@/components/icons'
 import { useTheme, radius, shadow, lineHeightFor, avatarColors, layout } from '@/theme'
-import { MotionPressable } from './Motion'
+import { MotionPressable, Enter } from './Motion'
 
 /* ------------------------------------------------------------------ */
 /* Khung màn hình & chữ                                               */
@@ -579,22 +579,84 @@ export function Loading() {
   )
 }
 
-/** Trạng thái rỗng, có thể kèm icon và nút hành động. */
-export function Empty({ text, title, icon, action, onAction, error, onRetry }: { text: string; title?: string; icon?: React.ReactNode; action?: string; onAction?: () => void; error?: unknown; onRetry?: () => void }) {
-  if (error) return (
-    <View accessibilityRole="alert" style={{ paddingVertical: 32, paddingHorizontal: 24, alignItems: 'center', gap: 10 }}>
-      <Txt size={16} weight="600">Không tải được nội dung</Txt>
-      <Txt muted style={{ textAlign: 'center' }}>{error instanceof Error ? error.message : 'Kiểm tra kết nối rồi thử lại.'}</Txt>
-      {onRetry ? <Button title="Thử lại" variant="outline" onPress={onRetry} style={{ marginTop: 6 }} /> : null}
-    </View>
-  )
+/** Trạng thái rỗng & báo lỗi chuẩn Meetup (MOTION-SPEC.md §6): Hoạt ảnh Enter, minh họa trực quan, typography rõ ràng và nút thử lại có phản hồi. */
+export function Empty({
+  text,
+  title,
+  icon,
+  action,
+  onAction,
+  error,
+  onRetry,
+}: {
+  text: string
+  title?: string
+  icon?: React.ReactNode
+  action?: string
+  onAction?: () => void
+  error?: unknown
+  onRetry?: () => void
+}) {
+  const t = useTheme()
+
+  if (error) {
+    const errorMsg =
+      error instanceof Error ? error.message : typeof error === 'string' ? error : text || 'Vui lòng kiểm tra kết nối mạng rồi thử lại.'
+    return (
+      <Enter duration={360}>
+        <View accessibilityRole="alert" style={{ paddingVertical: 40, paddingHorizontal: 28, alignItems: 'center', gap: 10 }}>
+          {icon ?? (
+            <View
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: 29,
+                backgroundColor: t.dangerTint,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 6,
+              }}
+            >
+              <AlertTriangle size={28} color={t.danger} />
+            </View>
+          )}
+          <Txt size={16} weight="700" style={{ textAlign: 'center' }}>
+            {title ?? 'Không thể tải nội dung'}
+          </Txt>
+          <Txt muted style={{ textAlign: 'center', maxWidth: 290, lineHeight: 20 }}>
+            {errorMsg}
+          </Txt>
+          {onRetry ? (
+            <Button
+              title="Thử lại"
+              variant="outline"
+              size="sm"
+              onPress={onRetry}
+              style={{ marginTop: 8, paddingHorizontal: 24 }}
+            />
+          ) : null}
+        </View>
+      </Enter>
+    )
+  }
+
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 8 }}>
-      {icon ? <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>{icon}</View> : null}
-      {title ? <Txt size={16} weight="700" style={{ textAlign: 'center' }}>{title}</Txt> : null}
-      <Txt muted style={{ textAlign: 'center' }}>{text}</Txt>
-      {action ? <Button title={action} size="sm" variant="secondary" onPress={onAction} style={{ marginTop: 8 }} /> : null}
-    </View>
+    <Enter duration={360}>
+      <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 8 }}>
+        {icon ? <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>{icon}</View> : null}
+        {title ? <Txt size={16} weight="700" style={{ textAlign: 'center' }}>{title}</Txt> : null}
+        <Txt muted style={{ textAlign: 'center', maxWidth: 290, lineHeight: 20 }}>{text}</Txt>
+        {action ? (
+          <Button
+            title={action}
+            size="sm"
+            variant="secondary"
+            onPress={onAction}
+            style={{ marginTop: 10, paddingHorizontal: 20 }}
+          />
+        ) : null}
+      </View>
+    </Enter>
   )
 }
 

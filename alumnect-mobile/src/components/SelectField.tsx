@@ -8,6 +8,7 @@ import { Button, IconButton, SearchBar, Txt } from './ui'
 import { normalize } from '@/constants/filters'
 import { useTheme } from '@/theme'
 import { SheetModal } from './SheetModal'
+import { MeetupRadio } from './MeetupRadio'
 
 export type SelectOption = { value: string; label: string }
 
@@ -68,10 +69,31 @@ export function SelectOptions({ options, values, multiple = false, onSelect }: {
       keyboardDismissMode="on-drag"
       renderItem={({ item }) => {
         const active = values.includes(item.value) || (!multiple && !values.length && item.value === '')
-        return <Pressable accessibilityRole={multiple ? 'checkbox' : 'radio'} accessibilityState={{ checked: active }} aria-checked={active} accessibilityLabel={item.label} onPress={() => onSelect(item.value)} style={({ pressed }) => ({ minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: pressed ? t.inputBg : active ? t.surface : t.card })}>
-          <Txt style={{ flex: 1 }} weight={active ? '600' : '400'}>{item.label}</Txt>
-          {active ? <Check size={18} color={t.primary} /> : null}
-        </Pressable>
+        return (
+          <Pressable
+            accessibilityRole={multiple ? 'checkbox' : 'radio'}
+            accessibilityState={{ checked: active }}
+            aria-checked={active}
+            accessibilityLabel={item.label}
+            onPress={() => onSelect(item.value)}
+            style={({ pressed }) => ({
+              minHeight: 52,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              backgroundColor: pressed ? t.inputBg : active ? t.surface : t.card,
+            })}
+          >
+            <Txt style={{ flex: 1 }} weight={active ? '600' : '400'}>{item.label}</Txt>
+            {multiple ? (
+              active ? <Check size={18} color={t.primary} /> : null
+            ) : (
+              <MeetupRadio checked={active} onPress={() => onSelect(item.value)} size={20} />
+            )}
+          </Pressable>
+        )
       }}
       ListEmptyComponent={<Txt muted style={{ textAlign: 'center', padding: 24 }}>Không có kết quả phù hợp.</Txt>}
     />
