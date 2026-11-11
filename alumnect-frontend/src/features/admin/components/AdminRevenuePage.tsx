@@ -8,7 +8,6 @@ import {
   FileSpreadsheet,
   FileText,
   HandCoins,
-  RefreshCw,
   Scale,
   Search,
   ShieldCheck,
@@ -182,7 +181,7 @@ export function AdminRevenuePage() {
   const [source, setSource] = useState<'ALL' | AdminRevenueTransactionDto['sourceType']>('ALL')
   const [query, setQuery] = useState('')
   const range = useMemo(() => getRange(period), [period])
-  const { data, isLoading, isFetching, error, refetch } = useAdminRevenueOverview(range)
+  const { data, isLoading, error, refetch } = useAdminRevenueOverview(range)
 
   // Sử dụng dữ liệu thực tế từ backend; nếu backend chưa có giao dịch nào thì kích hoạt demo fallback để kiểm thử
   const effectiveData = useMemo(() => {
@@ -243,15 +242,20 @@ export function AdminRevenuePage() {
     <div className="mx-auto max-w-7xl space-y-5 text-text">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid"><BadgeDollarSign className="h-4 w-4" /> Tài chính AlumNect</div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">Doanh thu nền tảng</h1>
-          <p className="mt-1 text-sm text-text-subtle">Chỉ ghi nhận tiền thuộc sở hữu Admin; không cộng tiền ký quỹ hoặc tiền đang chờ chi.</p>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
+            <BadgeDollarSign size={15} /> Tài chính AlumNect
+          </div>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+            Doanh thu nền tảng
+          </h1>
+          <p className="mt-0.5 text-xs text-text-subtle">
+            Chỉ ghi nhận tiền thuộc sở hữu Admin; không cộng tiền ký quỹ hoặc tiền đang chờ chi.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-xl border border-border bg-surface p-1 shadow-xs">
             {(['ALL', '30D', '90D', 'YEAR'] as Period[]).map((item) => <button key={item} type="button" onClick={() => setPeriod(item)} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${period === item ? 'bg-primary-solid text-on-primary shadow-raised' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{{ ALL: 'Tất cả', '30D': '30 ngày', '90D': '90 ngày', YEAR: 'Năm nay' }[item]}</button>)}
           </div>
-          <Button variant="secondary" size="sm" onClick={() => refetch()} className="gap-2"><RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} /> Làm mới</Button>
           
           {/* Enhanced Financial Export Dropdown Menu */}
           <div className="relative inline-block text-left" ref={exportDropdownRef}>

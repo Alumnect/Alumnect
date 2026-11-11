@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Trash2, Building2, Coins, Mail } from 'lucide-react'
+import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Trash2, Building2, Coins, Mail, Newspaper } from 'lucide-react'
 import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, ImageCarousel, Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
@@ -106,6 +106,8 @@ export default function AdminPostDetailPage() {
       </button>
 
       <PageHeader
+        kicker="Kiểm duyệt nội dung cộng đồng"
+        kickerIcon={<Newspaper size={15} />}
         title="Chi tiết bài viết"
         subtitle="Xem nội dung chi tiết và kiểm duyệt bài viết trên bảng tin cộng đồng."
       />

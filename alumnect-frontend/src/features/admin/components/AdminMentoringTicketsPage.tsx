@@ -299,15 +299,6 @@ export function AdminMentoringTicketsPage() {
             <span className="text-xs font-semibold text-text-subtle mr-2 hidden sm:inline">
               Hiển thị <strong className="text-text font-bold">{tickets.length}</strong> / <strong>{totalElements}</strong> Tickets
             </span>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-2 px-3 py-1.5 text-xs font-bold text-text-muted hover:text-text hover:bg-surface transition cursor-pointer shadow-2xs"
-              title="Tải lại danh sách"
-            >
-              <RotateCcw size={13} />
-              <span>Làm mới</span>
-            </button>
           </div>
         </div>
 

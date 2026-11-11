@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   ShieldCheck,
   Sparkles,
+  LayoutDashboard,
 } from 'lucide-react'
 import { PageHeader, Badge, Card, EmptyState, Skeleton, Button } from '@/components/ui'
 import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
@@ -343,6 +344,8 @@ export function AdminOverviewPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Page Header */}
       <PageHeader
+        kicker="Hệ thống vận hành Alumnect"
+        kickerIcon={<LayoutDashboard size={15} />}
         title="Tổng quan Quản trị"
         subtitle="Theo dõi chỉ số vận hành, phân tích tăng trưởng người dùng và xử lý các yêu cầu trên hệ thống."
       />

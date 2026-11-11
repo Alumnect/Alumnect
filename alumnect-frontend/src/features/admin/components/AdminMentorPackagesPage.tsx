@@ -407,18 +407,6 @@ export function AdminMentorPackagesPage() {
                     Bảng niêm yết giá, chu kỳ thời hạn và trạng thái cung ứng các gói cố vấn dành cho Cựu sinh viên.
                   </p>
                 </div>
-
-                <div className="flex items-center gap-2 self-start sm:self-center">
-                  <button
-                    type="button"
-                    onClick={() => refetch()}
-                    className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-2 px-3 py-1.5 text-xs font-bold text-text-muted hover:text-text hover:bg-surface transition cursor-pointer shadow-2xs"
-                    title="Tải lại danh sách"
-                  >
-                    <RotateCcw size={13} />
-                    <span>Làm mới</span>
-                  </button>
-                </div>
               </div>
 
               {/* Loading Skeleton */}
