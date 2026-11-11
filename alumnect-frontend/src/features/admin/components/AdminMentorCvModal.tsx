@@ -9,12 +9,9 @@ import {
   ZoomOut,
   RotateCcw,
   Loader2,
-  RefreshCw,
   FileCode,
-  FileSpreadsheet,
   CheckCircle2,
   Briefcase,
-  Building2,
   GraduationCap,
   Award,
   Sparkles,
@@ -44,7 +41,7 @@ export function AdminMentorCvModal({
   mentorNameFallback,
 }: AdminMentorCvModalProps) {
   // Lấy dữ liệu CV từ API
-  const { data: cvData, isLoading, isError, error, refetch } = useAdminMentorCv(mentorProfileId)
+  const { data: cvData, isLoading } = useAdminMentorCv(mentorProfileId)
 
   // Fallback lấy mentor từ bộ dữ liệu mẫu khi backend chưa có hoặc offline
   const fallbackMentor = useMemo(() => {
@@ -187,7 +184,6 @@ export function AdminMentorCvModal({
         window.URL.revokeObjectURL(blobUrl)
         toast.success(`Đã tải xuống tệp: ${fileName}`)
       } else {
-        // Fallback tải tệp trực tiếp
         const a = document.createElement('a')
         a.href = effectiveCvUrl
         a.download = fileName
@@ -212,14 +208,6 @@ export function AdminMentorCvModal({
   }
 
   if (!isOpen) return null
-
-  // URL nhúng cho trình xem ngoài
-  const officeOnlineUrl = effectiveCvUrl
-    ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(effectiveCvUrl)}`
-    : ''
-  const googleDocsUrl = effectiveCvUrl
-    ? `https://docs.google.com/viewer?url=${encodeURIComponent(effectiveCvUrl)}&embedded=true`
-    : ''
 
   return (
     <DialogFrame
