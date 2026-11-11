@@ -25,12 +25,6 @@ const DISPLAY_FORMAT: Record<DateTimePickerMode, string> = {
   datetime: 'dd/MM/yyyy HH:mm',
 }
 
-const PLACEHOLDER: Record<DateTimePickerMode, string> = {
-  date: 'Chọn ngày',
-  time: 'Chọn giờ',
-  datetime: 'Chọn ngày giờ',
-}
-
 function toDate(value: string | undefined | null, mode: DateTimePickerMode): Date | null {
   if (!value) return null
   const parsed = parse(value, VALUE_FORMAT[mode], new Date())

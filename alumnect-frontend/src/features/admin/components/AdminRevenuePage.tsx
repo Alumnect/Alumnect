@@ -1,11 +1,33 @@
-import { useMemo, useState, type ReactNode } from 'react'
-import { ArrowDownRight, ArrowUpRight, BadgeDollarSign, Download, HandCoins, RefreshCw, Scale, Search, ShieldCheck, WalletCards } from 'lucide-react'
+import { useMemo, useState, useRef, useEffect, type ReactNode } from 'react'
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  BadgeDollarSign,
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  HandCoins,
+  RefreshCw,
+  Scale,
+  Search,
+  ShieldCheck,
+  WalletCards,
+} from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { SelectDropdown } from '@/components/ui'
+import { SelectDropdown, toast } from '@/components/ui'
 import { useAdminRevenueOverview } from '../hooks/useAdmin'
 import type { AdminRevenueTransactionDto } from '../api/adminApi'
+import { exportFinancialExcel, exportRevenueCsv } from '../lib/excelExport'
 
 type Period = 'ALL' | '30D' | '90D' | 'YEAR'
+
+const PERIOD_LABELS: Record<Period, string> = {
+  ALL: 'Toàn bộ thời gian',
+  '30D': '30 ngày gần nhất',
+  '90D': '90 ngày gần nhất',
+  YEAR: 'Năm tài chính 2026',
+}
 
 const formatVnd = (value = 0) => new Intl.NumberFormat('vi-VN', {
   style: 'currency', currency: 'VND', maximumFractionDigits: 0,
@@ -48,20 +70,31 @@ export function AdminRevenuePage() {
   const chartMax = Math.max(...(data?.monthlyRevenue ?? []).map((item) => item.totalRevenue), 1)
   const growth = data?.monthGrowthPercent ?? 0
 
-  const exportCsv = () => {
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleExportExcel = () => {
+    if (!data) return
+    exportFinancialExcel(data, transactions, PERIOD_LABELS[period])
+    toast.success('Đã xuất Báo cáo tài chính Excel (.xls) thành công!')
+    setShowExportMenu(false)
+  }
+
+  const handleExportCsv = () => {
     if (!transactions.length) return
-    const escape = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`
-    const rows = [
-      ['Mã tham chiếu', 'Nguồn thu', 'Người thanh toán', 'Email', 'Số tiền', 'Thời gian', 'Phương thức'],
-      ...transactions.map((item) => [item.referenceCode, item.sourceType === 'MENTOR_SUBSCRIPTION' ? 'Gói Mentor' : 'Phí tranh chấp', item.payerName, item.payerEmail, item.amount, formatDateTime(item.occurredAt), item.paymentMethod]),
-    ]
-    const csv = `\uFEFF${rows.map((row) => row.map(escape).join(',')).join('\n')}`
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `doanh-thu-alumnect-${new Date().toISOString().slice(0, 10)}.csv`
-    anchor.click()
-    URL.revokeObjectURL(url)
+    exportRevenueCsv(transactions)
+    toast.success('Đã xuất file dữ liệu giao dịch (.csv) thành công!')
+    setShowExportMenu(false)
   }
 
   if (error) return (
@@ -85,7 +118,55 @@ export function AdminRevenuePage() {
             {(['ALL', '30D', '90D', 'YEAR'] as Period[]).map((item) => <button key={item} type="button" onClick={() => setPeriod(item)} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${period === item ? 'bg-primary-solid text-on-primary shadow-raised' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{{ ALL: 'Tất cả', '30D': '30 ngày', '90D': '90 ngày', YEAR: 'Năm nay' }[item]}</button>)}
           </div>
           <Button variant="secondary" size="sm" onClick={() => refetch()} className="gap-2"><RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} /> Làm mới</Button>
-          <Button variant="gold" size="sm" onClick={exportCsv} disabled={!transactions.length} className="gap-2"><Download className="h-4 w-4" /> Xuất báo cáo</Button>
+          
+          {/* Enhanced Financial Export Dropdown Menu */}
+          <div className="relative inline-block text-left" ref={exportDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              disabled={!transactions.length}
+              className="flex h-9 items-center gap-2 rounded-xl bg-primary-solid px-3.5 text-xs font-bold text-on-primary shadow-raised hover:bg-primary-solid/90 disabled:opacity-50 transition cursor-pointer"
+            >
+              <Download className="h-4 w-4" />
+              <span>Xuất báo cáo tài chính</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute right-0 z-50 mt-1.5 w-68 origin-top-right rounded-2xl border border-border bg-surface p-1.5 shadow-xl animate-in fade-in-80 zoom-in-95">
+                <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-text-subtle border-b border-border mb-1">
+                  Định dạng trích xuất
+                </div>
+                <button
+                  type="button"
+                  onClick={handleExportExcel}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-text hover:bg-primary-soft hover:text-primary-solid transition text-left cursor-pointer group"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition shrink-0">
+                    <FileSpreadsheet className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="font-bold text-text group-hover:text-primary-solid">Báo cáo tài chính Excel (.xls)</p>
+                    <p className="text-[10px] text-text-subtle">2 sheet: Tổng quan P&amp;L + Sổ chi tiết</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportCsv}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-text hover:bg-surface-2 transition text-left cursor-pointer group mt-0.5"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition shrink-0">
+                    <FileText className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="font-bold text-text">Dữ liệu thô CSV (.csv)</p>
+                    <p className="text-[10px] text-text-subtle">Danh sách giao dịch định dạng UTF-8</p>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

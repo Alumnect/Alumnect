@@ -4,9 +4,9 @@ import {
   Flag, ArrowRight, ShieldAlert, Check, Ban,
   Filter, Sparkles, CheckCircle2, ChevronRight,
   Trash2, Info, UserX, HelpCircle,
-  Search, User
+  Search, User, RotateCcw, Layers
 } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination, DialogFrame } from '@/components/ui'
+import { Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -168,6 +168,100 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
                     <span>{cfg.label}</span>
                   </div>
                   {isSelected && <CheckCircle2 size={14} className="text-text shrink-0 ml-2" />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface CustomCategoryDropdownProps {
+  value: CategoryKey
+  onChange: (val: CategoryKey) => void
+}
+
+function CustomCategoryDropdown({ value, onChange }: CustomCategoryDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedCfg = CATEGORY_MAP[value] || CATEGORY_MAP.ALL
+  const SelectedIcon = selectedCfg.icon
+
+  return (
+    <div className="relative inline-block text-left" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'flex h-10 items-center justify-between gap-2 rounded-xl border bg-surface px-3 text-xs font-bold text-text shadow-2xs transition duration-200 hover:border-primary-solid focus:outline-none cursor-pointer min-w-[160px]',
+          isOpen ? 'ring-2 ring-primary-500/20 border-primary-solid bg-surface-2' : 'border-border hover:bg-surface-2'
+        )}
+      >
+        <div className="flex items-center gap-2 truncate">
+          <span
+            className="flex h-5 w-5 items-center justify-center rounded-md text-white shadow-2xs shrink-0"
+            style={{ backgroundColor: selectedCfg.colorHex }}
+          >
+            <SelectedIcon size={12} />
+          </span>
+          <span className="truncate">{selectedCfg.shortLabel}</span>
+        </div>
+        <ChevronRight
+          size={14}
+          className={cn('text-text-subtle transition-transform duration-200 shrink-0 ml-1', isOpen ? 'rotate-90 text-text-muted' : 'rotate-0')}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 z-50 mt-1.5 w-56 origin-top-right rounded-2xl border border-border bg-surface backdrop-blur-xl p-1.5 shadow-xl animate-in fade-in-80 zoom-in-95">
+          <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border mb-1 flex items-center justify-between">
+            <span>Loại bài viết</span>
+            <Layers size={11} className="text-primary-solid" />
+          </div>
+          <div className="space-y-0.5">
+            {(Object.keys(CATEGORY_MAP) as CategoryKey[]).map((catKey) => {
+              const cfg = CATEGORY_MAP[catKey]
+              const Icon = cfg.icon
+              const isSelected = value === catKey
+
+              return (
+                <button
+                  key={catKey}
+                  type="button"
+                  onClick={() => {
+                    onChange(catKey)
+                    setIsOpen(false)
+                  }}
+                  className={cn(
+                    'flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition duration-150 text-left cursor-pointer',
+                    isSelected
+                      ? 'bg-primary-solid text-on-primary shadow-sm font-bold'
+                      : 'text-text hover:bg-surface-2'
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className="flex h-5.5 w-5.5 items-center justify-center rounded-lg text-white shadow-2xs shrink-0"
+                      style={{ backgroundColor: isSelected ? undefined : cfg.colorHex }}
+                    >
+                      <Icon size={12} />
+                    </span>
+                    <span>{cfg.label}</span>
+                  </div>
+                  {isSelected && <CheckCircle2 size={14} className="text-white shrink-0 ml-2" />}
                 </button>
               )
             })}
@@ -371,118 +465,139 @@ export function AdminReportsQueue() {
 
   const activeWillHide = getSelectedReportWillHide()
 
-  return (
-    <div className="mx-auto max-w-6xl">
-      <PageHeader 
-        title="Báo cáo vi phạm" 
-        subtitle="Quản lý và giải quyết các báo cáo vi phạm bài viết từ cộng đồng AlumNect." 
-      />
+  const hasActiveFilters =
+    reasonFilter !== 'ALL' ||
+    typeFilter !== 'ALL' ||
+    riskFilter !== 'ALL' ||
+    Boolean(searchQuery) ||
+    Boolean(authorQuery)
 
-      {/* --- Bộ lọc theo Loại bài viết (Color-coded Category Bar) --- */}
-      <Card hover={false} className="mb-4 p-4 bg-surface/80 backdrop-blur border border-border shadow-sm !overflow-visible relative z-20">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text">
-              <Filter size={14} className="text-gold-500" />
-              <span>Phân loại bài viết</span>
-            </div>
-            {totalElements > 0 && (
-              <span className="text-xs font-semibold text-text-subtle">
-                Hiển thị <strong className="text-text">{reports.length}</strong> / <strong>{totalElements}</strong> báo cáo
-              </span>
+  const resetFilters = () => {
+    setReasonFilter('ALL')
+    setTypeFilter('ALL')
+    setRiskFilter('ALL')
+    setSearchQuery('')
+    setAuthorQuery('')
+    setPage(0)
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-5">
+      {/* --- Top Header & Workflow Status Tabs (shadcn/ui Segmented Control) --- */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
+            <ShieldAlert size={15} /> Kiểm duyệt nội dung cộng đồng
+          </div>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+            Báo cáo vi phạm
+          </h1>
+          <p className="mt-0.5 text-xs text-text-subtle">
+            Giám sát, phân tích rủi ro AI và giải quyết các bài viết bị báo cáo vi phạm tiêu chuẩn cộng đồng.
+          </p>
+        </div>
+
+        {/* Primary Status Tabs */}
+        <div className="inline-flex items-center gap-1 rounded-2xl border border-border bg-surface p-1 shadow-xs self-start lg:self-auto">
+          {[
+            { key: 'PENDING', label: 'Đang chờ xử lý', countBadge: statusFilter === 'PENDING' ? totalElements : null },
+            { key: 'RESOLVED', label: 'Đã giải quyết', countBadge: statusFilter === 'RESOLVED' ? totalElements : null },
+            { key: 'DISMISSED', label: 'Đã bỏ qua', countBadge: statusFilter === 'DISMISSED' ? totalElements : null },
+          ].map((tab) => {
+            const isActive = statusFilter === tab.key
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(tab.key as any)
+                  setPage(0)
+                }}
+                className={cn(
+                  'relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-150 cursor-pointer select-none',
+                  isActive
+                    ? 'bg-primary-solid text-on-primary shadow-raised font-extrabold'
+                    : 'text-text-muted hover:bg-surface-2 hover:text-text'
+                )}
+              >
+                <span>{tab.label}</span>
+                {tab.countBadge !== null && tab.countBadge !== undefined && tab.countBadge > 0 && (
+                  <span
+                    className={cn(
+                      'rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none',
+                      isActive ? 'bg-white/20 text-white' : 'bg-primary-soft text-primary-solid'
+                    )}
+                  >
+                    {tab.countBadge}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* --- Unified Faceted Filter Toolbar (shadcn-admin Data Table Filter Style) --- */}
+      <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs space-y-3.5">
+        {/* Row 1: Search Inputs & Faceted Dropdowns */}
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
+          {/* Search Content */}
+          <div className="relative flex-1 min-w-[220px]">
+            <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+            <input
+              aria-label="Tìm nội dung bài viết..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setPage(0)
+              }}
+              placeholder="Tìm kiếm nội dung bài viết..."
+              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-8 text-xs text-text placeholder:text-text-subtle focus:border-primary-solid focus:bg-surface focus:outline-none transition shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('')
+                  setPage(0)
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text cursor-pointer"
+                title="Xóa tìm kiếm"
+              >
+                <X size={14} />
+              </button>
             )}
           </div>
 
-          {/* Type Filter Buttons */}
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            {(Object.keys(CATEGORY_MAP) as CategoryKey[]).map((catKey) => {
-              const cfg = CATEGORY_MAP[catKey]
-              const Icon = cfg.icon
-              const isSelected = typeFilter === catKey
-
-              return (
-                <button
-                  key={catKey}
-                  onClick={() => {
-                    setTypeFilter(catKey)
-                    setPage(0)
-                  }}
-                  className={cn(
-                    'flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition duration-200 border cursor-pointer',
-                    isSelected ? cfg.pillActiveBg : cfg.pillInactiveBg
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'flex h-5 w-5 items-center justify-center rounded-md shrink-0 transition',
-                      isSelected ? 'bg-white/20 text-current' : 'text-white'
-                    )}
-                    style={{ backgroundColor: isSelected ? undefined : cfg.colorHex }}
-                  >
-                    <Icon size={12} />
-                  </span>
-                  <span>{cfg.shortLabel}</span>
-                  {isSelected && <CheckCircle2 size={13} className="ml-0.5 shrink-0 opacity-80" />}
-                </button>
-              )
-            })}
+          {/* Search Author */}
+          <div className="relative w-full sm:w-56">
+            <User size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+            <input
+              aria-label="Tìm tác giả, email..."
+              value={authorQuery}
+              onChange={(e) => {
+                setAuthorQuery(e.target.value)
+                setPage(0)
+              }}
+              placeholder="Tác giả, email..."
+              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-8 text-xs text-text placeholder:text-text-subtle focus:border-primary-solid focus:bg-surface focus:outline-none transition shadow-2xs"
+            />
+            {authorQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthorQuery('')
+                  setPage(0)
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text cursor-pointer"
+                title="Xóa tìm kiếm"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
-        </div>
-      </Card>
 
-      {/* --- Controls: Tabs trạng thái & Bộ lọc lý do & Thanh tìm kiếm --- */}
-      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        {/* Status Tabs */}
-        <div className="flex flex-wrap gap-2">
-          {[
-            { key: 'PENDING', label: 'Đang chờ xử lý' },
-            { key: 'RESOLVED', label: 'Đã giải quyết' },
-            { key: 'DISMISSED', label: 'Đã bỏ qua' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => {
-                setStatusFilter(tab.key as any)
-                setPage(0)
-              }}
-              className={cn(
-                'rounded-full px-4 py-1.5 text-xs font-bold transition cursor-pointer select-none',
-                statusFilter === tab.key
-                  ? 'bg-primary-solid text-on-primary shadow-xs'
-                  : 'bg-surface-2 text-text-muted hover:bg-surface-3'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Risk Level Filter Tabs (Lọc theo mức độ rủi ro) */}
-        <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-border bg-surface-2 p-1">
-          <span className="flex items-center gap-1 px-2.5 text-[11px] font-bold text-text-subtle">
-            <Sparkles size={12} className="text-gold-500" /> Mức rủi ro:
-          </span>
-          {RISK_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => {
-                setRiskFilter(tab.key)
-                setPage(0)
-              }}
-              className={cn(
-                'rounded-full px-3 py-1 text-[11px] font-bold transition cursor-pointer select-none',
-                riskFilter === tab.key
-                  ? 'bg-primary-solid text-on-primary shadow-xs'
-                  : 'text-text-muted hover:text-text hover:bg-surface'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Custom Reason Dropdown & Tìm kiếm */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          {/* Reason Dropdown */}
           <CustomReasonDropdown
             value={reasonFilter}
             onChange={(newReason) => {
@@ -491,32 +606,76 @@ export function AdminReportsQueue() {
             }}
           />
 
-          <div className="relative flex items-center sm:w-48">
-            <Search size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
-            <input
-              aria-label="Tìm nội dung..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setPage(0)
-              }}
-              placeholder="Tìm nội dung..."
-              className="h-10 w-full rounded-2xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition shadow-2xs"
-            />
+          {/* Post Category Dropdown */}
+          <CustomCategoryDropdown
+            value={typeFilter}
+            onChange={(newCat) => {
+              setTypeFilter(newCat)
+              setPage(0)
+            }}
+          />
+
+          {/* Reset Filters button */}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-dashed border-border px-3 text-xs font-bold text-text-muted hover:border-danger hover:bg-danger-soft hover:text-danger transition cursor-pointer shrink-0"
+              title="Đặt lại toàn bộ bộ lọc"
+            >
+              <RotateCcw size={13} />
+              <span className="hidden sm:inline">Đặt lại</span>
+            </button>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-border/60" />
+
+        {/* Row 2: AI Risk Level Chips & Result Summary */}
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+          {/* Risk Level Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <span className="flex items-center gap-1.5 pr-1.5 text-xs font-bold text-text-subtle shrink-0">
+              <Sparkles size={13} className="text-gold-500" /> Mức rủi ro AI:
+            </span>
+
+            {RISK_TABS.map((tab) => {
+              const isSelected = riskFilter === tab.key
+              const dotColor =
+                tab.key === 'HIGH'
+                  ? 'bg-rose-500 ring-rose-500/20'
+                  : tab.key === 'MEDIUM'
+                  ? 'bg-amber-500 ring-amber-500/20'
+                  : tab.key === 'LOW'
+                  ? 'bg-emerald-500 ring-emerald-500/20'
+                  : 'bg-slate-400 ring-slate-400/20'
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => {
+                    setRiskFilter(tab.key)
+                    setPage(0)
+                  }}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition duration-150 cursor-pointer whitespace-nowrap shrink-0 border select-none',
+                    isSelected
+                      ? 'bg-primary-solid text-on-primary border-primary shadow-xs font-extrabold'
+                      : 'bg-surface-2 text-text-muted border-border hover:bg-surface-3 hover:text-text'
+                  )}
+                >
+                  <span className={cn('h-2 w-2 rounded-full ring-2 shrink-0', dotColor, isSelected ? 'bg-white ring-white/30' : '')} />
+                  <span>{tab.label}</span>
+                </button>
+              )
+            })}
           </div>
 
-          <div className="relative flex items-center sm:w-48">
-            <User size={15} className="pointer-events-none absolute left-3 text-text-subtle" />
-            <input
-              aria-label="Tìm tác giả, email..."
-              value={authorQuery}
-              onChange={(e) => {
-                setAuthorQuery(e.target.value)
-                setPage(0)
-              }}
-              placeholder="Tìm tác giả, email..."
-              className="h-10 w-full rounded-2xl border border-border bg-surface-2 pl-9 pr-3 text-xs text-text placeholder:text-text-subtle focus:border-gold-400 focus:bg-surface focus:outline-none transition shadow-2xs"
-            />
+          {/* Report Counter */}
+          <div className="text-xs font-semibold text-text-subtle shrink-0">
+            Hiển thị <strong className="text-text font-bold">{reports.length}</strong> / <strong>{totalElements}</strong> báo cáo vi phạm
           </div>
         </div>
       </div>
