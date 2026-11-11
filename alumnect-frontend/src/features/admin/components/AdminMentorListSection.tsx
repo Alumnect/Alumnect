@@ -244,7 +244,7 @@ export function AdminMentorListSection() {
   const [page, setPage] = useState(0)
 
   // Custom hook lấy danh sách Mentor phân trang & bộ lọc
-  const { data, isLoading, isError, error, refetch } = useAdminMentors({
+  const { data, isLoading, isError, refetch } = useAdminMentors({
     keyword: keyword || undefined,
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
     subscriptionStatus: subStatusFilter !== 'ALL' ? subStatusFilter : undefined,

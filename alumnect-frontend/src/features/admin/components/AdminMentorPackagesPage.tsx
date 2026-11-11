@@ -17,7 +17,7 @@ import {
   Award,
   TrendingUp,
 } from 'lucide-react'
-import { Badge, Skeleton, toast, DialogFrame, FadeSwitch } from '@/components/ui'
+import { Skeleton, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { useAdminMentorPackages, useUpdateMentorPackage, useAdminMentors } from '../hooks/useAdmin'
 import type { AdminMentorPackageDto } from '../api/adminApi'
 import { AdminMentorListSection, DEMO_MENTORS } from './AdminMentorListSection'
@@ -84,7 +84,7 @@ export function AdminMentorPackagesPage() {
   const [activeTab, setActiveTab] = useState<'PACKAGES' | 'MENTORS'>('PACKAGES')
   
   // Lấy dữ liệu các gói dịch vụ
-  const { data: rawPackages, isLoading, isError, error, refetch } = useAdminMentorPackages()
+  const { data: rawPackages, isLoading, isError, refetch } = useAdminMentorPackages()
   const updateMutation = useUpdateMentorPackage()
 
   // State cục bộ lưu chỉnh sửa gói khi test trên môi trường dev

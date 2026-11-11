@@ -3,7 +3,6 @@ import {
   FileText,
   ExternalLink,
   Download,
-  AlertCircle,
   X,
   ZoomIn,
   ZoomOut,
@@ -52,8 +51,8 @@ export function AdminMentorCvModal({
 
   // Document Viewer States
   const [zoom, setZoom] = useState<number>(100)
-  const [previewLoading, setPreviewLoading] = useState<boolean>(false)
-  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [, setPreviewLoading] = useState<boolean>(false)
+  const [, setPreviewError] = useState<string | null>(null)
   const [docViewerMode, setDocViewerMode] = useState<DocViewerMode>('DIGITAL_CV')
   const [isDownloading, setIsDownloading] = useState<boolean>(false)
 

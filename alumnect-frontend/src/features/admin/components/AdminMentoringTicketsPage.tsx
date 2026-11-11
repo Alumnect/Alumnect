@@ -12,22 +12,15 @@ import {
   AlertTriangle,
   DollarSign,
   ExternalLink,
-  ShieldAlert,
   UserCheck,
   Loader2,
-  Calendar,
   History,
-  FileCheck,
   Image as ImageIcon,
   Layers,
-  ArrowRight,
   MessageSquare,
   Sparkles,
-  Award,
-  TrendingUp,
 } from 'lucide-react'
-import { Badge, EmptyState, Pagination, Skeleton, SelectDropdown, toast, DialogFrame, FadeSwitch } from '@/components/ui'
-import { Button } from '@/components/ui/Button'
+import { EmptyState, Pagination, Skeleton, SelectDropdown, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { useAdminTickets, useAcceptAdminTicket, useAdminDisputeContext } from '../hooks/useAdmin'
 import {
   type MentoringDisputeTicket,
@@ -49,7 +42,7 @@ export function AdminMentoringTicketsPage() {
   const [page, setPage] = useState(0)
 
   // Custom hook lấy danh sách Tickets phân trang & bộ lọc từ Database Backend (API /admin/mentoring/tickets)
-  const { data, isLoading, isError, error, refetch } = useAdminTickets({
+  const { data, isLoading, isError, refetch } = useAdminTickets({
     keyword: keyword || undefined,
     type: typeFilter !== 'ALL' ? typeFilter : undefined,
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
@@ -432,7 +425,7 @@ export function AdminMentoringTicketsPage() {
         )}
 
         {/* Empty State */}
-        {!isLoading && filteredTickets.length === 0 && (
+        {!isLoading && tickets.length === 0 && (
           <div className="p-8">
             <EmptyState
               icon={<Scale size={32} className="text-text-subtle" />}
@@ -447,7 +440,7 @@ export function AdminMentoringTicketsPage() {
         )}
 
         {/* Bảng Ticket 4 Cột Compound - Không thanh cuộn ngang */}
-        {!isLoading && filteredTickets.length > 0 && (
+        {!isLoading && tickets.length > 0 && (
           <div className="w-full overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
@@ -849,7 +842,7 @@ export function AdminMentoringTicketsPage() {
                                         {ev.title}
                                       </h4>
                                       <span className="text-[10px] text-text-subtle font-mono">
-                                        {formatDate(ev.uploadedAt)}
+                                        {formatDate(ev.createdAt)}
                                       </span>
                                     </div>
                                   </div>
@@ -979,7 +972,15 @@ export function AdminMentoringTicketsPage() {
                   {/* TAB 4: THẢO LUẬN & HÒA GIẢI (THREAD) */}
                   {activeModalTab === 'discussion' && (
                     <div className="bg-surface rounded-2xl border border-border p-4 shadow-2xs">
-                      <MentoringTicketDiscussionThread ticketId={selectedTicket.id} />
+                      <MentoringTicketDiscussionThread
+                        ticketId={selectedTicket.id}
+                        ticketStatus={selectedTicket.status}
+                        currentRole="ADMIN"
+                        ticketCode={selectedTicket.ticketCode}
+                        studentName={selectedTicket.student?.fullName || selectedTicket.studentName}
+                        mentorName={selectedTicket.mentor?.fullName || selectedTicket.mentorName}
+                        totalAmount={selectedTicket.totalAmount}
+                      />
                     </div>
                   )}
                 </FadeSwitch>
@@ -1043,8 +1044,8 @@ export function AdminMentoringTicketsPage() {
         <ImageViewerModal
           isOpen={!!previewImage}
           onClose={() => setPreviewImage(null)}
-          imageUrl={previewImage}
-          altText="Ảnh bằng chứng tranh chấp"
+          src={previewImage}
+          alt="Ảnh bằng chứng tranh chấp"
         />
       )}
     </div>
