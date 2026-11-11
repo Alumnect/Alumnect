@@ -7,7 +7,6 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   AlertTriangle,
-  RefreshCw,
 } from 'lucide-react'
 import { Badge, EmptyState, Pagination, Skeleton, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -25,7 +24,7 @@ export function AdminMentoringFinancesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Lấy danh sách Quỹ Task từ server
-  const { data, isLoading, isError, error, refetch, isFetching } = useAdminTaskFunds({
+  const { data, isLoading, isError, error, refetch } = useAdminTaskFunds({
     keyword: keyword || undefined,
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
     settlementStatus: settlementFilter !== 'ALL' ? settlementFilter : undefined,
@@ -115,14 +114,13 @@ export function AdminMentoringFinancesPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-primary-solid text-xs sm:text-sm font-bold tracking-wide uppercase">
-            <Wallet className="w-4 h-4" />
-            <span>Quản trị tài chính Mentoring Task</span>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
+            <Wallet size={15} /> Quản trị tài chính Mentoring Task
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-text mt-1">
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
             Sổ quỹ & Đối soát tài chính theo Task
           </h1>
-          <p className="text-xs sm:text-sm text-text-subtle mt-1">
+          <p className="mt-0.5 text-xs text-text-subtle">
             Theo dõi dòng tiền ký quỹ Escrow, thù lao chi Cố vấn, hoàn trả Học viên và đối soát sổ quỹ chi tiết từng nhiệm vụ.
           </p>
         </div>
@@ -139,16 +137,6 @@ export function AdminMentoringFinancesPage() {
               {payoutBalance.isLoading ? '…' : payoutBalance.isError ? 'Không khả dụng' : formatVnd(payoutBalance.data)}
             </p>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => { refetch(); payoutBalance.refetch() }}
-            disabled={isFetching}
-            className="gap-2 text-xs font-semibold bg-surface hover:bg-surface-2 text-text-muted border border-border"
-          >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-            Làm mới
-          </Button>
         </div>
       </div>
 
