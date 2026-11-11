@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { ActivityIndicator, Pressable, View } from 'react-native'
+import React, { useEffect, useRef } from 'react'
+import { ActivityIndicator, Animated, Pressable, View } from 'react-native'
 import { Text } from '@/components/AppText'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -24,6 +24,7 @@ import { AlertTriangle, CheckCircle2, Info, XCircle } from '@/components/icons'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { startRealtime } from '@/lib/socket'
 import { MotionProvider, useReducedMotion } from '@/components/Motion'
+import { DURATION, EASING } from '@/theme/motion'
 
 export { ErrorFallback as ErrorBoundary } from '@/components/ErrorFallback'
 
@@ -32,6 +33,28 @@ type AppToastTone = 'success' | 'error' | 'info' | 'warning'
 
 function AppToast({ text, tone, actions = [] }: { text?: string; tone: AppToastTone; actions?: ToastAction[] }) {
   const t = useTheme()
+  const reduced = useReducedMotion()
+  const scale = useRef(new Animated.Value(reduced ? 1 : 0.86)).current
+  const opacity = useRef(new Animated.Value(reduced ? 1 : 0)).current
+
+  useEffect(() => {
+    if (reduced) return
+    Animated.parallel([
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: DURATION.fast,
+        easing: EASING.legacy,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: DURATION.fast,
+        easing: EASING.linear,
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [reduced, scale, opacity])
+
   const styles = {
     success: { color: t.success, tint: t.successTint, Icon: CheckCircle2 },
     error: { color: t.danger, tint: t.dangerTint, Icon: XCircle },
@@ -40,7 +63,25 @@ function AppToast({ text, tone, actions = [] }: { text?: string; tone: AppToastT
   }
   const { color, tint, Icon } = styles[tone]
   return (
-    <View accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ width: '92%', maxWidth: 480, backgroundColor: t.card, borderRadius: 16, borderWidth: 1, borderColor: t.border, padding: 14, elevation: 8, shadowColor: '#000', shadowOpacity: 0.16, shadowRadius: 10 }}>
+    <Animated.View
+      accessibilityRole="alert"
+      accessibilityLiveRegion="polite"
+      style={{
+        width: '92%',
+        maxWidth: 480,
+        backgroundColor: t.card,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: t.border,
+        padding: 14,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOpacity: 0.16,
+        shadowRadius: 10,
+        opacity,
+        transform: [{ scale }],
+      }}
+    >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: tint }}>
           <Icon size={21} color={color} />
@@ -54,7 +95,7 @@ function AppToast({ text, tone, actions = [] }: { text?: string; tone: AppToastT
           </Pressable>
         ))}
       </View> : null}
-    </View>
+    </Animated.View>
   )
 }
 
