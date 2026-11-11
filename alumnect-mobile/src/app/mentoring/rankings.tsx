@@ -109,7 +109,7 @@ export default function RankingsScreen() {
                   {/* Meetup x Kakao Podium Header Banner */}
                   <View style={styles.podiumHeaderRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                      <BrandIcon name="sparkle" size={18} />
+                      <BrandIcon name="sparkle" size={20} />
                       <Txt
                         size={11}
                         weight="800"
@@ -120,7 +120,7 @@ export default function RankingsScreen() {
                       </Txt>
                     </View>
                     <View style={[styles.podiumCountPill, { backgroundColor: colors.card, borderColor: colors.borderSubtle }]}>
-                      <BrandIcon name="star" size={13} />
+                      <BrandIcon name="star" size={14} />
                       <Txt size={11} weight="700" style={{ color: colors.text }}>
                         Top {items.length}
                       </Txt>

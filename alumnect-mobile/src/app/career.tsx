@@ -16,6 +16,7 @@ import { DEFAULT_COHORTS } from '@/constants/filters'
 import { useDebounced } from '@/lib/hooks'
 import { useTheme } from '@/theme'
 import { BrandIcon } from '@/components/BrandIcon'
+import { MeetupScribble } from '@/components/MeetupScribble'
 import { CommunityIntro } from '@/components/SocialUI'
 
 const year = (d?: string | null) => (d ? d.slice(0, 4) : '')
@@ -112,7 +113,7 @@ export default function CareerScreen() {
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<BrandIcon name="suitcase" size={56} />} title="Không tìm thấy lộ trình" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." action={active ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
+              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<MeetupScribble name="rocket_top_right" size={56} color={t.primary} />} title="Không tìm thấy lộ trình" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." action={active ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
             )
           }
           renderItem={({ item }) => (
