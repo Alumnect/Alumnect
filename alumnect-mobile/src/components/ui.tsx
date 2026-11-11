@@ -123,13 +123,13 @@ export function Button({
   variant?: ButtonVariant
   size?: 'sm' | 'md' | 'lg'
   icon?: React.ReactNode
+  /** Ghi đè màu chữ / icon của nút (dùng cho các nút có nền riêng như Mentoring). */
   textColor?: string
   style?: ViewStyle
 }) {
   const t = useTheme()
   const bg = { primary: t.action, brand: t.primary, secondary: t.inputBg, outline: t.card, ghost: 'transparent', danger: t.danger }[variant]
-  const baseFg = { primary: t.onAction, brand: t.onPrimary, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
-  const fg = textColor ?? baseFg
+  const fg = textColor ?? { primary: t.onAction, brand: t.onPrimary, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
   const height = { sm: 44, md: 48, lg: 52 }[size]
   return (
     <MotionPressable
