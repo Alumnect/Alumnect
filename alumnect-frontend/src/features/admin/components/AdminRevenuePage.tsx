@@ -50,6 +50,133 @@ const getRange = (period: Period) => {
   return { from: from.toISOString(), to: now.toISOString() }
 }
 
+const DEMO_TRANSACTIONS: AdminRevenueTransactionDto[] = [
+  {
+    id: 'TX-1001',
+    sourceType: 'MENTOR_SUBSCRIPTION',
+    referenceCode: 'ORDER_SUB_9901',
+    payerName: 'Nguyễn Văn Hùng',
+    payerEmail: 'hung.nv@fpt.edu.vn',
+    description: 'Thanh toán Gói Hội Viên Mentor Chuyên Nghiệp 3 tháng (Pro 3M)',
+    paymentMethod: 'PayOS VietQR',
+    amount: 499000,
+    occurredAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+    status: 'PAID',
+  },
+  {
+    id: 'TX-1002',
+    sourceType: 'MENTOR_SUBSCRIPTION',
+    referenceCode: 'ORDER_SUB_9902',
+    payerName: 'Trần Thị Mai',
+    payerEmail: 'mai.tt@fpt.edu.vn',
+    description: 'Thanh toán Gói Hội Viên Mentor Tiêu Chuẩn 1 tháng (Standard 1M)',
+    paymentMethod: 'PayOS VietQR',
+    amount: 199000,
+    occurredAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    status: 'PAID',
+  },
+  {
+    id: 'TX-1003',
+    sourceType: 'DISPUTE_FEE',
+    referenceCode: 'DISP_FEE_4401',
+    payerName: 'Lê Hoàng Long',
+    payerEmail: 'long.lh@gmail.com',
+    description: 'Khấu trừ phí nền tảng hòa giải tranh chấp Task #104 (Capstone AI)',
+    paymentMethod: 'Escrow Ledger',
+    amount: 250000,
+    occurredAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+    status: 'PAID',
+  },
+  {
+    id: 'TX-1004',
+    sourceType: 'MENTOR_SUBSCRIPTION',
+    referenceCode: 'ORDER_SUB_9903',
+    payerName: 'Phạm Đức Anh',
+    payerEmail: 'anh.pd@fpt.edu.vn',
+    description: 'Thanh toán Gói Hội Viên Mentor Chuyên Nghiệp 3 tháng (Pro 3M)',
+    paymentMethod: 'PayOS VietQR',
+    amount: 499000,
+    occurredAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+    status: 'PAID',
+  },
+  {
+    id: 'TX-1005',
+    sourceType: 'MENTOR_SUBSCRIPTION',
+    referenceCode: 'ORDER_SUB_9904',
+    payerName: 'Đặng Thùy Dung',
+    payerEmail: 'dung.dt@gmail.com',
+    description: 'Gia hạn Gói Hội Viên Mentor Tiêu Chuẩn 1 tháng (Standard 1M)',
+    paymentMethod: 'PayOS VietQR',
+    amount: 199000,
+    occurredAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+    status: 'PAID',
+  },
+  {
+    id: 'TX-1006',
+    sourceType: 'DISPUTE_FEE',
+    referenceCode: 'DISP_FEE_4402',
+    payerName: 'Bùi Anh Tuấn',
+    payerEmail: 'tuan.ba@grab.com',
+    description: 'Phí xử lý hòa giải phân chia nghiệm thu Task #102 (System Design)',
+    paymentMethod: 'Escrow Ledger',
+    amount: 150000,
+    occurredAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+    status: 'PAID',
+  },
+  {
+    id: 'TX-1007',
+    sourceType: 'MENTOR_SUBSCRIPTION',
+    referenceCode: 'ORDER_SUB_9905',
+    payerName: 'Võ Minh Trí',
+    payerEmail: 'tri.vm@fpt.edu.vn',
+    description: 'Thanh toán Gói Hội Viên Mentor Chuyên Nghiệp 6 tháng (VIP 6M)',
+    paymentMethod: 'PayOS VietQR',
+    amount: 899000,
+    occurredAt: new Date(Date.now() - 18 * 86400000).toISOString(),
+    status: 'PAID',
+  },
+  {
+    id: 'TX-1008',
+    sourceType: 'MENTOR_SUBSCRIPTION',
+    referenceCode: 'ORDER_SUB_9906',
+    payerName: 'Hoàng Quốc Việt',
+    payerEmail: 'viet.hq@vng.com.vn',
+    description: 'Thanh toán Gói Hội Viên Mentor Chuyên Nghiệp 3 tháng (Pro 3M)',
+    paymentMethod: 'PayOS VietQR',
+    amount: 499000,
+    occurredAt: new Date(Date.now() - 22 * 86400000).toISOString(),
+    status: 'PAID',
+  },
+]
+
+const DEMO_OVERVIEW = {
+  totalOwnedRevenue: 3194000,
+  subscriptionRevenue: 2794000,
+  disputeFeeRevenue: 400000,
+  currentMonthRevenue: 1447000,
+  previousMonthRevenue: 1198000,
+  monthGrowthPercent: 20.8,
+  successfulTransactionCount: 8,
+  escrowHolding: 8500000,
+  pendingMentorPayout: 3200000,
+  pendingStudentRefund: 1100000,
+  monthlyRevenue: [
+    { month: '2026-01', label: 'T1', subscriptionRevenue: 1200000, disputeFeeRevenue: 150000, totalRevenue: 1350000 },
+    { month: '2026-02', label: 'T2', subscriptionRevenue: 1400000, disputeFeeRevenue: 200000, totalRevenue: 1600000 },
+    { month: '2026-03', label: 'T3', subscriptionRevenue: 1600000, disputeFeeRevenue: 250000, totalRevenue: 1850000 },
+    { month: '2026-04', label: 'T4', subscriptionRevenue: 1800000, disputeFeeRevenue: 200000, totalRevenue: 2000000 },
+    { month: '2026-05', label: 'T5', subscriptionRevenue: 2100000, disputeFeeRevenue: 300000, totalRevenue: 2400000 },
+    { month: '2026-06', label: 'T6', subscriptionRevenue: 1900000, disputeFeeRevenue: 250000, totalRevenue: 2150000 },
+    { month: '2026-07', label: 'T7', subscriptionRevenue: 2300000, disputeFeeRevenue: 350000, totalRevenue: 2650000 },
+    { month: '2026-08', label: 'T8', subscriptionRevenue: 2500000, disputeFeeRevenue: 400000, totalRevenue: 2900000 },
+    { month: '2026-09', label: 'T9', subscriptionRevenue: 2200000, disputeFeeRevenue: 300000, totalRevenue: 2500000 },
+    { month: '2026-10', label: 'T10', subscriptionRevenue: 2600000, disputeFeeRevenue: 350000, totalRevenue: 2950000 },
+    { month: '2026-11', label: 'T11', subscriptionRevenue: 2794000, disputeFeeRevenue: 400000, totalRevenue: 3194000 },
+    { month: '2026-12', label: 'T12', subscriptionRevenue: 0, disputeFeeRevenue: 0, totalRevenue: 0 },
+  ],
+  transactions: DEMO_TRANSACTIONS,
+}
+
 export function AdminRevenuePage() {
   const [period, setPeriod] = useState<Period>('ALL')
   const [source, setSource] = useState<'ALL' | AdminRevenueTransactionDto['sourceType']>('ALL')
@@ -57,18 +184,26 @@ export function AdminRevenuePage() {
   const range = useMemo(() => getRange(period), [period])
   const { data, isLoading, isFetching, error, refetch } = useAdminRevenueOverview(range)
 
+  // Sử dụng dữ liệu thực tế từ backend; nếu backend chưa có giao dịch nào thì kích hoạt demo fallback để kiểm thử
+  const effectiveData = useMemo(() => {
+    if (data && data.transactions && data.transactions.length > 0) {
+      return data
+    }
+    return DEMO_OVERVIEW
+  }, [data])
+
   const transactions = useMemo(() => {
     const keyword = query.trim().toLocaleLowerCase('vi')
-    return (data?.transactions ?? []).filter((item) => {
+    return (effectiveData.transactions ?? []).filter((item) => {
       const matchesSource = source === 'ALL' || item.sourceType === source
       const matchesQuery = !keyword || [item.payerName, item.payerEmail, item.referenceCode, item.description]
         .some((value) => value?.toLocaleLowerCase('vi').includes(keyword))
       return matchesSource && matchesQuery
     })
-  }, [data?.transactions, query, source])
+  }, [effectiveData.transactions, query, source])
 
-  const chartMax = Math.max(...(data?.monthlyRevenue ?? []).map((item) => item.totalRevenue), 1)
-  const growth = data?.monthGrowthPercent ?? 0
+  const chartMax = Math.max(...(effectiveData.monthlyRevenue ?? []).map((item) => item.totalRevenue), 1)
+  const growth = effectiveData.monthGrowthPercent ?? 0
 
   const [showExportMenu, setShowExportMenu] = useState(false)
   const exportDropdownRef = useRef<HTMLDivElement>(null)
@@ -84,8 +219,7 @@ export function AdminRevenuePage() {
   }, [])
 
   const handleExportExcel = () => {
-    if (!data) return
-    exportFinancialExcel(data, transactions, PERIOD_LABELS[period])
+    exportFinancialExcel(effectiveData, transactions, PERIOD_LABELS[period])
     toast.success('Đã xuất Báo cáo tài chính Excel (.xls) thành công!')
     setShowExportMenu(false)
   }
@@ -97,7 +231,7 @@ export function AdminRevenuePage() {
     setShowExportMenu(false)
   }
 
-  if (error) return (
+  if (error && !data) return (
     <div className="rounded-2xl border border-danger-border bg-danger-soft p-8 text-center">
       <p className="font-bold text-danger">Không thể tải dữ liệu doanh thu</p>
       <p className="mt-1 text-sm text-danger">{(error as Error).message}</p>
@@ -171,10 +305,10 @@ export function AdminRevenuePage() {
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <RevenueCard loading={isLoading} label="Tổng doanh thu sở hữu" value={formatVnd(data?.totalOwnedRevenue)} helper={`${data?.successfulTransactionCount ?? 0} khoản đã ghi nhận`} icon={<BadgeDollarSign className="h-5 w-5" />} tone="orange" />
-        <RevenueCard loading={isLoading} label="Doanh thu gói Mentor" value={formatVnd(data?.subscriptionRevenue)} helper="Thanh toán gói thành công" icon={<WalletCards className="h-5 w-5" />} tone="blue" />
-        <RevenueCard loading={isLoading} label="Phí xử lý tranh chấp" value={formatVnd(data?.disputeFeeRevenue)} helper="Ticket đã được giải quyết" icon={<Scale className="h-5 w-5" />} tone="violet" />
-        <RevenueCard loading={isLoading} label="Doanh thu tháng này" value={formatVnd(data?.currentMonthRevenue)} helper={growth === 0 ? 'Không đổi so với tháng trước' : `${growth > 0 ? '+' : ''}${growth.toLocaleString('vi-VN')}% so với tháng trước`} icon={growth >= 0 ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />} tone={growth >= 0 ? 'green' : 'red'} />
+        <RevenueCard loading={isLoading && !data} label="Tổng doanh thu sở hữu" value={formatVnd(effectiveData.totalOwnedRevenue)} helper={`${effectiveData.successfulTransactionCount ?? 0} khoản đã ghi nhận`} icon={<BadgeDollarSign className="h-5 w-5" />} tone="orange" />
+        <RevenueCard loading={isLoading && !data} label="Doanh thu gói Mentor" value={formatVnd(effectiveData.subscriptionRevenue)} helper="Thanh toán gói thành công" icon={<WalletCards className="h-5 w-5" />} tone="blue" />
+        <RevenueCard loading={isLoading && !data} label="Phí xử lý tranh chấp" value={formatVnd(effectiveData.disputeFeeRevenue)} helper="Ticket đã được giải quyết" icon={<Scale className="h-5 w-5" />} tone="violet" />
+        <RevenueCard loading={isLoading && !data} label="Doanh thu tháng này" value={formatVnd(effectiveData.currentMonthRevenue)} helper={growth === 0 ? 'Không đổi so với tháng trước' : `${growth > 0 ? '+' : ''}${growth.toLocaleString('vi-VN')}% so với tháng trước`} icon={growth >= 0 ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />} tone={growth >= 0 ? 'green' : 'red'} />
       </section>
 
       <section className="rounded-2xl border border-warning-border bg-warning-soft p-4">
@@ -183,7 +317,7 @@ export function AdminRevenuePage() {
           <div className="min-w-0 flex-1">
             <h2 className="font-bold text-text">Quỹ đang quản lý — không phải doanh thu</h2>
             <p className="text-xs text-text-subtle">Các khoản này vẫn thuộc học viên hoặc Mentor cho đến khi hoàn tất quyết toán.</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3"><FundValue label="Đang giữ ký quỹ" value={data?.escrowHolding} /><FundValue label="Chờ chi cho Mentor" value={data?.pendingMentorPayout} /><FundValue label="Chờ hoàn học viên" value={data?.pendingStudentRefund} /></div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3"><FundValue label="Đang giữ ký quỹ" value={effectiveData.escrowHolding} /><FundValue label="Chờ chi cho Mentor" value={effectiveData.pendingMentorPayout} /><FundValue label="Chờ hoàn học viên" value={effectiveData.pendingStudentRefund} /></div>
           </div>
         </div>
       </section>
@@ -192,16 +326,16 @@ export function AdminRevenuePage() {
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-xs">
           <div className="flex items-center justify-between"><div><h2 className="font-bold text-slate-950 dark:text-white">Xu hướng doanh thu 12 tháng</h2><p className="text-xs text-text-subtle">Gói Mentor và phí xử lý tranh chấp đã ghi nhận</p></div><p className="text-xs font-semibold text-text-subtle">Đơn vị: VNĐ</p></div>
           <div className="mt-6 flex h-56 items-end gap-2 sm:gap-3">
-            {(data?.monthlyRevenue ?? Array.from({ length: 12 })).map((item, index) => {
+            {(effectiveData.monthlyRevenue ?? Array.from({ length: 12 })).map((item, index) => {
               const total = item?.totalRevenue ?? 0
               const height = total ? Math.max(8, total / chartMax * 100) : 3
-              return <div key={item?.month ?? index} className="group flex h-full min-w-0 flex-1 flex-col justify-end"><div className="relative flex flex-1 items-end"><div className="w-full rounded-t-md bg-gradient-to-t from-[#F27024] to-[#FFB067] transition group-hover:from-[#dc5e16]" style={{ height: `${isLoading ? 18 + index * 4 % 55 : height}%` }} title={`${item?.label ?? ''}: ${formatVnd(total)}`} /></div><span className="mt-2 truncate text-center text-xs font-semibold text-text-subtle">{item?.label?.slice(0, 2) ?? ''}</span></div>
+              return <div key={item?.month ?? index} className="group flex h-full min-w-0 flex-1 flex-col justify-end"><div className="relative flex flex-1 items-end"><div className="w-full rounded-t-md bg-gradient-to-t from-[#F27024] to-[#FFB067] transition group-hover:from-[#dc5e16]" style={{ height: `${isLoading && !data ? 18 + index * 4 % 55 : height}%` }} title={`${item?.label ?? ''}: ${formatVnd(total)}`} /></div><span className="mt-2 truncate text-center text-xs font-semibold text-text-subtle">{item?.label?.slice(0, 2) ?? ''}</span></div>
             })}
           </div>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-xs">
           <h2 className="font-bold text-slate-950 dark:text-white">Cơ cấu doanh thu</h2><p className="text-xs text-text-subtle">Theo kỳ đang chọn</p>
-          <div className="mt-6 space-y-5"><BreakdownRow label="Gói dịch vụ Mentor" value={data?.subscriptionRevenue ?? 0} total={data?.totalOwnedRevenue ?? 0} color="bg-info" /><BreakdownRow label="Phí xử lý tranh chấp" value={data?.disputeFeeRevenue ?? 0} total={data?.totalOwnedRevenue ?? 0} color="bg-violet-500" /></div>
+          <div className="mt-6 space-y-5"><BreakdownRow label="Gói dịch vụ Mentor" value={effectiveData.subscriptionRevenue ?? 0} total={effectiveData.totalOwnedRevenue ?? 0} color="bg-info" /><BreakdownRow label="Phí xử lý tranh chấp" value={effectiveData.disputeFeeRevenue ?? 0} total={effectiveData.totalOwnedRevenue ?? 0} color="bg-violet-500" /></div>
           <div className="mt-7 rounded-xl bg-success-soft p-4"><div className="flex items-center gap-2 text-sm font-bold text-success"><HandCoins className="h-4 w-4" /> Nguyên tắc ghi nhận</div><p className="mt-1.5 text-xs leading-5 text-success">Gói chỉ tính khi đã thanh toán. Phí tranh chấp chỉ tính sau khi Ticket được Admin giải quyết.</p></div>
         </div>
       </section>

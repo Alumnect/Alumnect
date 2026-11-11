@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { 
   Inbox, Eye, EyeOff, X, 
   Flag, ArrowRight, ShieldAlert, Check, Ban,
@@ -6,9 +6,8 @@ import {
   Trash2, Info, UserX, HelpCircle,
   Search, User, RotateCcw, Layers
 } from 'lucide-react'
-import { Badge, Card, Avatar, EmptyState, Skeleton, toast, Pagination, DialogFrame } from '@/components/ui'
+import { Badge, Avatar, EmptyState, Skeleton, toast, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { Reveal } from '@/components/motion'
 import { cn } from '@/lib/utils'
 import { useAdminReports, useUpdateReportStatus, useTogglePostHidden } from '../hooks/useAdmin'
 import type { AdminReportDto } from '../api/adminApi'
@@ -459,9 +458,23 @@ export function AdminReportsQueue() {
     }
   }, [accessToken, queryClient])
 
-  const reports = reportsData?.content || []
+  const rawReports = reportsData?.content || []
   const totalPages = reportsData?.totalPages || 0
   const totalElements = reportsData?.totalElements || 0
+
+  // Client-side fallback: Đảm bảo lọc mức rủi ro chính xác 100% theo tiêu chuẩn ModerationRiskLevel
+  const reports = useMemo(() => {
+    if (riskFilter === 'ALL') return rawReports
+    return rawReports.filter((r) => {
+      const isHigh = r.riskLevel === 'HIGH' || (r.aiScore != null && r.aiScore >= 0.85) || isImageAiViolation(r)
+      const isMedium = !isHigh && (r.riskLevel === 'MEDIUM' || (r.aiScore != null && r.aiScore >= 0.40))
+      const isLow = !isHigh && !isMedium
+      if (riskFilter === 'HIGH') return isHigh
+      if (riskFilter === 'MEDIUM') return isMedium
+      if (riskFilter === 'LOW') return isLow
+      return true
+    })
+  }, [rawReports, riskFilter])
 
   const activeWillHide = getSelectedReportWillHide()
 
@@ -482,392 +495,391 @@ export function AdminReportsQueue() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      {/* --- Top Header & Workflow Status Tabs (shadcn/ui Segmented Control) --- */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
-            <ShieldAlert size={15} /> Kiểm duyệt nội dung cộng đồng
-          </div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-            Báo cáo vi phạm
-          </h1>
-          <p className="mt-0.5 text-xs text-text-subtle">
-            Giám sát, phân tích rủi ro AI và giải quyết các bài viết bị báo cáo vi phạm tiêu chuẩn cộng đồng.
-          </p>
-        </div>
-
-        {/* Primary Status Tabs */}
-        <div className="inline-flex items-center gap-1 rounded-2xl border border-border bg-surface p-1 shadow-xs self-start lg:self-auto">
-          {[
-            { key: 'PENDING', label: 'Đang chờ xử lý', countBadge: statusFilter === 'PENDING' ? totalElements : null },
-            { key: 'RESOLVED', label: 'Đã giải quyết', countBadge: statusFilter === 'RESOLVED' ? totalElements : null },
-            { key: 'DISMISSED', label: 'Đã bỏ qua', countBadge: statusFilter === 'DISMISSED' ? totalElements : null },
-          ].map((tab) => {
-            const isActive = statusFilter === tab.key
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => {
-                  setStatusFilter(tab.key as any)
-                  setPage(0)
-                }}
-                className={cn(
-                  'relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-150 cursor-pointer select-none',
-                  isActive
-                    ? 'bg-primary-solid text-on-primary shadow-raised font-extrabold'
-                    : 'text-text-muted hover:bg-surface-2 hover:text-text'
-                )}
-              >
-                <span>{tab.label}</span>
-                {tab.countBadge !== null && tab.countBadge !== undefined && tab.countBadge > 0 && (
-                  <span
-                    className={cn(
-                      'rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none',
-                      isActive ? 'bg-white/20 text-white' : 'bg-primary-soft text-primary-solid'
-                    )}
-                  >
-                    {tab.countBadge}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* --- Unified Faceted Filter Toolbar (shadcn-admin Data Table Filter Style) --- */}
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs space-y-3.5">
-        {/* Row 1: Search Inputs & Faceted Dropdowns */}
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
-          {/* Search Content */}
-          <div className="relative flex-1 min-w-[220px]">
-            <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
-            <input
-              aria-label="Tìm nội dung bài viết..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setPage(0)
-              }}
-              placeholder="Tìm kiếm nội dung bài viết..."
-              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-8 text-xs text-text placeholder:text-text-subtle focus:border-primary-solid focus:bg-surface focus:outline-none transition shadow-2xs"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('')
-                  setPage(0)
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text cursor-pointer"
-                title="Xóa tìm kiếm"
-              >
-                <X size={14} />
-              </button>
-            )}
+    <div className="mx-auto max-w-6xl">
+      {/* 1 BẢNG DUY NHẤT (Single Unified Table Card) tích hợp toàn bộ: Header, Filter, Table, Pagination */}
+      <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
+        {/* --- Card Header: Tiêu đề trang & Tabs trạng thái xử lý --- */}
+        <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between bg-surface">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
+              <ShieldAlert size={15} /> Kiểm duyệt nội dung cộng đồng
+            </div>
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+              Báo cáo vi phạm
+            </h1>
+            <p className="mt-0.5 text-xs text-text-subtle">
+              Giám sát, phân tích rủi ro AI và giải quyết các bài viết bị báo cáo vi phạm tiêu chuẩn cộng đồng.
+            </p>
           </div>
 
-          {/* Search Author */}
-          <div className="relative w-full sm:w-56">
-            <User size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
-            <input
-              aria-label="Tìm tác giả, email..."
-              value={authorQuery}
-              onChange={(e) => {
-                setAuthorQuery(e.target.value)
-                setPage(0)
-              }}
-              placeholder="Tác giả, email..."
-              className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-8 text-xs text-text placeholder:text-text-subtle focus:border-primary-solid focus:bg-surface focus:outline-none transition shadow-2xs"
-            />
-            {authorQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthorQuery('')
-                  setPage(0)
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text cursor-pointer"
-                title="Xóa tìm kiếm"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          {/* Reason Dropdown */}
-          <CustomReasonDropdown
-            value={reasonFilter}
-            onChange={(newReason) => {
-              setReasonFilter(newReason)
-              setPage(0)
-            }}
-          />
-
-          {/* Post Category Dropdown */}
-          <CustomCategoryDropdown
-            value={typeFilter}
-            onChange={(newCat) => {
-              setTypeFilter(newCat)
-              setPage(0)
-            }}
-          />
-
-          {/* Reset Filters button */}
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-dashed border-border px-3 text-xs font-bold text-text-muted hover:border-danger hover:bg-danger-soft hover:text-danger transition cursor-pointer shrink-0"
-              title="Đặt lại toàn bộ bộ lọc"
-            >
-              <RotateCcw size={13} />
-              <span className="hidden sm:inline">Đặt lại</span>
-            </button>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="h-px bg-border/60" />
-
-        {/* Row 2: AI Risk Level Chips & Result Summary */}
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-          {/* Risk Level Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            <span className="flex items-center gap-1.5 pr-1.5 text-xs font-bold text-text-subtle shrink-0">
-              <Sparkles size={13} className="text-gold-500" /> Mức rủi ro AI:
-            </span>
-
-            {RISK_TABS.map((tab) => {
-              const isSelected = riskFilter === tab.key
-              const dotColor =
-                tab.key === 'HIGH'
-                  ? 'bg-rose-500 ring-rose-500/20'
-                  : tab.key === 'MEDIUM'
-                  ? 'bg-amber-500 ring-amber-500/20'
-                  : tab.key === 'LOW'
-                  ? 'bg-emerald-500 ring-emerald-500/20'
-                  : 'bg-slate-400 ring-slate-400/20'
-
+          {/* Primary Status Tabs */}
+          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface-2 p-1 shadow-2xs self-start sm:self-auto">
+            {[
+              { key: 'PENDING', label: 'Đang chờ xử lý', countBadge: statusFilter === 'PENDING' ? totalElements : null },
+              { key: 'RESOLVED', label: 'Đã giải quyết', countBadge: statusFilter === 'RESOLVED' ? totalElements : null },
+              { key: 'DISMISSED', label: 'Đã bỏ qua', countBadge: statusFilter === 'DISMISSED' ? totalElements : null },
+            ].map((tab) => {
+              const isActive = statusFilter === tab.key
               return (
                 <button
                   key={tab.key}
                   type="button"
                   onClick={() => {
-                    setRiskFilter(tab.key)
+                    setStatusFilter(tab.key as any)
                     setPage(0)
                   }}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition duration-150 cursor-pointer whitespace-nowrap shrink-0 border select-none',
-                    isSelected
-                      ? 'bg-primary-solid text-on-primary border-primary shadow-xs font-extrabold'
-                      : 'bg-surface-2 text-text-muted border-border hover:bg-surface-3 hover:text-text'
+                    'relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-150 cursor-pointer select-none',
+                    isActive
+                      ? 'bg-primary-solid text-on-primary shadow-raised font-extrabold'
+                      : 'text-text-muted hover:bg-surface hover:text-text'
                   )}
                 >
-                  <span className={cn('h-2 w-2 rounded-full ring-2 shrink-0', dotColor, isSelected ? 'bg-white ring-white/30' : '')} />
                   <span>{tab.label}</span>
+                  {tab.countBadge !== null && tab.countBadge !== undefined && tab.countBadge > 0 && (
+                    <span
+                      className={cn(
+                        'rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none',
+                        isActive ? 'bg-white/20 text-white' : 'bg-primary-soft text-primary-solid'
+                      )}
+                    >
+                      {tab.countBadge}
+                    </span>
+                  )}
                 </button>
               )
             })}
           </div>
+        </div>
 
-          {/* Report Counter */}
-          <div className="text-xs font-semibold text-text-subtle shrink-0">
-            Hiển thị <strong className="text-text font-bold">{reports.length}</strong> / <strong>{totalElements}</strong> báo cáo vi phạm
+        {/* --- Toolbar: Tìm kiếm, Bộ lọc Dropdown & Mức rủi ro AI --- */}
+        <div className="border-b border-border bg-surface-2/40 p-4 space-y-3.5">
+          {/* Row 1: Search Inputs & Faceted Dropdowns */}
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
+            {/* Search Content */}
+            <div className="relative flex-1 min-w-[220px]">
+              <Search size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+              <input
+                aria-label="Tìm nội dung bài viết..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setPage(0)
+                }}
+                placeholder="Tìm kiếm nội dung bài viết..."
+                className="h-10 w-full rounded-xl border border-border bg-surface pl-9 pr-8 text-xs text-text placeholder:text-text-subtle focus:border-primary-solid focus:outline-none transition shadow-2xs"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('')
+                    setPage(0)
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text cursor-pointer"
+                  title="Xóa tìm kiếm"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Search Author */}
+            <div className="relative w-full sm:w-56">
+              <User size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+              <input
+                aria-label="Tìm tác giả, email..."
+                value={authorQuery}
+                onChange={(e) => {
+                  setAuthorQuery(e.target.value)
+                  setPage(0)
+                }}
+                placeholder="Tác giả, email..."
+                className="h-10 w-full rounded-xl border border-border bg-surface pl-9 pr-8 text-xs text-text placeholder:text-text-subtle focus:border-primary-solid focus:outline-none transition shadow-2xs"
+              />
+              {authorQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthorQuery('')
+                    setPage(0)
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text cursor-pointer"
+                  title="Xóa tìm kiếm"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Reason Dropdown */}
+            <CustomReasonDropdown
+              value={reasonFilter}
+              onChange={(newReason) => {
+                setReasonFilter(newReason)
+                setPage(0)
+              }}
+            />
+
+            {/* Post Category Dropdown */}
+            <CustomCategoryDropdown
+              value={typeFilter}
+              onChange={(newCat) => {
+                setTypeFilter(newCat)
+                setPage(0)
+              }}
+            />
+
+            {/* Reset Filters button */}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-dashed border-border px-3 text-xs font-bold text-text-muted hover:border-danger hover:bg-danger-soft hover:text-danger transition cursor-pointer shrink-0"
+                title="Đặt lại toàn bộ bộ lọc"
+              >
+                <RotateCcw size={13} />
+                <span className="hidden sm:inline">Đặt lại</span>
+              </button>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border/60" />
+
+          {/* Row 2: AI Risk Level Chips & Result Summary */}
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+            {/* Risk Level Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <span className="flex items-center gap-1.5 pr-1.5 text-xs font-bold text-text-subtle shrink-0">
+                <Sparkles size={13} className="text-gold-500" /> Mức rủi ro AI:
+              </span>
+
+              {RISK_TABS.map((tab) => {
+                const isSelected = riskFilter === tab.key
+                const dotColor =
+                  tab.key === 'HIGH'
+                    ? 'bg-rose-500 ring-rose-500/20'
+                    : tab.key === 'MEDIUM'
+                    ? 'bg-amber-500 ring-amber-500/20'
+                    : tab.key === 'LOW'
+                    ? 'bg-emerald-500 ring-emerald-500/20'
+                    : 'bg-slate-400 ring-slate-400/20'
+
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => {
+                      setRiskFilter(tab.key)
+                      setPage(0)
+                    }}
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition duration-150 cursor-pointer whitespace-nowrap shrink-0 border select-none',
+                      isSelected
+                        ? 'bg-primary-solid text-on-primary border-primary shadow-xs font-extrabold'
+                        : 'bg-surface text-text-muted border-border hover:bg-surface-2 hover:text-text'
+                    )}
+                  >
+                    <span className={cn('h-2 w-2 rounded-full ring-2 shrink-0', dotColor, isSelected ? 'bg-white ring-white/30' : '')} />
+                    <span>{tab.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Report Counter */}
+            <div className="text-xs font-semibold text-text-subtle shrink-0">
+              Hiển thị <strong className="text-text font-bold">{reports.length}</strong> / <strong>{totalElements}</strong> báo cáo vi phạm
+            </div>
           </div>
         </div>
-      </div>
 
-      <Reveal>
+        {/* --- Thân bảng: Danh sách báo cáo vi phạm --- */}
         {isLoading ? (
-          <Card hover={false} className="p-6">
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-full bg-primary-soft" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-1/4 bg-primary-soft" />
-                    <Skeleton className="h-3 w-1/3 bg-primary-soft" />
-                  </div>
+          <div className="p-6 space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-10 w-10 rounded-full bg-primary-soft" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/4 bg-primary-soft" />
+                  <Skeleton className="h-3 w-1/3 bg-primary-soft" />
                 </div>
-              ))}
-            </div>
-          </Card>
+              </div>
+            ))}
+          </div>
         ) : error ? (
-          <EmptyState
-            icon={<Inbox size={24} />}
-            title="Lỗi tải danh sách báo cáo"
-            description={error instanceof Error ? error.message : 'Lỗi kết nối máy chủ.'}
-          />
+          <div className="p-8">
+            <EmptyState
+              icon={<Inbox size={24} />}
+              title="Lỗi tải danh sách báo cáo"
+              description={error instanceof Error ? error.message : 'Lỗi kết nối máy chủ.'}
+            />
+          </div>
         ) : reports.length === 0 ? (
-          <EmptyState
-            icon={<Inbox size={24} />}
-            title="Không có báo cáo nào"
-            description={
-              typeFilter !== 'ALL'
-                ? `Không tìm thấy báo cáo nào cho bài viết loại "${CATEGORY_MAP[typeFilter]?.label}".`
-                : `Không tìm thấy báo cáo nào ở trạng thái ${
-                    statusFilter === 'PENDING' ? 'chờ xử lý' : statusFilter === 'RESOLVED' ? 'đã giải quyết' : 'đã bỏ qua'
-                  }.`
-            }
-          />
+          <div className="p-8">
+            <EmptyState
+              icon={<Inbox size={24} />}
+              title="Không có báo cáo nào"
+              description={
+                typeFilter !== 'ALL'
+                  ? `Không tìm thấy báo cáo nào cho bài viết loại "${CATEGORY_MAP[typeFilter]?.label}".`
+                  : `Không tìm thấy báo cáo nào ở trạng thái ${
+                      statusFilter === 'PENDING' ? 'chờ xử lý' : statusFilter === 'RESOLVED' ? 'đã giải quyết' : 'đã bỏ qua'
+                    }.`
+              }
+            />
+          </div>
         ) : (
-          <div className="space-y-4">
-            <Card hover={false} className="overflow-x-auto border border-border bg-surface rounded-3xl">
-              <table className="w-full min-w-[760px] text-sm text-left">
-                <thead>
-                  <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2">
-                    <th className="px-5 py-3.5 font-bold">Người gửi báo cáo</th>
-                    <th className="px-5 py-3.5 font-bold">Lý do</th>
-                    <th className="px-5 py-3.5 font-bold">Loại bài</th>
-                    <th className="px-5 py-3.5 font-bold">Tác giả & Nội dung bài viết</th>
-                    <th className="px-5 py-3.5 font-bold text-center">Đánh giá rủi ro</th>
-                    <th className="px-5 py-3.5 font-bold text-center">Trạng thái bài</th>
-                    <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {reports.map((r) => {
-                    const reasonInfo = REASON_LABELS[r.reason] || { label: r.reason, tone: 'neutral' }
-                    const catCfg = getCategoryConfig(r.postType)
-                    const CatIcon = catCfg.icon
-                    
-                    // Show real-time local indicator if marked to hide
-                    const localWillHide = willHideMap[r.id]
-                    const currentStatus = localWillHide !== undefined 
-                      ? (localWillHide ? 'HIDDEN' : 'ACTIVE') 
-                      : r.postStatus
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-sm text-left">
+              <thead>
+                <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2/60">
+                  <th className="px-5 py-3.5 font-bold">Người gửi báo cáo</th>
+                  <th className="px-5 py-3.5 font-bold">Lý do</th>
+                  <th className="px-5 py-3.5 font-bold">Loại bài</th>
+                  <th className="px-5 py-3.5 font-bold">Tác giả & Nội dung bài viết</th>
+                  <th className="px-5 py-3.5 font-bold text-center">Đánh giá rủi ro</th>
+                  <th className="px-5 py-3.5 font-bold text-center">Trạng thái bài</th>
+                  <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {reports.map((r: AdminReportDto) => {
+                  const reasonInfo = REASON_LABELS[r.reason] || { label: r.reason, tone: 'neutral' }
+                  const catCfg = getCategoryConfig(r.postType)
+                  const CatIcon = catCfg.icon
 
-                    return (
-                      <tr key={r.id} className={cn('transition-colors hover:bg-surface-2 border-l-4', catCfg.rowBorderLeft, catCfg.bgHoverRow)}>
-                        {/* Người báo cáo */}
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <Avatar
-                              src={r.reporterAvatarUrl}
-                              name={reporterLabel(r)}
-                              size={36}
-                              className="border border-primary-soft-border shrink-0 animate-breathe"
-                            />
-                            <div className="min-w-0">
-                              <p className="font-bold text-text truncate">{reporterLabel(r)}</p>
-                              <p className="text-xs text-text-subtle truncate">{reporterDetail(r)}</p>
-                            </div>
+                  const localWillHide = willHideMap[r.id]
+                  const currentStatus = localWillHide !== undefined 
+                    ? (localWillHide ? 'HIDDEN' : 'ACTIVE') 
+                    : r.postStatus
+
+                  return (
+                    <tr key={r.id} className={cn('transition-colors hover:bg-surface-2/50 border-l-4', catCfg.rowBorderLeft)}>
+                      {/* Người báo cáo */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            src={r.reporterAvatarUrl}
+                            name={reporterLabel(r)}
+                            size={36}
+                            className="border border-primary-soft-border shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="font-bold text-text truncate">{reporterLabel(r)}</p>
+                            <p className="text-xs text-text-subtle truncate">{reporterDetail(r)}</p>
                           </div>
-                        </td>
+                        </div>
+                      </td>
 
-                        {/* Lý do báo cáo */}
-                        <td className="px-5 py-4">
-                          <div className="space-y-1">
-                            <Badge tone={reasonInfo.tone}>{reasonInfo.label}</Badge>
-                            {r.description && (
-                              <p className="text-xs text-text-subtle font-medium truncate max-w-[180px]" title={r.description}>
-                                {r.description}
-                              </p>
-                            )}
+                      {/* Lý do báo cáo */}
+                      <td className="px-5 py-4">
+                        <div className="space-y-1">
+                          <Badge tone={reasonInfo.tone}>{reasonInfo.label}</Badge>
+                          {r.description && (
+                            <p className="text-xs text-text-subtle font-medium truncate max-w-[180px]" title={r.description}>
+                              {r.description}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Loại bài viết */}
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold border shadow-2xs',
+                            catCfg.badgeBg,
+                            catCfg.badgeText,
+                            catCfg.badgeBorder
+                          )}
+                        >
+                          <CatIcon size={12} style={{ color: catCfg.colorHex }} />
+                          <span>{catCfg.shortLabel}</span>
+                        </span>
+                      </td>
+
+                      {/* Tác giả & Nội dung bài viết */}
+                      <td className="px-5 py-4">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-text-subtle font-medium">Bởi:</span>
+                            <span className="text-xs font-bold text-text truncate">{r.postAuthorName}</span>
                           </div>
-                        </td>
+                          <p className="text-xs text-text-muted truncate mt-1 max-w-[240px] font-medium bg-primary-soft p-1.5 rounded-lg border border-brand-100/50">
+                            {r.postContent}
+                          </p>
+                        </div>
+                      </td>
 
-                        {/* Loại bài viết */}
-                        <td className="px-5 py-4 whitespace-nowrap">
+                      {/* Đánh giá rủi ro (Gọn gàng trên 1 dòng - KHÔNG có tag "Tự động ẩn" gây rối mắt) */}
+                      <td className="px-5 py-4 text-center">
+                        {isImageAiViolation(r) ? (
+                          <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs bg-rose-50 text-rose-700 border-rose-200">
+                            <Sparkles size={11} />
+                            Ảnh vi phạm
+                          </span>
+                        ) : r.aiScore !== undefined && r.aiScore !== null ? (
                           <span
                             className={cn(
-                              'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold border shadow-2xs',
-                              catCfg.badgeBg,
-                              catCfg.badgeText,
-                              catCfg.badgeBorder
+                              'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs',
+                              r.riskLevel === 'HIGH' || r.aiScore >= 0.85
+                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             )}
                           >
-                            <CatIcon size={12} style={{ color: catCfg.colorHex }} />
-                            <span>{catCfg.shortLabel}</span>
+                            <Sparkles size={11} />
+                            {(r.aiScore * 100).toFixed(0)}%{' '}
+                            {r.riskLevel === 'HIGH' || r.aiScore >= 0.85
+                              ? 'Cao'
+                              : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
+                              ? 'Nghi vấn'
+                              : 'Thấp'}
                           </span>
-                        </td>
+                        ) : (
+                          <span className="text-xs text-text-subtle font-medium">—</span>
+                        )}
+                      </td>
 
-                        {/* Tác giả & Nội dung bài viết */}
-                        <td className="px-5 py-4">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-text-subtle font-medium">Bởi:</span>
-                              <span className="text-xs font-bold text-text truncate">{r.postAuthorName}</span>
-                            </div>
-                            <p className="text-xs text-text-muted truncate mt-1 max-w-[240px] font-medium bg-primary-soft p-1.5 rounded-lg border border-brand-100/50">
-                              {r.postContent}
-                            </p>
-                          </div>
-                        </td>
+                      {/* Trạng thái bài viết */}
+                      <td className="px-5 py-4 text-center">
+                        {currentStatus === 'HIDDEN' ? (
+                          <Badge tone="danger">Đã ẩn{localWillHide !== undefined && ' *'}</Badge>
+                        ) : currentStatus === 'DELETED' ? (
+                          <Badge tone="neutral">Đã xóa</Badge>
+                        ) : (
+                          <Badge tone="success">Công khai{localWillHide !== undefined && ' *'}</Badge>
+                        )}
+                      </td>
 
-                        {/* Đánh giá rủi ro */}
-                        <td className="px-5 py-4 text-center">
-                          {isImageAiViolation(r) ? (
-                            <div className="inline-flex flex-col items-center gap-1">
-                              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs bg-rose-50 text-rose-700 border-rose-200">
-                                <Sparkles size={11} />
-                                Ảnh vi phạm
-                              </span>
-                              {r.autoModerated && (
-                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100/60 rounded px-1.5 py-0.5">
-                                  Tự động ẩn
-                                </span>
-                              )}
-                            </div>
-                          ) : r.aiScore !== undefined && r.aiScore !== null ? (
-                            <div className="inline-flex flex-col items-center gap-1">
-                              <span
-                                className={cn(
-                                  'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs',
-                                  r.riskLevel === 'HIGH' || r.aiScore >= 0.85
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                    : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
-                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                )}
-                              >
-                                <Sparkles size={11} />
-                                {(r.aiScore * 100).toFixed(0)}% {r.riskLevel === 'HIGH' ? 'Cao' : r.riskLevel === 'MEDIUM' ? 'Nghi vấn' : 'Thấp'}
-                              </span>
-                              {r.autoModerated && (
-                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100/60 rounded px-1.5 py-0.5">
-                                  Tự động ẩn
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-text-subtle font-medium">—</span>
-                          )}
-                        </td>
+                      {/* Thao tác */}
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setSelectedReport(r)}
+                            className="inline-flex items-center gap-1 bg-primary-soft hover:bg-primary-soft text-primary-solid font-bold text-xs rounded-full px-3 py-1.5 border border-primary-soft-border transition-colors shadow-2xs cursor-pointer hover-sheen"
+                          >
+                            <Eye size={12} /> Chi tiết
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-                        {/* Trạng thái bài viết */}
-                        <td className="px-5 py-4 text-center">
-                          {currentStatus === 'HIDDEN' ? (
-                            <Badge tone="danger">Đã ẩn{localWillHide !== undefined && ' *'}</Badge>
-                          ) : currentStatus === 'DELETED' ? (
-                            <Badge tone="neutral">Đã xóa</Badge>
-                          ) : (
-                            <Badge tone="success">Công khai{localWillHide !== undefined && ' *'}</Badge>
-                          )}
-                        </td>
-
-                        {/* Thao tác */}
-                        <td className="px-5 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => setSelectedReport(r)}
-                              className="inline-flex items-center gap-1 bg-primary-soft hover:bg-primary-soft text-primary-solid font-bold text-xs rounded-full px-3 py-1.5 border border-primary-soft-border transition-colors shadow-2xs cursor-pointer hover-sheen"
-                            >
-                              <Eye size={12} /> Chi tiết
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </Card>
-
-            {/* Phân trang */}
+        {/* --- Card Footer: Phân trang tích hợp dưới đáy bảng --- */}
+        {totalPages > 1 && (
+          <div className="border-t border-border bg-surface p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <span className="text-xs font-semibold text-text-subtle">
+              Trang <strong className="text-text">{page + 1}</strong> / <strong>{totalPages}</strong>
+            </span>
             <Pagination
               page={page}
               totalPages={totalPages}
@@ -875,7 +887,7 @@ export function AdminReportsQueue() {
             />
           </div>
         )}
-      </Reveal>
+      </div>
 
       {/* Modal chi tiết báo cáo vi phạm */}
       {selectedReport && <DialogFrame
