@@ -120,7 +120,43 @@ function pageOf<T>(body: any, map: (r: Raw) => T, page: number) {
   return { items, page, hasMore }
 }
 
+export interface AiStudioResponse {
+  detectedType: PostType
+  polishedContent: string
+  jobData?: {
+    title?: string
+    company?: string
+    location?: string
+    salaryMin?: number
+    salaryMax?: number
+    contactEmail?: string
+    applyUrl?: string
+  } | null
+  eventData?: {
+    title?: string
+    location?: string
+    startTime?: string
+    endTime?: string
+    capacity?: number
+  } | null
+  posterSpec: {
+    illustrationScene: string
+    colorPalette: string
+    badgeText?: string | null
+    headline: string
+    subheadline?: string | null
+    highlightPill?: string | null
+    locationText?: string | null
+    bulletPoints?: string[] | null
+  }
+  source?: string
+}
+
 export const feedApi = {
+  aiStudio: async (prompt: string, preferredType?: string): Promise<AiStudioResponse> => {
+    const res: any = await http.post('/posts/ai-studio', { prompt, preferredType }, { timeout: 25000 })
+    return unwrap(res)
+  },
   getFeed: async ({ page = 0, filter = 'all' as FeedFilter, keyword = '', eventFilter }: { page?: number; filter?: FeedFilter; keyword?: string; eventFilter?: string }) => {
     const params: Record<string, string | number> = { page, size: PAGE_SIZE }
     if (filter !== 'all') params.type = filter

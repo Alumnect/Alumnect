@@ -5,8 +5,7 @@ import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Globe, Lock, Plus, Users } from '@/components/icons'
-import { Button, Card, Empty, Screen, SearchBar, Segmented, Tag, Txt } from '@/components/ui'
-import { SelectField } from '@/components/SelectField'
+import { Button, Card, Chip, ChipRow, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { ListSkeleton } from '@/components/Skeleton'
 import { GROUP_CATEGORIES, categoryLabel, groupApi } from '@/api/groups'
@@ -15,6 +14,8 @@ import { useAuthStore } from '@/store/authStore'
 import { useDebounced } from '@/lib/hooks'
 import { useTheme } from '@/theme'
 import { BrandCover } from '@/components/DetailBits'
+import { BrandIcon } from '@/components/BrandIcon'
+import { CommunityIntro, SoftTabs } from '@/components/SocialUI'
 
 type Tab = 'all' | 'mine'
 
@@ -22,17 +23,17 @@ const GroupItem = React.memo(function GroupItem({ g }: { g: GroupCard }) {
   const t = useTheme()
   const router = useRouter()
   return (
-    <Card style={{ marginHorizontal: 16, marginBottom: 16, padding: 0, overflow: 'hidden' }} onPress={() => router.push({ pathname: '/groups/[id]', params: { id: String(g.id) } })}>
+    <Card style={{ marginHorizontal: 16, marginBottom: 18, padding: 0, borderRadius: 22, overflow: 'hidden' }} onPress={() => router.push({ pathname: '/groups/[id]', params: { id: String(g.id) } })}>
       {g.coverImageUrl ? (
-        <Image source={{ uri: g.coverImageUrl }} style={{ height: 120, backgroundColor: t.inputBg }} contentFit="cover" />
+        <Image source={{ uri: g.coverImageUrl }} style={{ aspectRatio: 2.25, backgroundColor: t.inputBg }} contentFit="cover" transition={180} />
       ) : (
         <BrandCover height={96} />
       )}
-      <View style={{ padding: 14, gap: 4 }}>
-        <Txt weight="800" size={16} numberOfLines={1}>{g.name}</Txt>
-        {g.shortDescription ? <Txt muted numberOfLines={2} style={{ lineHeight: 20 }}>{g.shortDescription}</Txt> : null}
+      <View style={{ padding: 16, gap: 8 }}>
+        <Txt weight="600" size={17} numberOfLines={2}>{g.name}</Txt>
+        {g.shortDescription ? <Txt muted size={13} numberOfLines={2} style={{ lineHeight: 20 }}>{g.shortDescription}</Txt> : null}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-          <Tag label={categoryLabel(g.category)} />
+          <Tag label={categoryLabel(g.category)} tone="primary" />
           <Tag
             label={g.privacy === 'PRIVATE' ? 'Riêng tư' : 'Công khai'}
             tone="neutral"
@@ -64,19 +65,30 @@ export default function GroupsScreen() {
     initialPageParam: 0,
     queryFn: ({ pageParam }) => (tab === 'mine' ? groupApi.mine(pageParam) : groupApi.list({ page: pageParam, keyword, category })),
     getNextPageParam: (l) => (l.hasMore ? l.page + 1 : undefined),
+    enabled: role === 'ALUMNI',
   })
   const items = q.data?.pages.flatMap((p) => p.items) ?? []
+
+  if (role !== 'ALUMNI') {
+    return (
+      <Screen bg={t.card}>
+        <Header title="Hội nhóm" />
+        <Empty text="Chức năng Hội nhóm chỉ dành cho Cựu sinh viên (Alumni)." />
+      </Screen>
+    )
+  }
 
   return (
     <Screen bg={t.card}>
       <Header
         title="Hội nhóm"
-        right={role === 'ALUMNI' ? <Button title="Tạo nhóm" size="sm" icon={<Plus size={16} color="#fff" />} onPress={() => router.push('/groups/create')} /> : undefined}
+        right={role === 'ALUMNI' ? <Button title="Tạo nhóm" variant="brand" size="sm" icon={<Plus size={16} color="#fff" />} onPress={() => router.push('/groups/create')} /> : undefined}
       />
-      <Segmented<Tab> tabs={[['all', 'Khám phá'], ['mine', 'Nhóm của tôi']]} value={tab} onChange={setTab} />
+      <SoftTabs<Tab> tabs={[['all', 'Khám phá'], ['mine', 'Nhóm của tôi']]} value={tab} onChange={setTab} />
       <View style={{ flex: 1, backgroundColor: t.bg }}>
         <FlashList
           data={q.isLoading ? [] : items}
+          maintainVisibleContentPosition={{ disabled: true }}
           keyExtractor={(g) => String(g.id)}
           contentContainerStyle={{ paddingBottom: 24 }}
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
@@ -87,18 +99,18 @@ export default function GroupsScreen() {
               {tab === 'all' ? (
                 <View style={{ backgroundColor: t.card, paddingTop: 12, marginBottom: 16 }}>
                   <SearchBar value={kw} onChangeText={setKw} placeholder="Tìm nhóm theo tên, chủ đề..." style={{ paddingHorizontal: 16 }} />
-                  <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
-                    <SelectField label="Chủ đề nhóm" placeholder="Tất cả chủ đề" value={category} options={[...GROUP_CATEGORIES]} onChange={(value) => setCategory(value ?? '')} />
-                  </View>
+                  <ChipRow style={{ marginTop: 4 }}><Chip label="Tất cả" active={!category} onPress={() => setCategory('')} />{GROUP_CATEGORIES.map((c) => <Chip key={c.value} label={c.label} active={category === c.value} onPress={() => setCategory(c.value)} />)}</ChipRow>
                 </View>
               ) : <View style={{ height: 10 }} />}
+              {tab === 'all' && !keyword && !category ? <View style={{ paddingHorizontal: 16 }}><CommunityIntro icon="people" eyebrow="TÌM THẤY CỘNG ĐỒNG CỦA BẠN" title="Cùng sở thích. Cùng kết nối." description="Gặp gỡ những người đồng điệu và chia sẻ điều bạn yêu thích." /></View> : null}
+              {!q.isLoading && items.length ? <View style={{ paddingHorizontal: 18, marginBottom: 12 }}><Txt size={16} weight="600">{tab === 'mine' ? 'Nơi bạn thuộc về' : keyword || category ? 'Kết quả khám phá' : 'Khám phá các hội nhóm'}</Txt></View> : null}
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
             </View>
           }
           ListEmptyComponent={
             q.isLoading ? null : (
               <Empty error={q.error} onRetry={() => { void q.refetch() }}
-                icon={<Users size={28} color={t.primary} />}
+                icon={<BrandIcon name="people" size={56} />}
                 title={tab === 'mine' ? 'Bạn chưa tham gia nhóm nào' : 'Không tìm thấy nhóm'}
                 text={tab === 'mine' ? 'Khám phá các nhóm cùng sở thích, ngành nghề.' : 'Thử đổi chủ đề hoặc từ khoá khác.'}
                 action={tab === 'mine' ? 'Khám phá nhóm' : undefined}

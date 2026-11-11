@@ -8,13 +8,13 @@ import lombok.Getter;
 @Getter
 public enum ModerationRiskLevel {
     /** Vi phạm nghiêm trọng, nội dung bị tự động ẩn. */
-    HIGH(0.85, null),
+    HIGH(0.60, null),
 
     /** Cần Admin xem xét, nội dung vẫn hiển thị. */
-    MEDIUM(0.40, 0.85),
+    MEDIUM(0.20, 0.60),
 
     /** An toàn hoặc chỉ có tín hiệu yếu. */
-    LOW(null, 0.40);
+    LOW(null, 0.20);
 
     /** Ngưỡng dưới (bao gồm), null nếu không giới hạn. */
     private final Double minScore;

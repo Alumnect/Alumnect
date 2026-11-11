@@ -99,6 +99,10 @@ export function JobsPage() {
     return matchesKeyword && matchesLocation
   })
 
+  // Bộ lọc chạy trên các trang đã tải: khi đang lọc, nút tải thêm vẫn cần để tìm kết quả ở trang sau.
+  // Danh sách rỗng và không có bộ lọc thì không còn gì để tải thêm.
+  const showLoadMore = hasNextPage && (filteredJobs.length > 0 || kw !== '' || loc !== '')
+
   const formatSalary = (min?: number | null, max?: number | null) => {
     if (!min && !max) return t('jobs.negotiable')
     if (min && !max) return t('jobs.salaryFrom', { min: min.toLocaleString() })
@@ -334,7 +338,7 @@ export function JobsPage() {
         </Stagger>
       )}
 
-      {hasNextPage && (
+      {showLoadMore && (
         <Reveal>
           <div className="mt-8 flex justify-center">
             <Button

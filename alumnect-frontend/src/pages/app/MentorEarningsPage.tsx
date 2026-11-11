@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Landmark, ShieldAlert } from 'lucide-react'
+import { Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ButtonLink, Container } from '@/components/ui'
 import { MentorPageHeader, MentoringTermsGate } from '@/features/mentorship'
 import { mentoringWalletApi } from '@/features/mentorship/api/mentoringWalletApi'
 import { MentoringWalletTable } from '@/features/mentorship/components/MentoringWalletTable'
 import { MentoringActionCard } from '@/features/mentorship/components/MentoringUi'
+import { useAuthStore } from '@/store/authStore'
 
 /** Thu nhập Mentoring: thù lao từ các Task đã nghiệm thu và trạng thái chuyển tiền về tài khoản Mentor. */
 function MentorEarningsContent() {
@@ -51,6 +53,12 @@ function MentorEarningsContent() {
 }
 
 export function MentorEarningsPage() {
+  const user = useAuthStore((state) => state.user)
+
+  if (user?.role !== 'ALUMNI') {
+    return <Navigate to="/app/mentoring" replace />
+  }
+
   return (
     <Container className="py-2 sm:py-4">
       <MentoringTermsGate source="MENTORING_HOME">

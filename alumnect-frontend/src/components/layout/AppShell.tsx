@@ -15,6 +15,7 @@ import {
   Sun,
   Moon,
   GlobeSimple,
+  GraduationCap,
 } from '@/components/icons'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
@@ -34,6 +35,7 @@ import { Button } from '@/components/ui/Button'
 import { LoginPromptModal } from '@/components/ui/LoginPromptModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { MentorshipLayout } from '@/features/mentorship/components/MentorshipLayout'
+import { UpgradeAlumniModal, useMyVerificationStatus } from '@/features/verification'
 import { useClickOutside } from '@/hooks/useClickOutside'
 
 /* ----------------------------- small popover ----------------------------- */
@@ -124,8 +126,12 @@ export function AppShell() {
   const [sheet, setSheet] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [activePopover, setActivePopover] = useState<'apps' | 'account' | null>(null)
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
+  const { data: verificationStatus } = useMyVerificationStatus({
+    enabled: isAuthenticated && user?.role === 'STUDENT',
+  })
   const keyword = useSearchStore((s) => s.keyword)
   const setKeyword = useSearchStore((s) => s.setKeyword)
   const { theme, setTheme } = useThemeStore()
@@ -250,8 +256,16 @@ export function AppShell() {
     NAV_KEY_MAP[item.to]?.tab ? t(NAV_KEY_MAP[item.to].tab!) : (item.tabLabel ?? getNavShortLabel(item))
 
   // Hội nhóm chỉ hiển thị cho Cựu sinh viên (ALUMNI), ẩn với Khách và Sinh viên (STUDENT).
+  // Bản đồ cựu sinh viên (/app/map) và Lộ trình nghề nghiệp (/app/career) chỉ hiển thị cho STUDENT và ALUMNI.
   const visibleMoreNav = useMemo(
-    () => APP_MORE_NAV.filter((item) => item.to !== '/app/groups' || user?.role === 'ALUMNI'),
+    () =>
+      APP_MORE_NAV.filter((item) => {
+        if (item.to === '/app/groups') return user?.role === 'ALUMNI'
+        if (item.to === '/app/map' || item.to === '/app/career') {
+          return user?.role === 'STUDENT' || user?.role === 'ALUMNI'
+        }
+        return true
+      }),
     [user?.role]
   )
 
@@ -508,6 +522,19 @@ export function AppShell() {
                         </Link>
                       )
                     })}
+                  {user?.role === 'STUDENT' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActivePopover(null)
+                        setUpgradeModalOpen(true)
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text cursor-pointer"
+                    >
+                      <GraduationCap size={18} weight="regular" className="shrink-0 text-text-subtle" />
+                      <span>Nâng cấp Cựu sinh viên</span>
+                    </button>
+                  )}
                   <div className="my-1 h-px bg-border" />
                   <button
                     type="button"
@@ -571,12 +598,12 @@ export function AppShell() {
         location.pathname === '/app/map'
           ? "max-w-full px-2 sm:px-4 lg:px-5 pb-3 pt-3 lg:pb-3"
           : location.pathname === '/app/messages'
-          ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] overflow-y-auto no-scrollbar lg:h-[calc(100vh-3.85rem)]"
-          : isMentoringChatRoute
-          ? "h-[calc(100dvh-7.65rem)] max-w-[1560px] overflow-hidden px-3 py-3 sm:px-6 lg:h-[calc(100dvh-4.1rem)] lg:px-8"
-          : isMentoringRoute
-          ? "h-[calc(100vh-7.65rem)] max-w-[1560px] overflow-y-auto overscroll-contain px-3 pb-8 pt-3 scroll-pb-8 sm:px-6 lg:h-auto lg:overflow-visible lg:px-8 lg:pb-10 xl:h-[calc(100vh-4.1rem)] xl:overflow-hidden xl:pb-3"
-          : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
+            ? "max-w-7xl px-3 sm:px-6 lg:px-8 py-3 h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] overflow-y-auto no-scrollbar lg:h-[calc(100vh-3.85rem)]"
+            : isMentoringChatRoute
+              ? "h-[calc(100dvh-7.65rem)] max-w-[1560px] overflow-hidden px-3 py-3 sm:px-6 lg:h-[calc(100dvh-4.1rem)] lg:px-8"
+              : isMentoringRoute
+                ? "h-[calc(100vh-7.65rem)] max-w-[1560px] overflow-y-auto overscroll-contain px-3 pb-8 pt-3 scroll-pb-8 sm:px-6 lg:h-auto lg:overflow-visible lg:px-8 lg:pb-10 xl:h-[calc(100vh-4.1rem)] xl:overflow-hidden xl:pb-3"
+                : "max-w-7xl px-4 sm:px-6 lg:px-8 pb-28 pt-6 lg:pb-10"
       )}>
         <PageHeadingGuard />
         <ErrorBoundary>
@@ -629,30 +656,32 @@ export function AppShell() {
               </NavLink>
             )
           })}
-          <button
-            type="button"
-            onClick={() => setSheet(true)}
-            className={cn(
-              'relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2 text-xs font-semibold tracking-tight transition-colors',
-              sheet || isMoreRouteActive ? 'text-primary-solid' : 'text-text-subtle hover:text-text',
-            )}
-          >
-            {isMoreRouteActive && !sheet && (
-              <motion.span
-                layoutId="app-tab-mobile"
-                className="absolute left-1/2 top-1.5 h-8 w-14 -translate-x-1/2 rounded-full bg-primary-soft"
-                transition={TRANSITION.indicator}
-              />
-            )}
-            <SquaresFour size={22} weight={sheet || isMoreRouteActive ? 'fill' : 'regular'} className="relative" />
-            <span className="relative">{t('nav.more')}</span>
-          </button>
+          {isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => setSheet(true)}
+              className={cn(
+                'relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2 text-xs font-semibold tracking-tight transition-colors',
+                sheet || isMoreRouteActive ? 'text-primary-solid' : 'text-text-subtle hover:text-text',
+              )}
+            >
+              {isMoreRouteActive && !sheet && (
+                <motion.span
+                  layoutId="app-tab-mobile"
+                  className="absolute left-1/2 top-1.5 h-8 w-14 -translate-x-1/2 rounded-full bg-primary-soft"
+                  transition={TRANSITION.indicator}
+                />
+              )}
+              <SquaresFour size={22} weight={sheet || isMoreRouteActive ? 'fill' : 'regular'} className="relative" />
+              <span className="relative">{t('nav.more')}</span>
+            </button>
+          )}
         </div>
       </nav>
 
       {/* ===== mobile "more" sheet ===== */}
       <AnimatePresence>
-        {sheet && (
+        {sheet && isAuthenticated && (
           <>
             <motion.div
               className="fixed inset-0 z-40 bg-overlay lg:hidden"
@@ -677,10 +706,7 @@ export function AppShell() {
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-3" onClick={() => setSheet(false)}>
-                {(isAuthenticated 
-                  ? [...visibleMoreNav, { label: t('nav.messages'), to: '/app/messages', icon: Chats }, { label: t('nav.notifications'), to: '/app/notifications', icon: Bell }]
-                  : [...visibleMoreNav.filter(item => item.to === '/app/map' || item.to === '/app/career' || item.to === '/app/profile')]
-                ).map((item) => {
+                {visibleMoreNav.map((item) => {
                   const Icon = item.icon
                   const itemActive = isRouteActive(item.to)
                   return (
@@ -821,6 +847,15 @@ export function AppShell() {
 
       {/* Popup mời đăng nhập (kiểu Facebook) — hiện khi Guest cố tương tác */}
       <LoginPromptModal />
+
+      {/* Modal Nâng cấp lên Cựu sinh viên (mở từ Menu Tài khoản góc trên phải) */}
+      {isAuthenticated && user?.role === 'STUDENT' && (
+        <UpgradeAlumniModal
+          isOpen={upgradeModalOpen}
+          onClose={() => setUpgradeModalOpen(false)}
+          verificationStatus={verificationStatus}
+        />
+      )}
 
       {/* Nút Cuộn nhanh lên đầu trang (Back to top) */}
       <AnimatePresence>

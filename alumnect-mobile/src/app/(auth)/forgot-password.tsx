@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useRouter } from 'expo-router'
 import { useMutation } from '@tanstack/react-query'
-import { AuthScaffold } from '@/components/AuthScaffold'
-import { Button, Input } from '@/components/ui'
+import { AuthButton, AuthFooterButton, AuthScaffold } from '@/components/AuthScaffold'
+import { Input } from '@/components/ui'
 import { authApi } from '@/api/auth'
 import { toast, errMsg } from '@/lib/toast'
 
@@ -42,14 +42,13 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <AuthScaffold title="Quên mật khẩu" subtitle={step === 'email' ? 'Nhập email để nhận mã OTP' : `Nhập mã OTP đã gửi tới ${email}`}>
+    <AuthScaffold hero="short" onBack={() => router.replace('/(auth)/login')} footer={<AuthFooterButton title="Quay lại đăng nhập" onPress={() => router.replace('/(auth)/login')} />} title="Quên mật khẩu" subtitle={step === 'email' ? 'Nhập email để nhận mã OTP' : `Nhập mã OTP đã gửi tới ${email}`}>
       {step === 'email' ? (
-        <Input label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" error={error} />
+        <Input variant="float" label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" error={error} />
       ) : (
-        <Input label="Mã OTP" value={otp} onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))} keyboardType="number-pad" maxLength={6} error={error} />
+        <Input variant="float" label="Mã OTP" value={otp} onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))} keyboardType="number-pad" maxLength={6} error={error} />
       )}
-      <Button title={step === 'email' ? 'Gửi mã OTP' : 'Xác minh'} onPress={submit} loading={send.isPending || verify.isPending} />
-      <Button title="Quay lại đăng nhập" variant="ghost" onPress={() => router.replace('/(auth)/login')} style={{ marginTop: 8 }} />
+      <AuthButton title={step === 'email' ? 'Gửi mã OTP' : 'Xác minh'} onPress={submit} loading={send.isPending || verify.isPending} />
     </AuthScaffold>
   )
 }

@@ -30,6 +30,15 @@ public class AdminVerificationRequestDto {
     /** Ảnh đại diện của cựu sinh viên */
     private String avatarUrl;
 
+    /** Vai trò hiện tại của tài khoản (STUDENT nếu xin nâng cấp, ALUMNI nếu đăng ký mới) */
+    private String currentRole;
+
+    /** Mã số sinh viên FPTU */
+    private String studentCode;
+
+    /** Năm tốt nghiệp */
+    private Integer graduationYear;
+
     /** Mã chuyên ngành (VD: SE) */
     private String majorCode;
 

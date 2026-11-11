@@ -4,16 +4,23 @@ import { ScrollView } from '@/components/ScrollView'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Chip, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
+import { Button, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { GROUP_CATEGORIES, groupApi } from '@/api/groups'
 import { pickImage, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
+import { useTheme } from '@/theme'
+import { BrandIcon } from '@/components/BrandIcon'
+import { MotionPressable } from '@/components/Motion'
+import { FormSection } from '@/components/SocialUI'
+import { BottomBar } from '@/components/DetailBits'
+import { SelectField } from '@/components/SelectField'
 
 const parseTopics = (text: string) => Array.from(new Set(text.split(',').map((s) => s.trim()).filter(Boolean)))
 
 /** UC115 tạo / UC116 sửa nhóm (truyền `id` để sửa). */
 export default function GroupFormScreen() {
+  const t = useTheme()
   const router = useRouter()
   const qc = useQueryClient()
   const { id } = useLocalSearchParams<{ id?: string }>()
@@ -76,23 +83,28 @@ export default function GroupFormScreen() {
     <Screen keyboard>
       <Header title={id ? 'Cập nhật nhóm' : 'Tạo nhóm mới'} />
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-        {cover ? <Image source={{ uri: cover }} style={{ height: 140, borderRadius: 12, marginBottom: 8 }} contentFit="cover" /> : null}
-        <Button title={cover ? 'Đổi ảnh bìa' : 'Chọn ảnh bìa'} variant="outline" onPress={pickCover} loading={uploading} style={{ marginBottom: 16 }} />
-        <Input label="Tên nhóm" value={f.name} onChangeText={set('name')} error={errors.name} />
-        <Input label="Mô tả" value={f.description} onChangeText={set('description')} multiline error={errors.description} />
-        <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Danh mục</Txt>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, marginBottom: 14 }}>
-          {GROUP_CATEGORIES.map((c) => <Chip key={c.value} label={c.label} active={category === c.value} onPress={() => setCategory(c.value)} />)}
-        </View>
-        <Input label="Chủ đề (cách nhau bằng dấu phẩy)" value={f.topics} onChangeText={set('topics')} error={errors.topics} />
-        <Txt weight="600" size={13} style={{ marginBottom: 6 }}>Quyền riêng tư</Txt>
-        <View style={{ flexDirection: 'row', marginBottom: 14 }}>
-          <Chip label="Công khai" active={privacy === 'PUBLIC'} onPress={() => setPrivacy('PUBLIC')} />
-          <Chip label="Riêng tư (cần duyệt)" active={privacy === 'PRIVATE'} onPress={() => setPrivacy('PRIVATE')} />
-        </View>
-        <Input label="Quy định nhóm" value={f.joinRules} onChangeText={set('joinRules')} multiline error={errors.joinRules} />
-        <Button title={id ? 'Lưu thay đổi' : 'Tạo nhóm'} onPress={submit} loading={m.isPending} disabled={uploading} />
+        <MotionPressable accessibilityRole="button" accessibilityLabel={cover ? 'Đổi ảnh bìa' : 'Chọn ảnh bìa'} disabled={uploading} onPress={pickCover} style={{ minHeight: 172, borderRadius: 22, overflow: 'hidden', backgroundColor: t.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
+          {cover ? <Image source={{ uri: cover }} style={{ position: 'absolute', width: '100%', height: '100%' }} contentFit="cover" transition={180} /> : <BrandIcon name="people" size={64} />}
+          <View style={{ backgroundColor: t.card, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 }}><Txt weight="600" size={13}>{uploading ? 'Đang tải ảnh...' : cover ? 'Đổi ảnh bìa' : 'Thêm ảnh bìa cho nhóm'}</Txt></View>
+          {!cover ? <Txt muted size={12}>Một nơi dành cho những người cùng sở thích</Txt> : null}
+        </MotionPressable>
+        <FormSection icon="people2" title="Nhóm của bạn" caption="01 · Tạo dấu ấn riêng cho cộng đồng">
+          <Input label="Tên nhóm *" placeholder="Bạn muốn gọi cộng đồng là gì?" value={f.name} onChangeText={set('name')} error={errors.name} maxLength={200} />
+          <Input label="Giới thiệu nhóm *" placeholder="Chia sẻ điều kết nối mọi người trong nhóm..." value={f.description} onChangeText={set('description')} multiline error={errors.description} />
+          <SelectField label="Danh mục" value={category} options={[...GROUP_CATEGORIES]} onChange={(v) => setCategory(v ?? 'other')} clearable={false} />
+          <Input label="Chủ đề · Tối đa 5" placeholder="Thiết kế, chia sẻ nghề, portfolio" value={f.topics} onChangeText={set('topics')} error={errors.topics} />
+          <Txt muted size={12}>Ngăn cách các chủ đề bằng dấu phẩy để mọi người dễ tìm thấy nhóm.</Txt>
+        </FormSection>
+        <FormSection icon="world" title="Không gian kết nối" caption="02 · Chọn cách mọi người tham gia">
+          {(['PUBLIC', 'PRIVATE'] as const).map((value) => <MotionPressable key={value} onPress={() => setPrivacy(value)} accessibilityRole="radio" accessibilityState={{ checked: privacy === value }} style={{ padding: 14, borderRadius: 14, borderWidth: 1, borderColor: privacy === value ? t.primary : t.border, backgroundColor: privacy === value ? t.primaryTint : t.card, marginBottom: 10, flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+            <View style={{ flex: 1 }}><Txt weight="600" size={14}>{value === 'PUBLIC' ? 'Công khai' : 'Riêng tư'}</Txt><Txt muted size={12}>{value === 'PUBLIC' ? 'Mọi người có thể tham gia nhóm.' : 'Yêu cầu tham gia cần được phê duyệt.'}</Txt></View>
+            <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: privacy === value ? 6 : 1.5, borderColor: privacy === value ? t.primary : t.controlBorder }} />
+          </MotionPressable>)}
+          <View style={{ height: 8 }} />
+          <Input label="Quy định nhóm · Không bắt buộc" placeholder="Những điều thành viên cần biết..." value={f.joinRules} onChangeText={set('joinRules')} multiline error={errors.joinRules} />
+        </FormSection>
       </ScrollView>
+      <BottomBar><Button title={id ? 'Lưu thay đổi' : 'Tạo nhóm mới'} variant="brand" onPress={submit} loading={m.isPending} disabled={uploading} style={{ flex: 1 }} /></BottomBar>
     </Screen>
   )
 }

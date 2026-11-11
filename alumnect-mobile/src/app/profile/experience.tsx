@@ -11,6 +11,9 @@ import type { GeocodedPlace } from '@/lib/places'
 import { experienceApi } from '@/api/explore'
 import { useTheme } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
+import { DateField } from '@/components/DateField'
+import { CommunityIntro, FormSection } from '@/components/SocialUI'
+import { BottomBar } from '@/components/DetailBits'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -83,33 +86,38 @@ export default function ExperienceScreen() {
     <Screen keyboard>
       <Header title={id ? 'Sửa kinh nghiệm' : 'Thêm kinh nghiệm'} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        <Input label="Chức danh" value={f.title} onChangeText={set('title')} error={errors.title} />
-        <Input label="Công ty" value={f.company} onChangeText={set('company')} error={errors.company} />
+        <CommunityIntro icon="suitcase" eyebrow="HÀNH TRÌNH CỦA BẠN" title="Mỗi bước đều đáng nhớ" description="Cập nhật công việc để kết nối với những cơ hội phù hợp hơn." />
+        <FormSection icon="suitcase" title="Thông tin công việc" caption="01 · Vai trò và nơi bạn làm việc">
+        <Input label="Chức danh *" placeholder="Ví dụ: Senior Product Designer" value={f.title} onChangeText={set('title')} error={errors.title} />
+        <Input label="Công ty *" placeholder="Tên công ty hoặc tổ chức" value={f.company} onChangeText={set('company')} error={errors.company} />
         <PlaceField value={f.location} hasCoordinates={place != null || (f.location.trim() === existing?.location?.trim() && existing?.latitude != null && existing.longitude != null)} onChange={(value) => { setPlace(null); set('location')(value) }} onSelect={(value) => { setPlace(value); set('location')(value.location) }} onResolving={setResolvingPlace} />
-        <Input label="Bắt đầu (YYYY-MM-DD)" value={f.startDate} onChangeText={set('startDate')} autoCapitalize="none" placeholder="2022-07-01" error={errors.startDate} />
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <Txt weight="600">Đang làm việc tại đây</Txt>
-          <Switch value={isCurrent} onValueChange={setIsCurrent} trackColor={{ true: t.primary }} />
+        </FormSection>
+        <FormSection icon="calendar" title="Dấu mốc sự nghiệp" caption="02 · Thời gian và trải nghiệm">
+        <DateField dateOnly minimumDate={null} label="Ngày bắt đầu *" value={f.startDate} onChange={set('startDate')} error={errors.startDate} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, justifyContent: 'space-between', marginBottom: 18, padding: 12, borderRadius: 14, backgroundColor: t.surface }}>
+          <Txt size={13} weight="500" style={{ flex: 1 }}>Tôi đang làm việc tại đây</Txt>
+          <Switch accessibilityLabel="Đang làm việc tại đây" value={isCurrent} onValueChange={setIsCurrent} trackColor={{ true: t.primary }} />
         </View>
-        {!isCurrent ? <Input label="Kết thúc (YYYY-MM-DD)" value={f.endDate} onChangeText={set('endDate')} autoCapitalize="none" error={errors.endDate} /> : null}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <Txt weight="600">Đặt làm vị trí chính</Txt>
-          <Switch value={isPrimary} onValueChange={setIsPrimary} trackColor={{ true: t.primary }} />
+        {!isCurrent ? <DateField dateOnly minimumDate={f.startDate ? new Date(`${f.startDate}T00:00:00`) : null} label="Ngày kết thúc" value={f.endDate} onChange={set('endDate')} error={errors.endDate} /> : null}
+        <Input label="Mô tả trải nghiệm" placeholder="Vai trò, dự án hoặc thành tựu nổi bật của bạn..." value={f.description} onChangeText={set('description')} multiline />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
+          <View style={{ flex: 1 }}><Txt size={13} weight="600">Đặt làm vị trí chính</Txt><Txt size={12} muted>Hiển thị nổi bật trên hồ sơ của bạn</Txt></View>
+          <Switch accessibilityLabel="Đặt làm vị trí chính" value={isPrimary} onValueChange={setIsPrimary} trackColor={{ true: t.primary }} />
         </View>
-        <Input label="Mô tả" value={f.description} onChangeText={set('description')} multiline />
-        <Button title="Lưu" onPress={submit} loading={save.isPending} disabled={resolvingPlace} />
+        </FormSection>
         {id ? (
           <>
             <Card style={{ marginTop: 24 }}>
               <Txt weight="700" style={{ marginBottom: 8 }}>Thăng chức tại công ty này</Txt>
               <Input label="Chức danh mới" value={promo.newTitle} onChangeText={(v) => setPromo((x) => ({ ...x, newTitle: v }))} />
-              <Input label="Ngày bắt đầu (YYYY-MM-DD)" value={promo.newStartDate} onChangeText={(v) => setPromo((x) => ({ ...x, newStartDate: v }))} autoCapitalize="none" />
+              <DateField dateOnly minimumDate={null} label="Ngày bắt đầu" value={promo.newStartDate} onChange={(v) => setPromo((x) => ({ ...x, newStartDate: v }))} />
               <Button title="Ghi nhận thăng chức" variant="outline" disabled={!promo.newTitle.trim() || !DATE_RE.test(promo.newStartDate)} onPress={() => promote.mutate()} loading={promote.isPending} />
             </Card>
             <Button title="Xóa kinh nghiệm" variant="danger" style={{ marginTop: 16 }} onPress={() => setConfirmDelete(true)} loading={del.isPending} />
           </>
         ) : null}
       </ScrollView>
+      <BottomBar><Button variant="brand" title={id ? 'Lưu thay đổi' : 'Thêm kinh nghiệm'} onPress={submit} loading={save.isPending} disabled={resolvingPlace || del.isPending || promote.isPending} style={{ flex: 1 }} /></BottomBar>
       <ConfirmSheet visible={confirmDelete} title="Xóa kinh nghiệm này?" message="Kinh nghiệm sẽ bị xóa khỏi hồ sơ và lộ trình sự nghiệp của bạn." loading={del.isPending} onClose={() => setConfirmDelete(false)} onConfirm={() => del.mutate()} />
     </Screen>
   )

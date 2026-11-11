@@ -58,5 +58,8 @@ public enum NotificationType {
     MENTORING_ACCOUNT,
 
     /** Bài viết bị hệ thống tự động ẩn hoặc được khôi phục sau khi Admin xem xét (UC123) */
-    CONTENT_MODERATED
+    CONTENT_MODERATED,
+
+    /** Thông báo kết quả xét duyệt yêu cầu nâng cấp từ Sinh viên lên Cựu sinh viên (UC08) */
+    ALUMNI_VERIFICATION
 }

@@ -11938,6 +11938,200 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "UC08 - Upgrade Student to Alumni (Chuyển đổi Sinh viên lên Cựu sinh viên)",
+      "description": "Các API phục vụ Sinh viên (STUDENT) gửi hồ sơ minh chứng tốt nghiệp để nâng cấp tài khoản lên Cựu sinh viên (ALUMNI), theo dõi trạng thái xét duyệt (NONE / PENDING / APPROVED / REJECTED), gửi lại minh chứng khi bị từ chối và luồng Admin phê duyệt chuyển đổi vai trò.",
+      "item": [
+        {
+          "name": "8.1 Xem trạng thái xác minh / nâng cấp Cựu sinh viên của tôi - Thành công (HTTP 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/verifications/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "verifications",
+                "me"
+              ]
+            },
+            "description": "Phân quyền: Token (STUDENT, ALUMNI). Trả về trạng thái xác minh hiện tại của tài khoản (NONE nếu chưa từng gửi, hoặc PENDING / APPROVED / REJECTED kèm thông tin minh chứng, năm tốt nghiệp, chuyên ngành và ghi chú từ Admin)."
+          },
+          "response": []
+        },
+        {
+          "name": "8.2 Sinh viên gửi yêu cầu nâng cấp lên Cựu sinh viên - Thành công (HTTP 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proofUrl\": \"https://pub-xxxx.r2.dev/proofs/bang-tot-nghiep-fptu-se.pdf\",\n  \"graduationYear\": 2026,\n  \"majorId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/verifications/upgrade-alumni",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "verifications",
+                "upgrade-alumni"
+              ]
+            },
+            "description": "Phân quyền: Token (STUDENT đang ACTIVE). Tạo phiếu yêu cầu xác minh mới với trạng thái PENDING và đồng bộ năm tốt nghiệp, chuyên ngành vào hồ sơ cá nhân. Trong thời gian chờ duyệt, sinh viên vẫn giữ nguyên quyền sử dụng hệ thống."
+          },
+          "response": []
+        },
+        {
+          "name": "8.3 Sinh viên gửi yêu cầu nâng cấp - Thất bại Validation dữ liệu đầu vào (HTTP 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proofUrl\": \"\",\n  \"graduationYear\": 2000,\n  \"majorId\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/verifications/upgrade-alumni",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "verifications",
+                "upgrade-alumni"
+              ]
+            },
+            "description": "Kỳ vọng: HTTP 400 Bad Request với thông điệp 'Dữ liệu gửi lên không hợp lệ' và chi tiết lỗi tiếng Việt cho từng trường (proofUrl, graduationYear, majorId)."
+          },
+          "response": []
+        },
+        {
+          "name": "8.4 Sinh viên gửi trùng yêu cầu khi đang có phiếu chờ duyệt PENDING - Thất bại (HTTP 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proofUrl\": \"https://pub-xxxx.r2.dev/proofs/bang-tot-nghiep-fptu-se-lan2.pdf\",\n  \"graduationYear\": 2026,\n  \"majorId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/verifications/upgrade-alumni",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "verifications",
+                "upgrade-alumni"
+              ]
+            },
+            "description": "Kỳ vọng: HTTP 409 Conflict với thông điệp 'Bạn đang có một yêu cầu nâng cấp Cựu sinh viên chờ xét duyệt. Vui lòng đợi Quản trị viên phản hồi.'."
+          },
+          "response": []
+        },
+        {
+          "name": "8.5 Admin từ chối yêu cầu nâng cấp của Sinh viên (Giữ nguyên tài khoản STUDENT ACTIVE) - Thành công (HTTP 200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"REJECTED\",\n  \"reviewNote\": \"Ảnh chụp minh chứng tốt nghiệp bị mờ, không nhìn rõ số hiệu bằng. Vui lòng tải lại bản rõ nét hơn.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/verifications/1/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "verifications",
+                "1",
+                "review"
+              ]
+            },
+            "description": "Phân quyền: Admin. Từ chối phiếu nâng cấp của Sinh viên: trạng thái phiếu chuyển sang REJECTED nhưng tài khoản Sinh viên vẫn giữ nguyên vai trò STUDENT và trạng thái ACTIVE (không bị khóa), đồng thời nhận thông báo kèm lý do để gửi lại minh chứng."
+          },
+          "response": []
+        },
+        {
+          "name": "8.6 Admin phê duyệt yêu cầu nâng cấp của Sinh viên (Nâng vai trò lên ALUMNI) - Thành công (HTTP 200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"reviewNote\": \"Đã đối chiếu bằng tốt nghiệp chính thức hợp lệ.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/verifications/1/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "verifications",
+                "1",
+                "review"
+              ]
+            },
+            "description": "Phân quyền: Admin. Phê duyệt phiếu nâng cấp của Sinh viên: vai trò tài khoản tự động chuyển từ STUDENT sang ALUMNI, isAccountVerified = true, accountStatus = ACTIVE và đẩy thông báo chúc mừng thời gian thực qua WebSocket."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

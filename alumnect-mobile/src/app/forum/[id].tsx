@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BadgeCheck, MessageSquare, MoreHorizontal } from '@/components/icons'
-import { Avatar, Card, Empty, IconButton, Loading, Screen, Tag, Txt } from '@/components/ui'
+import { Avatar, Empty, IconButton, Loading, Screen, Tag, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
-import { CommentComposer } from '@/components/Comments'
+import { CommentBubble, CommentComposer } from '@/components/Comments'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
 import { VoteButton } from '@/components/VoteButton'
@@ -19,51 +19,25 @@ import { toast, errMsg } from '@/lib/toast'
 
 type Target = { answer: AnswerBase; mine: boolean } | null
 
-/** Một câu trả lời (hoặc phản hồi): tác giả, nội dung, bình chọn, trả lời. */
-const AnswerItem = React.memo(function AnswerItem({
-  a,
-  qid,
-  meId,
-  reply,
-  onReply,
-  onMore,
-}: {
-  a: AnswerBase
-  qid: string
-  meId?: string
-  reply?: boolean
-  onReply: (a: AnswerBase) => void
-  onMore: (a: AnswerBase) => void
-}) {
+type Row = { a: AnswerBase; reply: boolean }
+
+/** Ảnh trong câu hỏi: giữ đúng tỉ lệ gốc (4:5 đến banner ngang) để ảnh chụp màn hình không bị cắt mất chữ. */
+function QuestionImage({ uri }: { uri: string }) {
   const t = useTheme()
-  const router = useRouter()
+  const [ratio, setRatio] = useState(1.5)
   return (
-    <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 14, paddingVertical: 8 }}>
-      <Pressable onPress={() => a.authorId && router.push({ pathname: '/profile/[id]', params: { id: a.authorId } })}>
-        <Avatar uri={a.avatar} name={a.author} size={reply ? 28 : 36} />
-      </Pressable>
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Txt weight="700" size={14} numberOfLines={1} style={{ flexShrink: 1 }}>{a.author}</Txt>
-          {a.verified ? <BadgeCheck size={13} color={t.info} /> : null}
-          <View style={{ flex: 1 }} />
-          {a.authorId === meId ? (
-            <Pressable onPress={() => onMore(a)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Tuỳ chọn câu trả lời">
-              <MoreHorizontal size={18} color={t.textMuted} />
-            </Pressable>
-          ) : null}
-        </View>
-        {a.authorHeadline && !reply ? <Txt muted size={12} numberOfLines={1}>{a.authorHeadline}</Txt> : null}
-        <Txt style={{ marginTop: 4, lineHeight: 21 }}>{a.body}</Txt>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 6 }}>
-          <VoteButton voted={a.voted} votes={a.votes} onVote={() => forumApi.voteAnswer(qid, a.id)} onUnvote={() => forumApi.unvoteAnswer(qid, a.id)} />
-          <Txt muted size={12} weight="700" onPress={() => onReply(a)}>Trả lời</Txt>
-          <Txt muted size={12}>{`${a.time}${a.edited ? ' · đã sửa' : ''}`}</Txt>
-        </View>
-      </View>
-    </View>
+    <Image
+      source={{ uri }}
+      style={{ width: '100%', aspectRatio: ratio, borderRadius: 12, marginTop: 12, backgroundColor: t.inputBg, borderWidth: StyleSheet.hairlineWidth, borderColor: t.border }}
+      contentFit="cover"
+      cachePolicy="disk"
+      transition={180}
+      onLoad={(e) => {
+        if (e.source.width > 0 && e.source.height > 0) setRatio(Math.min(2.2, Math.max(0.8, e.source.width / e.source.height)))
+      }}
+    />
   )
-})
+}
 
 export default function QuestionDetailScreen() {
   const t = useTheme()
@@ -85,6 +59,8 @@ export default function QuestionDetailScreen() {
     getNextPageParam: (l) => (l.hasMore ? l.page + 1 : undefined),
   })
   const list = answers.data?.pages.flatMap((p) => p.items) ?? []
+  // Câu trả lời gốc, ngay dưới là các phản hồi của nó (giống bình luận ở bài viết).
+  const rows: Row[] = list.flatMap((a) => [{ a, reply: false }, ...a.replies.map((r) => ({ a: r, reply: true }))])
   const refresh = () => qc.invalidateQueries({ queryKey: ['question', id] })
 
   const send = useMutation({
@@ -126,60 +102,81 @@ export default function QuestionDetailScreen() {
       <Header title="Câu hỏi" right={isMine ? <IconButton label="Tuỳ chọn câu hỏi" icon={<MoreHorizontal size={20} color={t.text} />} onPress={() => setQMenu(true)} /> : undefined} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlashList
-          data={list}
-          keyExtractor={(a) => a.id}
-          style={{ backgroundColor: t.bg }}
-          contentContainerStyle={{ paddingBottom: 16 }}
+          data={rows}
+          keyExtractor={(r) => r.a.id}
+          getItemType={(r) => (r.reply ? 'reply' : 'answer')}
+          style={{ backgroundColor: t.card }}
+          contentContainerStyle={{ paddingBottom: 12 }}
           onEndReached={() => answers.hasNextPage && !answers.isFetchingNextPage && answers.fetchNextPage()}
           ListHeaderComponent={
             <View>
-              <View style={{ backgroundColor: t.card, padding: 16, marginBottom: 16 }}>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-                  {qd.topic ? <Tag label={qd.topic} /> : null}
-                  {qd.major ? <Tag label={qd.major} tone="neutral" /> : null}
-                </View>
-                <Txt size={22} weight="800" style={{ lineHeight: 30 }}>{qd.title}</Txt>
-                <Pressable
-                  onPress={() => qd.authorId && router.push({ pathname: '/profile/[id]', params: { id: qd.authorId } })}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 }}
-                >
-                  <Avatar uri={qd.avatar} name={qd.author} size={40} />
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Txt weight="700">{qd.author}</Txt>
-                      {qd.verified ? <BadgeCheck size={14} color={t.info} /> : null}
+              <View style={{ backgroundColor: t.card, paddingTop: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.border }}>
+                <View style={{ paddingHorizontal: 14 }}>
+                  {qd.topic || qd.major ? (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                      {qd.topic ? <Tag label={qd.topic} tone="primary" /> : null}
+                      {qd.major ? <Tag label={qd.major} tone="neutral" /> : null}
                     </View>
-                    <Txt muted size={12} numberOfLines={1}>{[qd.authorHeadline, qd.time].filter(Boolean).join(' · ')}</Txt>
+                  ) : null}
+                  <Txt size={21} weight="700" style={{ lineHeight: 29 }}>{qd.title}</Txt>
+                  <Pressable
+                    onPress={() => qd.authorId && router.push({ pathname: '/profile/[id]', params: { id: qd.authorId } })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Trang cá nhân ${qd.author}`}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 }}
+                  >
+                    <Avatar uri={qd.avatar} name={qd.author} size={40} />
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                        <Txt weight="700" size={15} numberOfLines={1} style={{ flexShrink: 1 }}>{qd.author}</Txt>
+                        {qd.verified ? <BadgeCheck size={15} color={t.info} weight="fill" /> : null}
+                      </View>
+                      <Txt muted size={12} numberOfLines={1}>{[qd.authorHeadline, qd.time].filter(Boolean).join(' · ')}</Txt>
+                    </View>
+                  </Pressable>
+                  <Txt size={15} style={{ marginTop: 14, lineHeight: 23 }}>{qd.body}</Txt>
+                  {qd.images.map((u) => <QuestionImage key={u} uri={u} />)}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, marginHorizontal: 6, paddingTop: 2, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.divider }}>
+                  <View style={{ paddingHorizontal: 8 }}>
+                    <VoteButton voted={qd.voted} votes={qd.votes} onVote={() => forumApi.vote(qd.id)} onUnvote={() => forumApi.unvote(qd.id)} />
                   </View>
-                </Pressable>
-                <Txt style={{ marginTop: 14, lineHeight: 23 }}>{qd.body}</Txt>
-                {qd.images.map((u) => <Image key={u} source={{ uri: u }} style={{ width: '100%', aspectRatio: 1.5, borderRadius: 14, marginTop: 12, backgroundColor: t.inputBg }} contentFit="cover" />)}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: t.divider }}>
-                  <VoteButton voted={qd.voted} votes={qd.votes} onVote={() => forumApi.vote(qd.id)} onUnvote={() => forumApi.unvote(qd.id)} />
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                    <MessageSquare size={17} color={t.textMuted} />
-                    <Txt muted size={13}>{`${list.length} câu trả lời`}</Txt>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 8 }}>
+                    <MessageSquare size={20} color={t.textMuted} />
+                    <Txt size={13} weight="600" color={t.textMuted}>{`${qd.answers ?? list.length} trả lời`}</Txt>
                   </View>
                 </View>
               </View>
-              <Txt weight="800" size={16} style={{ paddingHorizontal: 16, marginBottom: 8 }}>Câu trả lời</Txt>
+              <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>
+                <Txt weight="800" size={16} style={{ flex: 1 }}>Câu trả lời</Txt>
+                <Txt muted size={13}>{qd.answers ?? list.length}</Txt>
+              </View>
             </View>
           }
           ListEmptyComponent={
             answers.isLoading ? <Loading /> : <Empty icon={<BrandIcon name="chat" size={56} />} title="Chưa có câu trả lời" text="Chia sẻ kinh nghiệm của bạn để giúp người hỏi." />
           }
-          renderItem={({ item }) => (
-            <Card style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 8, paddingHorizontal: 0 }}>
-              <AnswerItem a={item} qid={id!} meId={me?.id} onReply={startReply} onMore={(a) => setTarget({ answer: a, mine: true })} />
-              {item.replies.length ? (
-                <View style={{ marginLeft: 30, borderLeftWidth: 2, borderLeftColor: t.divider }}>
-                  {item.replies.map((r) => (
-                    <AnswerItem key={r.id} a={r} qid={id!} meId={me?.id} reply onReply={startReply} onMore={(a) => setTarget({ answer: a, mine: true })} />
-                  ))}
-                </View>
-              ) : null}
-            </Card>
-          )}
+          renderItem={({ item: { a, reply } }) => {
+            const mine = a.authorId === me?.id
+            return (
+              <CommentBubble
+                author={a.author}
+                authorId={a.authorId}
+                avatar={a.avatar}
+                verified={a.verified}
+                headline={reply ? null : a.authorHeadline}
+                text={a.body}
+                time={a.time}
+                edited={a.edited}
+                reply={reply}
+                mine={mine}
+                replyLabel="Trả lời"
+                extra={<VoteButton compact voted={a.voted} votes={a.votes} onVote={() => forumApi.voteAnswer(id!, a.id)} onUnvote={() => forumApi.unvoteAnswer(id!, a.id)} />}
+                onReply={() => startReply(a)}
+                onMore={mine ? () => setTarget({ answer: a, mine: true }) : undefined}
+              />
+            )
+          }}
         />
         <CommentComposer
           value={text}

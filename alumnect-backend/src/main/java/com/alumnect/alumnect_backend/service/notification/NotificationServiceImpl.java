@@ -869,6 +869,50 @@ public class NotificationServiceImpl implements NotificationService {
         pushRealtimeNotification(recipient, notification);
     }
 
+    @Override
+    @Transactional
+    public void sendAlumniVerificationResultNotification(
+            User admin,
+            User recipient,
+            com.alumnect.alumnect_backend.entity.verification.VerificationRequest request,
+            boolean approved
+    ) {
+        if (recipient == null || request == null) {
+            return;
+        }
+
+        String title;
+        String content;
+        if (approved) {
+            title = "Yêu cầu nâng cấp Cựu sinh viên đã được phê duyệt 🎉";
+            content = "Chúc mừng! Yêu cầu nâng cấp tài khoản từ Sinh viên lên Cựu sinh viên của bạn đã được Quản trị viên phê duyệt. Tài khoản của bạn hiện đã có đầy đủ quyền hạn của Cựu sinh viên FPTU.";
+        } else {
+            title = "Yêu cầu nâng cấp Cựu sinh viên chưa được duyệt";
+            String reason = (request.getReviewNote() != null && !request.getReviewNote().isBlank())
+                    ? request.getReviewNote().trim()
+                    : "Minh chứng chưa hợp lệ hoặc chưa rõ ràng.";
+            content = "Yêu cầu nâng cấp lên Cựu sinh viên của bạn đã bị từ chối. Lý do: \"" + reason
+                    + "\". Bạn có thể kiểm tra và gửi lại minh chứng tại trang Hồ sơ cá nhân.";
+        }
+
+        Notification notification = Notification.builder()
+                .recipient(recipient)
+                .sender(admin)
+                .type(NotificationType.ALUMNI_VERIFICATION)
+                .title(title)
+                .content(content)
+                .targetType("ALUMNI_VERIFICATION")
+                .targetId(String.valueOf(request.getId()))
+                .senderCount(1)
+                .isRead(false)
+                .build();
+
+        notification = notificationRepository.save(notification);
+        pushRealtimeNotification(recipient, notification);
+        log.info("Đã gửi thông báo kết quả xét duyệt nâng cấp Cựu sinh viên (approved={}) tới User ID={}",
+                approved, recipient.getId());
+    }
+
     private void pushRealtimeNotification(User recipient, Notification notification) {
         if (recipient == null || notification == null) {
             return;

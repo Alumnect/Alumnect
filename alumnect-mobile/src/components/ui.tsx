@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View, useWindowDimensions, type TextInputProps, type ViewStyle } from 'react-native'
+import { ActivityIndicator, Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View, useWindowDimensions, type TextInputProps, type ViewStyle } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { Text, TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSegments } from 'expo-router'
 import { ChevronRight, Search, X, Eye, EyeOff } from '@/components/icons'
 import { useTheme, radius, shadow, lineHeightFor, avatarColors, layout } from '@/theme'
+import { MotionPressable } from './Motion'
 
 /* ------------------------------------------------------------------ */
 /* Khung màn hình & chữ                                               */
@@ -100,7 +101,7 @@ export function Txt({
 /* Nút                                                                */
 /* ------------------------------------------------------------------ */
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
+type ButtonVariant = 'primary' | 'brand' | 'secondary' | 'outline' | 'ghost' | 'danger'
 
 export function Button({
   title,
@@ -111,6 +112,7 @@ export function Button({
   variant = 'primary',
   size = 'md',
   icon,
+  textColor,
   style,
 }: {
   title: string
@@ -121,14 +123,16 @@ export function Button({
   variant?: ButtonVariant
   size?: 'sm' | 'md' | 'lg'
   icon?: React.ReactNode
+  /** Ghi đè màu chữ / icon của nút (dùng cho các nút có nền riêng như Mentoring). */
+  textColor?: string
   style?: ViewStyle
 }) {
   const t = useTheme()
-  const bg = { primary: t.action, secondary: t.inputBg, outline: t.card, ghost: 'transparent', danger: t.danger }[variant]
-  const fg = { primary: t.onAction, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
+  const bg = { primary: t.action, brand: t.primary, secondary: t.inputBg, outline: t.card, ghost: 'transparent', danger: t.danger }[variant]
+  const fg = textColor ?? { primary: t.onAction, brand: t.onPrimary, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
   const height = { sm: 44, md: 48, lg: 52 }[size]
   return (
-    <Pressable
+    <MotionPressable
       onPress={onPress}
       disabled={disabled || loading}
       accessibilityRole="button"
@@ -155,7 +159,7 @@ export function Button({
           <Text style={{ color: fg, fontWeight: '600', fontSize: size === 'sm' ? 13 : 15, lineHeight: 22, flexShrink: 1, textAlign: 'center' }}>{title}</Text>
         </View>
       )}
-    </Pressable>
+    </MotionPressable>
   )
 }
 
@@ -179,7 +183,7 @@ export function IconButton({
 }) {
   const t = useTheme()
   return (
-    <Pressable
+    <MotionPressable
       onPress={onPress}
       hitSlop={6}
       accessibilityRole="button"
@@ -195,7 +199,7 @@ export function IconButton({
           <Text style={{ color: t.isDark ? t.bg : '#fff', fontSize: 11, fontWeight: '600' }}>{badge > 99 ? '99+' : badge}</Text>
         </View>
       ) : null}
-    </Pressable>
+    </MotionPressable>
   )
 }
 
@@ -203,39 +207,100 @@ export function IconButton({
 /* Ô nhập                                                             */
 /* ------------------------------------------------------------------ */
 
-export function Input({ label, error, ...props }: TextInputProps & { label?: string; error?: string }) {
+export function Input({ label, error, hint, inputRef, icon, variant = 'outline', ...props }: TextInputProps & { label?: string; error?: string; hint?: string; inputRef?: React.ComponentProps<typeof TextInput>['ref']; icon?: React.ReactNode; variant?: 'outline' | 'float' }) {
   const t = useTheme()
   const [focus, setFocus] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  const float = variant === 'float' && !props.multiline
+  const up = focus || !!props.value
+  // Nhãn trượt lên khi có chữ / đang chọn (chỉ dùng transform nên chạy bằng luồng native).
+  const [lift] = useState(() => new Animated.Value(up ? 1 : 0))
+  useEffect(() => {
+    Animated.timing(lift, { toValue: up ? 1 : 0, duration: 140, useNativeDriver: true }).start()
+  }, [up, lift])
+  const handlers = {
+    onFocus: (e: Parameters<NonNullable<TextInputProps['onFocus']>>[0]) => {
+      setFocus(true)
+      props.onFocus?.(e)
+    },
+    onBlur: (e: Parameters<NonNullable<TextInputProps['onBlur']>>[0]) => {
+      setFocus(false)
+      props.onBlur?.(e)
+    },
+  }
+  const eye = props.secureTextEntry ? (
+    <Pressable onPress={() => setRevealed(!revealed)} accessibilityRole="button" accessibilityLabel={revealed ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} style={{ position: 'absolute', right: 2, top: 0, bottom: 0, width: 48, alignItems: 'center', justifyContent: 'center' }}>
+      {revealed ? <EyeOff size={20} color={t.textMuted} /> : <Eye size={20} color={t.textMuted} />}
+    </Pressable>
+  ) : null
+  const note = error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : hint ? <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 4 }}>{hint}</Text> : null
+
+  if (float) {
+    // Kiểu "float": ô trắng bo 16, viền mảnh, icon bên trái, viền xanh khi chọn, nhãn trượt lên.
+    const accent = error ? t.danger : focus ? t.info : t.controlBorder
+    const labelColor = error ? t.danger : focus ? t.info : t.textMuted
+    const left = icon ? 48 : 16
+    return (
+      <View style={{ marginBottom: 14 }}>
+        <View style={{ justifyContent: 'center', minHeight: 58, borderRadius: 16, backgroundColor: t.card, borderWidth: focus || error ? 2 : 1, borderColor: accent }}>
+          {icon ? <View pointerEvents="none" style={{ position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center' }}>{React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: focus ? t.info : t.textMuted }) : icon}</View> : null}
+          {label ? (
+            <Animated.Text
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left,
+                top: 17,
+                fontSize: 15,
+                lineHeight: 20,
+                color: labelColor,
+                transformOrigin: 'left center',
+                transform: [{ translateY: lift.interpolate({ inputRange: [0, 1], outputRange: [0, -11] }) }, { scale: lift.interpolate({ inputRange: [0, 1], outputRange: [1, 0.78] }) }],
+              }}
+            >
+              {label}
+            </Animated.Text>
+          ) : null}
+          <TextInput
+            ref={inputRef}
+            accessibilityLabel={label ?? props.placeholder}
+            {...props}
+            placeholder={undefined}
+            secureTextEntry={props.secureTextEntry && !revealed}
+            selectionColor={t.info}
+            {...handlers}
+            style={[{ minHeight: 56, paddingLeft: left, paddingRight: props.secureTextEntry ? 52 : 16, paddingTop: label ? 22 : 0, paddingBottom: label ? 6 : 0, fontSize: 15, color: t.text }, props.style]}
+          />
+          {eye}
+        </View>
+        {note}
+      </View>
+    )
+  }
+
   return (
     <View style={{ marginBottom: 18 }}>
       {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
       <View style={{ justifyContent: 'center' }}>
-      <TextInput
-        placeholderTextColor={t.textSubtle}
-        accessibilityLabel={label ?? props.placeholder}
-        {...props}
-        secureTextEntry={props.secureTextEntry && !revealed}
-        selectionColor={t.primary}
-        onFocus={(e) => {
-          setFocus(true)
-          props.onFocus?.(e)
-        }}
-        onBlur={(e) => {
-          setFocus(false)
-          props.onBlur?.(e)
-        }}
-        style={[
-          styles.input,
-          { backgroundColor: t.card, color: t.text, borderColor: error ? t.danger : focus ? t.primary : t.controlBorder },
-          props.multiline ? { minHeight: 110, textAlignVertical: 'top' } : null,
-          props.secureTextEntry ? { paddingRight: 52 } : null,
-          props.style,
-        ]}
-      />
-      {props.secureTextEntry ? <Pressable onPress={() => setRevealed(!revealed)} accessibilityRole="button" accessibilityLabel={revealed ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} style={{ position: 'absolute', right: 2, width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>{revealed ? <EyeOff size={20} color={t.textMuted} /> : <Eye size={20} color={t.textMuted} />}</Pressable> : null}
+        <TextInput
+          ref={inputRef}
+          placeholderTextColor={t.textSubtle}
+          accessibilityLabel={label ?? props.placeholder}
+          {...props}
+          secureTextEntry={props.secureTextEntry && !revealed}
+          selectionColor={t.primary}
+          {...handlers}
+          style={[
+            styles.input,
+            { backgroundColor: focus ? t.card : t.surface, color: t.text, borderColor: error ? t.danger : focus ? t.primary : t.border },
+            props.multiline ? { minHeight: 110, textAlignVertical: 'top' } : null,
+            props.secureTextEntry ? { paddingRight: 52 } : null,
+            props.style,
+          ]}
+        />
+        {eye}
       </View>
-      {error ? <Text style={{ color: t.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
+      {note}
     </View>
   )
 }
@@ -307,9 +372,9 @@ export function Card({ children, style, onPress, flat, accessibilityRole = 'butt
   const body: ViewStyle = { backgroundColor: t.card, borderColor: t.border, ...(flat ? {} : shadow(1, t.isDark)) }
   if (onPress) {
     return (
-      <Pressable onPress={onPress} accessibilityRole={accessibilityRole} style={({ pressed }) => [styles.card, body, { opacity: pressed ? 0.92 : 1 }, style]}>
+      <MotionPressable onPress={onPress} accessibilityRole={accessibilityRole} style={({ pressed }) => [styles.card, body, { opacity: pressed ? 0.92 : 1 }, style]}>
         {children}
-      </Pressable>
+      </MotionPressable>
     )
   }
   return <View style={[styles.card, body, style]}>{children}</View>
@@ -427,7 +492,7 @@ export function Segmented<K extends string>({
 export function Chip({ label, active, onPress, icon }: { label: string; active?: boolean; onPress?: () => void; icon?: React.ReactNode }) {
   const t = useTheme()
   return (
-    <Pressable
+    <MotionPressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
@@ -441,13 +506,14 @@ export function Chip({ label, active, onPress, icon }: { label: string; active?:
         paddingHorizontal: 14,
         borderRadius: radius.full,
         marginRight: 8,
-        backgroundColor: active ? t.text : t.inputBg,
+        backgroundColor: active ? t.primaryTint : t.inputBg,
+        borderWidth: 1, borderColor: active ? t.primary : 'transparent',
         opacity: pressed ? 0.8 : 1,
       })}
     >
       {icon}
-      <Text style={{ color: active ? t.card : t.text, fontWeight: '500', fontSize: 13, lineHeight: 20, flexShrink: 1 }}>{label}</Text>
-    </Pressable>
+      <Text style={{ color: active ? t.primary : t.text, fontWeight: '500', fontSize: 13, lineHeight: 20, flexShrink: 1 }}>{label}</Text>
+    </MotionPressable>
   )
 }
 
@@ -485,18 +551,18 @@ export function MenuRow({
 }) {
   const t = useTheme()
   return (
-    <Pressable
+    <MotionPressable
       onPress={onPress}
       accessibilityRole="button"
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, backgroundColor: pressed ? t.inputBg : 'transparent', borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth, borderBottomColor: t.divider })}
     >
-      <View style={{ width: 24, alignItems: 'center', justifyContent: 'center' }}>{React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: danger ? t.danger : t.textMuted }) : icon}</View>
+      <View style={{ width: 32, alignItems: 'center', justifyContent: 'center' }}>{React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: danger ? t.danger : t.textMuted }) : icon}</View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Txt weight="600" color={danger ? t.danger : undefined}>{label}</Txt>
         {hint ? <Txt muted size={12}>{hint}</Txt> : null}
       </View>
       {!danger ? <ChevronRight size={18} color={t.textSubtle} /> : null}
-    </Pressable>
+    </MotionPressable>
   )
 }
 

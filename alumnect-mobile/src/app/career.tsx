@@ -4,7 +4,6 @@ import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Route } from '@/components/icons'
 import { Avatar, Button, Card, Empty, Loading, Screen, SearchBar, Tag, Txt } from '@/components/ui'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { Header } from '@/components/Header'
@@ -16,23 +15,26 @@ import { authApi } from '@/api/auth'
 import { DEFAULT_COHORTS } from '@/constants/filters'
 import { useDebounced } from '@/lib/hooks'
 import { useTheme } from '@/theme'
+import { BrandIcon } from '@/components/BrandIcon'
+import { MeetupScribble } from '@/components/MeetupScribble'
+import { CommunityIntro } from '@/components/SocialUI'
 
 const year = (d?: string | null) => (d ? d.slice(0, 4) : '')
 
 function Timeline({ items }: { items: { key: string | number; title: string; company: string; start: string; end?: string | null; current: boolean }[] }) {
   const t = useTheme()
   return (
-    <View style={{ marginLeft: 6 }}>
+    <View style={{ marginLeft: 6, paddingTop: 6 }}>
       {items.map((e, i) => (
         <View key={e.key} style={{ flexDirection: 'row', gap: 12 }}>
           <View style={{ alignItems: 'center' }}>
-            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: e.current ? t.primary : t.border, marginTop: 4 }} />
-            {i < items.length - 1 ? <View style={{ width: 2, flex: 1, backgroundColor: t.border }} /> : null}
+            <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: e.current ? t.primary : t.card, borderWidth: e.current ? 3 : 2, borderColor: e.current ? t.primaryTint : t.controlBorder, marginTop: 4 }} />
+            {i < items.length - 1 ? <View style={{ width: 1, flex: 1, backgroundColor: t.border, marginVertical: 4 }} /> : null}
           </View>
           <View style={{ flex: 1, paddingBottom: 14 }}>
-            <Txt weight="700">{e.title}</Txt>
+            <Txt weight="600" size={14}>{e.title}</Txt>
             <Txt muted size={13}>{e.company}</Txt>
-            <Txt muted size={12}>{year(e.start)} — {e.current ? 'Hiện tại' : year(e.end)}</Txt>
+            <Txt color={e.current ? t.primary : t.textMuted} size={12} style={{ marginTop: 4 }}>{year(e.start)} — {e.current ? 'Hiện tại' : year(e.end) || 'Chưa cập nhật'}</Txt>
           </View>
         </View>
       ))}
@@ -90,10 +92,11 @@ export default function CareerScreen() {
 
   return (
     <Screen bg={t.card}>
-      <Header title="Lộ trình sự nghiệp" subtitle="Học hỏi con đường của người đi trước" />
+      <Header title="Lộ trình sự nghiệp" />
       <View style={{ flex: 1, backgroundColor: t.bg }}>
         <FlashList
           data={q.isLoading ? [] : items}
+          maintainVisibleContentPosition={{ disabled: true }}
           keyExtractor={(c) => String(c.userId)}
           contentContainerStyle={{ paddingBottom: 24 }}
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
@@ -104,26 +107,29 @@ export default function CareerScreen() {
               <View style={{ backgroundColor: t.card, paddingVertical: 12, marginBottom: 16 }}>
                 <SearchBar value={kw} onChangeText={setKw} placeholder="Tên, công ty, chức danh, ngành..." style={{ paddingHorizontal: 16 }} right={<FilterButton count={active} onPress={() => setSheet(true)} />} />
               </View>
+              {!search && !active ? <View style={{ paddingHorizontal: 16 }}><CommunityIntro icon="suitcase" eyebrow="HỌC TỪ NGƯỜI ĐI TRƯỚC" title="Mỗi hành trình, một cảm hứng" description="Khám phá những bước chuyển mình trong sự nghiệp của cựu sinh viên." /></View> : null}
               {q.isLoading ? <ListSkeleton variant="post" /> : null}
             </View>
           }
           ListEmptyComponent={
             q.isLoading ? null : (
-              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<Route size={28} color={t.primary} />} title="Không tìm thấy lộ trình" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." action={active ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
+              <Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<MeetupScribble name="rocket_top_right" size={56} color={t.primary} />} title="Không tìm thấy lộ trình" text="Thử bỏ bớt bộ lọc hoặc đổi từ khoá." action={active ? 'Xoá bộ lọc' : undefined} onAction={() => setFilters({})} />
             )
           }
           renderItem={({ item }) => (
-            <Card style={{ marginHorizontal: 16, marginBottom: 16 }} onPress={() => setSel(item)}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <Card style={{ marginHorizontal: 16, marginBottom: 16, borderRadius: 22, padding: 18 }} onPress={() => setSel(item)}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: t.divider }}>
                 <Avatar uri={item.avatarUrl} name={item.fullName} size={46} />
                 <View style={{ flex: 1 }}>
-                  <Txt weight="800">{item.fullName}</Txt>
+                  <Txt weight="600">{item.fullName}</Txt>
                   <Txt muted size={12} numberOfLines={1}>{[item.currentTitle, item.currentCompany].filter(Boolean).join(' tại ') || [item.major, item.cohort ? `K${item.cohort}` : null].filter(Boolean).join(' · ')}</Txt>
                 </View>
                 {item.cohort ? <Tag label={`K${item.cohort}`} tone="neutral" /> : null}
               </View>
               <Timeline items={item.careerPreview.map((e) => ({ key: e.experienceId, title: e.title, company: e.company, start: e.startDate, end: e.endDate, current: e.isCurrent }))} />
+              {!item.careerPreview.length ? <Txt muted size={13}>Chưa có kinh nghiệm được chia sẻ.</Txt> : null}
               {item.totalExperiences > item.careerPreview.length ? <Txt size={12} color={t.primary} weight="700">{`Xem thêm ${item.totalExperiences - item.careerPreview.length} vị trí khác`}</Txt> : null}
+              <Txt size={12} weight="600" color={t.primary} style={{ marginTop: 8 }}>Khám phá hành trình →</Txt>
             </Card>
           )}
         />

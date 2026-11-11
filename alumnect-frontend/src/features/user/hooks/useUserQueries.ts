@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore, type Role } from '@/store/authStore'
 import { userApi } from '../api/userApi'
 import type { UserSearchParams } from '../model/userTypes'
 
@@ -22,11 +22,19 @@ export function useOwnProfile(options?: { enabled?: boolean }) {
       const data = response.data
       if (data) {
         const currentUser = useAuthStore.getState().user
-        if (currentUser && (currentUser.name !== data.fullName || currentUser.avatarUrl !== data.avatarUrl)) {
+        if (
+          currentUser &&
+          (currentUser.name !== data.fullName ||
+            currentUser.avatarUrl !== data.avatarUrl ||
+            currentUser.role !== data.role ||
+            currentUser.verified !== data.isAccountVerified)
+        ) {
           useAuthStore.getState().setUser({
             ...currentUser,
             name: data.fullName,
             avatarUrl: data.avatarUrl || currentUser.avatarUrl,
+            role: (data.role as Role) || currentUser.role,
+            verified: data.isAccountVerified,
           })
         }
       }

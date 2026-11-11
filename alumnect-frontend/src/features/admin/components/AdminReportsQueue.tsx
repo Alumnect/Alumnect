@@ -819,24 +819,26 @@ export function AdminReportsQueue() {
                               Ảnh vi phạm
                             </span>
                           ) : r.aiScore !== undefined && r.aiScore !== null ? (
-                            <span
-                              className={cn(
-                                'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border shadow-2xs whitespace-nowrap',
-                                r.riskLevel === 'HIGH' || r.aiScore >= 0.85
-                                  ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60'
-                                  : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60'
+<div className="inline-flex flex-col items-center gap-1">
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border shadow-2xs whitespace-nowrap',
+                                  r.riskLevel === 'HIGH' || r.aiScore >= 0.60
+                                    ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60'
+                                    : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.20
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60'
+                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60'
+                                )}
+                              >
+                                <Sparkles size={10} />
+                                {(r.aiScore * 100).toFixed(0)}% {r.riskLevel === 'HIGH' ? 'Cao' : r.riskLevel === 'MEDIUM' ? 'Nghi vấn' : 'Thấp'}
+                              </span>
+                              {r.autoModerated && (
+                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100/60 dark:bg-rose-950/40 dark:text-rose-300 rounded px-1.5 py-0.5">
+                                  Tự động ẩn
+                                </span>
                               )}
-                            >
-                              <Sparkles size={10} />
-                              {(r.aiScore * 100).toFixed(0)}%{' '}
-                              {r.riskLevel === 'HIGH' || r.aiScore >= 0.85
-                                ? 'Cao'
-                                : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
-                                ? 'Nghi vấn'
-                                : 'Thấp'}
-                            </span>
+                            </div>
                           ) : (
                             <span className="text-xs text-text-subtle font-medium">—</span>
                           )}
@@ -1082,9 +1084,9 @@ export function AdminReportsQueue() {
                         <span
                           className={cn(
                             'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border',
-                            selectedReport.riskLevel === 'HIGH' || selectedReport.aiScore >= 0.85
+                            selectedReport.riskLevel === 'HIGH' || selectedReport.aiScore >= 0.60
                               ? 'bg-rose-50 text-rose-700 border-rose-300'
-                              : selectedReport.riskLevel === 'MEDIUM' || selectedReport.aiScore >= 0.40
+                              : selectedReport.riskLevel === 'MEDIUM' || selectedReport.aiScore >= 0.20
                               ? 'bg-amber-50 text-amber-700 border-amber-300'
                               : 'bg-emerald-50 text-emerald-700 border-emerald-300'
                           )}

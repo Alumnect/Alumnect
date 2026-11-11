@@ -125,6 +125,10 @@ export function MentoringTaskResolutionBanner({
   onOpenTicketDiscussion,
   onRefresh,
 }: MentoringTaskResolutionBannerProps) {
+  void _canCreateDisputeTicket
+  void _canSubmitDisputeEvidence
+  void _isMentor
+  void _onOpenCreateDispute
   const { t } = useTranslation()
   // API trả vai trò bằng nhãn tiếng Việt ('Học viên'/'Mentor') hoặc mã vai trò → dịch theo ngôn ngữ hiện tại
   const roleName = (role?: string | null) => {
