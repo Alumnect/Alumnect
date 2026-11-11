@@ -398,7 +398,7 @@ export function AdminBroadcastPage() {
               </span>
               {[
                 { id: 'ALL', label: 'Tất cả' },
-                { id: 'ALL_USERS', label: 'Toàn trường' },
+                { id: 'ALL_USERS', label: 'Tất cả người dùng' },
                 { id: 'STUDENT', label: 'Sinh viên' },
                 { id: 'ALUMNI', label: 'Cựu SV' },
                 { id: 'SPECIFIC_USER', label: 'Cá nhân' },
@@ -480,12 +480,12 @@ export function AdminBroadcastPage() {
           </div>
         </div>
 
-        {/* --- Table: Danh sách thông báo (4 Cột Compound, ZERO CUỘN NGANG) --- */}
+        {/* --- Table: Danh sách thông báo (Bố cục gọn gàng, 100% không tràn màn hình) --- */}
         {isLoading ? (
           <div className="p-6 space-y-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-10 w-10 rounded-xl bg-primary-soft/40" />
+                <Skeleton className="h-9 w-9 rounded-xl bg-primary-soft/40" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-1/3 bg-primary-soft/40" />
                   <Skeleton className="h-3 w-1/2 bg-primary-soft/40" />
@@ -510,14 +510,14 @@ export function AdminBroadcastPage() {
             />
           </div>
         ) : (
-          <div className="w-full">
-            <table className="w-full text-xs text-left">
+          <div className="w-full overflow-hidden">
+            <table className="w-full table-fixed text-xs text-left">
               <thead>
                 <tr className="border-b border-border text-[11px] uppercase tracking-wider text-text-subtle bg-surface-2/60">
-                  <th className="px-4 py-3 sm:px-5 font-bold w-[38%]">Tiêu đề & Nội dung</th>
-                  <th className="px-4 py-3 sm:px-5 font-bold w-[20%]">Đối tượng nhận</th>
-                  <th className="px-4 py-3 sm:px-5 font-bold w-[26%]">Tiến trình & Trạng thái</th>
-                  <th className="px-4 py-3 sm:px-5 font-bold text-right w-[120px]">Thao tác</th>
+                  <th className="px-3.5 py-3 font-bold w-[42%]">Tiêu đề & Nội dung</th>
+                  <th className="px-3 py-3 font-bold w-[18%]">Đối tượng nhận</th>
+                  <th className="px-3 py-3 font-bold w-[26%]">Tiến trình & Trạng thái</th>
+                  <th className="px-3 py-3 pr-4 font-bold text-right w-[14%]">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -532,21 +532,21 @@ export function AdminBroadcastPage() {
                       className="cursor-pointer transition-colors hover:bg-surface-2/60 group"
                     >
                       {/* Cột 1: Tiêu đề & Nội dung phát sóng */}
-                      <td className="px-4 py-3.5 sm:px-5 align-top">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-solid border border-primary-soft-border group-hover:scale-105 transition-transform shadow-2xs">
-                            <Megaphone size={16} />
+                      <td className="px-3.5 py-3 align-top">
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-solid border border-primary-soft-border group-hover:scale-105 transition-transform shadow-2xs mt-0.5">
+                            <Megaphone size={14} />
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] font-bold text-text-subtle uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-[10px] font-bold text-text-subtle uppercase tracking-wider shrink-0">
                                 #{item.id}
                               </span>
                               <h3 className="font-extrabold text-xs text-text truncate group-hover:text-primary-solid transition">
                                 {item.title}
                               </h3>
                             </div>
-                            <div className="rounded-xl border border-border/70 bg-surface-2/40 p-2 text-xs text-text leading-relaxed">
+                            <div className="rounded-lg border border-border/70 bg-surface-2/40 p-2 text-[11px] text-text leading-relaxed">
                               <p className="line-clamp-2">
                                 {item.content}
                               </p>
@@ -556,44 +556,44 @@ export function AdminBroadcastPage() {
                       </td>
 
                       {/* Cột 2: Đối tượng nhận */}
-                      <td className="px-4 py-3.5 sm:px-5 align-top">
+                      <td className="px-3 py-3 align-top">
                         {item.recipientType === 'ALL_USERS' ? (
-                          <div className="space-y-1">
-                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-orange-500/10 px-2.5 py-1 text-xs font-bold text-orange-600 dark:text-orange-400 border border-orange-500/20 shadow-2xs">
-                              <Globe size={12} /> Toàn trường
+                          <div className="space-y-0.5">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-0.5 text-xs font-bold text-orange-600 dark:text-orange-400 border border-orange-500/20 shadow-2xs">
+                              <Globe size={11} /> Tất cả
                             </span>
-                            <p className="text-[11px] text-text-subtle">Mọi thành viên active</p>
+                            <p className="text-[10px] text-text-subtle">Tất cả người dùng</p>
                           </div>
                         ) : item.recipientType === 'USER_ROLE' ? (
-                          <div className="space-y-1">
+                          <div className="space-y-0.5">
                             {item.recipientRole === 'STUDENT' ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-sky-600 dark:text-sky-400 border border-sky-500/20 shadow-2xs">
-                                <GraduationCap size={12} /> Sinh viên
+                              <span className="inline-flex items-center gap-1 rounded-md bg-sky-500/10 px-2 py-0.5 text-xs font-bold text-sky-600 dark:text-sky-400 border border-sky-500/20 shadow-2xs">
+                                <GraduationCap size={11} /> Sinh viên
                               </span>
                             ) : item.recipientRole === 'ALUMNI' ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
-                                <Briefcase size={12} /> Cựu sinh viên
+                              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
+                                <Briefcase size={11} /> Cựu sinh viên
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 rounded-lg bg-purple-500/10 px-2.5 py-1 text-xs font-bold text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-2xs">
-                                <Users size={12} /> Quản trị viên
+                              <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/10 px-2 py-0.5 text-xs font-bold text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-2xs">
+                                <Users size={11} /> Quản trị viên
                               </span>
                             )}
-                            <p className="text-[11px] text-text-subtle">Nhóm vai trò</p>
+                            <p className="text-[10px] text-text-subtle">Nhóm vai trò</p>
                           </div>
                         ) : (
-                          <div className="flex items-start gap-2.5">
+                          <div className="flex items-start gap-2">
                             <Avatar
                               src={item.recipientUser?.avatarUrl}
                               name={item.recipientUser?.fullName || 'User'}
-                              size={32}
+                              size={28}
                               className="shrink-0 ring-1 ring-border mt-0.5"
                             />
                             <div className="min-w-0">
-                              <p className="font-extrabold text-xs text-text truncate max-w-[140px]">
+                              <p className="font-extrabold text-xs text-text truncate max-w-[120px]">
                                 {item.recipientUser?.fullName || 'Người dùng'}
                               </p>
-                              <p className="text-[11px] text-text-subtle truncate max-w-[140px]" title={item.recipientUser?.email}>
+                              <p className="text-[10px] text-text-subtle truncate max-w-[120px]" title={item.recipientUser?.email}>
                                 {item.recipientUser?.email}
                               </p>
                             </div>
@@ -602,8 +602,8 @@ export function AdminBroadcastPage() {
                       </td>
 
                       {/* Cột 3: Tiến trình & Trạng thái */}
-                      <td className="px-4 py-3.5 sm:px-5 align-top">
-                        <div className="space-y-1.5">
+                      <td className="px-3 py-3 align-top">
+                        <div className="space-y-1">
                           {/* Status Badge */}
                           <div>
                             <Badge tone={statusTone} className="text-[10px] font-bold px-2 py-0.5">
@@ -616,18 +616,18 @@ export function AdminBroadcastPage() {
                             {item.status === 'SCHEDULED' ? (
                               <div className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
                                 <Clock size={11} className="shrink-0" />
-                                <span>Hẹn gửi: {formatDateTime(item.scheduledAt)}</span>
+                                <span className="truncate">Hẹn: {formatDateTime(item.scheduledAt)}</span>
                               </div>
                             ) : (
                               <div className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                                 <CheckCircle2 size={11} className="shrink-0" />
-                                <span>Đã gửi: {formatDateTime(item.sentAt || item.createdAt)}</span>
+                                <span className="truncate">Gửi: {formatDateTime(item.sentAt || item.createdAt)}</span>
                               </div>
                             )}
 
                             <div className="flex items-center gap-1 text-text-subtle">
                               <Hourglass size={11} className="shrink-0" />
-                              <span>
+                              <span className="truncate">
                                 {item.durationType === 'FOREVER' || !item.expiresAt ? (
                                   'Hiệu lực: Vĩnh viễn'
                                 ) : (
@@ -639,7 +639,7 @@ export function AdminBroadcastPage() {
                             {item.archivedAt && (
                               <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400 font-medium">
                                 <Archive size={11} className="shrink-0" />
-                                <span>Lưu trữ: {formatDateTime(item.archivedAt)}</span>
+                                <span className="truncate">Lưu trữ: {formatDateTime(item.archivedAt)}</span>
                               </div>
                             )}
                           </div>
@@ -647,8 +647,8 @@ export function AdminBroadcastPage() {
                       </td>
 
                       {/* Cột 4: Thao tác */}
-                      <td className="px-4 py-3.5 sm:px-5 align-top text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="px-3 py-3 pr-4 align-top text-right">
+                        <div className="flex items-center justify-end gap-1">
                           {/* View detail button */}
                           <Button
                             variant="secondary"
@@ -657,10 +657,10 @@ export function AdminBroadcastPage() {
                               e.stopPropagation()
                               setDetailItem(item)
                             }}
-                            className="h-8 px-2.5 text-xs font-bold bg-surface-2 text-text hover:bg-surface-3 border border-border shadow-2xs"
+                            className="h-7 px-2 text-xs font-bold bg-surface-2 text-text hover:bg-surface-3 border border-border shadow-2xs"
                             title="Xem chi tiết thông báo"
                           >
-                            <Eye size={13} />
+                            <Eye size={12} />
                             <span>Xem</span>
                           </Button>
 
@@ -673,10 +673,10 @@ export function AdminBroadcastPage() {
                                 e.stopPropagation()
                                 setCancelTargetId(item.id)
                               }}
-                              className="h-8 px-2 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 shadow-2xs"
+                              className="h-7 w-7 p-0 flex items-center justify-center text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 shadow-2xs"
                               title="Hủy lịch phát sóng"
                             >
-                              <Trash2 size={13} />
+                              <Trash2 size={12} />
                             </Button>
                           )}
 
@@ -689,10 +689,10 @@ export function AdminBroadcastPage() {
                                 e.stopPropagation()
                                 setArchiveTargetId(item.id)
                               }}
-                              className="h-8 px-2 text-xs font-bold border border-border bg-surface-2 text-text-muted hover:bg-surface-3 shadow-2xs"
+                              className="h-7 w-7 p-0 flex items-center justify-center text-xs font-bold border border-border bg-surface-2 text-text-muted hover:bg-surface-3 shadow-2xs"
                               title="Lưu trữ thông báo"
                             >
-                              <Archive size={13} />
+                              <Archive size={12} />
                             </Button>
                           )}
                         </div>
