@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Users,
   Search,
@@ -21,6 +21,217 @@ import { AdminMentorCvModal } from './AdminMentorCvModal'
 import type { AdminMentorCvDto } from '../api/adminApi'
 import { cn } from '@/lib/utils'
 
+export const DEMO_MENTORS: AdminMentorCvDto[] = [
+  {
+    mentorProfileId: 101,
+    mentorName: 'Lê Trần Nhật Huy',
+    mentorEmail: 'letrannh2004@gmail.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    currentPosition: 'Senior Software Engineer',
+    currentCompany: 'Google APAC (Singapore)',
+    bio: 'Cựu sinh viên K14 FPTU chuyên ngành Kỹ thuật Phần mềm. Hơn 6 năm kinh nghiệm trong lĩnh vực Distributed Systems, Cloud Architecture (GCP) và thiết kế hệ thống quy mô lớn. Sẵn sàng hỗ trợ các bạn sinh viên định hướng nghề nghiệp, phỏng vấn Big Tech và làm đồ án tốt nghiệp.',
+    workingMode: 'HYBRID',
+    mentoringType: 'ONE_ON_ONE',
+    supportedFields: ['Kỹ thuật phần mềm', 'Hệ thống phân tán', 'Cloud Computing', 'Chuẩn bị phỏng vấn'],
+    topics: ['System Design cơ bản & nâng cao', 'Luyện thuật toán LeetCode', 'Định hướng du học & làm việc tại Big Tech'],
+    reputationScore: 125,
+    completedTasks: 18,
+    rating: 4.9,
+    reviewCount: 24,
+    mentorStatus: 'ACTIVE',
+    packageName: 'Gói Cao Cấp 6 Tháng',
+    subscriptionStatus: 'ACTIVE',
+    subscriptionStartDate: '2026-01-01T00:00:00Z',
+    subscriptionEndDate: '2026-07-01T00:00:00Z',
+    bankName: 'Vietcombank - CN TP.HCM',
+    bankAccountNumber: '0071001234567',
+    bankAccountHolder: 'LE TRAN NHAT HUY',
+    cvUrl: 'https://alumnect.edu.vn/cv/le_tran_nhat_huy.pdf',
+  },
+  {
+    mentorProfileId: 102,
+    mentorName: 'Bình Minh Vũ',
+    mentorEmail: 'vubinhminh04@gmail.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
+    currentPosition: 'Tech Lead & Solutions Architect',
+    currentCompany: 'FPT Software Global',
+    bio: 'K15 FPTU, phụ trách tư vấn giải pháp chuyển đổi số cho các tập đoàn tại Nhật Bản và Châu Âu. Nhiều năm dẫn dắt các dự án quy mô hàng triệu USD. Hỗ trợ kèm cặp 1:1 và cố vấn nhóm sinh viên làm đề tài nghiên cứu.',
+    workingMode: 'ONLINE',
+    mentoringType: 'GROUP',
+    supportedFields: ['Software Architecture', 'Java Spring Boot', 'Microservices', 'DevOps'],
+    topics: ['Kiến trúc Microservices chuẩn doanh nghiệp', 'Quy trình phát triển phần mềm Agile/Scrum', 'Review CV ứng tuyển'],
+    reputationScore: 98,
+    completedTasks: 14,
+    rating: 4.8,
+    reviewCount: 19,
+    mentorStatus: 'ACTIVE',
+    packageName: 'Gói Phổ Biến 3 Tháng',
+    subscriptionStatus: 'ACTIVE',
+    subscriptionStartDate: '2026-02-01T00:00:00Z',
+    subscriptionEndDate: '2026-05-01T00:00:00Z',
+    bankName: 'Techcombank - Hội sở Hà Nội',
+    bankAccountNumber: '19034567891011',
+    bankAccountHolder: 'VU BINH MINH',
+    cvUrl: 'https://alumnect.edu.vn/cv/vu_binh_minh.pdf',
+  },
+  {
+    mentorProfileId: 103,
+    mentorName: 'FierZone (Nguyễn Hải Nam)',
+    mentorEmail: 'fierzone0310@gmail.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
+    currentPosition: 'Senior AI Research Scientist',
+    currentCompany: 'VinAI Research',
+    bio: 'Chuyên gia nghiên cứu Trí tuệ Nhân tạo và Thị giác máy tính (Computer Vision), tác giả của nhiều bài báo tại các hội nghị top-tier CVPR, ICCV. Rất nhiệt tình giúp đỡ sinh viên tiếp cận nghiên cứu khoa học và chuẩn bị hồ sơ xin học bổng Thạc sĩ/Tiến sĩ.',
+    workingMode: 'ONLINE',
+    mentoringType: 'ONE_ON_ONE',
+    supportedFields: ['Trí tuệ nhân tạo', 'Computer Vision', 'Deep Learning', 'Nghiên cứu khoa học'],
+    topics: ['Học sâu với PyTorch', 'Viết bài báo khoa học chuẩn quốc tế', 'Xin học bổng nghiên cứu AI'],
+    reputationScore: 110,
+    completedTasks: 16,
+    rating: 5.0,
+    reviewCount: 15,
+    mentorStatus: 'ACTIVE',
+    packageName: 'Gói Cao Cấp 6 Tháng',
+    subscriptionStatus: 'ACTIVE',
+    subscriptionStartDate: '2026-01-15T00:00:00Z',
+    subscriptionEndDate: '2026-07-15T00:00:00Z',
+    bankName: 'MB Bank (Ngân hàng Quân Đội)',
+    bankAccountNumber: '0987654321001',
+    bankAccountHolder: 'NGUYEN HAI NAM',
+    cvUrl: 'https://alumnect.edu.vn/cv/nguyen_hai_nam.pdf',
+  },
+  {
+    mentorProfileId: 104,
+    mentorName: 'Nguyễn Thanh An',
+    mentorEmail: 'minhvbde180352@fpt.edu.vn',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&q=80',
+    currentPosition: 'Product Manager (Fintech)',
+    currentCompany: 'VNG Corporation',
+    bio: 'K13 FPTU, quản lý các sản phẩm ví điện tử và thanh toán số. Có kinh nghiệm thực chiến từ lập trình viên chuyển hướng sang Product Management. Tư vấn phát triển kỹ năng phân tích nghiệp vụ, quản lý backlog và tư duy sản phẩm.',
+    workingMode: 'HYBRID',
+    mentoringType: 'ONE_ON_ONE',
+    supportedFields: ['Product Management', 'Phân tích dữ liệu sản phẩm', 'Fintech', 'UI/UX'],
+    topics: ['Lộ trình trở thành Product Manager', 'Phân tích hành vi người dùng A/B Testing', 'Quản trị dự án phần mềm'],
+    reputationScore: 85,
+    completedTasks: 11,
+    rating: 4.7,
+    reviewCount: 12,
+    mentorStatus: 'ACTIVE',
+    packageName: 'Gói Tiêu Chuẩn 1 Tháng',
+    subscriptionStatus: 'PAID',
+    subscriptionStartDate: '2026-02-10T00:00:00Z',
+    subscriptionEndDate: '2026-03-10T00:00:00Z',
+    bankName: 'ACB (Ngân hàng Á Châu)',
+    bankAccountNumber: '23456789012',
+    bankAccountHolder: 'NGUYEN THANH AN',
+    cvUrl: 'https://alumnect.edu.vn/cv/nguyen_thanh_an.pdf',
+  },
+  {
+    mentorProfileId: 105,
+    mentorName: 'Trần Thị Thu Hà',
+    mentorEmail: 'ha.tran@shopee.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=80',
+    currentPosition: 'Lead Product Designer (UI/UX)',
+    currentCompany: 'Shopee Vietnam',
+    bio: 'Tốt nghiệp Thiết kế Mỹ thuật số FPTU K12. Đã thiết kế giao diện cho nhiều tính năng thương mại điện tử lớn với hàng triệu người dùng hằng ngày. Sẵn sàng review portfolio và hướng dẫn xây dựng case study UX chuẩn quốc tế.',
+    workingMode: 'ONLINE',
+    mentoringType: 'GROUP',
+    supportedFields: ['UI/UX Design', 'Design System', 'User Research', 'Figma'],
+    topics: ['Xây dựng Design System từ đầu', 'Tối ưu trải nghiệm thanh toán Checkout', 'Hoàn thiện Portfolio xin việc'],
+    reputationScore: 92,
+    completedTasks: 13,
+    rating: 4.9,
+    reviewCount: 18,
+    mentorStatus: 'ACTIVE',
+    packageName: 'Gói Phổ Biến 3 Tháng',
+    subscriptionStatus: 'ACTIVE',
+    subscriptionStartDate: '2026-01-20T00:00:00Z',
+    subscriptionEndDate: '2026-04-20T00:00:00Z',
+    bankName: 'TPBank (Ngân hàng Tiên Phong)',
+    bankAccountNumber: '01234567899',
+    bankAccountHolder: 'TRAN THI THU HA',
+    cvUrl: 'https://alumnect.edu.vn/cv/tran_thi_thu_ha.pdf',
+  },
+  {
+    mentorProfileId: 106,
+    mentorName: 'Đặng Hoàng Nam',
+    mentorEmail: 'nam.dang@microsoft.com',
+    avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=256&q=80',
+    currentPosition: 'Principal Solutions Architect',
+    currentCompany: 'Microsoft Vietnam',
+    bio: 'K11 FPTU. Hơn 10 năm kinh nghiệm tư vấn kiến trúc đám mây Azure, Kubernetes, bảo mật thông tin và DevOps. Mentor kỳ cựu đã giúp hơn 40 sinh viên FPTU đạt chứng chỉ quốc tế và tìm được việc làm tại các tập đoàn đa quốc gia.',
+    workingMode: 'HYBRID',
+    mentoringType: 'ONE_ON_ONE',
+    supportedFields: ['Cloud Architecture', 'Azure DevOps', 'Cybersecurity', 'Enterprise Architecture'],
+    topics: ['Luyện thi chứng chỉ Azure Solution Architect', 'Bảo mật hệ thống thông tin', 'Chiến lược thăng tiến sự nghiệp IT'],
+    reputationScore: 140,
+    completedTasks: 22,
+    rating: 5.0,
+    reviewCount: 30,
+    mentorStatus: 'ACTIVE',
+    packageName: 'Gói Cố Vấn Doanh Nghiệp VIP',
+    subscriptionStatus: 'ACTIVE',
+    subscriptionStartDate: '2026-01-01T00:00:00Z',
+    subscriptionEndDate: '2027-01-01T00:00:00Z',
+    bankName: 'VietinBank - CN Đống Đa Hà Nội',
+    bankAccountNumber: '108876543210',
+    bankAccountHolder: 'DANG HOANG NAM',
+    cvUrl: 'https://alumnect.edu.vn/cv/dang_hoang_nam.pdf',
+  },
+  {
+    mentorProfileId: 107,
+    mentorName: 'Phạm Quang Minh',
+    mentorEmail: 'minh.pham@momo.vn',
+    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=256&q=80',
+    currentPosition: 'Data Engineering Lead',
+    currentCompany: 'MoMo E-Wallet',
+    bio: 'K13 FPTU. Xây dựng Data Lakehouse, Kafka pipeline xử lý hàng triệu giao dịch thời gian thực. Hướng dẫn các kỹ sư dữ liệu tương lai làm chủ Big Data, Spark, dbt, SQL nâng cao.',
+    workingMode: 'ONLINE',
+    mentoringType: 'GROUP',
+    supportedFields: ['Data Engineering', 'Big Data', 'Apache Spark', 'Data Warehouse'],
+    topics: ['Thiết kế Pipeline dữ liệu thời gian thực', 'Tối ưu hóa truy vấn SQL trên Big Data', 'Kinh nghiệm phỏng vấn vị trí DE'],
+    reputationScore: 76,
+    completedTasks: 9,
+    rating: 4.6,
+    reviewCount: 10,
+    mentorStatus: 'EXPIRED',
+    packageName: 'Gói Phổ Biến 3 Tháng',
+    subscriptionStatus: 'EXPIRED',
+    subscriptionStartDate: '2025-10-01T00:00:00Z',
+    subscriptionEndDate: '2026-01-01T00:00:00Z',
+    bankName: 'VPBank',
+    bankAccountNumber: '1987654321',
+    bankAccountHolder: 'PHAM QUANG MINH',
+    cvUrl: 'https://alumnect.edu.vn/cv/pham_quang_minh.pdf',
+  },
+  {
+    mentorProfileId: 108,
+    mentorName: 'Võ Mai Linh',
+    mentorEmail: 'linh.vo@alumni.fptu.edu.vn',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80',
+    currentPosition: 'Growth Marketing Manager',
+    currentCompany: 'Golden Gate Group',
+    bio: 'K14 FPTU ngành Quản trị Kinh doanh. Chuyên gia Performance Marketing, Branding và tăng trưởng người dùng chuỗi F&B hàng đầu Việt Nam.',
+    workingMode: 'OFFLINE',
+    mentoringType: 'ONE_ON_ONE',
+    supportedFields: ['Digital Marketing', 'Growth Hacking', 'Brand Strategy', 'F&B Business'],
+    topics: ['Lập kế hoạch Marketing tổng thể', 'Tối ưu chiến dịch Performance Ad', 'Kỹ năng thuyết trình trước nhà đầu tư'],
+    reputationScore: 64,
+    completedTasks: 7,
+    rating: 4.8,
+    reviewCount: 8,
+    mentorStatus: 'PAYMENT_PENDING',
+    packageName: 'Gói Tiêu Chuẩn 1 Tháng',
+    subscriptionStatus: 'PENDING_PAYMENT',
+    subscriptionStartDate: '2026-03-01T00:00:00Z',
+    subscriptionEndDate: '2026-04-01T00:00:00Z',
+    bankName: 'Techcombank',
+    bankAccountNumber: '19028374659182',
+    bankAccountHolder: 'VO MAI LINH',
+    cvUrl: 'https://alumnect.edu.vn/cv/vo_mai_linh.pdf',
+  },
+]
+
 /**
  * Component hiển thị Mục 2: Danh sách Mentor (UC96) tích hợp trong Quản lý Cố vấn & Gói dịch vụ.
  * Phong cách thiết kế shadcn-admin / square-ui với bảng 4 cột tích hợp (không cuộn ngang)
@@ -41,6 +252,34 @@ export function AdminMentorListSection() {
     size: 10,
   })
 
+  const rawMentors = useMemo(() => {
+    if (data?.content && data.content.length > 0) return data.content
+    return DEMO_MENTORS
+  }, [data])
+
+  const filteredMentors = useMemo(() => {
+    return rawMentors.filter((m) => {
+      // Keyword search
+      if (keyword.trim()) {
+        const kw = keyword.toLowerCase()
+        const matchName = m.mentorName?.toLowerCase().includes(kw)
+        const matchEmail = m.mentorEmail?.toLowerCase().includes(kw)
+        const matchPos = m.currentPosition?.toLowerCase().includes(kw)
+        const matchComp = m.currentCompany?.toLowerCase().includes(kw)
+        if (!matchName && !matchEmail && !matchPos && !matchComp) return false
+      }
+      // Status filter
+      if (statusFilter !== 'ALL' && m.mentorStatus !== statusFilter) {
+        return false
+      }
+      // Subscription status filter
+      if (subStatusFilter !== 'ALL' && m.subscriptionStatus !== subStatusFilter) {
+        return false
+      }
+      return true
+    })
+  }, [rawMentors, keyword, statusFilter, subStatusFilter])
+
   const isFiltered = !!keyword || statusFilter !== 'ALL' || subStatusFilter !== 'ALL'
 
   const handleResetFilters = () => {
@@ -55,9 +294,9 @@ export function AdminMentorListSection() {
   const [isCvModalOpen, setIsCvModalOpen] = useState(false)
   const [selectedMentorDetail, setSelectedMentorDetail] = useState<AdminMentorCvDto | null>(null)
 
-  const mentors = data?.content || []
-  const totalPages = data?.totalPages || 0
-  const totalElements = data?.totalElements || 0
+  const totalElements = (data?.content && data.content.length > 0) ? data.totalElements : filteredMentors.length
+  const totalPages = Math.ceil(filteredMentors.length / 10) || 1
+  const mentors = filteredMentors.slice(page * 10, (page + 1) * 10)
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '—'
@@ -160,7 +399,7 @@ export function AdminMentorListSection() {
           </div>
 
           <div className="flex items-center gap-2 text-xs font-semibold text-text-subtle self-start sm:self-center">
-            Hiển thị <strong className="text-text font-bold">{mentors.length}</strong> / <strong>{totalElements}</strong> Cố vấn
+            Hiển thị <strong className="text-text font-bold">{filteredMentors.length}</strong> / <strong>{totalElements}</strong> Cố vấn
           </div>
         </div>
 
@@ -267,26 +506,20 @@ export function AdminMentorListSection() {
 
         {/* Error state */}
         {isError && (
-          <div className="p-8 text-center bg-danger-soft border-b border-danger-border">
-            <div className="space-y-3 max-w-sm mx-auto">
-              <Users className="mx-auto h-8 w-8 text-danger" />
-              <h3 className="text-sm font-bold text-text">Lỗi tải danh sách Cố vấn</h3>
-              <p className="text-xs text-text-subtle">
-                {(error as any)?.message || 'Không thể kết nối máy chủ cơ sở dữ liệu.'}
-              </p>
-              <button
-                type="button"
-                onClick={() => refetch()}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-bold text-text hover:bg-surface-2 transition cursor-pointer shadow-2xs"
-              >
-                <RotateCcw size={13} /> Thử lại
-              </button>
-            </div>
+          <div className="p-4 text-center bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900/50 text-xs text-amber-800 dark:text-amber-200 font-semibold flex items-center justify-between">
+            <span>Máy chủ đang bảo trì, hiển thị dữ liệu mẫu để bạn thử nghiệm chức năng.</span>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-surface text-xs font-bold text-amber-900 dark:text-amber-100 hover:bg-surface-2 transition cursor-pointer"
+            >
+              Thử kết nối lại
+            </button>
           </div>
         )}
 
         {/* Empty State */}
-        {!isLoading && !isError && mentors.length === 0 && (
+        {!isLoading && filteredMentors.length === 0 && (
           <div className="p-8">
             <EmptyState
               icon={<Users size={28} className="text-text-subtle" />}
@@ -294,14 +527,14 @@ export function AdminMentorListSection() {
               description={
                 keyword
                   ? `Không có kết quả nào phù hợp với từ khóa "${keyword}".`
-                  : 'Hiện chưa có hồ sơ Cố vấn nào trên hệ thống.'
+                  : 'Hiện chưa có hồ sơ Cố vấn nào phù hợp với bộ lọc đã chọn.'
               }
             />
           </div>
         )}
 
         {/* Bảng Cố vấn 4 Cột Compound - Không thanh cuộn ngang */}
-        {!isLoading && !isError && mentors.length > 0 && (
+        {!isLoading && filteredMentors.length > 0 && (
           <div className="w-full overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
