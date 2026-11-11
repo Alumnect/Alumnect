@@ -60,11 +60,9 @@ export function AdminMentorCvModal({
   // Ref container cho docx-preview
   const docxContainerRef = useRef<HTMLDivElement>(null)
 
-  // Đường dẫn tệp CV
-  const rawCvUrl = cvData?.cvUrl || cvData?.cvFileKey || fallbackMentor?.cvUrl
-  const effectiveCvUrl = rawCvUrl && !rawCvUrl.startsWith('http')
-    ? rawCvUrl
-    : (rawCvUrl && rawCvUrl.includes('alumnect.edu.vn') ? '/sample-mentor-cv.pdf' : (rawCvUrl || '/sample-mentor-cv.pdf'))
+  // Đường dẫn tệp CV thực tế từ backend
+  const rawCvUrl = cvData?.cvUrl || cvData?.cvFileKey
+  const effectiveCvUrl = rawCvUrl && !rawCvUrl.includes('alumnect.edu.vn') ? rawCvUrl : null
 
   // Trích xuất định dạng và tên file
   const getFileExtension = (url?: string | null): string => {
@@ -167,23 +165,34 @@ export function AdminMentorCvModal({
     window.print()
   }
 
-  // Xử lý tải file gốc
+  // Xử lý tải / lưu CV
   const handleDownloadCv = async () => {
-    try {
-      setIsDownloading(true)
-      const res = await fetch(effectiveCvUrl)
-      if (res.ok) {
-        const blob = await res.blob()
-        const blobUrl = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = blobUrl
-        a.download = fileName
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        window.URL.revokeObjectURL(blobUrl)
-        toast.success(`Đã tải xuống tệp: ${fileName}`)
-      } else {
+    if (effectiveCvUrl) {
+      try {
+        setIsDownloading(true)
+        const res = await fetch(effectiveCvUrl)
+        if (res.ok) {
+          const blob = await res.blob()
+          const blobUrl = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = blobUrl
+          a.download = fileName
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          window.URL.revokeObjectURL(blobUrl)
+          toast.success(`Đã tải xuống tệp: ${fileName}`)
+        } else {
+          const a = document.createElement('a')
+          a.href = effectiveCvUrl
+          a.download = fileName
+          a.target = '_blank'
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          toast.success(`Đã tải xuống tệp: ${fileName}`)
+        }
+      } catch {
         const a = document.createElement('a')
         a.href = effectiveCvUrl
         a.download = fileName
@@ -192,18 +201,12 @@ export function AdminMentorCvModal({
         a.click()
         document.body.removeChild(a)
         toast.success(`Đã tải xuống tệp: ${fileName}`)
+      } finally {
+        setIsDownloading(false)
       }
-    } catch {
-      const a = document.createElement('a')
-      a.href = effectiveCvUrl
-      a.download = fileName
-      a.target = '_blank'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      toast.success(`Đã tải xuống tệp: ${fileName}`)
-    } finally {
-      setIsDownloading(false)
+    } else {
+      window.print()
+      toast.info('Đã mở hộp thoại in / lưu PDF hồ sơ Cố vấn')
     }
   }
 
@@ -256,35 +259,42 @@ export function AdminMentorCvModal({
       {/* Action Toolbar */}
       <div className="px-6 py-2.5 bg-surface-2/60 border-b border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
         {/* Switcher: Hồ sơ số vs Tệp PDF gốc */}
-        <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface p-1 shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setDocViewerMode('DIGITAL_CV')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
-              docViewerMode === 'DIGITAL_CV'
-                ? 'bg-primary-solid text-on-primary shadow-2xs font-extrabold'
-                : 'text-text-muted hover:bg-surface-2 hover:text-text'
-            )}
-          >
-            <FileText size={13} />
-            <span>Hồ sơ CV số (Digital CV)</span>
-          </button>
+        {effectiveCvUrl ? (
+          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface p-1 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setDocViewerMode('DIGITAL_CV')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                docViewerMode === 'DIGITAL_CV'
+                  ? 'bg-primary-solid text-on-primary shadow-2xs font-extrabold'
+                  : 'text-text-muted hover:bg-surface-2 hover:text-text'
+              )}
+            >
+              <FileText size={13} />
+              <span>Hồ sơ CV số (Digital CV)</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setDocViewerMode('ORIGINAL_FILE')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
-              docViewerMode === 'ORIGINAL_FILE'
-                ? 'bg-primary-solid text-on-primary shadow-2xs font-extrabold'
-                : 'text-text-muted hover:bg-surface-2 hover:text-text'
-            )}
-          >
-            <FileCode size={13} />
-            <span>Tệp tài liệu gốc ({cvFormat})</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setDocViewerMode('ORIGINAL_FILE')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
+                docViewerMode === 'ORIGINAL_FILE'
+                  ? 'bg-primary-solid text-on-primary shadow-2xs font-extrabold'
+                  : 'text-text-muted hover:bg-surface-2 hover:text-text'
+              )}
+            >
+              <FileCode size={13} />
+              <span>Tệp tài liệu gốc ({cvFormat})</span>
+            </button>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-bold text-text-muted shadow-2xs">
+            <FileText size={13} className="text-primary-solid" />
+            <span>Hồ sơ CV số (Digital CV)</span>
+          </div>
+        )}
 
         {/* Controls: Zoom, Print & Download */}
         <div className="flex items-center gap-2">
