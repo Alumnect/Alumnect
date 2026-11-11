@@ -731,17 +731,14 @@ export function AdminReportsQueue() {
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-sm text-left">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-sm text-left">
               <thead>
                 <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2/60">
-                  <th className="px-5 py-3.5 font-bold">Người gửi báo cáo</th>
-                  <th className="px-5 py-3.5 font-bold">Lý do</th>
-                  <th className="px-5 py-3.5 font-bold">Loại bài</th>
-                  <th className="px-5 py-3.5 font-bold">Tác giả & Nội dung bài viết</th>
-                  <th className="px-5 py-3.5 font-bold text-center">Đánh giá rủi ro</th>
-                  <th className="px-5 py-3.5 font-bold text-center">Trạng thái bài</th>
-                  <th className="px-5 py-3.5 font-bold text-right">Hành động</th>
+                  <th className="px-4 py-3 sm:px-5 font-bold w-[30%]">Người gửi & Phân loại</th>
+                  <th className="px-4 py-3 sm:px-5 font-bold">Tác giả & Nội dung bài viết</th>
+                  <th className="px-4 py-3 sm:px-5 font-bold text-center w-[160px]">Rủi ro & Trạng thái</th>
+                  <th className="px-4 py-3 sm:px-5 font-bold text-right w-[100px]">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -757,114 +754,120 @@ export function AdminReportsQueue() {
 
                   return (
                     <tr key={r.id} className={cn('transition-colors hover:bg-surface-2/50 border-l-4', catCfg.rowBorderLeft)}>
-                      {/* Người báo cáo */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
+                      {/* Cột 1: Người báo cáo + Lý do + Loại bài */}
+                      <td className="px-4 py-3.5 sm:px-5">
+                        <div className="flex items-start gap-2.5">
                           <Avatar
                             src={r.reporterAvatarUrl}
                             name={reporterLabel(r)}
-                            size={36}
-                            className="border border-primary-soft-border shrink-0"
+                            size={34}
+                            className="border border-border shrink-0 mt-0.5"
                           />
-                          <div className="min-w-0">
-                            <p className="font-bold text-text truncate">{reporterLabel(r)}</p>
-                            <p className="text-xs text-text-subtle truncate">{reporterDetail(r)}</p>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div>
+                              <p className="font-bold text-xs text-text truncate leading-tight">{reporterLabel(r)}</p>
+                              <p className="text-[11px] text-text-subtle truncate">{reporterDetail(r)}</p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                              <Badge tone={reasonInfo.tone} className="text-[10px] px-1.5 py-0.5 leading-none">
+                                {reasonInfo.label}
+                              </Badge>
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold border shadow-2xs',
+                                  catCfg.badgeBg,
+                                  catCfg.badgeText,
+                                  catCfg.badgeBorder
+                                )}
+                              >
+                                <CatIcon size={10} style={{ color: catCfg.colorHex }} />
+                                <span>{catCfg.shortLabel}</span>
+                              </span>
+                            </div>
+                            {r.description && (
+                              <p className="text-[11px] text-text-subtle line-clamp-1 italic" title={r.description}>
+                                "{r.description}"
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
 
-                      {/* Lý do báo cáo */}
-                      <td className="px-5 py-4">
-                        <div className="space-y-1">
-                          <Badge tone={reasonInfo.tone}>{reasonInfo.label}</Badge>
-                          {r.description && (
-                            <p className="text-xs text-text-subtle font-medium truncate max-w-[180px]" title={r.description}>
-                              {r.description}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Loại bài viết */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <span
-                          className={cn(
-                            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold border shadow-2xs',
-                            catCfg.badgeBg,
-                            catCfg.badgeText,
-                            catCfg.badgeBorder
-                          )}
-                        >
-                          <CatIcon size={12} style={{ color: catCfg.colorHex }} />
-                          <span>{catCfg.shortLabel}</span>
-                        </span>
-                      </td>
-
-                      {/* Tác giả & Nội dung bài viết */}
-                      <td className="px-5 py-4">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
+                      {/* Cột 2: Tác giả & Nội dung bài viết */}
+                      <td className="px-4 py-3.5 sm:px-5">
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex items-center gap-1.5">
                             <span className="text-xs text-text-subtle font-medium">Bởi:</span>
-                            <span className="text-xs font-bold text-text truncate">{r.postAuthorName}</span>
+                            <span className="text-xs font-bold text-text truncate">{r.postAuthorName || 'Ẩn danh'}</span>
                           </div>
-                          <p className="text-xs text-text-muted truncate mt-1 max-w-[240px] font-medium bg-primary-soft p-1.5 rounded-lg border border-brand-100/50">
-                            {r.postContent}
+                          <p
+                            className="text-xs text-text-muted line-clamp-2 font-medium bg-surface-2/80 p-2 rounded-lg border border-border/70 leading-relaxed break-words"
+                            title={r.postContent}
+                          >
+                            {r.postContent || '(Không có nội dung văn bản)'}
                           </p>
                         </div>
                       </td>
 
-                      {/* Đánh giá rủi ro (Gọn gàng trên 1 dòng - KHÔNG có tag "Tự động ẩn" gây rối mắt) */}
-                      <td className="px-5 py-4 text-center">
-                        {isImageAiViolation(r) ? (
-                          <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs bg-rose-50 text-rose-700 border-rose-200">
-                            <Sparkles size={11} />
-                            Ảnh vi phạm
-                          </span>
-                        ) : r.aiScore !== undefined && r.aiScore !== null ? (
-                          <span
-                            className={cn(
-                              'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border shadow-2xs',
-                              r.riskLevel === 'HIGH' || r.aiScore >= 0.85
-                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                      {/* Cột 3: Đánh giá rủi ro & Trạng thái bài viết gộp chung */}
+                      <td className="px-4 py-3.5 sm:px-5 text-center">
+                        <div className="flex flex-col items-center justify-center gap-1.5">
+                          {/* AI Risk Score Pill */}
+                          {isImageAiViolation(r) ? (
+                            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border shadow-2xs bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 whitespace-nowrap">
+                              <Sparkles size={10} />
+                              Ảnh vi phạm
+                            </span>
+                          ) : r.aiScore !== undefined && r.aiScore !== null ? (
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border shadow-2xs whitespace-nowrap',
+                                r.riskLevel === 'HIGH' || r.aiScore >= 0.85
+                                  ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60'
+                                  : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60'
+                              )}
+                            >
+                              <Sparkles size={10} />
+                              {(r.aiScore * 100).toFixed(0)}%{' '}
+                              {r.riskLevel === 'HIGH' || r.aiScore >= 0.85
+                                ? 'Cao'
                                 : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
-                                ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            )}
-                          >
-                            <Sparkles size={11} />
-                            {(r.aiScore * 100).toFixed(0)}%{' '}
-                            {r.riskLevel === 'HIGH' || r.aiScore >= 0.85
-                              ? 'Cao'
-                              : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.40
-                              ? 'Nghi vấn'
-                              : 'Thấp'}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-text-subtle font-medium">—</span>
-                        )}
-                      </td>
+                                ? 'Nghi vấn'
+                                : 'Thấp'}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-text-subtle font-medium">—</span>
+                          )}
 
-                      {/* Trạng thái bài viết */}
-                      <td className="px-5 py-4 text-center">
-                        {currentStatus === 'HIDDEN' ? (
-                          <Badge tone="danger">Đã ẩn{localWillHide !== undefined && ' *'}</Badge>
-                        ) : currentStatus === 'DELETED' ? (
-                          <Badge tone="neutral">Đã xóa</Badge>
-                        ) : (
-                          <Badge tone="success">Công khai{localWillHide !== undefined && ' *'}</Badge>
-                        )}
-                      </td>
-
-                      {/* Thao tác */}
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setSelectedReport(r)}
-                            className="inline-flex items-center gap-1 bg-primary-soft hover:bg-primary-soft text-primary-solid font-bold text-xs rounded-full px-3 py-1.5 border border-primary-soft-border transition-colors shadow-2xs cursor-pointer hover-sheen"
-                          >
-                            <Eye size={12} /> Chi tiết
-                          </button>
+                          {/* Trạng thái bài viết */}
+                          {currentStatus === 'HIDDEN' ? (
+                            <Badge tone="danger" className="text-[10px] px-2 py-0.5">
+                              Đã ẩn{localWillHide !== undefined && ' *'}
+                            </Badge>
+                          ) : currentStatus === 'DELETED' ? (
+                            <Badge tone="neutral" className="text-[10px] px-2 py-0.5">
+                              Đã xóa
+                            </Badge>
+                          ) : (
+                            <Badge tone="success" className="text-[10px] px-2 py-0.5">
+                              Công khai{localWillHide !== undefined && ' *'}
+                            </Badge>
+                          )}
                         </div>
+                      </td>
+
+                      {/* Cột 4: Thao tác */}
+                      <td className="px-4 py-3.5 sm:px-5 text-right">
+                        <button
+                          onClick={() => setSelectedReport(r)}
+                          className="inline-flex items-center gap-1 bg-primary-soft hover:bg-primary-soft/80 text-primary-solid font-bold text-xs rounded-xl px-2.5 py-1.5 border border-primary-soft-border transition-colors shadow-2xs cursor-pointer whitespace-nowrap"
+                          title="Xem chi tiết báo cáo"
+                        >
+                          <Eye size={12} />
+                          <span>Chi tiết</span>
+                        </button>
                       </td>
                     </tr>
                   )
