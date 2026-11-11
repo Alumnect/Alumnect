@@ -11,7 +11,6 @@ import {
   Archive,
   Hourglass,
   Clock,
-  RefreshCw,
   Search,
   RotateCcw,
   CheckCircle2,
@@ -102,7 +101,7 @@ export function AdminBroadcastPage() {
   const [archiveTargetId, setArchiveTargetId] = useState<number | null>(null)
 
   // Query API
-  const { data, isLoading, isFetching, error, refetch } = useAdminSystemNotifications({
+  const { data, isLoading, error, refetch } = useAdminSystemNotifications({
     timeFilter,
     status: statusFilter || undefined,
     page,
@@ -223,17 +222,6 @@ export function AdminBroadcastPage() {
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="flex items-center gap-2 rounded-xl text-xs font-bold h-9 px-3.5 border border-border shadow-2xs"
-          >
-            <RefreshCw size={13} className={cn(isFetching && 'animate-spin text-primary-solid')} />
-            <span>{isFetching ? 'Đang đồng bộ...' : 'Làm mới'}</span>
-          </Button>
-
           <Button
             variant="primary"
             size="sm"

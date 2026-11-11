@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   Sparkles,
   RotateCcw,
-  RefreshCw,
   X,
   Image as ImageIcon,
   AlertTriangle,
@@ -244,7 +243,7 @@ export function AdminPostsPage() {
   const [page, setPage] = useState(0)
 
   // Query dữ liệu bài viết
-  const { data, isLoading, isFetching, error, refetch } = useAdminPosts({
+  const { data, isLoading, error } = useAdminPosts({
     query: query || undefined,
     author: author || undefined,
     status: status === 'ALL' ? undefined : status,
@@ -310,7 +309,7 @@ export function AdminPostsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* 1. Header & Live Refresh */}
+      {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
@@ -322,19 +321,6 @@ export function AdminPostsPage() {
           <p className="mt-0.5 text-xs text-text-subtle">
             Duyệt, phân loại theo mục đích và kiểm duyệt nội dung bài viết trong toàn bộ hệ thống mạng lưới.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="flex items-center gap-2 rounded-xl text-xs font-bold h-9 px-3.5 border border-border shadow-2xs"
-          >
-            <RefreshCw size={13} className={cn(isFetching && 'animate-spin text-primary-solid')} />
-            <span>{isFetching ? 'Đang đồng bộ...' : 'Làm mới'}</span>
-          </Button>
         </div>
       </div>
 
