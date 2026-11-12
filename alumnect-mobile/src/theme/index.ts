@@ -34,7 +34,7 @@ const light = {
   textMuted: '#5C626C',
   textSubtle: '#666D77',
   inputBg: '#F1F3F5',
-  action: '#202329',
+  action: palette.primary,
   onAction: '#FFFFFF',
   /** Chữ/biểu tượng đặt trên nền `primary`. */
   onPrimary: '#FFFFFF',
@@ -65,8 +65,8 @@ const dark: typeof light = {
   textMuted: '#B8B8B8',
   textSubtle: '#A6A6A6',
   inputBg: '#252525',
-  action: '#F4F4F4',
-  onAction: '#191919',
+  action: '#FB8A3C',
+  onAction: '#FFFFFF',
   /** Cam sáng trên nền tối cần chữ tối để đủ tương phản. */
   onPrimary: '#1C1917',
   primaryTint: '#3A2414',

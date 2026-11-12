@@ -17,6 +17,9 @@ import {
   UserRound,
 } from '@/components/icons'
 import { Avatar, Button, Empty, Loading, Screen, Txt } from '@/components/ui'
+import { BrandIcon } from '@/components/BrandIcon'
+import { Enter, MotionPressable } from '@/components/Motion'
+import * as Haptics from 'expo-haptics'
 import { Header } from '@/components/Header'
 import { BottomBar, InfoRow, SectionCard } from '@/components/DetailBits'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
@@ -118,7 +121,7 @@ export default function MentorDetailScreen() {
                 >
                   <View style={[styles.statusDot, { backgroundColor: isAvailable ? liveGreen : '#DC2626' }]} />
                   <Txt size={12} weight="700" style={{ color: isAvailable ? (isDark ? '#4ADE80' : '#15803D') : '#DC2626' }}>
-                    {isAvailable ? 'Sẵn sàng nhận kết nối' : 'Tạm ngưng nhận'}
+                    {isAvailable ? 'Sẵn sàng hướng dẫn' : 'Tạm ngưng nhận'}
                   </Txt>
                 </View>
 
@@ -154,7 +157,7 @@ export default function MentorDetailScreen() {
                   {m.completedTasks ?? 0}
                 </Txt>
                 <Txt size={11} weight="600" style={{ color: colors.textTertiary, marginTop: 2 }}>
-                  Nhiệm vụ xong
+                  Buổi đã cố vấn
                 </Txt>
               </View>
 
@@ -180,14 +183,14 @@ export default function MentorDetailScreen() {
 
         {/* Meetup Content Cards */}
         {/* 1. Giới thiệu */}
-        <SectionCard title="Giới thiệu bản thân" icon={<UserRound size={18} color={viridian} weight="bold" />}>
+        <SectionCard title="Giới thiệu bản thân" icon={<BrandIcon name="writing" size={24} />}>
           <Txt size={14} style={{ color: colors.text, lineHeight: 22 }}>
             {m.bio || m.biography || 'Mentor chưa cập nhật phần giới thiệu chi tiết.'}
           </Txt>
         </SectionCard>
 
         {/* 2. Hình thức làm việc */}
-        <SectionCard title="Hình thức & Phương thức hướng dẫn" icon={<Laptop size={18} color={viridian} weight="bold" />}>
+        <SectionCard title="Hình thức & Phương thức hướng dẫn" icon={<BrandIcon name="computer" size={24} />}>
           {m.workingMode ? (
             <InfoRow
               icon={<Laptop size={16} color={viridian} />}
@@ -207,7 +210,7 @@ export default function MentorDetailScreen() {
 
         {/* 3. Lĩnh vực & Chủ đề hỗ trợ */}
         {(m.supportedFields.length > 0 || m.topics.length > 0) && (
-          <SectionCard title="Lĩnh vực & Chủ đề cố vấn" icon={<Star size={18} color={viridian} weight="fill" />}>
+          <SectionCard title="Lĩnh vực & Chủ đề cố vấn" icon={<BrandIcon name="star" size={24} />}>
             <View style={styles.tagsContainer}>
               {m.supportedFields.map((f) => (
                 <View key={f.id} style={[styles.fieldPill, { backgroundColor: viridianSoft }]}>
@@ -234,7 +237,7 @@ export default function MentorDetailScreen() {
 
         {/* 4. Kỹ năng chuyên môn */}
         {m.skills.length > 0 && (
-          <SectionCard title="Kỹ năng chuyên môn" icon={<Sparkles size={18} color={viridian} weight="fill" />}>
+          <SectionCard title="Kỹ năng chuyên môn" icon={<BrandIcon name="sparkle" size={24} />}>
             <View style={styles.tagsContainer}>
               {m.skills.map((s) => (
                 <View key={s.id} style={[styles.skillPill, { backgroundColor: colors.tagBg, borderColor: colors.tagBorder }]}>
@@ -249,7 +252,7 @@ export default function MentorDetailScreen() {
 
         {/* 5. Kinh nghiệm làm việc */}
         {m.experiences.length > 0 && (
-          <SectionCard title="Kinh nghiệm sự nghiệp" icon={<Briefcase size={18} color={viridian} weight="bold" />}>
+          <SectionCard title="Kinh nghiệm sự nghiệp" icon={<BrandIcon name="suitcase" size={24} />}>
             {m.experiences.map((e, i) => (
               <View key={e.id} style={{ flexDirection: 'row', gap: 12 }}>
                 <View style={{ alignItems: 'center' }}>
@@ -289,7 +292,10 @@ export default function MentorDetailScreen() {
           title="Nhắn tin"
           variant="secondary"
           icon={<MessageCircle size={18} color={viridian} weight="fill" />}
-          onPress={() => router.push({ pathname: '/chat/direct/[userId]', params: { userId: String(m.userId) } })}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            router.push({ pathname: '/chat/direct/[userId]', params: { userId: String(m.userId) } })
+          }}
           style={{ flex: 1 }}
         />
         {role === 'STUDENT' ? (
@@ -298,12 +304,13 @@ export default function MentorDetailScreen() {
             textColor="#FFFFFF"
             icon={<Send size={16} color="#FFFFFF" weight="fill" />}
             disabled={!isAvailable}
-            onPress={() =>
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
               router.push({
                 pathname: '/mentoring/mentor/request',
                 params: { id: String(m.mentorId), name: m.fullName },
               })
-            }
+            }}
             style={{
               flex: 1.8,
               paddingHorizontal: 10,

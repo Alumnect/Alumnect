@@ -6,7 +6,7 @@ import { FlashList } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ImageIcon, Info, Paperclip, Send, X } from '@/components/icons'
+import { ChevronLeft, Handshake, ImageIcon, Info, Paperclip, Send, X } from '@/components/icons'
 import { Avatar, Button, Empty, Loading, Screen, Txt } from './ui'
 import { MotionPressable } from './Motion'
 import { chatApi } from '@/api/chat'
@@ -15,6 +15,8 @@ import { SharedCard } from '@/components/SharedCards'
 import { parseSharedLink } from '@/lib/share'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
+import { useMentoringTheme } from '@/theme/mentoringTheme'
+import { DEAL_STATUS_LABEL } from '@/api/mentoringFlow'
 import { pickImage, uploadFile, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 
@@ -90,6 +92,8 @@ export function ChatWindow({
   const context = useQuery({ queryKey: ['mentoring-chat-context', convId], enabled: !!isMentoring && convId != null, queryFn: () => chatApi.mentoringContext(convId!), refetchOnMount: 'always', refetchInterval: 15_000 })
   const deal = context.data?.deal?.deal
   const canSend = !isMentoring || (!!context.data?.canSendMessage && !context.data.readOnly && !context.isError)
+  const { viridian, viridianSoft } = useMentoringTheme()
+  const canPropose = canSend && (!!context.data?.canCreateDealTicket || !!context.data?.canAcceptDealByRequest)
 
   const q = useInfiniteQuery({
     queryKey: ['messages', convId],
@@ -169,17 +173,149 @@ export function ChatWindow({
         }
       </View>
       {isMentoring && convId != null ? (
-        <View style={{ gap: 8, padding: 12, backgroundColor: t.surface }}>
-          {context.isLoading ? <Txt muted size={13}>Đang kiểm tra quyền trò chuyện...</Txt> : context.isError ? <><Txt muted size={13}>Không thể kiểm tra quyền trò chuyện.</Txt><Button title="Thử lại quyền chat" variant="outline" onPress={() => void context.refetch()} /></> : context.data?.readOnly || !canSend ? <Txt muted size={13}>{context.data?.readOnlyReason || 'Cuộc trò chuyện hiện chỉ cho phép xem.'}</Txt> : null}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-          <Txt size={13} weight="600" style={{ flexGrow: 1 }}>{deal ? 'Deal #' + deal.id + ' · ' + deal.status : 'Chưa có thỏa thuận'}</Txt>
-          {deal ? (
-            <Button title="Xem deal" style={{ minHeight: 44, paddingHorizontal: 16 }} onPress={() => router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(deal.id) } })} />
+        <View style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 6 }}>
+          {context.isLoading ? (
+            <View style={{ padding: 10, borderRadius: 14, backgroundColor: t.surface, alignItems: 'center' }}>
+              <Txt muted size={12}>Đang kiểm tra quyền trò chuyện...</Txt>
+            </View>
+          ) : context.isError ? (
+            <View style={{ padding: 10, borderRadius: 14, backgroundColor: t.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Txt muted size={12}>Không thể kiểm tra quyền trò chuyện.</Txt>
+              <Pressable onPress={() => void context.refetch()}>
+                <Txt size={12} weight="700" style={{ color: viridian }}>Thử lại</Txt>
+              </Pressable>
+            </View>
+          ) : (
+            <View
+              style={{
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: t.isDark ? '#333333' : '#EAECEF',
+                backgroundColor: t.card,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 3,
+                elevation: 1,
+              }}
+            >
+              {/* Left: Icon + Status Text */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 12,
+                    backgroundColor: t.isDark ? '#2E1C10' : viridianSoft,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Handshake size={20} color={viridian} weight="bold" />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt size={13} weight="800" numberOfLines={1} style={{ color: t.text }}>
+                    {deal ? `Thỏa thuận #${deal.id}` : 'Chưa có thỏa thuận'}
+                  </Txt>
+                  <Txt size={11} weight="500" numberOfLines={1} style={{ color: t.textMuted, marginTop: 1 }}>
+                    {deal
+                      ? (DEAL_STATUS_LABEL[deal.status] ?? deal.status)
+                      : canPropose
+                        ? 'Đề xuất điều khoản để bắt đầu'
+                        : 'Đang trao đổi với Mentor'}
+                  </Txt>
+                </View>
+              </View>
+
+              {/* Right: Action Button(s) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                {deal ? (
+                  <>
+                    {context.data?.taskId ? (
+                      <MotionPressable
+                        onPress={() => router.push({ pathname: '/mentoring/tasks/[id]', params: { id: String(context.data.taskId) } })}
+                        accessibilityRole="button"
+                        accessibilityLabel="Xem nhiệm vụ"
+                        style={{
+                          backgroundColor: t.isDark ? '#222222' : '#F4F5F7',
+                          borderWidth: 1,
+                          borderColor: t.isDark ? '#333333' : '#EAECEF',
+                          paddingHorizontal: 11,
+                          paddingVertical: 7,
+                          borderRadius: 999,
+                        }}
+                      >
+                        <Txt size={12} weight="700" style={{ color: t.text }}>
+                          Nhiệm vụ
+                        </Txt>
+                      </MotionPressable>
+                    ) : null}
+                    <MotionPressable
+                      onPress={() => router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(deal.id) } })}
+                      accessibilityRole="button"
+                      accessibilityLabel="Xem chi tiết thỏa thuận"
+                      style={{
+                        backgroundColor: viridian,
+                        paddingHorizontal: 13,
+                        paddingVertical: 7,
+                        borderRadius: 999,
+                        shadowColor: viridian,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 3,
+                        elevation: 2,
+                      }}
+                    >
+                      <Txt size={12} weight="800" style={{ color: '#FFFFFF' }}>
+                        Xem thỏa thuận
+                      </Txt>
+                    </MotionPressable>
+                  </>
+                ) : canPropose ? (
+                  <MotionPressable
+                    onPress={() =>
+                      router.push({
+                        pathname: '/mentoring/deal/form',
+                        params: {
+                          conversationId: String(convId),
+                        },
+                      })
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel="Đề xuất thỏa thuận"
+                    style={{
+                      backgroundColor: viridian,
+                      paddingHorizontal: 13,
+                      paddingVertical: 7,
+                      borderRadius: 999,
+                      shadowColor: viridian,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 3,
+                      elevation: 2,
+                    }}
+                  >
+                    <Txt size={12} weight="800" style={{ color: '#FFFFFF' }}>
+                      Đề xuất thỏa thuận
+                    </Txt>
+                  </MotionPressable>
+                ) : null}
+              </View>
+            </View>
+          )}
+
+          {/* Read-only banner if cannot send */}
+          {context.data?.readOnly || !canSend ? (
+            <Txt muted size={11} style={{ marginTop: 4, marginHorizontal: 4 }}>
+              {context.data?.readOnlyReason || 'Cuộc trò chuyện hiện chỉ cho phép xem.'}
+            </Txt>
           ) : null}
-          {context.data?.canAcceptDealByRequest && canSend ? <Button title="Deal theo yêu cầu" onPress={() => router.push({ pathname: '/mentoring/deal/form', params: { conversationId: String(convId) } })} /> : null}
-          {context.data?.canCreateDealTicket && canSend ? <Button title="Đề xuất điều khoản" variant="outline" onPress={() => router.push({ pathname: '/mentoring/deal/form', params: { conversationId: String(convId), renegotiate: '1' } })} /> : null}
-          {context.data?.taskId ? <Button title="Xem nhiệm vụ" variant="outline" onPress={() => router.push({ pathname: '/mentoring/tasks/[id]', params: { id: String(context.data.taskId) } })} /> : null}
-          </View>
         </View>
       ) : null}
       <View style={{ flex: 1 }}>

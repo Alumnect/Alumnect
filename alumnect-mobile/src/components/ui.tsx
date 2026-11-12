@@ -129,7 +129,7 @@ export function Button({
 }) {
   const t = useTheme()
   const bg = { primary: t.action, brand: t.primary, secondary: t.inputBg, outline: t.card, ghost: 'transparent', danger: t.danger }[variant]
-  const fg = textColor ?? { primary: t.onAction, brand: t.onPrimary, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
+  const fg = textColor ?? { primary: '#FFFFFF', brand: '#FFFFFF', secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
   const height = { sm: 44, md: 48, lg: 52 }[size]
   return (
     <MotionPressable
@@ -207,7 +207,7 @@ export function IconButton({
 /* Ô nhập                                                             */
 /* ------------------------------------------------------------------ */
 
-export function Input({ label, error, hint, inputRef, icon, variant = 'outline', ...props }: TextInputProps & { label?: string; error?: string; hint?: string; inputRef?: React.ComponentProps<typeof TextInput>['ref']; icon?: React.ReactNode; variant?: 'outline' | 'float' }) {
+export function Input({ label, error, hint, inputRef, icon, variant = 'outline', containerStyle, ...props }: TextInputProps & { label?: string; error?: string; hint?: string; inputRef?: React.ComponentProps<typeof TextInput>['ref']; icon?: React.ReactNode; variant?: 'outline' | 'float'; containerStyle?: ViewStyle }) {
   const t = useTheme()
   const [focus, setFocus] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -241,7 +241,7 @@ export function Input({ label, error, hint, inputRef, icon, variant = 'outline',
     const labelColor = error ? t.danger : focus ? t.info : t.textMuted
     const left = icon ? 48 : 16
     return (
-      <View style={{ marginBottom: 14 }}>
+      <View style={[{ marginBottom: 14 }, containerStyle]}>
         <View style={{ justifyContent: 'center', minHeight: 58, borderRadius: 16, backgroundColor: t.card, borderWidth: focus || error ? 2 : 1, borderColor: accent }}>
           {icon ? <View pointerEvents="none" style={{ position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center' }}>{React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: focus ? t.info : t.textMuted }) : icon}</View> : null}
           {label ? (
@@ -279,7 +279,7 @@ export function Input({ label, error, hint, inputRef, icon, variant = 'outline',
   }
 
   return (
-    <View style={{ marginBottom: 18 }}>
+    <View style={[{ marginBottom: 18 }, containerStyle]}>
       {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
       <View style={{ justifyContent: 'center' }}>
         <TextInput

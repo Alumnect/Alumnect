@@ -5,7 +5,7 @@ import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Map, Sparkles, UserCheck, Users } from '@/components/icons'
+import { Map, Sparkles, Users } from '@/components/icons'
 import { Chip, Empty, Screen, SearchBar, Txt } from '@/components/ui'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { UserRow } from '@/components/UserRow'
@@ -18,7 +18,7 @@ import { useDebounced } from '@/lib/hooks'
 import { useTheme } from '@/theme'
 import { ListSkeleton } from '@/components/Skeleton'
 
-type Tab = 'directory' | 'suggestions' | 'following'
+type Tab = 'directory' | 'suggestions'
 
 const SORTS: Record<string, [string, 'ASC' | 'DESC', string]> = {
   newest: ['createdAt', 'DESC', 'Mới nhất'],
@@ -26,11 +26,10 @@ const SORTS: Record<string, [string, 'ASC' | 'DESC', string]> = {
   cohort: ['cohort', 'DESC', 'Khóa học'],
 }
 
-/** Mạng lưới cựu sinh viên & sinh viên: Danh bạ, Gợi ý kết nối thông minh & Đang theo dõi. */
+/** Mạng lưới cựu sinh viên & sinh viên: Danh bạ & Gợi ý kết nối thông minh. */
 export default function NetworkScreen() {
   const t = useTheme()
   const router = useRouter()
-  const meId = useAuthStore((s) => s.user?.id)
   const [tab, setTab] = useState<Tab>('directory')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState<FilterValues>({ sort: 'newest' })
@@ -82,24 +81,14 @@ export default function NetworkScreen() {
     queryFn: () => userApi.suggestions(30),
   })
 
-  const following = useInfiniteQuery({
-    queryKey: ['following', meId],
-    enabled: tab === 'following' && !!meId,
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) => userApi.following(meId!, pageParam),
-    getNextPageParam: (l) => (l.data.last ? undefined : l.data.pageNumber + 1),
-  })
-
   const active = countActive(filters, ['sort'])
   const setRole = (role?: string) => setFilters((f) => ({ ...f, role }))
 
   const data =
     tab === 'directory'
       ? results.data?.pages.flatMap((p) => p.data.content) ?? []
-      : tab === 'suggestions'
-        ? suggestions.data?.data ?? []
-        : following.data?.pages.flatMap((p) => p.data.content) ?? []
-  const loading = tab === 'directory' ? results.isLoading : tab === 'suggestions' ? suggestions.isLoading : following.isLoading
+      : suggestions.data?.data ?? []
+  const loading = tab === 'directory' ? results.isLoading : suggestions.isLoading
   const total = tab === 'directory' ? results.data?.pages[0]?.data.totalElements : undefined
 
   const handleTabChange = (nextTab: Tab) => {
@@ -234,52 +223,6 @@ export default function NetworkScreen() {
           >
             Gợi ý
           </Txt>
-          <View
-            style={{
-              backgroundColor: t.primary,
-              paddingHorizontal: 4.5,
-              paddingVertical: 1,
-              borderRadius: 6,
-            }}
-          >
-            <Txt size={9} weight="800" style={{ color: '#fff' }}>
-              AI
-            </Txt>
-          </View>
-        </Pressable>
-
-        <Pressable
-          onPress={() => handleTabChange('following')}
-          accessibilityRole="tab"
-          accessibilityState={{ selected: tab === 'following' }}
-          style={{
-            flex: 1,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            paddingVertical: 9,
-            borderRadius: 11,
-            backgroundColor: tab === 'following' ? t.card : 'transparent',
-            elevation: tab === 'following' ? 2 : 0,
-            shadowColor: '#000',
-            shadowOpacity: tab === 'following' ? 0.08 : 0,
-            shadowRadius: 3,
-            shadowOffset: { width: 0, height: 1 },
-          }}
-        >
-          <UserCheck
-            size={16}
-            color={tab === 'following' ? t.primary : t.textMuted}
-            weight={tab === 'following' ? 'bold' : 'regular'}
-          />
-          <Txt
-            size={13}
-            weight={tab === 'following' ? '700' : '500'}
-            style={{ color: tab === 'following' ? t.text : t.textMuted }}
-          >
-            Đang theo dõi
-          </Txt>
         </Pressable>
       </View>
 
@@ -291,10 +234,9 @@ export default function NetworkScreen() {
           contentContainerStyle={{ paddingBottom: 24 }}
           onEndReached={() => {
             if (tab === 'directory' && results.hasNextPage) results.fetchNextPage()
-            if (tab === 'following' && following.hasNextPage) following.fetchNextPage()
           }}
-          refreshing={tab === 'directory' ? results.isRefetching : tab === 'suggestions' ? suggestions.isRefetching : following.isRefetching}
-          onRefresh={() => (tab === 'directory' ? results.refetch() : tab === 'suggestions' ? suggestions.refetch() : following.refetch())}
+          refreshing={tab === 'directory' ? results.isRefetching : suggestions.isRefetching}
+          onRefresh={() => (tab === 'directory' ? results.refetch() : suggestions.refetch())}
           ListHeaderComponent={
             <View>
               {tab === 'directory' ? (
@@ -359,41 +301,18 @@ export default function NetworkScreen() {
           ListEmptyComponent={
             loading ? null : (
               <Empty
-                error={tab === 'directory' ? results.error : tab === 'suggestions' ? suggestions.error : following.error}
-                onRetry={() => { void (tab === 'directory' ? results.refetch() : tab === 'suggestions' ? suggestions.refetch() : following.refetch()) }}
-                icon={
-                  tab === 'directory' ? (
-                    <BrandIcon name="people2" size={56} />
-                  ) : tab === 'suggestions' ? (
-                    <BrandIcon name="world" size={56} />
-                  ) : (
-                    <BrandIcon name="people" size={56} />
-                  )
-                }
-                title={
-                  tab === 'following'
-                    ? 'Bạn chưa theo dõi ai'
-                    : tab === 'suggestions'
-                      ? 'Chưa có thêm gợi ý mới'
-                      : 'Không tìm thấy thành viên'
-                }
+                error={tab === 'directory' ? results.error : suggestions.error}
+                onRetry={() => { void (tab === 'directory' ? results.refetch() : suggestions.refetch()) }}
+                icon={tab === 'directory' ? <BrandIcon name="people2" size={56} /> : <BrandIcon name="world" size={56} />}
+                title={tab === 'suggestions' ? 'Chưa có thêm gợi ý mới' : 'Không tìm thấy thành viên'}
                 text={
-                  tab === 'following'
-                    ? 'Hãy khám phá mục Gợi ý hoặc Danh bạ để kết nối với cựu sinh viên và bạn học.'
-                    : tab === 'suggestions'
-                      ? 'Cập nhật thêm ngành học, khoá và công ty trong hồ sơ của bạn để nhận thêm gợi ý kết nối chuẩn xác.'
-                      : 'Thử bỏ bớt bộ lọc hoặc tìm kiếm theo họ tên, kỹ năng khác.'
+                  tab === 'suggestions'
+                    ? 'Cập nhật thêm ngành học, khoá và công ty trong hồ sơ của bạn để nhận thêm gợi ý kết nối chuẩn xác.'
+                    : 'Thử bỏ bớt bộ lọc hoặc tìm kiếm theo họ tên, kỹ năng khác.'
                 }
-                action={
-                  tab === 'directory' && active > 0
-                    ? 'Xoá bộ lọc'
-                    : tab === 'following'
-                      ? 'Khám phá gợi ý'
-                      : undefined
-                }
+                action={tab === 'directory' && active > 0 ? 'Xoá bộ lọc' : undefined}
                 onAction={() => {
                   if (tab === 'directory') setFilters({ sort: 'newest' })
-                  else if (tab === 'following') handleTabChange('suggestions')
                 }}
               />
             )
