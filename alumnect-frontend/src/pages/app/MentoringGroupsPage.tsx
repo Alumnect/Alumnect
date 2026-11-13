@@ -134,10 +134,8 @@ export function MentoringGroupsPage() {
       <MentoringTermsGate source="MENTORING_HOME">
       <div className="space-y-6">
         <MentorPageHeader
-          icon={<Users className="h-4 w-4" />}
-          eyebrow={t('mentoring.groupsEyebrow')}
+          scene="groups"
           title={t('mentoring.groupsTitle')}
-          description={t('mentoring.groupsSubtitle')}
           actions={
             <Button size="sm" onClick={() => setIsCreateModalOpen(true)} leftIcon={<Plus className="h-4 w-4" />}>
               {t('mentoring.createGroup')}
@@ -378,7 +376,7 @@ export function MentoringGroupsPage() {
                             {group.description}
                           </p>
                         ) : (
-                          <p className="text-xs text-text-subtle italic">{t('mentoring.noGroupDescription')}</p>
+                          <p className="text-xs text-text-subtle">{t('mentoring.noGroupDescription')}</p>
                         )}
 
                         {/* Stats Summary */}

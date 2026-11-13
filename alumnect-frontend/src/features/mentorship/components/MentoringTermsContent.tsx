@@ -24,7 +24,7 @@ export function MentoringTermsContent() {
         aria-label={t('mentoring.termsDocumentAriaLabel')}
         className="space-y-5 text-xs sm:text-sm text-text-muted focus:outline-none"
       >
-        <p className="italic text-text-subtle dark:text-text-subtle">
+        <p className="text-text-subtle dark:text-text-subtle">
           {t('mentoring.termsWelcomeIntro')}
         </p>
 

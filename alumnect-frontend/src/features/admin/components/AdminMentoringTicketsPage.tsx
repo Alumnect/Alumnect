@@ -18,7 +18,6 @@ import {
   Image as ImageIcon,
   Layers,
   MessageSquare,
-  Sparkles,
 } from 'lucide-react'
 import { EmptyState, Pagination, Skeleton, SelectDropdown, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { useAdminTickets, useAcceptAdminTicket, useAdminDisputeContext } from '../hooks/useAdmin'
@@ -29,6 +28,8 @@ import {
 } from '@/features/mentorship'
 import { AdminResolveTicketModal } from './AdminResolveTicketModal'
 import { cn } from '@/lib/utils'
+import { AdminPageBanner, StatTile, panelClass } from './AdminVisuals'
+import { fmtCount } from './adminFormat'
 
 /**
  * Trang Quản lý Tranh chấp & Hòa giải Task dành cho Admin (UC116 - UC120).
@@ -54,11 +55,12 @@ export function AdminMentoringTicketsPage() {
   const totalElements = data?.totalElements || 0
   const totalPages = data?.totalPages || 0
 
-  // Thống kê nhanh 4 KPIs từ cơ sở dữ liệu
-  const totalTickets = totalElements
-  const openTickets = tickets.filter((t) => t.status === 'OPEN').length
-  const inReviewTickets = tickets.filter((t) => t.status === 'IN_REVIEW').length
-  const resolvedTickets = tickets.filter((t) => t.status === 'RESOLVED').length
+  // Số liệu toàn hệ thống theo trạng thái (không phụ thuộc trang/bộ lọc đang xem)
+  const { data: allTicketsPage } = useAdminTickets({ page: 0, size: 1 })
+  const { data: openTicketsPage } = useAdminTickets({ status: 'OPEN', page: 0, size: 1 })
+  const { data: inReviewTicketsPage } = useAdminTickets({ status: 'IN_REVIEW', page: 0, size: 1 })
+  const { data: resolvedTicketsPage } = useAdminTickets({ status: 'RESOLVED', page: 0, size: 1 })
+  const openTickets = openTicketsPage?.totalElements ?? 0
 
   // State quản lý Modal xem chi tiết Ticket
   const [selectedTicket, setSelectedTicket] = useState<MentoringDisputeTicket | null>(null)
@@ -180,120 +182,42 @@ export function AdminMentoringTicketsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* 1. Header & Tiêu đề Phân hệ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
-            <Scale size={15} /> Trọng tài & Hòa giải Mentorship
-          </div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-            Quản lý Tranh chấp & Hòa giải Task
-          </h1>
-          <p className="mt-0.5 text-xs text-text-subtle">
-            Theo dõi, tiếp nhận thụ lý và phân xử các khiếu nại vi phạm cam kết hoặc thỏa thuận dừng sớm nhiệm vụ Mentoring.
-          </p>
-        </div>
+      {/* 1. Dải đầu trang */}
+      <AdminPageBanner
+        title="Tranh chấp & hòa giải"
+        scene="disputes"
+      />
 
-        <div className="flex items-center gap-2 self-start sm:self-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-muted shadow-2xs">
-            <Scale className="h-4 w-4 text-primary-solid" />
-            <span>Phân hệ Trọng tài Task</span>
-          </div>
-        </div>
+      {/* 2. Số liệu theo trạng thái — bấm để lọc */}
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        {(
+          [
+            { key: 'ALL', label: 'Tổng số ticket', value: allTicketsPage?.totalElements, icon: <Layers />, tone: 'slate', hint: undefined },
+            { key: 'OPEN', label: 'Chờ tiếp nhận', value: openTicketsPage?.totalElements, icon: <Clock />, tone: 'red', hint: openTickets > 0 ? 'Cần tiếp nhận' : undefined },
+            { key: 'IN_REVIEW', label: 'Đang hòa giải', value: inReviewTicketsPage?.totalElements, icon: <UserCheck />, tone: 'amber', hint: undefined },
+            { key: 'RESOLVED', label: 'Đã phân xử', value: resolvedTicketsPage?.totalElements, icon: <CheckCircle2 />, tone: 'green', hint: undefined },
+          ] as const
+        ).map((tile) => (
+          <StatTile
+            key={tile.key}
+            icon={tile.icon}
+            tone={tile.tone}
+            label={tile.label}
+            value={fmtCount(tile.value)}
+            hint={tile.hint}
+            active={statusFilter === tile.key}
+            onClick={() => {
+              setStatusFilter(tile.key)
+              setPage(0)
+            }}
+          />
+        ))}
       </div>
-
-      {/* 2. Top 4 Executive KPI Cards (Shadcn-Admin style) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        {/* Card 1: Tổng Ticket */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Tổng số Ticket</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft text-primary-solid shadow-2xs">
-              <Scale size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{totalTickets}</span>
-            <span className="text-xs text-text-subtle font-medium">yêu cầu</span>
-          </div>
-          <p className="mt-1 text-[11px] text-text-subtle font-medium">
-            Toàn bộ tranh chấp & thỏa thuận
-          </p>
-        </div>
-
-        {/* Card 2: Chờ tiếp nhận */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Chờ tiếp nhận</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 shadow-2xs">
-              <Clock size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-sky-600 dark:text-sky-400 tracking-tight">{openTickets}</span>
-            <span className="text-xs text-text-subtle font-medium">cần xử lý</span>
-          </div>
-          <p className="mt-1 text-[11px] text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-            </span>
-            Chưa có cán bộ phân công
-          </p>
-        </div>
-
-        {/* Card 3: Đang xử lý */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Đang hòa giải</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shadow-2xs">
-              <AlertTriangle size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight">{inReviewTickets}</span>
-            <span className="text-xs text-text-subtle font-medium">đang thụ lý</span>
-          </div>
-          <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
-            <Sparkles size={11} /> Thu thập bằng chứng
-          </p>
-        </div>
-
-        {/* Card 4: Đã giải quyết */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Đã ban hành phán quyết</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-2xs">
-              <CheckCircle2 size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">{resolvedTickets}</span>
-            <span className="text-xs text-text-subtle font-medium">hoàn tất</span>
-          </div>
-          <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-            <CheckCircle2 size={11} /> Đã phân xử & giải ngân
-          </p>
-        </div>
-      </div>
-
       {/* 3. BẢNG DUY NHẤT (Single Unified Card Container) */}
-      <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
+      <div className={panelClass}>
         {/* Card Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border p-5 bg-surface">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-soft text-primary-solid shadow-2xs">
-                <Scale size={15} />
-              </span>
-              <h2 className="text-base font-extrabold text-slate-950 dark:text-white">
-                Danh sách Ticket Tranh chấp & Hòa giải Task
-              </h2>
-            </div>
-            <p className="mt-1 text-xs text-text-subtle">
-              Toàn bộ danh sách hồ sơ khiếu nại, yêu cầu trọng tài hòa giải giữa Cố vấn và Học viên.
-            </p>
-          </div>
+          <h2 className="text-base font-semibold text-text">Danh sách ticket</h2>
 
           <div className="flex items-center gap-2 self-start sm:self-center">
             <span className="text-xs font-semibold text-text-subtle mr-2 hidden sm:inline">
@@ -435,7 +359,7 @@ export function AdminMentoringTicketsPage() {
           <div className="w-full overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2/60">
+                <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
                   <th className="px-4 py-3 sm:px-5 font-bold w-[25%]">Mã Ticket & Phân loại</th>
                   <th className="px-4 py-3 sm:px-5 font-bold w-[38%]">Nhiệm vụ & Các bên tham gia</th>
                   <th className="px-4 py-3 sm:px-5 font-bold text-center w-[20%]">Ngân sách & Trạng thái</th>
@@ -455,25 +379,25 @@ export function AdminMentoringTicketsPage() {
                       {/* Cột 1: Mã Ticket & Loại */}
                       <td className="px-4 py-3.5 sm:px-5">
                         <div className="space-y-1">
-                          <span className="font-mono font-extrabold text-xs text-text bg-surface-2 px-2 py-0.5 rounded-md border border-border/80 shadow-2xs inline-block">
+                          <span className="tabular-nums font-bold text-xs text-text bg-surface-2 px-2 py-0.5 rounded-md border border-border/80 shadow-2xs inline-block">
                             {t.ticketCode}
                           </span>
                           <span
                             className={cn(
-                              'inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs whitespace-nowrap block mt-1 w-fit',
+                              'inline-block px-2 py-0.5 rounded-md text-xs font-bold border shadow-2xs whitespace-nowrap block mt-1 w-fit',
                               typeInfo.className
                             )}
                           >
                             {typeInfo.text}
                           </span>
-                          <p className="text-[11px] text-text-subtle pt-0.5">{formatDate(t.createdAt)}</p>
+                          <p className="text-xs text-text-subtle pt-0.5">{formatDate(t.createdAt)}</p>
                         </div>
                       </td>
 
                       {/* Cột 2: Nhiệm vụ & Tiêu đề & Học viên/Cố vấn */}
                       <td className="px-4 py-3.5 sm:px-5">
                         <div className="space-y-1">
-                          <p className="font-extrabold text-xs text-text leading-tight line-clamp-1" title={t.title}>
+                          <p className="font-bold text-xs text-text leading-tight line-clamp-1" title={t.title}>
                             {t.title}
                           </p>
                           <p className="text-xs text-text-muted font-medium line-clamp-1">
@@ -481,7 +405,7 @@ export function AdminMentoringTicketsPage() {
                           </p>
 
                           {/* Học viên & Cố vấn */}
-                          <div className="flex flex-col gap-0.5 pt-1 text-[11px] text-text-subtle">
+                          <div className="flex flex-col gap-0.5 pt-1 text-xs text-text-subtle">
                             <div className="flex items-center gap-1.5 truncate">
                               <span className="h-1.5 w-1.5 rounded-full bg-sky-500 shrink-0" />
                               <span>Học viên: <strong className="text-text font-semibold">{studentName}</strong></span>
@@ -493,7 +417,7 @@ export function AdminMentoringTicketsPage() {
                           </div>
 
                           {t.evidences && t.evidences.length > 0 && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-sky-600 dark:text-sky-400 font-bold mt-1 bg-sky-50 dark:bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-900/60 shadow-2xs">
+                            <span className="inline-flex items-center gap-1 text-xs text-sky-600 dark:text-sky-400 font-bold mt-1 bg-sky-50 dark:bg-sky-950/40 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-900/60 shadow-2xs">
                               <FileText size={10} /> {t.evidences.length} bằng chứng đính kèm
                             </span>
                           )}
@@ -504,12 +428,12 @@ export function AdminMentoringTicketsPage() {
                       <td className="px-4 py-3.5 sm:px-5 text-center">
                         <div className="flex flex-col items-center justify-center gap-1">
                           {/* Tổng tiền ký quỹ */}
-                          <span className="font-extrabold text-sm text-text tracking-tight">
+                          <span className="font-bold text-sm text-text tracking-tight">
                             {formatVND(t.totalAmount)}
                           </span>
 
                           {/* Đề xuất hoàn / thù lao nếu có */}
-                          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-text-subtle flex-wrap justify-center">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-text-subtle flex-wrap justify-center">
                             {t.studentRefund !== null && t.studentRefund !== undefined && Number(t.studentRefund) > 0 && (
                               <span className="text-sky-600 dark:text-sky-400">Hoàn: {formatVND(t.studentRefund)}</span>
                             )}
@@ -521,7 +445,7 @@ export function AdminMentoringTicketsPage() {
                           {/* Trạng thái Badge */}
                           <span
                             className={cn(
-                              'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border shadow-2xs mt-0.5 whitespace-nowrap',
+                              'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold border shadow-2xs mt-0.5 whitespace-nowrap',
                               statusInfo.className
                             )}
                           >
@@ -530,7 +454,7 @@ export function AdminMentoringTicketsPage() {
                           </span>
 
                           {/* Cán bộ phụ trách */}
-                          <p className="text-[10px] text-text-subtle truncate max-w-[140px] pt-0.5">
+                          <p className="text-xs text-text-subtle truncate max-w-[140px] pt-0.5">
                             {t.handledByName ? `Phụ trách: ${t.handledByName}` : 'Chưa phân công'}
                           </p>
                         </div>
@@ -617,7 +541,7 @@ export function AdminMentoringTicketsPage() {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-text bg-surface-2 px-2 py-0.5 rounded-md border border-border shadow-2xs">
+                  <span className="text-xs tabular-nums font-bold text-text bg-surface-2 px-2 py-0.5 rounded-md border border-border shadow-2xs">
                     {selectedTicket.ticketCode}
                   </span>
                   <span
@@ -637,7 +561,7 @@ export function AdminMentoringTicketsPage() {
                     {getStatusBadge(selectedTicket.status).text}
                   </span>
                 </div>
-                <h2 className="text-lg font-extrabold text-slate-950 dark:text-white mt-1.5 truncate">
+                <h2 className="text-lg font-bold text-text mt-1.5 truncate">
                   {selectedTicket.title}
                 </h2>
                 <p className="text-xs text-text-subtle flex items-center gap-2 mt-0.5">
@@ -664,13 +588,13 @@ export function AdminMentoringTicketsPage() {
                 className={cn(
                   'flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold border-b-2 transition cursor-pointer select-none',
                   activeModalTab === 'evidence'
-                    ? 'border-primary-solid text-primary-solid font-extrabold'
+                    ? 'border-primary-solid text-primary-solid font-bold'
                     : 'border-transparent text-text-subtle hover:text-text'
                 )}
               >
                 <FileText size={14} />
                 <span>Bằng chứng tranh chấp</span>
-                <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-xs font-extrabold bg-primary-soft text-primary-solid">
+                <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-xs font-bold bg-primary-soft text-primary-solid">
                   {disputeContext?.evidences?.length ?? selectedTicket.evidences?.length ?? 0}
                 </span>
               </button>
@@ -681,7 +605,7 @@ export function AdminMentoringTicketsPage() {
                 className={cn(
                   'flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold border-b-2 transition cursor-pointer select-none',
                   activeModalTab === 'context'
-                    ? 'border-primary-solid text-primary-solid font-extrabold'
+                    ? 'border-primary-solid text-primary-solid font-bold'
                     : 'border-transparent text-text-subtle hover:text-text'
                 )}
               >
@@ -700,7 +624,7 @@ export function AdminMentoringTicketsPage() {
                 className={cn(
                   'flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold border-b-2 transition cursor-pointer select-none',
                   activeModalTab === 'ticket'
-                    ? 'border-primary-solid text-primary-solid font-extrabold'
+                    ? 'border-primary-solid text-primary-solid font-bold'
                     : 'border-transparent text-text-subtle hover:text-text'
                 )}
               >
@@ -714,7 +638,7 @@ export function AdminMentoringTicketsPage() {
                 className={cn(
                   'flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold border-b-2 transition cursor-pointer select-none',
                   activeModalTab === 'discussion'
-                    ? 'border-primary-solid text-primary-solid font-extrabold'
+                    ? 'border-primary-solid text-primary-solid font-bold'
                     : 'border-transparent text-text-subtle hover:text-text'
                 )}
               >
@@ -832,12 +756,12 @@ export function AdminMentoringTicketsPage() {
                                       <h4 className="text-xs font-bold text-text line-clamp-1">
                                         {ev.title}
                                       </h4>
-                                      <span className="text-[10px] text-text-subtle font-mono">
+                                      <span className="text-xs text-text-subtle tabular-nums">
                                         {formatDate(ev.createdAt)}
                                       </span>
                                     </div>
                                   </div>
-                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-surface-2 border border-border text-text-subtle">
+                                  <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-surface-2 border border-border text-text-subtle">
                                     {ev.fileType}
                                   </span>
                                 </div>
@@ -868,7 +792,7 @@ export function AdminMentoringTicketsPage() {
                                         <ExternalLink size={12} /> Mở tệp đính kèm
                                       </a>
                                     )}
-                                    <span className="text-[10px] text-text-subtle">
+                                    <span className="text-xs text-text-subtle">
                                       Bởi: <strong className="text-text">{ev.uploadedBy?.fullName || 'Người tham gia'}</strong>
                                     </span>
                                   </div>
@@ -886,10 +810,10 @@ export function AdminMentoringTicketsPage() {
                     <div className="space-y-4">
                       {/* Thẻ tóm tắt thông tin Task */}
                       <div className="p-5 rounded-2xl border border-border bg-surface space-y-3 shadow-2xs">
-                        <div className="flex items-center gap-2 text-xs font-bold text-primary-solid uppercase tracking-wider">
+                        <div className="flex items-center gap-2 text-xs font-bold text-primary-solid">
                           <Layers size={14} /> Thông tin bối cảnh nhiệm vụ
                         </div>
-                        <h3 className="text-sm font-extrabold text-slate-950 dark:text-white">
+                        <h3 className="text-sm font-bold text-text">
                           {selectedTicket.taskTitle || `#Task ${selectedTicket.taskId}`}
                         </h3>
                         <p className="text-xs text-text-muted leading-relaxed font-medium">
@@ -920,27 +844,27 @@ export function AdminMentoringTicketsPage() {
                   {activeModalTab === 'ticket' && (
                     <div className="space-y-4">
                       <div className="p-5 rounded-2xl border border-border bg-surface space-y-4 shadow-2xs">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-primary-solid flex items-center gap-1.5">
+                        <h3 className="text-xs font-bold text-primary-solid flex items-center gap-1.5">
                           <DollarSign size={14} /> Cân đối quỹ & Dự thảo phân chia
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                           <div className="p-3.5 rounded-xl border border-border bg-surface-2/60">
                             <span className="text-text-subtle block mb-1">Tổng ngân sách Task:</span>
-                            <span className="font-extrabold text-base text-text">
+                            <span className="font-bold text-base text-text">
                               {formatVND(selectedTicket.totalAmount)}
                             </span>
                           </div>
 
                           <div className="p-3.5 rounded-xl border border-border bg-surface-2/60">
                             <span className="text-text-subtle block mb-1">Dự thảo hoàn Học viên:</span>
-                            <span className="font-extrabold text-base text-sky-600 dark:text-sky-400">
+                            <span className="font-bold text-base text-sky-600 dark:text-sky-400">
                               {formatVND(selectedTicket.studentRefund)}
                             </span>
                           </div>
 
                           <div className="p-3.5 rounded-xl border border-border bg-surface-2/60">
                             <span className="text-text-subtle block mb-1">Dự thảo chi Cố vấn:</span>
-                            <span className="font-extrabold text-base text-emerald-600 dark:text-emerald-400">
+                            <span className="font-bold text-base text-emerald-600 dark:text-emerald-400">
                               {formatVND(selectedTicket.mentorAmount)}
                             </span>
                           </div>
@@ -948,7 +872,7 @@ export function AdminMentoringTicketsPage() {
 
                         {selectedTicket.resolutionNote && (
                           <div className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/30 text-xs space-y-1">
-                            <span className="font-extrabold text-emerald-800 dark:text-emerald-200 block">
+                            <span className="font-bold text-emerald-800 dark:text-emerald-200 block">
                               Phán quyết cuối cùng của Ban Quản Trị:
                             </span>
                             <p className="text-emerald-900 dark:text-emerald-300 font-medium leading-relaxed">

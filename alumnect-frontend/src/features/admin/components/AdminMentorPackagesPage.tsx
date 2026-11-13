@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import {
-  Compass,
   Edit3,
   CheckCircle2,
   XCircle,
@@ -11,70 +10,15 @@ import {
   Users,
   X,
   Loader2,
-  Sparkles,
   Clock,
-  Crown,
   Award,
-  TrendingUp,
 } from 'lucide-react'
 import { Skeleton, toast, DialogFrame, FadeSwitch } from '@/components/ui'
 import { useAdminMentorPackages, useUpdateMentorPackage, useAdminMentors } from '../hooks/useAdmin'
 import type { AdminMentorPackageDto } from '../api/adminApi'
-import { AdminMentorListSection, DEMO_MENTORS } from './AdminMentorListSection'
+import { AdminMentorListSection } from './AdminMentorListSection'
+import { AdminPageBanner, StatTile } from './AdminVisuals'
 import { cn } from '@/lib/utils'
-
-export const DEMO_PACKAGES: AdminMentorPackageDto[] = [
-  {
-    id: 1,
-    code: '1_MONTH',
-    name: 'Gói Tiêu Chuẩn 1 Tháng',
-    description: 'Gói trải nghiệm kết nối cố vấn trong vòng 1 tháng dành cho Alumni mới gia nhập.',
-    durationMonths: 1,
-    price: 100000,
-    status: 'ACTIVE',
-    createdAt: '2026-01-10T08:00:00Z',
-  },
-  {
-    id: 2,
-    code: '3_MONTHS',
-    name: 'Gói Phổ Biến 3 Tháng',
-    description: 'Gói cố vấn 3 tháng tối ưu chi phí, được khuyên dùng nhất cho các Mentor chính thức.',
-    durationMonths: 3,
-    price: 250000,
-    status: 'ACTIVE',
-    createdAt: '2026-01-10T08:00:00Z',
-  },
-  {
-    id: 3,
-    code: '6_MONTHS',
-    name: 'Gói Cao Cấp 6 Tháng',
-    description: 'Gói đồng hành cố vấn dài hạn 6 tháng với ưu đãi tiết kiệm cao nhất và đặc quyền hiển thị nổi bật.',
-    durationMonths: 6,
-    price: 500000,
-    status: 'ACTIVE',
-    createdAt: '2026-01-10T08:00:00Z',
-  },
-  {
-    id: 4,
-    code: '12_MONTHS',
-    name: 'Gói Cố Vấn Doanh Nghiệp VIP',
-    description: 'Gói hợp tác chiến lược 1 năm dành cho Lãnh đạo doanh nghiệp và Cố vấn cấp cao.',
-    durationMonths: 12,
-    price: 950000,
-    status: 'ACTIVE',
-    createdAt: '2026-02-01T09:00:00Z',
-  },
-  {
-    id: 5,
-    code: 'TRIAL',
-    name: 'Gói Khởi Nghiệp Sinh Viên',
-    description: 'Gói ưu đãi miễn phí trong các kỳ Hackathon và chương trình Khởi nghiệp Sinh viên FPTU.',
-    durationMonths: 1,
-    price: 0,
-    status: 'INACTIVE',
-    createdAt: '2026-02-15T10:00:00Z',
-  },
-]
 
 /**
  * Trang quản lý hồ sơ Cố vấn & biểu giá các Gói dịch vụ Mentoring dành cho Quản trị viên.
@@ -87,27 +31,15 @@ export function AdminMentorPackagesPage() {
   const { data: rawPackages, isLoading, isError, refetch } = useAdminMentorPackages()
   const updateMutation = useUpdateMentorPackage()
 
-  // State cục bộ lưu chỉnh sửa gói khi test trên môi trường dev
-  const [localPackages, setLocalPackages] = useState<AdminMentorPackageDto[] | null>(null)
-
   // Lấy dữ liệu thống kê Cố vấn
   const { data: mentorsData } = useAdminMentors({ page: 0, size: 100 })
 
-  const displayPackages = useMemo(() => {
-    if (localPackages) return localPackages
-    if (rawPackages && rawPackages.length > 0) return rawPackages
-    return DEMO_PACKAGES
-  }, [localPackages, rawPackages])
-
-  const mentorsList = useMemo(() => {
-    if (mentorsData?.content && mentorsData.content.length > 0) return mentorsData.content
-    return DEMO_MENTORS
-  }, [mentorsData])
+  // Chỉ dùng dữ liệu thật từ backend
+  const displayPackages = useMemo(() => rawPackages ?? [], [rawPackages])
+  const mentorsList = useMemo(() => mentorsData?.content ?? [], [mentorsData])
 
   // Thống kê nhanh KPIs
-  const totalMentors = (mentorsData?.totalElements && mentorsData.totalElements > 0)
-    ? mentorsData.totalElements
-    : mentorsList.length
+  const totalMentors = mentorsData?.totalElements ?? mentorsList.length
 
   const activeMentors = useMemo(
     () => mentorsList.filter((m) => m.mentorStatus === 'ACTIVE').length,
@@ -198,24 +130,9 @@ export function AdminMentorPackagesPage() {
       })
       toast.success('Cập nhật gói dịch vụ thành công')
       setIsModalOpen(false)
-    } catch (err: any) {
-      // Cập nhật local state để người dùng có thể test tức thì ngay cả khi backend offline
-      setLocalPackages((prev) => {
-        const currentList = prev || displayPackages
-        return currentList.map((p) =>
-          p.id === selectedPkg.id
-            ? {
-                ...p,
-                price: priceNum,
-                status: statusInput,
-                name: nameInput.trim(),
-                description: descInput.trim(),
-              }
-            : p
-        )
-      })
-      toast.success('Đã cập nhật dữ liệu gói dịch vụ thành công!')
-      setIsModalOpen(false)
+    } catch (err) {
+      // Lưu thất bại: giữ modal mở để Admin sửa lại, không báo thành công giả
+      toast.error((err as Error)?.message || 'Không thể cập nhật gói dịch vụ. Vui lòng thử lại.')
     }
   }
 
@@ -225,139 +142,52 @@ export function AdminMentorPackagesPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* 1. Header & Tabs Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
-            <Compass size={15} /> Quản trị mạng lưới Cố vấn
+      {/* 1. Dải đầu trang + chuyển khung xem */}
+      <AdminPageBanner
+        title="Cố vấn & gói dịch vụ"
+        scene="packages"
+        actions={
+          <div role="tablist" aria-label="Khung xem" className="inline-flex rounded-2xl border border-[#F3D9C8] bg-white/80 p-1 backdrop-blur dark:border-border dark:bg-surface">
+            {(
+              [
+                { key: 'PACKAGES', label: 'Gói dịch vụ', count: displayPackages.length, icon: <Package size={15} /> },
+                { key: 'MENTORS', label: 'Danh sách cố vấn', count: totalMentors, icon: <Users size={15} /> },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition',
+                  activeTab === tab.key ? 'bg-[#1F2A44] text-white shadow-sm' : 'text-text-muted hover:text-text'
+                )}
+              >
+                {tab.icon}
+                {tab.label}
+                <span
+                  className={cn(
+                    'rounded-full px-1.5 py-0.5 text-xs font-bold leading-none tabular-nums',
+                    activeTab === tab.key ? 'bg-white/15 text-white' : 'bg-surface-2 text-text-subtle'
+                  )}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            ))}
           </div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-            Quản lý Cố vấn & Gói dịch vụ
-          </h1>
-          <p className="mt-0.5 text-xs text-text-subtle">
-            Quản lý hồ sơ Cố vấn, điều chỉnh biểu giá các gói dịch vụ niêm yết và theo dõi trạng thái tham gia của Cựu sinh viên.
-          </p>
-        </div>
+        }
+      />
 
-        {/* Shadcn-style Segmented Control Tabs */}
-        <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface-2 p-1 shadow-2xs self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab('PACKAGES')}
-            className={cn(
-              'relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-150 cursor-pointer select-none',
-              activeTab === 'PACKAGES'
-                ? 'bg-primary-solid text-on-primary shadow-raised font-extrabold'
-                : 'text-text-muted hover:bg-surface hover:text-text'
-            )}
-          >
-            <Package size={14} />
-            <span>Gói dịch vụ</span>
-            <span
-              className={cn(
-                'rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none',
-                activeTab === 'PACKAGES' ? 'bg-white/20 text-white' : 'bg-primary-soft text-primary-solid'
-              )}
-            >
-              {displayPackages.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('MENTORS')}
-            className={cn(
-              'relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-150 cursor-pointer select-none',
-              activeTab === 'MENTORS'
-                ? 'bg-primary-solid text-on-primary shadow-raised font-extrabold'
-                : 'text-text-muted hover:bg-surface hover:text-text'
-            )}
-          >
-            <Users size={14} />
-            <span>Danh sách Cố vấn</span>
-            <span
-              className={cn(
-                'rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none',
-                activeTab === 'MENTORS' ? 'bg-white/20 text-white' : 'bg-primary-soft text-primary-solid'
-              )}
-            >
-              {totalMentors}
-            </span>
-          </button>
-        </div>
+      {/* 2. Số liệu */}
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        <StatTile icon={<Users />} tone="orange" label="Cố vấn" value={totalMentors} hint={`${activeMentors} đang hoạt động`} />
+        <StatTile icon={<CheckCircle2 />} tone="green" label="Có gói hiệu lực" value={subscribedMentors} />
+        <StatTile icon={<Package />} tone="blue" label="Gói đang mở bán" value={activePackages} hint={`${inactivePackages} gói tạm ngưng`} />
+        <StatTile icon={<Award />} tone="violet" label="Nhiệm vụ hoàn thành" value={totalCompletedTasks} />
       </div>
-
-      {/* 2. Top 4 Executive KPI Cards (Shadcn-Admin style) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        {/* Card 1: Tổng Cố vấn */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Tổng số Cố vấn</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft text-primary-solid shadow-2xs">
-              <Users size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{totalMentors}</span>
-            <span className="text-xs text-text-subtle font-medium">hồ sơ</span>
-          </div>
-          <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-            <CheckCircle2 size={11} /> {activeMentors} đang hoạt động
-          </p>
-        </div>
-
-        {/* Card 2: Gói niêm yết */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Gói dịch vụ</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 shadow-2xs">
-              <Package size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{displayPackages.length}</span>
-            <span className="text-xs text-text-subtle font-medium">chính sách</span>
-          </div>
-          <p className="mt-1 text-[11px] text-text-subtle font-medium">
-            {activePackages} mở bán · {inactivePackages} tạm ngưng
-          </p>
-        </div>
-
-        {/* Card 3: Cố vấn có gói hiệu lực */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Gói đang kích hoạt</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shadow-2xs">
-              <Crown size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{subscribedMentors}</span>
-            <span className="text-xs text-text-subtle font-medium">Cố vấn</span>
-          </div>
-          <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
-            <Sparkles size={11} /> Đã thanh toán phí gói
-          </p>
-        </div>
-
-        {/* Card 4: Uy tín & Hiệu suất */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Nhiệm vụ hoàn thành</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-2xs">
-              <Award size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{totalCompletedTasks}</span>
-            <span className="text-xs text-text-subtle font-medium">tasks</span>
-          </div>
-          <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold flex items-center gap-1">
-            <TrendingUp size={11} /> Vận hành thành công
-          </p>
-        </div>
-      </div>
-
       {/* 3. Main Views Switching */}
       <FadeSwitch id={activeTab}>
         {/* Tab 2: Danh sách Cố vấn */}
@@ -376,7 +206,7 @@ export function AdminMentorPackagesPage() {
                       Không thể tải dữ liệu gói dịch vụ từ máy chủ
                     </span>
                     <span className="text-text-muted">
-                      Đang hiển thị bộ dữ liệu mẫu dự phòng để bạn xem trước và trải nghiệm chức năng.
+                      Vui lòng kiểm tra kết nối rồi thử lại.
                     </span>
                   </div>
                 </div>
@@ -399,13 +229,10 @@ export function AdminMentorPackagesPage() {
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-soft text-primary-solid shadow-2xs">
                       <Package size={15} />
                     </span>
-                    <h2 className="text-base font-extrabold text-slate-950 dark:text-white">
+                    <h2 className="text-base font-bold text-text">
                       Danh mục Gói dịch vụ Cố vấn
                     </h2>
                   </div>
-                  <p className="mt-1 text-xs text-text-subtle">
-                    Bảng niêm yết giá, chu kỳ thời hạn và trạng thái cung ứng các gói cố vấn dành cho Cựu sinh viên.
-                  </p>
                 </div>
               </div>
 
@@ -429,7 +256,7 @@ export function AdminMentorPackagesPage() {
                 <div className="w-full overflow-x-auto">
                   <table className="w-full text-sm text-left">
                     <thead>
-                      <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2/60">
+                      <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
                         <th className="px-5 py-3.5 font-bold w-[40%]">Thông tin gói dịch vụ</th>
                         <th className="px-4 py-3.5 font-bold text-center w-[15%]">Thời lượng</th>
                         <th className="px-5 py-3.5 font-bold text-right w-[20%]">Giá niêm yết</th>
@@ -448,22 +275,10 @@ export function AdminMentorPackagesPage() {
                             {/* Cột 1: Thông tin gói & Code & Mô tả */}
                             <td className="px-5 py-4">
                               <div className="flex items-start gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-solid border border-primary-soft-border shadow-2xs mt-0.5">
-                                  {pkg.durationMonths >= 6 ? (
-                                    <Crown size={20} className="text-amber-500" />
-                                  ) : pkg.durationMonths >= 3 ? (
-                                    <Award size={20} className="text-primary-solid" />
-                                  ) : (
-                                    <Package size={20} className="text-primary-solid" />
-                                  )}
-                                </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-extrabold text-text text-sm leading-tight">
+                                    <span className="font-bold text-text text-sm leading-tight">
                                       {pkg.name}
-                                    </span>
-                                    <span className="font-mono text-[10px] font-bold text-primary-solid bg-primary-soft px-2 py-0.5 rounded-md border border-primary-soft-border shadow-2xs">
-                                      {pkg.code}
                                     </span>
                                   </div>
                                   <p className="text-xs text-text-subtle mt-1 line-clamp-1 leading-relaxed" title={pkg.description}>
@@ -483,11 +298,11 @@ export function AdminMentorPackagesPage() {
 
                             {/* Cột 3: Giá niêm yết */}
                             <td className="px-5 py-4 text-right">
-                              <span className="font-extrabold text-base text-text tracking-tight block">
+                              <span className="font-bold text-base text-text tracking-tight block">
                                 {formatVND(pkg.price)}
                               </span>
                               {isMultiMonth && (
-                                <span className="text-[11px] font-semibold text-text-subtle block mt-0.5">
+                                <span className="text-xs font-semibold text-text-subtle block mt-0.5">
                                   ~{formatVND(monthlyPrice)} / tháng
                                 </span>
                               )}
@@ -530,6 +345,12 @@ export function AdminMentorPackagesPage() {
                   </table>
                 </div>
               )}
+
+              {!isLoading && !isError && displayPackages.length === 0 && (
+                <p className="px-5 py-12 text-center text-sm text-text-subtle">
+                  Chưa có gói dịch vụ nào trong hệ thống.
+                </p>
+              )}
             </div>
 
             {/* Modal Chỉnh sửa Gói dịch vụ */}
@@ -547,7 +368,7 @@ export function AdminMentorPackagesPage() {
                       <Edit3 size={16} />
                     </span>
                     <div>
-                      <h2 className="text-lg font-extrabold text-slate-950 dark:text-white leading-tight">
+                      <h2 className="text-lg font-bold text-text leading-tight">
                         Chỉnh sửa gói dịch vụ
                       </h2>
                       <p className="text-xs text-text-subtle mt-0.5">
@@ -595,7 +416,7 @@ export function AdminMentorPackagesPage() {
                         type="text"
                         disabled
                         value={`${selectedPkg.code} (${selectedPkg.durationMonths} Tháng)`}
-                        className="h-10 w-full rounded-xl border border-border bg-surface-2 px-3 text-xs font-mono text-text-subtle cursor-not-allowed select-none"
+                        className="h-10 w-full rounded-xl border border-border bg-surface-2 px-3 text-xs tabular-nums text-text-subtle cursor-not-allowed select-none"
                       />
                     </div>
                   </div>
@@ -606,7 +427,7 @@ export function AdminMentorPackagesPage() {
                       Giá niêm yết (VNĐ) <span className="text-danger">*</span>
                     </label>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-text-subtle font-extrabold">
+                      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-text-subtle font-bold">
                         ₫
                       </span>
                       <input
@@ -617,16 +438,16 @@ export function AdminMentorPackagesPage() {
                         value={priceInput}
                         onChange={(e) => setPriceInput(e.target.value)}
                         placeholder="Nhập số tiền..."
-                        className="h-10 w-full rounded-xl border border-border bg-surface pl-8 pr-12 text-xs font-extrabold text-text focus:border-primary-solid focus:outline-none transition shadow-2xs"
+                        className="h-10 w-full rounded-xl border border-border bg-surface pl-8 pr-12 text-xs font-bold text-text focus:border-primary-solid focus:outline-none transition shadow-2xs"
                       />
                       <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-text-subtle font-bold">
                         VNĐ
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-text-subtle pt-0.5">
+                    <div className="flex items-center justify-between text-xs text-text-subtle pt-0.5">
                       <span>
                         Hiển thị thực tế:{' '}
-                        <strong className="text-primary-solid font-extrabold">
+                        <strong className="text-primary-solid font-bold">
                           {formatVND(parseFloat(priceInput) || 0)}
                         </strong>
                       </span>
@@ -711,7 +532,7 @@ export function AdminMentorPackagesPage() {
                     type="submit"
                     form="edit-package-form"
                     disabled={updateMutation.isPending}
-                    className="px-5 py-2 text-xs font-extrabold text-on-primary bg-primary-solid hover:bg-primary-solid/90 rounded-xl transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shadow-raised"
+                    className="px-5 py-2 text-xs font-bold text-on-primary bg-primary-solid hover:bg-primary-solid/90 rounded-xl transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50 shadow-raised"
                   >
                     {updateMutation.isPending && (
                       <Loader2 size={14} className="animate-spin" />

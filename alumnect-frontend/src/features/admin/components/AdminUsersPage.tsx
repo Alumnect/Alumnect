@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Search,
   Lock,
@@ -13,24 +13,16 @@ import {
   Calendar,
   FileText,
   Award,
-  CheckCircle2,
-  ShieldAlert,
-  UserCheck,
   RotateCcw,
 } from 'lucide-react'
-import { PageHeader, Badge, Avatar, EmptyState, Skeleton, toast, Modal, Pagination, DialogFrame } from '@/components/ui'
+import { Badge, Avatar, EmptyState, Skeleton, toast, Modal, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
-import { useAdminUsers, useAdminUserDetail, useUpdateUserStatus } from '../hooks/useAdmin'
+import { useAdminUsers, useAdminUserDetail, useUpdateUserStatus, useAdminOverview } from '../hooks/useAdmin'
 import { AdminMentorCvModal } from './AdminMentorCvModal'
 import type { AdminUserDto } from '../api/adminApi'
-
-const TABS = [
-  { name: 'Tất cả', value: 'ALL' },
-  { name: 'Cựu sinh viên', value: 'ALUMNI' },
-  { name: 'Sinh viên', value: 'STUDENT' },
-  { name: 'Đang khóa', value: 'LOCKED' },
-]
+import { AdminPageBanner, StatTile, panelClass } from './AdminVisuals'
+import { fmtCount } from './adminFormat'
 
 /**
  * Trang quản lý tài khoản người dùng dành cho Quản trị viên (Admin).
@@ -75,11 +67,11 @@ export function AdminUsersPage() {
     }
   }, [selectedUserId])
 
-  const [confirmUserLock, setConfirmUserLock] = useState<{ id: number; currentStatus: string } | null>(null)
+  const [confirmUserLock, setConfirmUserLock] = useState<{ id: number; currentStatus: string; name?: string; email?: string } | null>(null)
 
   // Lock / Unlock Action handler
-  const handleToggleLock = (userId: number, currentStatus: string) => {
-    setConfirmUserLock({ id: userId, currentStatus })
+  const handleToggleLock = (userId: number, currentStatus: string, name?: string, email?: string) => {
+    setConfirmUserLock({ id: userId, currentStatus, name, email })
   }
 
   const handleConfirmToggleLock = async () => {
@@ -98,20 +90,15 @@ export function AdminUsersPage() {
   const totalPages = data?.totalPages || 0
   const totalElements = data?.totalElements || 0
 
-  // Thống kê KPIs từ dữ liệu trên trang hiện tại
-  const stats = useMemo(() => {
-    let alumniCount = 0
-    let studentCount = 0
-    let lockedCount = 0
-
-    users.forEach((u: AdminUserDto) => {
-      if (u.role === 'ALUMNI') alumniCount++
-      if (u.role === 'STUDENT') studentCount++
-      if (u.accountStatus === 'LOCKED') lockedCount++
-    })
-
-    return { alumniCount, studentCount, lockedCount }
-  }, [users])
+  // Thống kê toàn hệ thống (không đếm theo trang đang xem)
+  const { data: overview } = useAdminOverview()
+  const { data: lockedUsers } = useAdminUsers({ status: 'LOCKED', page: 0, size: 1 })
+  const stats = [
+    { key: 'ALL', label: 'Tổng số tài khoản', value: overview?.totalUsers, icon: <Users />, tone: 'slate' as const },
+    { key: 'ALUMNI', label: 'Cựu sinh viên', value: overview?.totalAlumni, icon: <GraduationCap />, tone: 'orange' as const },
+    { key: 'STUDENT', label: 'Sinh viên', value: overview?.totalStudents, icon: <BookOpen />, tone: 'blue' as const },
+    { key: 'LOCKED', label: 'Đang khóa', value: lockedUsers?.totalElements, icon: <Lock />, tone: 'red' as const },
+  ]
 
   const hasActiveFilters = tab !== 'ALL' || Boolean(query)
 
@@ -123,127 +110,31 @@ export function AdminUsersPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* 1. Header chuẩn hóa theo phong cách Quản lý Cố vấn & Gói dịch vụ */}
-      <PageHeader
-        kicker="Quản lý thành viên hệ thống"
-        kickerIcon={<Users size={15} />}
+      {/* 1. Dải đầu trang */}
+      <AdminPageBanner
         title="Quản lý tài khoản"
-        subtitle="Tra cứu danh sách thành viên, xem hồ sơ chi tiết và phân quyền khóa/mở khóa tài khoản người dùng."
+        scene="users"
       />
 
-      {/* 2. Top 4 Executive KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        {/* Card 1: Tổng số tài khoản */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Tổng số tài khoản</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft text-primary-solid shadow-2xs">
-              <Users size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{totalElements}</span>
-            <span className="text-xs text-text-subtle font-medium">thành viên</span>
-          </div>
-          <p className="mt-1 text-[11px] text-text-subtle font-medium">
-            Trang {page + 1} / {Math.max(1, totalPages)}
-          </p>
-        </div>
-
-        {/* Card 2: Cựu sinh viên */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Cựu sinh viên</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 shadow-2xs">
-              <GraduationCap size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{stats.alumniCount}</span>
-            <span className="text-xs text-text-subtle font-medium">trên trang này</span>
-          </div>
-          <p className="mt-1 text-[11px] text-orange-600 dark:text-orange-400 font-semibold flex items-center gap-1">
-            <CheckCircle2 size={11} /> Mạng lưới Alumni FPTU
-          </p>
-        </div>
-
-        {/* Card 3: Sinh viên FPTU */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Sinh viên FPTU</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 shadow-2xs">
-              <BookOpen size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{stats.studentCount}</span>
-            <span className="text-xs text-text-subtle font-medium">trên trang này</span>
-          </div>
-          <p className="mt-1 text-[11px] text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1">
-            <UserCheck size={11} /> Sinh viên đang theo học
-          </p>
-        </div>
-
-        {/* Card 4: Đang bị khóa */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Đang bị khóa</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shadow-2xs">
-              <Lock size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{stats.lockedCount}</span>
-            <span className="text-xs text-text-subtle font-medium">tài khoản</span>
-          </div>
-          <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1">
-            <ShieldAlert size={11} /> Hạn chế quyền truy cập
-          </p>
-        </div>
+      {/* 2. Số liệu toàn hệ thống — bấm để lọc */}
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        {stats.map((s) => (
+          <StatTile
+            key={s.key}
+            icon={s.icon}
+            tone={s.tone}
+            label={s.label}
+            value={fmtCount(s.value)}
+            active={tab === s.key}
+            onClick={() => {
+              setTab(s.key)
+              setPage(0)
+            }}
+          />
+        ))}
       </div>
-
       {/* 3. Single Unified Container Card: Tích hợp Header, Filters, Table & Pagination */}
-      <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
-        {/* Card Header: Tabs vai trò / trạng thái */}
-        <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between bg-surface">
-          <div>
-            <h2 className="text-base font-extrabold text-text flex items-center gap-2">
-              <span>Danh sách tài khoản thành viên</span>
-              <span className="rounded-full bg-primary-soft text-primary-solid px-2 py-0.5 text-xs font-bold">
-                {totalElements} tài khoản
-              </span>
-            </h2>
-            <p className="text-xs text-text-subtle mt-0.5">
-              Phân loại theo nhóm vai trò, kiểm tra trạng thái xác thực và phân quyền tài khoản.
-            </p>
-          </div>
-
-          {/* Segmented Status Tabs */}
-          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface-2 p-1 shadow-2xs self-start sm:self-auto overflow-x-auto max-w-full">
-            {TABS.map((t) => {
-              const isActive = tab === t.value
-              return (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => {
-                    setTab(t.value)
-                    setPage(0)
-                  }}
-                  className={cn(
-                    'relative flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer select-none whitespace-nowrap',
-                    isActive
-                      ? 'bg-primary-solid text-on-primary shadow-xs font-extrabold'
-                      : 'text-text-muted hover:bg-surface hover:text-text'
-                  )}
-                >
-                  <span>{t.name}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
+      <div className={panelClass}>
         {/* Toolbar: Tìm kiếm & Đặt lại bộ lọc */}
         <div className="border-b border-border bg-surface-2/40 p-4">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
@@ -327,7 +218,7 @@ export function AdminUsersPage() {
           <div className="w-full overflow-hidden">
             <table className="w-full table-fixed text-xs text-left">
               <thead>
-                <tr className="border-b border-border text-[11px] uppercase tracking-wider text-text-subtle bg-surface-2/60">
+                <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
                   <th className="px-3.5 py-3 font-bold w-[40%]">Thành viên & Mã số</th>
                   <th className="px-3.5 py-3 font-bold w-[24%]">Vai trò & Hồ sơ</th>
                   <th className="px-3.5 py-3 font-bold w-[18%]">Trạng thái</th>
@@ -353,18 +244,18 @@ export function AdminUsersPage() {
                         />
                         <div className="min-w-0 flex-1 space-y-0.5">
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[10px] font-bold text-text-subtle uppercase tracking-wider shrink-0">
+                            <span className="text-xs font-bold text-text-subtle shrink-0">
                               #{u.id}
                             </span>
-                            <h3 className="font-extrabold text-xs text-text truncate group-hover:text-primary-solid transition">
+                            <h3 className="font-bold text-xs text-text truncate group-hover:text-primary-solid transition">
                               {u.fullName}
                             </h3>
                           </div>
-                          <p className="text-[11px] text-text-subtle truncate max-w-[200px]" title={u.email}>
+                          <p className="text-xs text-text-subtle truncate max-w-[200px]" title={u.email}>
                             {u.email}
                           </p>
                           {(u.studentCode || u.cohort) && (
-                            <p className="text-[10px] text-text-subtle font-medium">
+                            <p className="text-xs text-text-subtle font-medium">
                               MSSV: <strong className="text-text font-semibold">{u.studentCode || 'N/A'}</strong>
                               {u.cohort ? ` · K${u.cohort}` : ''}
                             </p>
@@ -381,7 +272,7 @@ export function AdminUsersPage() {
                             tone={
                               u.role === 'ADMIN' ? 'gold' : u.role === 'ALUMNI' ? 'brand' : 'neutral'
                             }
-                            className="px-2 py-0.5 text-[10px] font-bold"
+                            className="px-2 py-0.5 text-xs font-bold"
                           >
                             {u.role === 'ADMIN' ? 'Quản trị viên' : u.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
                           </Badge>
@@ -395,7 +286,7 @@ export function AdminUsersPage() {
                               setSelectedCvMentorId(u.mentorProfileId || u.id)
                               setIsCvModalOpen(true)
                             }}
-                            className="inline-flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 shadow-2xs transition cursor-pointer"
+                            className="inline-flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-0.5 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 shadow-2xs transition cursor-pointer"
                             title="Xem CV Mentor"
                           >
                             <FileText size={11} /> CV Mentor
@@ -410,12 +301,12 @@ export function AdminUsersPage() {
                         <div>
                           <Badge
                             tone={u.accountStatus === 'LOCKED' ? 'danger' : 'success'}
-                            className="px-2 py-0.5 text-[10px] font-bold"
+                            className="px-2 py-0.5 text-xs font-bold"
                           >
                             {u.accountStatus === 'LOCKED' ? 'Bị khóa' : 'Hoạt động'}
                           </Badge>
                         </div>
-                        <p className="text-[10px] text-text-subtle font-medium">
+                        <p className="text-xs text-text-subtle font-medium">
                           {new Date(u.createdAt).toLocaleDateString('vi-VN')}
                         </p>
                       </div>
@@ -442,7 +333,7 @@ export function AdminUsersPage() {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleToggleLock(u.id, u.accountStatus)
+                              handleToggleLock(u.id, u.accountStatus, u.fullName, u.email)
                             }}
                             className={cn(
                               'grid h-7 w-7 place-items-center rounded-lg border transition shadow-2xs cursor-pointer',
@@ -511,23 +402,23 @@ export function AdminUsersPage() {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg font-extrabold text-text tracking-tight">{userDetail.fullName}</h2>
+                    <h2 className="text-lg font-bold text-text tracking-tight">{userDetail.fullName}</h2>
                     <Badge
                       tone={userDetail.role === 'ADMIN' ? 'neutral' : userDetail.role === 'ALUMNI' ? 'brand' : 'aqua'}
-                      className="px-2 py-0.5 text-[10px] rounded-full shrink-0 font-bold uppercase border"
+                      className="px-2 py-0.5 text-xs rounded-full shrink-0 font-bold border"
                     >
                       {userDetail.role === 'ADMIN' ? 'Quản trị viên' : userDetail.role === 'ALUMNI' ? 'Cựu sinh viên' : 'Sinh viên'}
                     </Badge>
                     <Badge
                       tone={userDetail.accountStatus === 'LOCKED' ? 'danger' : 'success'}
-                      className="px-2 py-0.5 text-[10px] rounded-full shrink-0 font-bold uppercase border"
+                      className="px-2 py-0.5 text-xs rounded-full shrink-0 font-bold border"
                     >
                       {userDetail.accountStatus === 'LOCKED' ? 'Bị khóa' : 'Hoạt động'}
                     </Badge>
                   </div>
                   <p className="text-text-subtle text-xs mt-0.5 font-medium">{userDetail.email}</p>
                   {userDetail.headline && (
-                    <p className="text-text-muted text-[11px] mt-1.5 italic font-medium flex items-center gap-1.5 bg-surface-2 border border-border px-2 py-1 rounded-lg w-fit">
+                    <p className="text-text-muted text-xs mt-1.5 font-medium flex items-center gap-1.5 bg-surface-2 border border-border px-2 py-1 rounded-lg w-fit">
                       <Award size={12} className="shrink-0 text-amber-500" />
                       <span>"{userDetail.headline}"</span>
                     </p>
@@ -551,18 +442,18 @@ export function AdminUsersPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   {/* Contact Column */}
                   <div className="space-y-2.5 p-3.5 rounded-2xl bg-surface-2 border border-border">
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                       <Mail size={12} className="text-primary-solid" />
                       <span>Thông tin liên hệ</span>
                     </h4>
                     
                     <div className="space-y-1.5 text-xs">
                       <div>
-                        <span className="text-[11px] font-medium text-text-subtle block mb-0.5">Địa chỉ Email</span>
+                        <span className="text-xs font-medium text-text-subtle block mb-0.5">Địa chỉ Email</span>
                         <span className="font-semibold text-text break-all">{userDetail.email}</span>
                       </div>
                       <div>
-                        <span className="text-[11px] font-medium text-text-subtle block mb-0.5">Số điện thoại</span>
+                        <span className="text-xs font-medium text-text-subtle block mb-0.5">Số điện thoại</span>
                         <span className="font-semibold text-text flex items-center gap-1">
                           <Phone size={11} className="text-text-subtle shrink-0" />
                           {userDetail.phone || 'Chưa cập nhật'}
@@ -573,25 +464,25 @@ export function AdminUsersPage() {
 
                   {/* Education Column */}
                   <div className="space-y-2.5 p-3.5 rounded-2xl bg-surface-2 border border-border">
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                       <GraduationCap size={13} className="text-primary-solid" />
                       <span>Học vấn & Mã số</span>
                     </h4>
                     
                     <div className="space-y-1.5 text-xs">
                       <div>
-                        <span className="text-[11px] font-medium text-text-subtle block mb-0.5">Chuyên ngành</span>
+                        <span className="text-xs font-medium text-text-subtle block mb-0.5">Chuyên ngành</span>
                         <span className="font-semibold text-text flex items-center gap-1">
                           <BookOpen size={11} className="text-text-subtle shrink-0" />
                           {userDetail.majorName ? `${userDetail.majorName} (${userDetail.majorCode})` : 'Chưa chọn'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[11px] font-medium text-text-subtle block mb-0.5">Mã sinh viên / Khóa</span>
+                        <span className="text-xs font-medium text-text-subtle block mb-0.5">Mã sinh viên / Khóa</span>
                         <span className="font-semibold text-text flex items-center gap-1.5">
                           <span>{userDetail.studentCode || 'N/A'}</span>
                           {userDetail.cohort ? (
-                            <Badge tone="neutral" className="px-1.5 py-0 text-[10px] font-bold border border-border">
+                            <Badge tone="neutral" className="px-1.5 py-0 text-xs font-bold border border-border">
                               K{userDetail.cohort}
                             </Badge>
                           ) : ''}
@@ -604,7 +495,7 @@ export function AdminUsersPage() {
                 {/* Biography block if present */}
                 {userDetail.biography && (
                   <div className="p-3.5 rounded-2xl bg-surface-2 border border-border space-y-1.5">
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                       <FileText size={12} className="text-primary-solid" />
                       <span>Tiểu sử bản thân</span>
                     </h4>
@@ -623,10 +514,7 @@ export function AdminUsersPage() {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Badge tone={userDetail.accountStatus === 'ACTIVE' ? 'success' : 'danger'} className="text-[10px] px-2 py-0.5 font-bold">
-                      {userDetail.accountStatus === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
-                    </Badge>
-                    <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-[10px] px-2 py-0.5 font-bold">
+                    <Badge tone={userDetail.isAccountVerified ? 'gold' : 'neutral'} className="text-xs px-2 py-0.5 font-bold">
                       {userDetail.isAccountVerified ? 'Đã xác minh' : 'Chưa xác minh'}
                     </Badge>
                   </div>
@@ -639,7 +527,7 @@ export function AdminUsersPage() {
                       size="sm"
                       variant="primary"
                       onClick={() => {
-                        handleToggleLock(userDetail.id, userDetail.accountStatus)
+                        handleToggleLock(userDetail.id, userDetail.accountStatus, userDetail.fullName, userDetail.email)
                       }}
                       className={cn(
                         'font-bold text-xs rounded-xl px-4 py-2 transition text-white',
@@ -704,7 +592,7 @@ export function AdminUsersPage() {
         >
           <p className="text-xs text-text-muted leading-relaxed">
             Bạn có chắc chắn muốn {confirmUserLock.currentStatus === 'LOCKED' ? 'mở khóa' : 'khóa'} tài khoản{' '}
-            <strong className="text-text font-bold">#{confirmUserLock.id}</strong> không?
+            <strong className="text-text font-bold">{confirmUserLock.name || `#${confirmUserLock.id}`}</strong>{confirmUserLock.email ? ` (${confirmUserLock.email})` : ''} không?
           </p>
         </Modal>
       )}

@@ -503,7 +503,7 @@ export function MentoringGroupDetailPage() {
             {/* Right Column: Group Rules & Stats */}
             <div className="space-y-6">
               <Card hover={false} className="border border-primary-soft-border bg-brand-50/30 p-5 space-y-3 dark:bg-brand-700/20">
-                <h4 className="text-xs font-bold text-primary-solid uppercase tracking-wider">
+                <h4 className="text-xs font-bold text-primary-solid">
                   {t('mentoring.processGroupFirstHeading')}
                 </h4>
                 <ul className="text-xs text-primary-solid space-y-2.5 leading-relaxed">
@@ -530,7 +530,7 @@ export function MentoringGroupDetailPage() {
 
               {/* Quick Actions */}
               <Card hover={false} className="border border-border p-5 space-y-3 dark:bg-surface">
-                <h4 className="text-xs font-bold text-text uppercase tracking-wider">
+                <h4 className="text-xs font-bold text-text">
                   {t('mentoring.quickActionsHeading')}
                 </h4>
                 <div className="space-y-2">

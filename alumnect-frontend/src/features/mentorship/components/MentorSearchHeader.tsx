@@ -54,10 +54,8 @@ export function MentorSearchHeader({
   return (
     <div className="space-y-3">
       <MentorPageHeader
-        icon={<Search className="h-4 w-4" />}
-        eyebrow={t('mentoring.eyebrowNetwork')}
+        scene="campus"
         title={t('mentoring.exploreMentors')}
-        description={t('mentoring.connectHeroSubtitle')}
         actions={!isLoading ? (
           <span className="rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary-solid ring-1 ring-inset ring-brand-200 dark:ring-brand-300/20">
             {t('mentoring.mentorCount', { count: totalElements })}

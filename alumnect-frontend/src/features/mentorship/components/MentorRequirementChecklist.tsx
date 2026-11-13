@@ -89,7 +89,10 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
       actionUrl: '/app/mentoring/become-mentor',
       content: hasCv ? (
         <p className="text-xs font-medium text-success">
-          {t('mentoring.reqCvMet', { filename: cvFileName || 'CV_Mentor.pdf' })}
+          {/* Tên lưu trữ dạng UUID không có nghĩa với người dùng; thiếu tên thì không tự đặt tên giả */}
+          {cvFileName && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(cvFileName)
+            ? t('mentoring.reqCvMet', { filename: cvFileName })
+            : t('mentoring.reqCvMetNoName', '✓ Đã đính kèm tệp CV')}
         </p>
       ) : (
         <p className="text-xs font-medium text-danger">
@@ -147,9 +150,7 @@ export function MentorRequirementChecklist({ status }: MentorRequirementChecklis
           <h2 className="font-display text-base sm:text-lg font-bold text-text">
             {t('mentoring.requirementsTitle')}
           </h2>
-          <p className="text-xs text-text-subtle dark:text-text-subtle mt-0.5">
-            {t('mentoring.requirementsDesc')}
-          </p>
+
         </div>
         <Badge tone={completedCount === 4 ? 'success' : 'brand'} className="self-start sm:self-auto text-xs">
           {t('mentoring.requirementsCompletedBadge', { completed: completedCount, total: 4 })}

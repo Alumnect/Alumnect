@@ -4,13 +4,15 @@ import {
   Flag, ArrowRight, ShieldAlert, Check, Ban,
   Filter, Sparkles, CheckCircle2, ChevronRight,
   Trash2, Info, UserX, HelpCircle,
-  Search, User, RotateCcw, Layers
+  Search, User, RotateCcw, Layers, Clock, XCircle
 } from 'lucide-react'
 import { Badge, Avatar, EmptyState, Skeleton, toast, Pagination, DialogFrame } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useAdminReports, useUpdateReportStatus, useTogglePostHidden } from '../hooks/useAdmin'
 import type { AdminReportDto } from '../api/adminApi'
+import { AdminPageBanner, StatTile, panelClass } from './AdminVisuals'
+import { fmtCount } from './adminFormat'
 import { CATEGORY_MAP, getCategoryConfig } from './AdminPostsPage'
 import type { CategoryKey } from './AdminPostsPage'
 import { Client } from '@stomp/stompjs'
@@ -129,7 +131,7 @@ function CustomReasonDropdown({ value, onChange }: CustomReasonDropdownProps) {
 
       {isOpen && (
         <div className="absolute right-0 z-50 mt-1.5 w-60 origin-top-right rounded-2xl border border-border-strong bg-surface backdrop-blur-xl p-1.5 shadow-2xl shadow-plum-950/20 animate-in fade-in-80 zoom-in-95">
-          <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border mb-1 flex items-center justify-between">
+          <div className="px-3 py-1.5 text-xs font-bold text-text-subtle border-b border-border mb-1 flex items-center justify-between">
             <span>Lọc theo lý do</span>
             <Sparkles size={11} className="text-brand-400" />
           </div>
@@ -226,7 +228,7 @@ function CustomCategoryDropdown({ value, onChange }: CustomCategoryDropdownProps
 
       {isOpen && (
         <div className="absolute right-0 z-50 mt-1.5 w-56 origin-top-right rounded-2xl border border-border bg-surface backdrop-blur-xl p-1.5 shadow-xl animate-in fade-in-80 zoom-in-95">
-          <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle border-b border-border mb-1 flex items-center justify-between">
+          <div className="px-3 py-1.5 text-xs font-bold text-text-subtle border-b border-border mb-1 flex items-center justify-between">
             <span>Loại bài viết</span>
             <Layers size={11} className="text-primary-solid" />
           </div>
@@ -478,6 +480,16 @@ export function AdminReportsQueue() {
 
   const activeWillHide = getSelectedReportWillHide()
 
+  // Tổng thật theo trạng thái (không phụ thuộc bộ lọc đang chọn)
+  const { data: pendingCount } = useAdminReports({ status: 'PENDING', page: 0, size: 1 })
+  const { data: resolvedCount } = useAdminReports({ status: 'RESOLVED', page: 0, size: 1 })
+  const { data: dismissedCount } = useAdminReports({ status: 'DISMISSED', page: 0, size: 1 })
+  const statusTiles = [
+    { key: 'PENDING' as const, label: 'Đang chờ xử lý', value: pendingCount?.totalElements, icon: <Clock />, tone: 'red' as const },
+    { key: 'RESOLVED' as const, label: 'Đã giải quyết', value: resolvedCount?.totalElements, icon: <CheckCircle2 />, tone: 'green' as const },
+    { key: 'DISMISSED' as const, label: 'Đã bỏ qua', value: dismissedCount?.totalElements, icon: <XCircle />, tone: 'slate' as const },
+  ]
+
   const hasActiveFilters =
     reasonFilter !== 'ALL' ||
     typeFilter !== 'ALL' ||
@@ -495,64 +507,33 @@ export function AdminReportsQueue() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
-      {/* 1 BẢNG DUY NHẤT (Single Unified Table Card) tích hợp toàn bộ: Header, Filter, Table, Pagination */}
-      <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
-        {/* --- Card Header: Tiêu đề trang & Tabs trạng thái xử lý --- */}
-        <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between bg-surface">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
-              <ShieldAlert size={15} /> Kiểm duyệt nội dung cộng đồng
-            </div>
-            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-              Báo cáo vi phạm
-            </h1>
-            <p className="mt-0.5 text-xs text-text-subtle">
-              Giám sát, phân tích rủi ro AI và giải quyết các bài viết bị báo cáo vi phạm tiêu chuẩn cộng đồng.
-            </p>
-          </div>
+    <div className="mx-auto max-w-6xl space-y-6">
+      {/* 1. Dải đầu trang */}
+      <AdminPageBanner
+        title="Báo cáo vi phạm"
+        scene="reports"
+      />
 
-          {/* Primary Status Tabs */}
-          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface-2 p-1 shadow-2xs self-start sm:self-auto">
-            {[
-              { key: 'PENDING', label: 'Đang chờ xử lý', countBadge: statusFilter === 'PENDING' ? totalElements : null },
-              { key: 'RESOLVED', label: 'Đã giải quyết', countBadge: statusFilter === 'RESOLVED' ? totalElements : null },
-              { key: 'DISMISSED', label: 'Đã bỏ qua', countBadge: statusFilter === 'DISMISSED' ? totalElements : null },
-            ].map((tab) => {
-              const isActive = statusFilter === tab.key
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => {
-                    setStatusFilter(tab.key as any)
-                    setPage(0)
-                  }}
-                  className={cn(
-                    'relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-150 cursor-pointer select-none',
-                    isActive
-                      ? 'bg-primary-solid text-on-primary shadow-raised font-extrabold'
-                      : 'text-text-muted hover:bg-surface hover:text-text'
-                  )}
-                >
-                  <span>{tab.label}</span>
-                  {tab.countBadge !== null && tab.countBadge !== undefined && tab.countBadge > 0 && (
-                    <span
-                      className={cn(
-                        'rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none',
-                        isActive ? 'bg-white/20 text-white' : 'bg-primary-soft text-primary-solid'
-                      )}
-                    >
-                      {tab.countBadge}
-                    </span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+      {/* 2. Trạng thái xử lý — bấm để lọc */}
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+        {statusTiles.map((s) => (
+          <StatTile
+            key={s.key}
+            icon={s.icon}
+            tone={s.tone}
+            label={s.label}
+            value={fmtCount(s.value)}
+            active={statusFilter === s.key}
+            onClick={() => {
+              setStatusFilter(s.key)
+              setPage(0)
+            }}
+          />
+        ))}
+      </div>
 
-        {/* --- Toolbar: Tìm kiếm, Bộ lọc Dropdown & Mức rủi ro AI --- */}
+      {/* 3. Bảng báo cáo: bộ lọc, danh sách, phân trang */}
+      <div className={panelClass}>        {/* --- Toolbar: Tìm kiếm, Bộ lọc Dropdown & Mức rủi ro AI --- */}
         <div className="border-b border-border bg-surface-2/40 p-4 space-y-3.5">
           {/* Row 1: Search Inputs & Faceted Dropdowns */}
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
@@ -677,7 +658,7 @@ export function AdminReportsQueue() {
                     className={cn(
                       'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition duration-150 cursor-pointer whitespace-nowrap shrink-0 border select-none',
                       isSelected
-                        ? 'bg-primary-solid text-on-primary border-primary shadow-xs font-extrabold'
+                        ? 'bg-primary-solid text-on-primary border-primary shadow-xs font-bold'
                         : 'bg-surface text-text-muted border-border hover:bg-surface-2 hover:text-text'
                     )}
                   >
@@ -734,7 +715,7 @@ export function AdminReportsQueue() {
           <div className="w-full overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2/60">
+                <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
                   <th className="px-4 py-3 sm:px-5 font-bold w-[30%]">Người gửi & Phân loại</th>
                   <th className="px-4 py-3 sm:px-5 font-bold">Tác giả & Nội dung bài viết</th>
                   <th className="px-4 py-3 sm:px-5 font-bold text-center w-[160px]">Rủi ro & Trạng thái</th>
@@ -766,15 +747,15 @@ export function AdminReportsQueue() {
                           <div className="min-w-0 flex-1 space-y-1">
                             <div>
                               <p className="font-bold text-xs text-text truncate leading-tight">{reporterLabel(r)}</p>
-                              <p className="text-[11px] text-text-subtle truncate">{reporterDetail(r)}</p>
+                              <p className="text-xs text-text-subtle truncate">{reporterDetail(r)}</p>
                             </div>
                             <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                              <Badge tone={reasonInfo.tone} className="text-[10px] px-1.5 py-0.5 leading-none">
+                              <Badge tone={reasonInfo.tone} className="text-xs px-1.5 py-0.5 leading-none">
                                 {reasonInfo.label}
                               </Badge>
                               <span
                                 className={cn(
-                                  'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold border shadow-2xs',
+                                  'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-bold border shadow-2xs',
                                   catCfg.badgeBg,
                                   catCfg.badgeText,
                                   catCfg.badgeBorder
@@ -785,7 +766,7 @@ export function AdminReportsQueue() {
                               </span>
                             </div>
                             {r.description && (
-                              <p className="text-[11px] text-text-subtle line-clamp-1 italic" title={r.description}>
+                              <p className="text-xs text-text-subtle line-clamp-1" title={r.description}>
                                 "{r.description}"
                               </p>
                             )}
@@ -814,7 +795,7 @@ export function AdminReportsQueue() {
                         <div className="flex flex-col items-center justify-center gap-1.5">
                           {/* AI Risk Score Pill */}
                           {isImageAiViolation(r) ? (
-                            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border shadow-2xs bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold border shadow-2xs bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 whitespace-nowrap">
                               <Sparkles size={10} />
                               Ảnh vi phạm
                             </span>
@@ -822,7 +803,7 @@ export function AdminReportsQueue() {
 <div className="inline-flex flex-col items-center gap-1">
                               <span
                                 className={cn(
-                                  'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border shadow-2xs whitespace-nowrap',
+                                  'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold border shadow-2xs whitespace-nowrap',
                                   r.riskLevel === 'HIGH' || r.aiScore >= 0.60
                                     ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60'
                                     : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.20
@@ -834,7 +815,7 @@ export function AdminReportsQueue() {
                                 {(r.aiScore * 100).toFixed(0)}% {r.riskLevel === 'HIGH' ? 'Cao' : r.riskLevel === 'MEDIUM' ? 'Nghi vấn' : 'Thấp'}
                               </span>
                               {r.autoModerated && (
-                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100/60 dark:bg-rose-950/40 dark:text-rose-300 rounded px-1.5 py-0.5">
+                                <span className="text-xs font-bold text-rose-600 bg-rose-100/60 dark:bg-rose-950/40 dark:text-rose-300 rounded px-1.5 py-0.5">
                                   Tự động ẩn
                                 </span>
                               )}
@@ -845,15 +826,15 @@ export function AdminReportsQueue() {
 
                           {/* Trạng thái bài viết */}
                           {currentStatus === 'HIDDEN' ? (
-                            <Badge tone="danger" className="text-[10px] px-2 py-0.5">
+                            <Badge tone="danger" className="text-xs px-2 py-0.5">
                               Đã ẩn{localWillHide !== undefined && ' *'}
                             </Badge>
                           ) : currentStatus === 'DELETED' ? (
-                            <Badge tone="neutral" className="text-[10px] px-2 py-0.5">
+                            <Badge tone="neutral" className="text-xs px-2 py-0.5">
                               Đã xóa
                             </Badge>
                           ) : (
-                            <Badge tone="success" className="text-[10px] px-2 py-0.5">
+                            <Badge tone="success" className="text-xs px-2 py-0.5">
                               Công khai{localWillHide !== undefined && ' *'}
                             </Badge>
                           )}
@@ -927,7 +908,7 @@ export function AdminReportsQueue() {
               
               {/* Thông tin người báo cáo */}
               <div className="p-4 rounded-2xl bg-brand-50/40 border border-primary-soft-border space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-primary-solid flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-primary-solid flex items-center gap-1.5">
                   <ShieldAlert size={14} /> Thông tin báo cáo
                 </h4>
                 <div className="flex items-center gap-3">
@@ -959,7 +940,7 @@ export function AdminReportsQueue() {
                 {selectedReport.description && (
                   <div className="bg-surface p-3 rounded-xl border border-primary-soft-border mt-2">
                     <span className="text-xs text-text-subtle block font-medium mb-1">Mô tả chi tiết từ người gửi:</span>
-                    <p className="text-xs text-text italic font-medium leading-relaxed">
+                    <p className="text-xs text-text font-medium leading-relaxed">
                       "{selectedReport.description}"
                     </p>
                   </div>
@@ -970,7 +951,7 @@ export function AdminReportsQueue() {
               <div className="p-4 rounded-2xl bg-brand-50/40 border border-primary-soft-border space-y-3">
                 <div className="flex justify-between items-center gap-2 flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-primary-solid">
+                    <h4 className="text-xs font-bold text-primary-solid">
                       Bài viết bị báo cáo
                     </h4>
                     {(() => {
@@ -1018,7 +999,7 @@ export function AdminReportsQueue() {
                         <button
                           type="button"
                           onClick={() => setRevealMedia((prev) => !prev)}
-                          className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-[11px] font-bold text-text hover:bg-surface-3 transition cursor-pointer"
+                          className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-xs font-bold text-text hover:bg-surface-3 transition cursor-pointer"
                         >
                           {revealMedia ? (
                             <>
@@ -1054,7 +1035,7 @@ export function AdminReportsQueue() {
                             />
                             {shouldBlur && (
                               <div className="absolute inset-0 flex items-center justify-center bg-black/35 p-2 text-center">
-                                <span className="rounded-full bg-black/65 px-2.5 py-1 text-[10px] font-bold text-white">
+                                <span className="rounded-full bg-black/65 px-2.5 py-1 text-xs font-bold text-white">
                                   Đã làm mờ bảo vệ
                                 </span>
                               </div>
@@ -1072,18 +1053,18 @@ export function AdminReportsQueue() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <Sparkles size={16} className="text-gold-500" />
-                        <h4 className="text-xs font-bold text-text uppercase tracking-wider">
+                        <h4 className="text-xs font-bold text-text">
                           Phân tích Kiểm duyệt Tự động
                         </h4>
                       </div>
                       {isImageAiViolation(selectedReport) ? (
-                        <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border bg-rose-50 text-rose-700 border-rose-300">
+                        <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold border bg-rose-50 text-rose-700 border-rose-300">
                           AI Vision: Phát hiện ảnh vi phạm
                         </span>
                       ) : (
                         <span
                           className={cn(
-                            'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-extrabold border',
+                            'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold border',
                             selectedReport.riskLevel === 'HIGH' || selectedReport.aiScore >= 0.60
                               ? 'bg-rose-50 text-rose-700 border-rose-300'
                               : selectedReport.riskLevel === 'MEDIUM' || selectedReport.aiScore >= 0.20
@@ -1131,7 +1112,7 @@ export function AdminReportsQueue() {
                           {selectedReport.detectedKeywords.split(',').map((kw, i) => (
                             <span
                               key={i}
-                              className="inline-block bg-rose-100 text-rose-800 text-[11px] font-bold px-2 py-0.5 rounded-md border border-rose-200"
+                              className="inline-block bg-rose-100 text-rose-800 text-xs font-bold px-2 py-0.5 rounded-md border border-rose-200"
                             >
                               {kw.trim()}
                             </span>
@@ -1139,7 +1120,7 @@ export function AdminReportsQueue() {
                         </div>
                       )}
                       {selectedReport.autoModerated && (
-                        <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px] flex items-center gap-2">
+                        <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-xs flex items-center gap-2">
                           <ShieldAlert size={15} className="shrink-0 text-rose-600" />
                           {isImageAiViolation(selectedReport)
                             ? 'Hệ thống AI đã tự động ẩn bài viết do phát hiện hình ảnh nhạy cảm hoặc bạo lực.'
@@ -1227,7 +1208,7 @@ export function AdminReportsQueue() {
                 ) : (
                   <div className="text-xs font-bold text-text-subtle">
                     Báo cáo này đã ở trạng thái:{' '}
-                    <span className="text-text font-extrabold">
+                    <span className="text-text font-bold">
                       {selectedReport.status === 'RESOLVED' ? 'Đã giải quyết' : 'Đã bỏ qua'}
                     </span>
                   </div>
