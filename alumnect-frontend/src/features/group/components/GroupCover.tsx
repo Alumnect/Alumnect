@@ -69,14 +69,14 @@ export function GroupCover({
         <div className="absolute inset-0 grid place-items-center p-4 text-center">
           {showInitial ? (
             <div className="grid h-16 w-16 place-items-center rounded-2xl bg-surface/70">
-              <span className="text-3xl font-bold tracking-tight">{initial}</span>
+              <span className="text-3xl font-extrabold tracking-tight">{initial}</span>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1.5">
               <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface/60">
                 <Users2 size={24} />
               </span>
-              <span className="max-w-[80%] truncate text-xs font-bold tracking-wide">{name}</span>
+              <span className="max-w-[80%] truncate text-xs font-bold tracking-wide uppercase">{name}</span>
             </div>
           )}
         </div>

@@ -76,12 +76,6 @@ function onNotification(m: IMessage) {
 
     if (n.type?.startsWith('MENTORING_')) queryClient.invalidateQueries({ predicate: isMentoringKey })
 
-    // Kết quả xét duyệt nâng cấp Cựu sinh viên (UC08): làm mới trạng thái xác minh và hồ sơ.
-    if (n.type === 'ALUMNI_VERIFICATION' || n.targetType === 'ALUMNI_VERIFICATION') {
-      queryClient.invalidateQueries({ queryKey: ['verification'] })
-      queryClient.invalidateQueries({ queryKey: ['profile'] })
-    }
-
     // Yêu cầu mentoring mới: toast có nút Nhận / Bỏ qua (giống Web).
     if (n.targetType === 'MENTORING_INCOMING_REQUEST' && n.targetId) {
       const requestId = Number(n.targetId)

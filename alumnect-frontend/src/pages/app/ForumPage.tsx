@@ -9,13 +9,12 @@
  *  - UC40: nút "Đặt câu hỏi" (chỉ Student/Alumni) mở modal đặt câu hỏi mới.
  *  - Xử lý đầy đủ trạng thái: loading (skeleton) / rỗng / lỗi (retry) / thành công.
  */
-import { BrandBanner } from '@/components/brand/BrandBlocks'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ChevronUp, MessageSquare, Clock, Flame, CheckCircle2, Loader2, AlertTriangle, Inbox, LayoutGrid, GraduationCap, Search, X } from 'lucide-react'
+import { HelpCircle, ChevronUp, MessageSquare, Clock, Flame, CheckCircle2, Loader2, AlertTriangle, Inbox, LayoutGrid, GraduationCap, Search, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Badge, Card, Avatar, FadeSwitch } from '@/components/ui'
+import { PageHeader, Badge, Card, Avatar, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -249,16 +248,16 @@ export function ForumPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-5xl">
       <SeoHead
         title="Diễn đàn & Hỏi đáp Cựu sinh viên FPT"
         description="Diễn đàn trao đổi học thuật, kinh nghiệm nghề nghiệp, giải đáp thắc mắc và định hướng tương lai dành riêng cho sinh viên và cựu sinh viên Đại học FPT."
         keywords="diễn đàn FPT, hỏi đáp FPT, Q&A sinh viên FPT, kinh nghiệm phỏng vấn, AlumNect forum"
       />
-      <BrandBanner
-        scene="forum"
-        className="mb-6"
+      <PageHeader
+        icon={<HelpCircle size={20} />}
         title={t('forum.title')}
+        subtitle={t('forum.subtitle')}
         actions={
           canAsk ? (
             <Button variant="primary" size="sm" onClick={() => setAskOpen(true)}>

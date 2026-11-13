@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Building, CheckCircle2, Save, ShieldAlert } from 'lucide-react'
+import { Building, CheckCircle2, RotateCcw, Save, ShieldAlert } from 'lucide-react'
 import { Container, toast, SelectDropdown, type SelectOption } from '@/components/ui'
 import { MentorPageHeader, MentoringTermsGate, TASK_QUERY_KEYS } from '@/features/mentorship'
 import { mentoringWalletApi } from '@/features/mentorship/api/mentoringWalletApi'
@@ -85,7 +85,8 @@ function MentoringRefundsContent() {
   return (
     <div className="space-y-5">
       <MentorPageHeader
-        scene="refund"
+        icon={<RotateCcw className="h-4 w-4" />}
+        eyebrow={t('mentoring.mentoringPaymentEyebrow')}
         title={t('mentoring.refundsPageTitle')}
         description={t('mentoring.refundsPageDesc')}
       />
@@ -143,7 +144,7 @@ function MentoringRefundsContent() {
                     />
                   )}
                   <span className="font-medium text-text">{selectedBank.fullName || selectedBank.name}</span>
-                  <span className="rounded bg-surface-2 px-1.5 py-0.5 text-xs tabular-nums font-semibold text-text-subtle">
+                  <span className="rounded bg-surface-2 px-1.5 py-0.5 text-xs font-mono font-semibold text-text-subtle">
                     BIN {selectedBank.bin}
                   </span>
                 </div>
@@ -164,7 +165,7 @@ function MentoringRefundsContent() {
             </MentoringField>
             <MentoringField label={t('mentoring.accountHolderLabel')} required hint={t('mentoring.accountHolderHint')}>
               <input
-                className={`${MENTORING_INPUT} `}
+                className={`${MENTORING_INPUT} uppercase`}
                 placeholder="NGUYEN VAN A"
                 value={form.bankAccountHolder}
                 onChange={(e) => setDraft({ ...form, bankAccountHolder: e.target.value.toUpperCase() })}

@@ -10,7 +10,7 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   ArrowRight,
@@ -63,25 +63,15 @@ const TYPE_META: Record<string, { labelKey: string; tone: 'brand' | 'gold' | 'aq
   normal: { labelKey: 'feed.normal', tone: 'brand' },
 }
 
-/**
- * Nút quay lại ở đầu trang. Bài viết được mở từ nhiều nơi (Bảng tin, Sự kiện, Việc làm, Thông báo, Bài đã lưu),
- * nên nếu có trang trước trong ứng dụng thì quay lại đúng trang đó; mở trực tiếp bằng link thì về Bảng tin.
- */
+/** Nút quay lại bảng tin, hiển thị ở đầu mọi trạng thái của trang. */
 function BackToFeed() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const className = 'mb-4 inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-text'
-  if (location.key !== 'default') {
-    return (
-      <button type="button" onClick={() => navigate(-1)} className={className}>
-        <ArrowLeft size={16} /> {t('common.back')}
-      </button>
-    )
-  }
   return (
-    <Link to="/app" className={className}>
-      <ArrowLeft size={16} /> {t('common.backToFeed')}
+    <Link
+      to="/app"
+      className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-text"
+    >
+      <ArrowLeft size={16} /> {t('common.back')} {t('nav.feed')}
     </Link>
   )
 }

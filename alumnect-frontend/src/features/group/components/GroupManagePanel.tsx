@@ -75,7 +75,7 @@ export function GroupManagePanel({ group }: { group: GroupDetail }) {
           >
             <t.icon size={16} /> {t.label}
             {!!t.badge && (
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary-solid px-1 text-xs font-bold text-on-primary">
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary-solid px-1 text-xs font-black text-on-primary">
                 {t.badge}
               </span>
             )}
@@ -191,7 +191,7 @@ function SettingRow({
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className={cn('text-sm font-bold', danger ? 'text-danger' : 'text-text')}>
+        <p className={cn('text-sm font-extrabold', danger ? 'text-danger' : 'text-text')}>
           {title}
         </p>
         <p className="mt-1 text-xs leading-relaxed text-text-subtle">{description}</p>

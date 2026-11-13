@@ -284,7 +284,7 @@ export function ProfilePage() {
   // Skeleton khi đang tải
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-8">
         <Skeleton className="h-48 rounded-3xl sm:h-60" />
         <div className="space-y-3">
           <Skeleton className="h-8 w-48" />
@@ -297,7 +297,7 @@ export function ProfilePage() {
   // Lỗi hoặc không tìm thấy
   if (error || !profile) {
     return (
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-5xl p-6">
         <Button
           variant="secondary"
           size="sm"
@@ -362,7 +362,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 space-y-6">
       {/* TOP FACEBOOK PROFILE HEADER CARD (Đồng nhất cho cả View & Edit mode) */}
       <Reveal>
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden text-left">

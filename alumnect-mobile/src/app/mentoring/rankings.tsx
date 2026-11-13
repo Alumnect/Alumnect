@@ -9,7 +9,7 @@ import { Avatar, Empty, Screen, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
 import { SheetModal } from '@/components/SheetModal'
 import { ListSkeleton } from '@/components/Skeleton'
-import { Check, ChevronRight, SlidersHorizontal, Star, X } from '@/components/icons'
+import { Check, ChevronDown, ChevronRight, Star, X } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { mentoringApi } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
@@ -40,22 +40,17 @@ export default function RankingsScreen() {
     <Screen bg={colors.bg}>
       <Header
         title="Bảng xếp hạng Mentor"
-        subtitle="Top cố vấn tiêu biểu theo lĩnh vực"
+        subtitle="Vinh danh chuyên gia cố vấn uy tín nhất theo lĩnh vực"
         right={
           <Pressable
             onPress={() => setFieldSheet(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Chọn lĩnh vực"
-            style={({ pressed }) => [
-              styles.headerFilterBtn,
-              {
-                backgroundColor: isDark ? colors.surface : viridianSoft,
-                borderColor: isDark ? colors.border : '#FEDCC7',
-                opacity: pressed ? 0.75 : 1,
-              },
-            ]}
+            style={[styles.headerFilterBtn, { backgroundColor: viridianSoft, borderColor: viridian }]}
           >
-            <SlidersHorizontal size={17} color={viridian} weight="bold" />
+            <BrandIcon name="computer" size={16} />
+            <Txt size={11} weight="800" style={{ color: viridian }} numberOfLines={1}>
+              Ngành
+            </Txt>
+            <ChevronDown size={13} color={viridian} weight="bold" />
           </Pressable>
         }
       />
@@ -114,7 +109,7 @@ export default function RankingsScreen() {
                   {/* Meetup x Kakao Podium Header Banner */}
                   <View style={styles.podiumHeaderRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                      <BrandIcon name="sparkle" size={20} />
+                      <BrandIcon name="sparkle" size={18} />
                       <Txt
                         size={11}
                         weight="800"
@@ -125,7 +120,7 @@ export default function RankingsScreen() {
                       </Txt>
                     </View>
                     <View style={[styles.podiumCountPill, { backgroundColor: colors.card, borderColor: colors.borderSubtle }]}>
-                      <BrandIcon name="star" size={14} />
+                      <BrandIcon name="star" size={13} />
                       <Txt size={11} weight="700" style={{ color: colors.text }}>
                         Top {items.length}
                       </Txt>
@@ -187,57 +182,62 @@ export default function RankingsScreen() {
                     },
                   ]}
                 >
-                  {/* Top Identity Row: Rank + Avatar + Full Name & Company */}
+                  {/* Top Identity Row: Rank + Avatar + Full Name & Company (Không bị cắt tên) */}
                   <View style={styles.cardTopRow}>
                     <View
                       style={[
                         styles.rankBadge,
                         {
-                          backgroundColor: isTop3 ? viridianSoft : (isDark ? colors.surface : '#F4F5F7'),
-                          borderColor: isTop3 ? viridian : (isDark ? colors.borderSubtle : '#E5E7EB'),
+                          backgroundColor: isTop3 ? viridianSoft : colors.surface,
+                          borderColor: isTop3 ? viridian : colors.borderSubtle,
                         },
                       ]}
                     >
-                      <Txt
-                        weight="800"
-                        size={12}
-                        style={{ color: isTop3 ? viridian : colors.textSecondary }}
-                      >
-                        #{item.rank}
-                      </Txt>
+                      {isTop3 ? (
+                        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                          <BrandIcon name="star" size={16} />
+                          <Txt size={9} weight="800" style={{ color: viridian, marginTop: -2 }}>
+                            #{item.rank}
+                          </Txt>
+                        </View>
+                      ) : (
+                        <Txt weight="800" size={13} style={{ color: colors.textSecondary }}>
+                          #{item.rank}
+                        </Txt>
+                      )}
                     </View>
 
-                    <Avatar uri={item.avatarUrl} name={item.fullName} size={42} ring={isTop3} />
+                    <Avatar uri={item.avatarUrl} name={item.fullName} size={50} ring={isTop3} />
 
-                    <View style={{ flex: 1, minWidth: 0, marginLeft: 2 }}>
+                    <View style={{ flex: 1, marginLeft: 2 }}>
                       <View style={styles.nameHeaderRow}>
-                        <Txt weight="800" size={15} style={{ color: colors.text, flexShrink: 1 }} numberOfLines={1}>
+                        <Txt weight="800" size={16} style={{ color: colors.text, flexShrink: 1 }}>
                           {item.fullName}
                         </Txt>
-                        <BrandIcon name="check" size={15} />
+                        <BrandIcon name="check" size={16} />
                       </View>
-                      <Txt size={12} style={{ color: colors.textSecondary, marginTop: 1 }} numberOfLines={1}>
-                        {item.currentCompany ?? item.headline ?? 'Cố vấn chuyên môn'}
+                      <Txt size={13} style={{ color: colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
+                        {item.currentCompany ?? item.headline ?? 'Chuyên gia cố vấn Alumnect'}
                       </Txt>
                     </View>
 
-                    <ChevronRight size={15} color={colors.textTertiary} />
+                    <ChevronRight size={16} color={colors.textTertiary} />
                   </View>
 
-                  {/* Bottom Metric Strip: 1 dòng ngang gọn gàng cân đối, không rớt dòng */}
+                  {/* Bottom Kakao Metric Strip: Thoáng đãng, tách bạch Rating - Số phiên - Điểm Uy tín */}
                   <View style={[styles.cardBottomStrip, { borderTopColor: colors.borderSubtle }]}>
                     <View style={styles.metricLeftGroup}>
-                      <View style={[styles.metricPill, { backgroundColor: isDark ? '#2E1C10' : '#FFF5EE', borderColor: isDark ? '#4A2C16' : '#FEDCC7' }]}>
-                        <Star size={11} color={viridian} weight="fill" />
-                        <Txt size={11.5} weight="800" style={{ color: viridian, marginLeft: 3 }}>
+                      <View style={[styles.metricPill, { backgroundColor: viridianSoft }]}>
+                        <Star size={12} color={viridian} weight="fill" />
+                        <Txt size={12} weight="800" style={{ color: viridian }}>
                           {item.rating?.toFixed?.(1) ?? '5.0'}
                         </Txt>
                       </View>
 
-                      <View style={[styles.metricPill, { backgroundColor: isDark ? colors.surface : '#F7F8FA', borderColor: isDark ? colors.border : '#E6E8EB' }]}>
-                        <BrandIcon name="task" size={12} />
-                        <Txt size={11} weight="600" style={{ color: colors.textSecondary, marginLeft: 3 }}>
-                          {`${item.completedTasks} buổi`}
+                      <View style={[styles.metricPill, { backgroundColor: colors.surface }]}>
+                        <BrandIcon name="task" size={13} />
+                        <Txt size={12} weight="600" style={{ color: colors.textSecondary }}>
+                          {`${item.completedTasks} phiên hoàn thành`}
                         </Txt>
                       </View>
                     </View>
@@ -246,17 +246,23 @@ export default function RankingsScreen() {
                       style={[
                         styles.reputationPill,
                         {
-                          backgroundColor: isTop3 ? viridian : (isDark ? '#2E1C10' : '#FFF3EB'),
-                          borderColor: isTop3 ? viridian : (isDark ? '#4A2C16' : '#FEDCC7'),
+                          backgroundColor: isTop3 ? viridian : viridianSoft,
                         },
                       ]}
                     >
                       <Txt
-                        size={10.5}
+                        size={10}
+                        weight="700"
+                        style={{ color: isTop3 ? 'rgba(255,255,255,0.88)' : viridian, textTransform: 'uppercase' }}
+                      >
+                        Uy tín
+                      </Txt>
+                      <Txt
                         weight="800"
+                        size={14}
                         style={{ color: isTop3 ? '#FFFFFF' : viridian, fontVariant: ['tabular-nums'] }}
                       >
-                        {`Uy tín ${Math.round(item.reputationScore)}`}
+                        {Math.round(item.reputationScore)}
                       </Txt>
                     </View>
                   </View>
@@ -380,42 +386,43 @@ function PodiumItem({
 
 const styles = StyleSheet.create({
   headerFilterBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    borderWidth: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 1,
   },
   filterBar: {
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   chipScroll: {
     paddingHorizontal: 16,
-    gap: 6,
+    gap: 8,
   },
   industryChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
     borderRadius: 999,
     borderWidth: 1,
   },
   podiumContainer: {
     paddingHorizontal: 14,
-    paddingTop: 10,
+    paddingTop: 14,
     paddingBottom: 0,
-    marginBottom: 6,
+    marginBottom: 8,
     borderBottomWidth: 1,
   },
   podiumHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 14,
     gap: 8,
   },
   podiumCountPill: {
@@ -423,7 +430,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 9,
-    paddingVertical: 3.5,
+    paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
   },
@@ -438,30 +445,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   podiumAvatarWrap: {
-    padding: 2.5,
+    padding: 3,
     borderRadius: 999,
-    borderWidth: 2,
+    borderWidth: 2.5,
     position: 'relative',
     alignItems: 'center',
   },
   podiumRankPill: {
     position: 'absolute',
-    bottom: -7,
-    paddingHorizontal: 7,
-    paddingVertical: 1,
+    bottom: -8,
+    paddingHorizontal: 8,
+    paddingVertical: 1.5,
     borderRadius: 999,
   },
   podiumNameWrap: {
-    minHeight: 30,
+    minHeight: 34,
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 10,
     paddingHorizontal: 2,
   },
   pedestalBlock: {
     width: '100%',
     marginTop: 6,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
     borderWidth: 1,
     borderBottomWidth: 0,
     alignItems: 'center',
@@ -469,19 +476,19 @@ const styles = StyleSheet.create({
   },
   rankCard: {
     marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 14,
-    padding: 11,
+    marginTop: 12,
+    borderRadius: 18,
+    padding: 15,
   },
   cardTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   rankBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -490,40 +497,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 5,
+    gap: 6,
   },
   cardBottomStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 12,
+    paddingTop: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    gap: 8,
+    gap: 10,
   },
   metricLeftGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    flexShrink: 1,
+    flexWrap: 'wrap',
+    gap: 8,
+    flex: 1,
   },
   metricPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 7,
-    paddingVertical: 2.5,
-    borderRadius: 6,
-    borderWidth: 1,
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   reputationPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2.5,
+    gap: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
     borderRadius: 999,
-    borderWidth: 1,
   },
   sheetHeader: {
     flexDirection: 'row',

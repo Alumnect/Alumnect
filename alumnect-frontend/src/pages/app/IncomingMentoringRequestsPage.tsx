@@ -12,6 +12,7 @@ import {
   type IncomingRequestScope,
 } from '@/features/mentorship'
 import { MentoringFilterTabs, type MentoringFilterOption } from '@/features/mentorship/components/MentoringUi'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 
 type ResponseFilter = 'ALL' | MentoringResponseStatus
@@ -55,7 +56,7 @@ function IncomingMentoringRequestsContent() {
     [t],
   )
 
-  const { data, isLoading, isError, error, refetch } = useIncomingMentoringRequests({
+  const { data, isLoading, isError, error, refetch, isFetching } = useIncomingMentoringRequests({
     status: BACKEND_STATUS[responseFilter],
     scope: scopeFilter,
     page,
@@ -70,8 +71,21 @@ function IncomingMentoringRequestsContent() {
   return (
     <div className="space-y-5">
       <MentorPageHeader
-        scene="inbox"
+        icon={<Inbox className="h-4 w-4" />}
+        eyebrow={t('mentoring.mentorEyebrow')}
         title={t('mentoring.incomingRequestsTitle')}
+        description={t('mentoring.incomingRequestsDesc')}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            leftIcon={<RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />}
+          >
+            {t('mentoring.refresh')}
+          </Button>
+        }
       />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

@@ -1,8 +1,7 @@
-import { BrandBanner } from '@/components/brand/BrandBlocks'
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarDays, MapPin, Users, Clock, Loader2, Bookmark, Ban, Search, X } from 'lucide-react'
-import { Card, Avatar, SmartImage, EmptyState, toast, FadeSwitch } from '@/components/ui'
+import { PageHeader, Card, Avatar, SmartImage, EmptyState, toast, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Stagger, StaggerItem, Reveal } from '@/components/motion'
 import { useFeed, useToggleSavePost } from '@/features/feed'
@@ -76,10 +75,10 @@ export function EventsPage() {
         description="Tham gia các sự kiện và buổi gặp gỡ từ cộng đồng cựu sinh viên Đại học FPT."
         keywords="sự kiện FPT, sự kiện cựu sinh viên, FPT alumni event, AlumNect sự kiện"
       />
-      <BrandBanner
-        scene="events"
-        className="mb-6"
+      <PageHeader
+        icon={<CalendarDays size={20} />}
         title={t('event.pageTitle')}
+        subtitle={t('event.pageSubtitle')}
       />
 
       {/* Khung tìm kiếm sự kiện & lọc tab thời gian */}
@@ -196,8 +195,8 @@ export function EventsPage() {
                         <SmartImage src={cover} alt={event.title || t('event.unnamedEvent')} className="h-full w-full" imgClassName="object-cover transition-transform duration-500 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-t from-plum-900/85 to-transparent" />
                         <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center">
-                          <span className="text-xs font-bold text-warning">{dateInfo.month}</span>
-                          <span className="text-xl font-bold text-text">{dateInfo.day}</span>
+                          <span className="text-xs font-bold uppercase text-warning">{dateInfo.month}</span>
+                          <span className="text-xl font-extrabold text-text">{dateInfo.day}</span>
                         </div>
                         {event.status === 'CANCELLED' && (
                           <div className="absolute left-20 top-3 flex items-center gap-1 rounded-xl bg-danger-soft px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-xs">

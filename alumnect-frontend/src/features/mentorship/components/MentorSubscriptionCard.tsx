@@ -148,7 +148,7 @@ export function MentorSubscriptionCard({
             onClick={() => onSelect(pkg.id)}
             rightIcon={<ArrowRight size={13} />}
           >
-            {isPendingSelection ? t('mentoring.selectingPackage') : isSelected ? t('mentoring.actionResumePayment') : t('mentoring.selectThisPackage')}
+            {isPendingSelection ? t('mentoring.selectingPackage') : isSelected ? t('mentoring.activePackageBadge') : t('mentoring.selectThisPackage')}
           </Button>
         )}
       </div>

@@ -1,4 +1,3 @@
-import { BrandBanner } from '@/components/brand/BrandBlocks'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -25,7 +24,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Avatar, Card, EmptyState, Skeleton, Pagination, toast } from '@/components/ui'
+import { PageHeader, Avatar, Card, EmptyState, Skeleton, Pagination, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import http from '@/lib/http'
@@ -278,11 +277,11 @@ export function NotificationsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl pb-10">
-      <BrandBanner
-        scene="notifications"
-        className="mb-6"
+    <div className="mx-auto max-w-3xl pb-10">
+      <PageHeader
+        icon={<Bell size={20} />}
         title={t('notification.title')}
+        subtitle={t('notification.subtitle')}
         actions={
           hasUnread && (
             <Button

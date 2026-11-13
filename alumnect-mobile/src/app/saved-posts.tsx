@@ -1,13 +1,13 @@
 import React from 'react'
 import { FlashList } from '@shopify/flash-list'
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { Bookmark } from '@/components/icons'
 import { Empty, Screen } from '@/components/ui'
-import { MeetupScribble } from '@/components/MeetupScribble'
 import { ListSkeleton } from '@/components/Skeleton'
+import { palette } from '@/theme'
 import { Header } from '@/components/Header'
 import { PostCard } from '@/components/PostCard'
 import { feedApi } from '@/api/feed'
-import { palette } from '@/theme'
 
 export default function SavedPostsScreen() {
   const q = useInfiniteQuery({
@@ -28,7 +28,7 @@ export default function SavedPostsScreen() {
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           refreshing={q.isRefetching}
           onRefresh={() => q.refetch()}
-          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<MeetupScribble name="empty_box" size={54} color={palette.primary} />} title="Chưa lưu bài viết nào" text="Bấm biểu tượng Lưu trên bài viết để đọc lại sau." />}
+          ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} icon={<Bookmark size={26} color={palette.primary} />} title="Chưa lưu bài viết nào" text="Bấm biểu tượng Lưu trên bài viết để đọc lại sau." />}
           renderItem={({ item }) => <PostCard post={item} />}
         />
       )}

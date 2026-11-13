@@ -77,27 +77,6 @@ export interface ExperienceRequest extends ExperienceLocation {
   description?: string | null
 }
 
-/** [C2] AI đối chiếu lộ trình 1-chạm — khớp CareerAiCompareResponse phía Backend. */
-export interface LadderStep { period: string; title: string; company: string; takeawayVi: string }
-export interface PersonCard {
-  userId: number | null; name: string; avatarUrl: string | null; headline: string | null; currentRole: string | null; company: string | null
-  majorName: string | null; cohort: number | null; relationshipType: string | null; yearsSinceFirstJob: number | null; companyCount: number; skills: string[]
-}
-export interface CareerAiCompare {
-  targetPerson: PersonCard; viewerPerson: PersonCard; comparisonSummaryVi: string
-  historicalLadder: LadderStep[]; viewerLadder: LadderStep[]
-  sharedStrengths: string[]; keyGapsToBridge: string[]; transferableSkills: string[]
-  actionableAdviceVi: string; viewerHasExperience: boolean; source: string
-}
-type AnyRec = Record<string, any>
-const strs = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
-const ladder = (v: unknown): LadderStep[] => (Array.isArray(v) ? v : []).map((s: AnyRec) => ({ period: s?.period ?? '', title: s?.title ?? '', company: s?.company ?? '', takeawayVi: s?.takeawayVi ?? '' }))
-const person = (p: AnyRec = {}): PersonCard => ({
-  userId: p.userId ?? null, name: p.name ?? '', avatarUrl: p.avatarUrl ?? null, headline: p.headline ?? null, currentRole: p.currentRole ?? null,
-  company: p.company ?? null, majorName: p.majorName ?? null, cohort: p.cohort ?? null, relationshipType: p.relationshipType ?? null,
-  yearsSinceFirstJob: p.yearsSinceFirstJob ?? null, companyCount: Number(p.companyCount ?? 0), skills: strs(p.skills),
-})
-
 export const exploreApi = {
   map: (f: { search?: string; cohort?: number; majorId?: number }) =>
     http.get<unknown, ApiResponse<MapPoint[]>>('/alumni-map', { params: f }).then((r) => r.data ?? []),
@@ -106,16 +85,6 @@ export const exploreApi = {
       ...r.data,
       content: r.data.content.map((person) => ({ ...person, careerPreview: person.careerPreview.map((step) => ({ ...step, isCurrent: step.isCurrent ?? step.current ?? false })) })),
     })),
-  careerAiCompare: (targetUserId: number) =>
-    http.post<unknown, ApiResponse<AnyRec>>('/career-paths/ai-compare', { targetUserId }, { timeout: 20000 }).then((r): CareerAiCompare => {
-      const d: AnyRec = (r as AnyRec)?.data ?? r ?? {}
-      return {
-        targetPerson: person(d.targetPerson), viewerPerson: person(d.viewerPerson), comparisonSummaryVi: d.comparisonSummaryVi ?? '',
-        historicalLadder: ladder(d.historicalLadder), viewerLadder: ladder(d.viewerLadder),
-        sharedStrengths: strs(d.sharedStrengths), keyGapsToBridge: strs(d.keyGapsToBridge), transferableSkills: strs(d.transferableSkills),
-        actionableAdviceVi: d.actionableAdviceVi ?? '', viewerHasExperience: !!d.viewerHasExperience, source: d.source ?? 'LOCAL_FALLBACK',
-      }
-    }),
   careerDetail: (userId: number) => http.get<unknown, ApiResponse<CareerDetail>>(`/career-paths/users/${userId}`).then((r) => r.data),
 }
 

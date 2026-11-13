@@ -71,14 +71,6 @@ export const MentorMentoringSection: React.FC<Props> = ({
     }
   }
 
-  // Rời ô nhập thì tự thêm chủ đề đã gõ, để không bị mất khi bấm Lưu nháp / Hoàn tất mà quên bấm "Thêm"
-  const commitPendingTopic = () => {
-    const trimmed = topicInput.trim()
-    if (!trimmed) return
-    if (!mentoringTopics.includes(trimmed)) onAddTopic(trimmed)
-    setTopicInput('')
-  }
-
   // Danh sách ngành nghề lọc theo từ khóa tìm kiếm
   const filteredIndustries = availableIndustries.filter((ind) =>
     ind.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
@@ -371,7 +363,6 @@ export const MentorMentoringSection: React.FC<Props> = ({
               value={topicInput}
               onChange={(e) => setTopicInput(e.target.value)}
               onKeyDown={handleAddTopic}
-              onBlur={commitPendingTopic}
               className="flex-1 px-3.5 py-2 rounded-xl border border-border dark:border-border-strong bg-surface text-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-primary placeholder:text-text-subtle dark:placeholder:text-text-subtle"
             />
             <button

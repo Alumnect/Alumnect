@@ -19,8 +19,6 @@ import { Container, Card } from '@/components/ui/primitives'
 import { ButtonLink } from '@/components/ui/Button'
 import { useAuthStore } from '@/store/authStore'
 import { useMentorStatus } from '@/features/mentorship/hooks/useMentorStatus'
-import { BrandHero } from '@/components/brand/BrandBlocks'
-import { brandButtonClass, softButtonClass } from '@/components/brand/brandClasses'
 import { vnd } from '@/lib/utils'
 import {
   Sparkles,
@@ -201,46 +199,93 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
   })
   const topMentors = mentorsData?.content ?? []
 
-  // Hành động phụ theo vai trò và trạng thái Mentor (không lặp các mục trong sidebar)
-  const secondaryAction = !isAlumni
-    ? { to: '/app/mentoring/requests/create', label: t('mentoring.createRequest'), icon: <Sparkles className="h-4 w-4 text-primary-solid" /> }
-    : isMentorActive
-      ? { to: '/app/mentoring/become-mentor', label: t('mentoring.mentorProfile'), icon: <UserCheck className="h-4 w-4" /> }
-      : isExpired
-        ? { to: '/app/mentoring/packages', label: t('mentoring.renewPackage'), icon: <ArrowRight className="h-4 w-4" /> }
-        : isPaymentPending
-          ? { to: '/app/mentoring/subscription?step=checkout', label: t('mentoring.activatePackage'), icon: <ArrowRight className="h-4 w-4" /> }
-          : !status?.hasMentorProfile
-            ? { to: '/app/mentoring/become-mentor', label: t('mentoring.becomeMentor'), icon: <ArrowRight className="h-4 w-4" /> }
-            : null
-
   return (
     <div
       className="space-y-6"
     >
-      {/* 1. Dải chào có minh hoạ campus FPT + hành động chính */}
-      <motion.div variants={itemVariants}>
-        <BrandHero
-          eyebrow={t('mentoring.homeGreeting', { name: user?.name || '' })}
-          title={t('mentoring.connectHeroTitle')}
-          actions={
-            <>
-              <Link to="/app/mentoring/discover" className={brandButtonClass}>
-                <Search className="h-4 w-4" />
-                {t('mentoring.exploreMentors')}
-              </Link>
-              {secondaryAction && (
-                <Link to={secondaryAction.to} className={softButtonClass}>
-                  {secondaryAction.icon}
-                  {secondaryAction.label}
-                </Link>
-              )}
-            </>
-          }
-        >
-          {isExpired ? t('mentoring.expiredPackageDesc') : undefined}
-        </BrandHero>
+      {/* 1. Hero Banner: Tối giản, thanh lịch, gọn gàng */}
+      <motion.div
+        variants={itemVariants}
+        className="mentor-page-header relative overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6"
+      >
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl dark:bg-brand-500/5" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />
+
+        <div className="relative z-10 max-w-2xl space-y-2.5">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-text">
+            {t('mentoring.connectHeroTitle')}
+          </h1>
+
+          <p className="text-sm leading-relaxed text-text-muted">
+            {isExpired
+              ? t('mentoring.expiredPackageDesc')
+              : t('mentoring.connectHeroSubtitle')}
+          </p>
+
+          {/* Cụm hành động chính tinh gọn, không lặp lại các nút trong sidebar */}
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <ButtonLink
+              to="/app/mentoring/discover"
+              variant="primary"
+              size="sm"
+              leftIcon={<Search className="h-4 w-4" />}
+              className="shadow-xs font-semibold"
+            >
+              {t('mentoring.exploreMentors')}
+            </ButtonLink>
+
+            {isAlumni ? (
+              isMentorActive ? (
+                <ButtonLink
+                  to="/app/mentoring/become-mentor"
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<UserCheck className="h-4 w-4" />}
+                >
+                  {t('mentoring.mentorProfile')}
+                </ButtonLink>
+              ) : isExpired ? (
+                <ButtonLink
+                  to="/app/mentoring/packages"
+                  variant="outline"
+                  size="sm"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                >
+                  {t('mentoring.renewPackage')}
+                </ButtonLink>
+              ) : isPaymentPending ? (
+                <ButtonLink
+                  to="/app/mentoring/subscription?step=checkout"
+                  variant="outline"
+                  size="sm"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                >
+                  {t('mentoring.activatePackage')}
+                </ButtonLink>
+              ) : !status?.hasMentorProfile ? (
+                <ButtonLink
+                  to="/app/mentoring/become-mentor"
+                  variant="outline"
+                  size="sm"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                >
+                  {t('mentoring.becomeMentor')}
+                </ButtonLink>
+              ) : null
+            ) : (
+              <ButtonLink
+                to="/app/mentoring/requests/create"
+                variant="outline"
+                size="sm"
+                leftIcon={<Sparkles className="h-4 w-4 text-primary-solid" />}
+              >
+                {t('mentoring.createRequest')}
+              </ButtonLink>
+            )}
+          </div>
+        </div>
       </motion.div>
+
       {/* 2. Việc cần làm tiếp theo */}
       <MentoringWorkSummary isMentorActive={isMentorActive} />
 
@@ -251,6 +296,7 @@ function MentoringHomeContent({ status }: MentoringHomeContentProps) {
             <h2 className="font-display text-lg font-bold text-text">
               {t('mentoring.featuredMentors')}
             </h2>
+            <p className="text-xs text-text-subtle">{t('mentoring.featuredMentorsDesc')}</p>
           </div>
           <Link
             to="/app/mentoring/discover"

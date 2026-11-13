@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react'
-import { Pressable, StyleSheet, TextInput, View } from 'react-native'
+import React, { useState } from 'react'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import * as Haptics from 'expo-haptics'
 import {
   Award,
   Briefcase,
@@ -13,33 +12,29 @@ import {
   ChevronDown,
   ChevronRight,
   ClipboardList,
+  FilePlus2,
   FileText,
+  GraduationCap,
   Handshake,
   IgMessenger,
   Landmark,
   LayoutGrid,
   ListChecks,
   RotateCcw,
-  Search,
   Sparkles,
+  Trophy,
   UserCheck,
   Users,
   X,
-  XCircle,
 } from '@/components/icons'
-import { Button, Empty, Screen, Txt } from '@/components/ui'
+import { Empty, IconButton, Screen, SearchBar, Txt } from '@/components/ui'
 import { BrandIcon, type BrandIconName } from '@/components/BrandIcon'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { SheetModal } from '@/components/SheetModal'
 import { MentorCardView } from '@/components/MentorCardView'
 import { MentoringHeaderBrand, MentorStoryRing } from '@/components/MentoringBrand'
-import { Enter, MotionPressable } from '@/components/Motion'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
 import type { MentoringType, WorkingMode } from '@/api/mentoring'
-import { MentoringTermsGate } from '@/components/MentoringTermsGate'
-import { MentoringSwitch, SwitchPane, type MentoringView } from '@/components/MentoringSwitch'
-import { MentoringHub } from '@/components/MentoringHub'
-import { useMentoringHub } from '@/lib/useMentoringHub'
 import { useAuthStore } from '@/store/authStore'
 import { useDebounced } from '@/lib/hooks'
 import { ListSkeleton } from '@/components/Skeleton'
@@ -53,40 +48,12 @@ const SORTS: [string, string][] = [
 ]
 const DEFAULTS: FilterValues = { sort: 'reputationScore_desc' }
 
-/** Ánh xạ tên lĩnh vực sang biểu tượng Meetup 3D BrandIcon */
-function getIndustryBrandIcon(name: string): BrandIconName {
-  const lower = name.toLowerCase()
-  if (lower.includes('công nghệ') || lower.includes('cntt') || lower.includes('tin học') || lower.includes('phần mềm') || lower.includes('it')) {
-    return 'computer'
-  }
-  if (lower.includes('kinh doanh') || lower.includes('quản trị') || lower.includes('thương mại')) {
-    return 'suitcase'
-  }
-  if (lower.includes('thiết kế') || lower.includes('đồ họa') || lower.includes('mỹ thuật') || lower.includes('ui/ux') || lower.includes('art')) {
-    return 'painting'
-  }
-  if (lower.includes('marketing') || lower.includes('truyền thông') || lower.includes('quảng cáo') || lower.includes('pr')) {
-    return 'megaphone'
-  }
-  if (lower.includes('ngôn ngữ') || lower.includes('ngoại ngữ') || lower.includes('dịch thuật') || lower.includes('tiếng')) {
-    return 'world'
-  }
-  if (lower.includes('tài chính') || lower.includes('kế toán') || lower.includes('ngân hàng') || lower.includes('đầu tư')) {
-    return 'coin'
-  }
-  if (lower.includes('luật') || lower.includes('pháp lý')) {
-    return 'lock'
-  }
-  return 'sparkle'
-}
-
 /**
  * Cố vấn & Kết nối: Meetup x Instagram x Kakao 2026 Design
- * - Tone màu chủ đạo: Cam thương hiệu (#CE4A09 / #FB8A3C) - Trắng (#FFFFFF) - Đen (#202329 / #101010)
- * - Instagram Story Spotlight Rail cho Top Mentors với vòng Story Ring sống động
- * - Kakao Bento Quick Flow Pills với BrandIcon 3D Meetup đồng bộ
- * - Thanh tìm kiếm Instagram x Thanh lọc ngành nghề 1-chạm (Category Rail)
- * - Meetup Mentor Directory Cards với bố cục bento tối ưu và phản hồi xúc giác mượt mà
+ * - Tone màu chủ đạo: Cam (#CE4A09 / #F27124) - Trắng (#FFFFFF) - Đen (#202329 / #101010)
+ * - Instagram Story Spotlight Rail cho Top Mentors
+ * - Kakao Quick Action Pills & Bento Utility Sheet với BrandIcon
+ * - Meetup Mentor Directory Cards
  */
 export default function MentoringTab() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
@@ -99,12 +66,7 @@ export default function MentoringTab() {
   const [utilitySheet, setUtilitySheet] = useState(false)
   const [fieldModal, setFieldModal] = useState(false)
   const [selectedFieldId, setSelectedFieldId] = useState<number | undefined>(undefined)
-  const keyword = useDebounced(kw, 350)
-  // Tách 2 phần: "Của tôi" (việc cần xử lý, task đang đồng hành) và "Tìm mentor".
-  // Mặc định theo ngữ cảnh: có hoạt động mentoring → "Của tôi", chưa có gì → "Tìm mentor". Người dùng chọn tay thì giữ nguyên.
-  const hub = useMentoringHub()
-  const [userView, setUserView] = useState<MentoringView | null>(null)
-  const view: MentoringView = userView ?? (hub.ready ? (hub.hasActivity || hub.mentorStats ? 'mine' : 'discover') : 'mine')
+  const keyword = useDebounced(kw, 400)
 
   const options = useQuery({ queryKey: ['mentor-filter-options'], queryFn: mentoringApi.filterOptions, staleTime: 10 * 60_000 })
   const industries = options.data?.industries ?? []
@@ -147,7 +109,7 @@ export default function MentoringTab() {
     getNextPageParam: (l) => (l.last ? undefined : l.pageNumber + 1),
   })
 
-  // Spotlight mentors for Instagram Story Rail
+  // Query top spotlight mentors for Instagram-style story rail
   const spotlightQuery = useQuery({
     queryKey: ['mentoring-spotlight'],
     queryFn: () => mentoringApi.search({ sortBy: 'rating', sortDir: 'desc' }),
@@ -158,80 +120,45 @@ export default function MentoringTab() {
   const items = q.data?.pages.flatMap((p) => p.content) ?? []
   const active = countActive(filters, ['sort'])
 
-  // Danh mục phím tắt luồng Mentoring (Kakao Bento Action Strip)
-  // Danh mục phím tắt luồng Mentoring — đồng bộ MENTORSHIP_NAVIGATION của Web:
-  // nhóm "Mentoring của tôi" dùng chung (Cựu sinh viên cũng có thể gửi yêu cầu), nhóm "Dành cho Mentor" chỉ cho ALUMNI.
-  const isAlumni = role === 'ALUMNI'
-  // Phần "Tìm mentor" chỉ giữ lối tắt liên quan việc tìm kiếm; các mục quản lý đã chuyển sang "Của tôi".
-  const quickShortcuts: { key: string; label: string; brand: BrandIconName; href: string; primary?: boolean }[] = [
-    { key: 'create', label: 'Đăng bài toán tìm mentor', brand: 'pencil', href: '/mentoring/create-request', primary: true },
-    { key: 'rank', label: 'Bảng xếp hạng', brand: 'star', href: '/mentoring/rankings' },
-    { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
-  ]
-
-  const handleSelectField = (fieldId: number | undefined) => {
-    Haptics.selectionAsync()
-    setSelectedFieldId(fieldId)
-  }
+  const quickShortcuts: { key: string; label: string; brand: BrandIconName; href: string; primary?: boolean }[] =
+    role === 'STUDENT'
+      ? [
+          { key: 'create', label: 'Tạo yêu cầu', brand: 'pencil', href: '/mentoring/create-request', primary: true },
+          { key: 'my-req', label: 'Yêu cầu của tôi', brand: 'writing', href: '/mentoring/my-requests' },
+          { key: 'tasks', label: 'Nhiệm vụ', brand: 'task', href: '/mentoring/tasks' },
+          { key: 'deals', label: 'Thỏa thuận', brand: 'check', href: '/mentoring/deals' },
+          { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
+          { key: 'rank', label: 'Xếp hạng', brand: 'star', href: '/mentoring/rankings' },
+          { key: 'refunds', label: 'Hoàn tiền', brand: 'coin', href: '/mentoring/refunds' },
+        ]
+      : [
+          { key: 'incoming', label: 'Yêu cầu đến', brand: 'writing', href: '/mentoring/incoming-requests', primary: true },
+          { key: 'tasks', label: 'Nhiệm vụ', brand: 'task', href: '/mentoring/tasks' },
+          { key: 'deals', label: 'Thỏa thuận', brand: 'check', href: '/mentoring/deals' },
+          { key: 'earnings', label: 'Thu nhập', brand: 'coin', href: '/mentoring/earnings' },
+          { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
+          { key: 'rank', label: 'Xếp hạng', brand: 'star', href: '/mentoring/rankings' },
+          { key: 'status', label: 'Hồ sơ Mentor', brand: 'suitcase', href: '/mentoring/status' },
+        ]
 
   return (
-    <MentoringTermsGate header={false}>
     <Screen bg={colors.bg}>
-      {/* 1. Header Bar: Brand Logo + Tiện ích & Tin nhắn */}
+      {/* Top Bar with Brand + Utility & Messages Icon Actions */}
       <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
         <MentoringHeaderBrand />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <MotionPressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-              setUtilitySheet(true)
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Quản lý & Tiện ích Cố vấn"
-            style={[
-              styles.headerActionBtn,
-              {
-                backgroundColor: isDark ? '#262626' : '#F4F5F7',
-                borderColor: isDark ? '#383838' : '#E8EAED',
-              },
-            ]}
-          >
-            <LayoutGrid size={20} color={colors.text} />
-          </MotionPressable>
-
-          <MotionPressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-              router.push('/mentoring/messages')
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Tin nhắn mentoring"
-            style={[
-              styles.headerActionBtn,
-              {
-                backgroundColor: isDark ? '#262626' : '#F4F5F7',
-                borderColor: isDark ? '#383838' : '#E8EAED',
-              },
-            ]}
-          >
-            <IgMessenger size={20} color={colors.text} />
-            {hub.unread ? (
-              <View style={[styles.headerBadge, { backgroundColor: viridian, borderColor: colors.card }]}>
-                <Txt size={10} weight="800" style={{ color: '#FFFFFF' }}>{hub.unread > 99 ? '99+' : hub.unread}</Txt>
-              </View>
-            ) : null}
-          </MotionPressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <IconButton
+            label="Quản lý & Tiện ích Cố vấn"
+            icon={<LayoutGrid size={21} color={colors.text} />}
+            onPress={() => setUtilitySheet(true)}
+          />
+          <IconButton
+            label="Tin nhắn mentoring"
+            icon={<IgMessenger size={21} color={colors.text} />}
+            onPress={() => router.push('/mentoring/messages')}
+          />
         </View>
       </View>
-      <View style={{ backgroundColor: colors.card, paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSubtle }}>
-        <MentoringSwitch value={view} onChange={setUserView} badge={hub.actionItems.length} />
-      </View>
-
-      <SwitchPane visible={view === 'mine'} direction={-1}>
-        <MentoringHub hub={hub} onDiscover={() => setUserView('discover')} />
-      </SwitchPane>
-
-      <SwitchPane visible={view === 'discover'} direction={1}>
 
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
         <FlashList
@@ -246,7 +173,7 @@ export default function MentoringTab() {
           }}
           ListHeaderComponent={
             <View>
-              {/* 2. Kakao Quick Flow Strip: Phím tắt thao tác nhanh với BrandIcon Meetup */}
+              {/* Kakao / Instagram Quick Flow Strip: 1-Tap Access to All Mentoring Flows */}
               <View style={[styles.quickFlowBar, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
                 <ScrollView
                   horizontal
@@ -254,28 +181,21 @@ export default function MentoringTab() {
                   contentContainerStyle={styles.quickFlowScroll}
                 >
                   {quickShortcuts.map((s) => (
-                    <MotionPressable
+                    <Pressable
                       key={s.key}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                        router.push(s.href as never)
-                      }}
-                      style={[
+                      onPress={() => router.push(s.href as never)}
+                      style={({ pressed }) => [
                         styles.quickFlowPill,
                         s.primary
                           ? {
                               backgroundColor: viridian,
                               borderColor: viridian,
-                              shadowColor: viridian,
-                              shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: 0.25,
-                              shadowRadius: 4,
-                              elevation: 2,
                             }
                           : {
-                              backgroundColor: isDark ? colors.surface : '#F7F8FA',
-                              borderColor: isDark ? colors.border : '#E6E8EB',
+                              backgroundColor: colors.surface,
+                              borderColor: colors.border,
                             },
+                        { opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
                       ]}
                     >
                       <View
@@ -292,43 +212,40 @@ export default function MentoringTab() {
                             : undefined
                         }
                       >
-                        <BrandIcon name={s.brand} size={s.primary ? 15 : 18} />
+                        <BrandIcon name={s.brand} size={s.primary ? 16 : 19} />
                       </View>
                       <Txt
-                        size={12.5}
-                        weight={s.primary ? '800' : '700'}
+                        size={12}
+                        weight={s.primary ? '700' : '600'}
                         style={{ color: s.primary ? '#FFFFFF' : colors.text }}
                       >
                         {s.label}
                       </Txt>
-                    </MotionPressable>
+                    </Pressable>
                   ))}
                 </ScrollView>
               </View>
 
-              {/* 3. Instagram Story Spotlight Rail: Top Mentors Tiêu Biểu */}
+              {/* Instagram Story Spotlight Rail: Top Mentors */}
               {spotlightMentors.length > 0 && (
                 <View style={[styles.spotlightSection, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
                   <View style={styles.spotlightTitleRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <BrandIcon name="sparkle" size={20} />
-                      <Txt size={12.5} weight="800" style={{ color: colors.text, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                      <BrandIcon name="sparkle" size={18} />
+                      <Txt size={12} weight="800" style={{ color: colors.text, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                         Mentor Tiêu Biểu
                       </Txt>
                     </View>
-                    <MotionPressable
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                        router.push('/mentoring/rankings')
-                      }}
+                    <Pressable
+                      onPress={() => router.push('/mentoring/rankings')}
                       style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                     >
                       <BrandIcon name="star" size={15} />
-                      <Txt size={12} weight="800" style={{ color: viridian }}>
+                      <Txt size={12} weight="700" style={{ color: viridian }}>
                         Bảng xếp hạng
                       </Txt>
                       <ChevronRight size={13} color={viridian} weight="bold" />
-                    </MotionPressable>
+                    </Pressable>
                   </View>
                   <ScrollView
                     horizontal
@@ -354,123 +271,67 @@ export default function MentoringTab() {
                 </View>
               )}
 
-              {/* 4. Instagram Explore Search Bar + 1-Tap Category Filter Rail */}
-              <View style={[styles.searchSection, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle, marginBottom: 12 }]}>
-                {/* Search Bar */}
-                <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View
-                    style={{
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: isDark ? colors.surface : '#F4F5F7',
-                      borderRadius: 14,
-                      paddingHorizontal: 12,
-                      height: 44,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      gap: 8,
-                    }}
-                  >
-                    <Search size={18} color={colors.textSecondary} />
-                    <TextInput
-                      value={kw}
-                      onChangeText={setKw}
-                      placeholder="Tìm mentor theo tên, kỹ năng, công ty..."
-                      placeholderTextColor={colors.textTertiary}
-                      style={{ flex: 1, fontSize: 13.5, color: colors.text, paddingVertical: 0 }}
-                      returnKeyType="search"
-                      autoCorrect={false}
-                    />
-                    {kw.length > 0 ? (
-                      <Pressable onPress={() => setKw('')} hitSlop={8} style={{ padding: 4 }}>
-                        <XCircle size={18} color={colors.textSecondary} weight="fill" />
-                      </Pressable>
-                    ) : null}
-                  </View>
+              {/* Combined Search & Quick Field Dropdown */}
+              <View style={[styles.searchSection, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle, marginBottom: 10 }]}>
+                <SearchBar
+                  value={kw}
+                  onChangeText={setKw}
+                  placeholder="Tìm mentor theo tên, kỹ năng, công ty..."
+                  style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 }}
+                  right={<FilterButton count={active} onPress={() => setSheet(true)} />}
+                />
 
-                  <FilterButton count={active} onPress={() => setSheet(true)} />
-                </View>
-
-                {/* 1-Tap Horizontal Category Pills with Meetup 3D BrandIcons */}
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.categoryScroll}
-                >
-                  {/* Option: Tất cả */}
-                  <MotionPressable
-                    onPress={() => handleSelectField(undefined)}
-                    accessibilityRole="tab"
-                    accessibilityState={{ selected: selectedFieldId === undefined }}
-                    style={[
-                      styles.categoryPill,
-                      selectedFieldId === undefined
-                        ? {
-                            backgroundColor: viridian,
-                            borderColor: viridian,
-                            shadowColor: viridian,
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 3,
-                            elevation: 2,
-                          }
-                        : {
-                            backgroundColor: isDark ? colors.surface : '#F7F8FA',
-                            borderColor: isDark ? colors.border : '#E6E8EB',
-                          },
+                {/* Sub-row: 1-Tap Field Dropdown Pill & Experts Count */}
+                <View style={styles.quickFieldRow}>
+                  <Pressable
+                    onPress={() => setFieldModal(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Chọn lĩnh vực"
+                    style={({ pressed }) => [
+                      styles.fieldDropdownBtn,
+                      {
+                        backgroundColor: selectedFieldId !== undefined ? viridianSoft : colors.surface,
+                        borderColor: selectedFieldId !== undefined ? viridian : colors.border,
+                        opacity: pressed ? 0.8 : 1,
+                      },
                     ]}
                   >
-                    <BrandIcon name="sparkle" size={16} />
+                    <Briefcase size={14} color={selectedFieldId !== undefined ? viridian : colors.textSecondary} />
                     <Txt
-                      size={12.5}
-                      weight={selectedFieldId === undefined ? '800' : '600'}
-                      style={{ color: selectedFieldId === undefined ? '#FFFFFF' : colors.text }}
+                      size={12}
+                      weight={selectedFieldId !== undefined ? '700' : '600'}
+                      style={{
+                        color: selectedFieldId !== undefined ? viridian : colors.text,
+                        marginLeft: 6,
+                        marginRight: 4,
+                        maxWidth: 200,
+                      }}
+                      numberOfLines={1}
                     >
-                      {`Tất cả (${items.length})`}
+                      {selectedIndustry ? selectedIndustry.name : 'Tất cả lĩnh vực'}
                     </Txt>
-                  </MotionPressable>
-
-                  {/* List of dynamic industries */}
-                  {industries.map((ind) => {
-                    const isSelected = selectedFieldId === ind.id
-                    const iconName = getIndustryBrandIcon(ind.name)
-                    return (
-                      <MotionPressable
-                        key={ind.id}
-                        onPress={() => handleSelectField(ind.id)}
-                        accessibilityRole="tab"
-                        accessibilityState={{ selected: isSelected }}
-                        style={[
-                          styles.categoryPill,
-                          isSelected
-                            ? {
-                                backgroundColor: viridian,
-                                borderColor: viridian,
-                                shadowColor: viridian,
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.25,
-                                shadowRadius: 3,
-                                elevation: 2,
-                              }
-                            : {
-                                backgroundColor: isDark ? colors.surface : '#F7F8FA',
-                                borderColor: isDark ? colors.border : '#E6E8EB',
-                              },
-                        ]}
+                    {selectedFieldId !== undefined ? (
+                      <Pressable
+                        hitSlop={8}
+                        onPress={(e) => {
+                          e.stopPropagation()
+                          setSelectedFieldId(undefined)
+                        }}
+                        style={{ padding: 2 }}
                       >
-                        <BrandIcon name={iconName} size={16} />
-                        <Txt
-                          size={12.5}
-                          weight={isSelected ? '800' : '600'}
-                          style={{ color: isSelected ? '#FFFFFF' : colors.text }}
-                        >
-                          {ind.name}
-                        </Txt>
-                      </MotionPressable>
-                    )
-                  })}
-                </ScrollView>
+                        <X size={12} color={viridian} />
+                      </Pressable>
+                    ) : (
+                      <ChevronDown size={13} color={colors.textSecondary} />
+                    )}
+                  </Pressable>
+
+                  {items.length > 0 && (
+                    <Txt size={12} weight="600" style={{ color: colors.textTertiary }}>
+                      {items.length} chuyên gia
+                    </Txt>
+                  )}
+                </View>
               </View>
 
               {q.isLoading ? <ListSkeleton variant="row" count={4} /> : null}
@@ -481,9 +342,9 @@ export default function MentoringTab() {
               <Empty
                 error={q.error}
                 onRetry={() => { void q.refetch() }}
-                icon={<BrandIcon name="binoculars" size={54} />}
+                icon={<GraduationCap size={34} color={viridian} />}
                 title="Không tìm thấy mentor phù hợp"
-                text="Thử đổi từ khóa tìm kiếm hoặc chọn danh mục lĩnh vực khác."
+                text="Thử thay đổi từ khóa tìm kiếm hoặc bấm nút 'Tất cả lĩnh vực'."
                 action={active || selectedFieldId !== undefined ? 'Xoá tất cả bộ lọc' : undefined}
                 onAction={() => {
                   setFilters(DEFAULTS)
@@ -492,11 +353,7 @@ export default function MentoringTab() {
               />
             )
           }
-          renderItem={({ item }) => (
-            <Enter duration={280}>
-              <MentorCardView m={item} />
-            </Enter>
-          )}
+          renderItem={({ item }) => <MentorCardView m={item} />}
           ListFooterComponent={
             q.isFetchingNextPage ? (
               <Txt muted size={12} style={{ textAlign: 'center', padding: 16 }}>
@@ -507,9 +364,7 @@ export default function MentoringTab() {
         />
       </View>
 
-      </SwitchPane>
-
-      {/* 5. Utility Bottom Sheet: Không gian quản lý & điều hành Cố vấn (Kakao Bento Sheet) */}
+      {/* Utility Bottom Sheet: Không gian quản lý & điều hành Cố vấn (Meetup x Kakao Bento) */}
       <SheetModal visible={utilitySheet} onClose={() => setUtilitySheet(false)} maxHeight={0.86}>
         <View style={[styles.sheetHeader, { borderBottomColor: colors.borderSubtle }]}>
           <View style={{ flex: 1 }}>
@@ -539,62 +394,81 @@ export default function MentoringTab() {
             Luồng Cố vấn chính
           </Txt>
 
-          <UtilityRow
-            brandIcon="pencil"
-            icon={<FileText size={20} color="#FFFFFF" weight="bold" />}
-            title="Tạo yêu cầu mới"
-            desc="Đăng bài toán cần mentor hỗ trợ định hướng & giải đáp"
-            primary
-            onPress={() => {
-              setUtilitySheet(false)
-              router.push('/mentoring/create-request')
-            }}
-          />
-          <UtilityRow
-            brandIcon="writing"
-            icon={<ClipboardList size={20} color={viridian} />}
-            title="Yêu cầu của tôi"
-            desc="Theo dõi trạng thái các yêu cầu cố vấn bạn đã tạo"
-            onPress={() => {
-              setUtilitySheet(false)
-              router.push('/mentoring/my-requests')
-            }}
-          />
-          <UtilityRow
-            brandIcon="task"
-            icon={<ListChecks size={20} color={viridian} />}
-            title="Nhiệm vụ của tôi"
-            desc="Tiến độ bài tập và nhiệm vụ đang đồng hành cùng mentor"
-            onPress={() => {
-              setUtilitySheet(false)
-              router.push('/mentoring/tasks')
-            }}
-          />
-          <UtilityRow
-            brandIcon="check"
-            icon={<Handshake size={20} color={viridian} weight="bold" />}
-            title="Thỏa thuận hợp tác"
-            desc="Hợp đồng và điều khoản hướng dẫn đã xác lập"
-            onPress={() => {
-              setUtilitySheet(false)
-              router.push('/mentoring/deals')
-            }}
-          />
-
-          {isAlumni ? (
+          {role === 'STUDENT' ? (
             <>
-              <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 12, marginBottom: 2 }}>
-                Dành cho Mentor
-              </Txt>
+              <UtilityRow
+                brandIcon="pencil"
+                icon={<FileText size={20} color="#FFFFFF" weight="bold" />}
+                title="Tạo yêu cầu mới"
+                desc="Đăng bài toán cần mentor hỗ trợ định hướng & giải đáp"
+                primary
+                onPress={() => {
+                  setUtilitySheet(false)
+                  router.push('/mentoring/create-request')
+                }}
+              />
+              <UtilityRow
+                brandIcon="writing"
+                icon={<ClipboardList size={20} color={viridian} />}
+                title="Yêu cầu của tôi"
+                desc="Theo dõi trạng thái các yêu cầu cố vấn bạn đã tạo"
+                onPress={() => {
+                  setUtilitySheet(false)
+                  router.push('/mentoring/my-requests')
+                }}
+              />
+              <UtilityRow
+                brandIcon="task"
+                icon={<ListChecks size={20} color={viridian} />}
+                title="Nhiệm vụ của tôi"
+                desc="Tiến độ bài tập và nhiệm vụ đang đồng hành cùng mentor"
+                onPress={() => {
+                  setUtilitySheet(false)
+                  router.push('/mentoring/tasks')
+                }}
+              />
+              <UtilityRow
+                brandIcon="check"
+                icon={<Handshake size={20} color={viridian} weight="bold" />}
+                title="Thỏa thuận hợp tác"
+                desc="Hợp đồng và điều khoản hướng dẫn đã xác lập"
+                onPress={() => {
+                  setUtilitySheet(false)
+                  router.push('/mentoring/deals')
+                }}
+              />
+            </>
+          ) : (
+            <>
               <UtilityRow
                 brandIcon="writing"
                 icon={<ClipboardList size={20} color="#FFFFFF" weight="bold" />}
                 title="Yêu cầu đến"
-                desc="Yêu cầu hướng dẫn mới gửi đến bạn đang chờ phản hồi"
+                desc="Danh sách yêu cầu hướng dẫn mới từ sinh viên chờ duyệt"
                 primary
                 onPress={() => {
                   setUtilitySheet(false)
                   router.push('/mentoring/incoming-requests')
+                }}
+              />
+              <UtilityRow
+                brandIcon="task"
+                icon={<ListChecks size={20} color={viridian} />}
+                title="Nhiệm vụ học viên"
+                desc="Theo dõi tiến độ bài nộp và đánh giá chất lượng sinh viên"
+                onPress={() => {
+                  setUtilitySheet(false)
+                  router.push('/mentoring/tasks')
+                }}
+              />
+              <UtilityRow
+                brandIcon="check"
+                icon={<Handshake size={20} color={viridian} weight="bold" />}
+                title="Thỏa thuận hợp tác"
+                desc="Hợp đồng mentoring và các cam kết đang hoạt động"
+                onPress={() => {
+                  setUtilitySheet(false)
+                  router.push('/mentoring/deals')
                 }}
               />
               <UtilityRow
@@ -618,7 +492,7 @@ export default function MentoringTab() {
                 }}
               />
             </>
-          ) : null}
+          )}
 
           {/* Section: Cộng đồng & Mở rộng */}
           <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 12, marginBottom: 2 }}>
@@ -660,7 +534,96 @@ export default function MentoringTab() {
         </ScrollView>
       </SheetModal>
 
-      {/* 6. FilterSheet nâng cao */}
+      {/* Field Selection BottomSheet (1-Tap Fast Selection) */}
+      <SheetModal visible={fieldModal} onClose={() => setFieldModal(false)} maxHeight={0.78}>
+        <View style={[styles.sheetHeader, { borderBottomColor: colors.borderSubtle }]}>
+          <View style={{ flex: 1 }}>
+            <Txt weight="800" size={17} style={{ color: colors.text }}>
+              Lĩnh vực Cố vấn
+            </Txt>
+            <Txt size={11} weight="500" style={{ color: colors.textTertiary, marginTop: 2 }}>
+              Chọn lĩnh vực chuyên môn bạn quan tâm
+            </Txt>
+          </View>
+          <Pressable
+            onPress={() => setFieldModal(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Đóng"
+            style={[styles.sheetCloseBtn, { backgroundColor: colors.surface }]}
+          >
+            <X size={18} color={colors.textSecondary} />
+          </Pressable>
+        </View>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16, paddingBottom: Math.max(24, insets.bottom + 16), gap: 8 }}
+        >
+          {/* Option: Tất cả lĩnh vực */}
+          <Pressable
+            onPress={() => {
+              setSelectedFieldId(undefined)
+              setFieldModal(false)
+            }}
+            style={({ pressed }) => [
+              styles.fieldOptionRow,
+              {
+                backgroundColor: selectedFieldId === undefined ? viridianSoft : colors.card,
+                borderColor: selectedFieldId === undefined ? viridian : colors.borderSubtle,
+                opacity: pressed ? 0.75 : 1,
+              },
+            ]}
+          >
+            <View style={{ flex: 1 }}>
+              <Txt
+                weight={selectedFieldId === undefined ? '700' : '600'}
+                size={14}
+                style={{ color: selectedFieldId === undefined ? viridian : colors.text }}
+              >
+                Tất cả lĩnh vực
+              </Txt>
+              <Txt size={11} weight="500" style={{ color: colors.textTertiary, marginTop: 2 }}>
+                Hiển thị toàn bộ chuyên gia & mentor
+              </Txt>
+            </View>
+            {selectedFieldId === undefined && <Check size={18} color={viridian} weight="bold" />}
+          </Pressable>
+
+          {/* List of industries */}
+          {industries.map((ind) => {
+            const isSelected = selectedFieldId === ind.id
+            return (
+              <Pressable
+                key={ind.id}
+                onPress={() => {
+                  setSelectedFieldId(ind.id)
+                  setFieldModal(false)
+                }}
+                style={({ pressed }) => [
+                  styles.fieldOptionRow,
+                  {
+                    backgroundColor: isSelected ? viridianSoft : colors.card,
+                    borderColor: isSelected ? viridian : colors.borderSubtle,
+                    opacity: pressed ? 0.75 : 1,
+                  },
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Txt
+                    weight={isSelected ? '700' : '600'}
+                    size={14}
+                    style={{ color: isSelected ? viridian : colors.text }}
+                  >
+                    {ind.name}
+                  </Txt>
+                </View>
+                {isSelected && <Check size={18} color={viridian} weight="bold" />}
+              </Pressable>
+            )
+          })}
+        </ScrollView>
+      </SheetModal>
+
       <FilterSheet
         visible={sheet}
         onClose={() => setSheet(false)}
@@ -674,7 +637,6 @@ export default function MentoringTab() {
         }}
       />
     </Screen>
-    </MentoringTermsGate>
   )
 }
 
@@ -693,53 +655,42 @@ function UtilityRow({
   primary?: boolean
   onPress: () => void
 }) {
-  const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
+  const { colors, viridian, viridianSoft } = useMentoringTheme()
   return (
-    <MotionPressable
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-        onPress()
-      }}
-      style={[
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
         styles.utilityRow,
         {
-          backgroundColor: primary ? (isDark ? '#2E1C10' : viridianSoft) : colors.card,
+          backgroundColor: primary ? viridianSoft : colors.card,
           borderColor: primary ? viridian : colors.border,
           borderWidth: primary ? 1.5 : 1,
+          opacity: pressed ? 0.85 : 1,
         },
       ]}
     >
-      <View
-        style={[
-          styles.utilityIconWrap,
-          {
-            backgroundColor: primary ? '#FFFFFF' : (isDark ? '#262626' : viridianSoft),
-            borderWidth: primary ? 1 : 0,
-            borderColor: viridian,
-          },
-        ]}
-      >
+      <View style={[styles.utilityIconWrap, { backgroundColor: primary ? '#FFFFFF' : viridianSoft, borderWidth: primary ? 1 : 0, borderColor: viridian }]}>
         {brandIcon ? <BrandIcon name={brandIcon} size={26} /> : icon}
       </View>
       <View style={{ flex: 1, marginLeft: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Txt weight="800" size={14.5} style={{ color: colors.text }}>
+          <Txt weight="800" size={14} style={{ color: colors.text }}>
             {title}
           </Txt>
           {primary && (
             <View style={{ backgroundColor: viridian, paddingHorizontal: 7, paddingVertical: 1.5, borderRadius: 6 }}>
-              <Txt size={10} weight="800" style={{ color: '#FFFFFF' }}>
-                MỚI
+              <Txt size={10} weight="700" style={{ color: '#FFFFFF' }}>
+                Trọng tâm
               </Txt>
             </View>
           )}
         </View>
-        <Txt size={12} weight="500" style={{ color: colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
+        <Txt size={12} weight="400" style={{ color: colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
           {desc}
         </Txt>
       </View>
       <ChevronRight size={16} color={primary ? viridian : colors.textTertiary} weight="bold" />
-    </MotionPressable>
+    </Pressable>
   )
 }
 
@@ -750,27 +701,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 10,
-  },
-  headerBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerActionBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   quickFlowBar: {
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -784,9 +716,9 @@ const styles = StyleSheet.create({
   quickFlowPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6.5,
+    gap: 6,
     paddingHorizontal: 13,
-    height: 38,
+    height: 36,
     borderRadius: 999,
     borderWidth: 1,
   },
@@ -808,19 +740,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingBottom: 10,
   },
-  categoryScroll: {
-    paddingHorizontal: 16,
-    gap: 8,
-    paddingTop: 2,
-    paddingBottom: 4,
-  },
-  categoryPill: {
+  quickFieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 13,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 4,
+  },
+  fieldDropdownBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
+    borderWidth: 1,
+  },
+  fieldOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: 14,
     borderWidth: 1,
   },
   sheetHeader: {

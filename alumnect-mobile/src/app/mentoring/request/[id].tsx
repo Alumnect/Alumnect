@@ -95,16 +95,8 @@ export default function RequestDetailScreen() {
           {r.budgetMin != null || r.budgetMax != null ? (
             <InfoRow
               icon={<Wallet size={17} color={viridian} />}
-              label="Ngân sách dự kiến"
-              value={
-                r.budgetMin != null && r.budgetMax != null && r.budgetMin === r.budgetMax
-                  ? r.budgetMin === 0
-                    ? 'Miễn phí'
-                    : formatVnd(r.budgetMin)
-                  : r.budgetMin != null && r.budgetMax != null
-                  ? `${formatVnd(r.budgetMin)} – ${formatVnd(r.budgetMax)}`
-                  : formatVnd(r.budgetMin ?? r.budgetMax)
-              }
+              label="Dự toán ngân sách"
+              value={`${formatVnd(r.budgetMin)} – ${formatVnd(r.budgetMax)}`}
               last={!r.expectedDeadline}
             />
           ) : null}

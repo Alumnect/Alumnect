@@ -130,7 +130,7 @@ export function RequestForm({
   const insets = useSafeAreaInsets()
   const terms = useQuery({ queryKey: ['mentoring-terms'], queryFn: mentoringApi.termsStatus })
   const industries = useQuery({ queryKey: ['mentoring-industries'], queryFn: mentoringApi.industries })
-  const [f, setF] = useState({ title: '', description: '', budget: '' })
+  const [f, setF] = useState({ title: '', description: '', budgetMin: '', budgetMax: '' })
   const [industryId, setIndustryId] = useState<number | null>(null)
   const [mode, setMode] = useState<WorkingMode>('ONLINE')
   const [taskType, setTaskType] = useState('CAREER_ORIENTATION')
@@ -167,8 +167,8 @@ export function RequestForm({
         participationType: participation,
         groupId: participation === 'GROUP' ? groupId : null,
         taskType,
-        budgetMin: f.budget ? Number(f.budget) : null,
-        budgetMax: f.budget ? Number(f.budget) : null,
+        budgetMin: f.budgetMin ? Number(f.budgetMin) : null,
+        budgetMax: f.budgetMax ? Number(f.budgetMax) : null,
         expectedDeadline: deadline || null,
         clientRequestKey: key,
         attachments,
@@ -223,8 +223,8 @@ export function RequestForm({
     if (!industryId) e.industry = 'Lĩnh vực cần hỗ trợ không được để trống'
     if (participation === 'GROUP' && !groups.data?.some((g) => g.id === groupId && g.canManage && g.status === 'ACTIVE'))
       e.group = 'Vui lòng chọn nhóm bạn đang quản lý'
-    if (f.budget && Number(f.budget) < 0)
-      e.budget = 'Mức ngân sách không được nhỏ hơn 0'
+    if (f.budgetMin && f.budgetMax && Number(f.budgetMin) > Number(f.budgetMax))
+      e.budget = 'Ngân sách tối thiểu không được lớn hơn tối đa'
     if (deadline && new Date(deadline).getTime() <= Date.now())
       e.deadline = 'Thời hạn mong muốn phải ở trong tương lai'
     setErrors(e)
@@ -261,7 +261,7 @@ export function RequestForm({
     { num: 1, idx: '01', label: 'Hình thức', done: participation === 'INDIVIDUAL' || Boolean(groupId), active: activeStep === 1 },
     { num: 2, idx: '02', label: 'Nội dung', done: isContentComplete, active: activeStep === 2 || hasContentInput },
     { num: 3, idx: '03', label: 'Chuyên môn', done: Boolean(industryId), active: activeStep === 3 },
-    { num: 4, idx: '04', label: 'Ngân sách', done: Boolean(f.budget || deadline), active: activeStep === 4 },
+    { num: 4, idx: '04', label: 'Ngân sách', done: Boolean(f.budgetMin || f.budgetMax || deadline), active: activeStep === 4 },
     { num: 5, idx: '05', label: 'Tài liệu', done: attachments.length > 0, active: activeStep === 5 },
   ]
 
@@ -582,31 +582,41 @@ export function RequestForm({
         >
           <StepBadge
             step="04"
-            title="3. Ngân sách dự kiến (VNĐ)"
-            subtitle="Không bắt buộc — để trống nếu bạn muốn trao đổi mức phí linh hoạt cùng Mentor"
+            title="Dự toán Ngân sách & Thời hạn"
+            subtitle="Khung thù lao dự kiến dành cho Mentor (không bắt buộc)"
             brandIcon="coin"
             done={steps[3].done}
             active={steps[3].active}
           />
-          <Input
-            label="Mức ngân sách (VNĐ)"
-            placeholder="Ví dụ: 300000 (nhập 0 nếu mong muốn miễn phí)"
-            value={f.budget}
-            onFocus={() => setActiveStep(4)}
-            onChangeText={(v) => {
-              setActiveStep(4)
-              set('budget')(v.replace(/\D/g, ''))
-            }}
-            keyboardType="number-pad"
-            error={errors.budget}
-            hint={
-              f.budget
-                ? Number(f.budget) === 0
-                  ? 'Miễn phí'
-                  : `${Number(f.budget).toLocaleString('vi-VN')} VNĐ`
-                : undefined
-            }
-          />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Input
+                label="Tối thiểu (VND)"
+                placeholder="VD: 100000"
+                value={f.budgetMin}
+                onFocus={() => setActiveStep(4)}
+                onChangeText={(v) => {
+                  setActiveStep(4)
+                  set('budgetMin')(v.replace(/\D/g, ''))
+                }}
+                keyboardType="number-pad"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Input
+                label="Tối đa (VND)"
+                placeholder="VD: 500000"
+                value={f.budgetMax}
+                onFocus={() => setActiveStep(4)}
+                onChangeText={(v) => {
+                  setActiveStep(4)
+                  set('budgetMax')(v.replace(/\D/g, ''))
+                }}
+                keyboardType="number-pad"
+                error={errors.budget}
+              />
+            </View>
+          </View>
           <DateField
             label="Thời hạn mong muốn hoàn thành (tùy chọn)"
             value={deadline}

@@ -17,15 +17,14 @@ import { BottomBar } from '@/components/DetailBits'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
-/** UC07: thêm / sửa / xóa kinh nghiệm, thăng chức (promote) và quay lại / thêm vị trí khác tại công ty cũ (rejoin) — giống Web. */
+/** UC07: thêm / sửa / xóa kinh nghiệm và thăng chức (promote). */
 export default function ExperienceScreen() {
   const t = useTheme()
   const router = useRouter()
   const qc = useQueryClient()
-  const { id, rejoinFrom } = useLocalSearchParams<{ id?: string; rejoinFrom?: string }>()
+  const { id } = useLocalSearchParams<{ id?: string }>()
   const list = useQuery({ queryKey: ['experiences'], queryFn: experienceApi.list })
   const existing = id ? list.data?.find((e) => e.id === Number(id)) : undefined
-  const rejoinSource = !id && rejoinFrom ? list.data?.find((e) => e.id === Number(rejoinFrom)) : undefined
 
   const [f, setF] = useState({ title: '', company: '', location: '', startDate: '', endDate: '', description: '' })
   const [isCurrent, setIsCurrent] = useState(false)
@@ -40,19 +39,6 @@ export default function ExperienceScreen() {
     setLoaded(true)
     setF({ title: existing.title, company: existing.company, location: existing.location ?? '', startDate: existing.startDate, endDate: existing.endDate ?? '', description: existing.description ?? '' })
     setIsCurrent(existing.isCurrent); setIsPrimary(existing.isPrimary)
-  }
-  if (rejoinSource && !loaded) {
-    // Rejoin: giữ công ty + địa điểm (kèm toạ độ), để trống chức danh/ngày, mặc định là công việc hiện tại & vị trí chính.
-    setLoaded(true)
-    setF({ title: '', company: rejoinSource.company, location: rejoinSource.location ?? '', startDate: '', endDate: '', description: '' })
-    setIsCurrent(true); setIsPrimary(true)
-    if (rejoinSource.latitude != null && rejoinSource.longitude != null) {
-      setPlace({
-        location: rejoinSource.location ?? '', latitude: rejoinSource.latitude, longitude: rejoinSource.longitude,
-        placeId: rejoinSource.placeId ?? null, locationCity: rejoinSource.locationCity ?? null, locationCountry: rejoinSource.locationCountry ?? null,
-        locationCountryCode: rejoinSource.locationCountryCode ?? null, geocodingProvider: rejoinSource.geocodingProvider ?? null,
-      } as GeocodedPlace)
-    }
   }
   const set = (k: keyof typeof f) => (v: string) => setF((x) => ({ ...x, [k]: v }))
   const after = (msg: string) => { toast.success(msg); qc.invalidateQueries({ queryKey: ['experiences'] }); qc.invalidateQueries({ queryKey: ['profile'] }); router.back() }
@@ -93,21 +79,14 @@ export default function ExperienceScreen() {
     if (!Object.keys(e).length) save.mutate()
   }
 
-  if ((id || rejoinFrom) && list.isLoading) return <Screen><Header title="Sửa kinh nghiệm" /><Loading /></Screen>
+  if (id && list.isLoading) return <Screen><Header title="Sửa kinh nghiệm" /><Loading /></Screen>
   if (id && !existing) return <Screen><Header title="Sửa kinh nghiệm" /><Empty text="Không tìm thấy kinh nghiệm." error={list.error} onRetry={() => { void list.refetch() }} /></Screen>
 
   return (
     <Screen keyboard>
-      <Header title={id ? 'Sửa kinh nghiệm' : rejoinSource ? 'Thêm vị trí tại công ty cũ' : 'Thêm kinh nghiệm'} />
+      <Header title={id ? 'Sửa kinh nghiệm' : 'Thêm kinh nghiệm'} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         <CommunityIntro icon="suitcase" eyebrow="HÀNH TRÌNH CỦA BẠN" title="Mỗi bước đều đáng nhớ" description="Cập nhật công việc để kết nối với những cơ hội phù hợp hơn." />
-        {rejoinSource ? (
-          <View style={{ padding: 12, borderRadius: 14, backgroundColor: t.primaryTint, marginBottom: 14, gap: 4 }}>
-            <Txt size={13} weight="600" color={t.primary}>{`Bạn đang thêm vị trí mới tại ${rejoinSource.company}.`}</Txt>
-            <Txt size={12} color={t.primary}>• Quay lại làm việc tại đây: giữ nguyên “Tôi đang làm việc tại đây”.</Txt>
-            <Txt size={12} color={t.primary}>• Bổ sung công việc cũ: tắt lựa chọn đó để nhập ngày kết thúc.</Txt>
-          </View>
-        ) : null}
         <FormSection icon="suitcase" title="Thông tin công việc" caption="01 · Vai trò và nơi bạn làm việc">
         <Input label="Chức danh *" placeholder="Ví dụ: Senior Product Designer" value={f.title} onChangeText={set('title')} error={errors.title} />
         <Input label="Công ty *" placeholder="Tên công ty hoặc tổ chức" value={f.company} onChangeText={set('company')} error={errors.company} />
@@ -126,21 +105,14 @@ export default function ExperienceScreen() {
           <Switch accessibilityLabel="Đặt làm vị trí chính" value={isPrimary} onValueChange={setIsPrimary} trackColor={{ true: t.primary }} />
         </View>
         </FormSection>
-        {existing && !existing.isCurrent ? (
-          <Card style={{ marginTop: 24 }}>
-            <Txt weight="700" style={{ marginBottom: 4 }}>Thêm vị trí khác tại công ty này</Txt>
-            <Txt muted size={12} style={{ marginBottom: 12 }}>Quay lại làm việc hoặc bổ sung một vị trí khác tại {existing.company}.</Txt>
-            <Button title="Thêm vị trí tại công ty này" variant="outline" onPress={() => router.replace({ pathname: '/profile/experience', params: { rejoinFrom: String(existing.id) } })} />
-          </Card>
-        ) : null}
         {id ? (
           <>
-            {existing?.isCurrent ? <Card style={{ marginTop: 24 }}>
+            <Card style={{ marginTop: 24 }}>
               <Txt weight="700" style={{ marginBottom: 8 }}>Thăng chức tại công ty này</Txt>
               <Input label="Chức danh mới" value={promo.newTitle} onChangeText={(v) => setPromo((x) => ({ ...x, newTitle: v }))} />
               <DateField dateOnly minimumDate={null} label="Ngày bắt đầu" value={promo.newStartDate} onChange={(v) => setPromo((x) => ({ ...x, newStartDate: v }))} />
               <Button title="Ghi nhận thăng chức" variant="outline" disabled={!promo.newTitle.trim() || !DATE_RE.test(promo.newStartDate)} onPress={() => promote.mutate()} loading={promote.isPending} />
-            </Card> : null}
+            </Card>
             <Button title="Xóa kinh nghiệm" variant="danger" style={{ marginTop: 16 }} onPress={() => setConfirmDelete(true)} loading={del.isPending} />
           </>
         ) : null}

@@ -5,12 +5,10 @@ import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bell, Check, Globe, ImagePlus, Lock, MessageCircle, MessageSquare, MoreHorizontal, Share2, UserPlus, Users } from '@/components/icons'
-import { Avatar, Button, Empty, IconButton, Loading, Screen, SearchBar, Tag, Txt } from '@/components/ui'
+import { Avatar, Button, Empty, IconButton, Loading, Screen, Tag, Txt } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
 import { Header } from '@/components/Header'
 import { ActionSheet } from '@/components/ActionSheet'
-import { ConfirmSheet } from '@/components/ConfirmSheet'
-import { useDebounced } from '@/lib/hooks'
 import { ShareSheet } from '@/components/ShareSheet'
 import { groupPath } from '@/lib/share'
 import { GroupPostCard } from '@/components/GroupPostCard'
@@ -30,11 +28,6 @@ export default function GroupDetailScreen() {
   const [shareOpen, setShareOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const me = useAuthStore((s) => s.user)
-  const [confirm, setConfirm] = useState<'leave' | 'delete' | null>(null)
-  const [transferOpen, setTransferOpen] = useState(false)
-  const [newOwner, setNewOwner] = useState<number | null>(null)
-  const [memberKw, setMemberKw] = useState('')
-  const memberKeyword = useDebounced(memberKw, 400)
 
   const group = useQuery({ queryKey: ['group', id], queryFn: () => groupApi.get(id!) })
   const g = group.data
@@ -60,44 +53,10 @@ export default function GroupDetailScreen() {
     onError: (e) => toast.error(errMsg(e)),
   })
   const leave = useMutation({
-    mutationFn: (newOwnerId?: number) => groupApi.leave(gid, newOwnerId),
-    onSuccess: (r) => {
-      toast.success(r?.message || 'Bạn đã rời nhóm.')
-      setConfirm(null)
-      setTransferOpen(false)
-      refresh()
-      router.back()
-    },
+    mutationFn: () => groupApi.leave(gid),
+    onSuccess: () => { toast.success('Bạn đã rời nhóm.'); refresh(); router.back() },
     onError: (e) => toast.error(errMsg(e)),
   })
-  const del = useMutation({
-    mutationFn: () => groupApi.remove(gid),
-    onSuccess: () => { toast.success('Đã xóa nhóm.'); setConfirm(null); refresh(); router.back() },
-    onError: (e) => toast.error(errMsg(e)),
-  })
-  // Giống Web: đã ở trong chat → mở; có chat nhưng chưa vào → tham gia; chưa có chat → chủ nhóm tạo.
-  const chat = useMutation({
-    mutationFn: async (mode: 'open' | 'join' | 'create') => {
-      if (mode === 'open') return { conversationId: group.data!.conversationId! }
-      return mode === 'join' ? groupApi.joinChat(gid) : groupApi.createChat(gid)
-    },
-    onSuccess: (r, mode) => {
-      if (mode !== 'open') {
-        toast.success(mode === 'create' ? 'Đã tạo nhóm chat cho hội nhóm.' : 'Đã tham gia nhóm chat.')
-        refresh()
-        qc.invalidateQueries({ queryKey: ['conversations'] })
-      }
-      router.push({ pathname: '/chat/[id]', params: { id: String(r.conversationId) } })
-    },
-    onError: (e) => toast.error(errMsg(e)),
-  })
-  // Chủ nhóm rời nhóm khi còn thành viên khác → bắt buộc chuyển quyền sở hữu (giống TransferOwnershipModal của Web).
-  const candidates = useQuery({
-    queryKey: ['group-members', gid, 'transfer', memberKeyword],
-    queryFn: () => groupApi.members(gid, 0, memberKeyword.trim()),
-    enabled: transferOpen,
-  })
-  const transferList = (candidates.data?.items ?? []).filter((m) => String(m.userId) !== me?.id)
 
   if (group.isLoading) return <Screen><Header title="Nhóm" /><Loading /></Screen>
   if (!g) return <Screen><Header title="Nhóm" /><Empty text="Không tìm thấy nhóm." error={group.error} onRetry={() => { void group.refetch() }} /></Screen>
@@ -110,20 +69,8 @@ export default function GroupDetailScreen() {
     ...(manager ? [{ label: 'Chỉnh sửa nhóm', onPress: () => router.push({ pathname: '/groups/create', params: { id } }) }] : []),
     ...(manager ? [{ label: `Yêu cầu tham gia${g.pendingRequestCount ? ` (${g.pendingRequestCount})` : ''}`, onPress: () => router.push({ pathname: '/groups/[id]/join-requests', params: { id } }) }] : []),
     ...(owner ? [{ label: g.status === 'INACTIVE' ? 'Mở lại nhóm' : 'Đóng nhóm', onPress: () => run(() => groupApi.setStatus(gid, g.status === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE'), g.status === 'INACTIVE' ? 'Đã mở lại nhóm.' : 'Đã đóng nhóm.') }] : []),
-    ...(isMember
-      ? [{
-          label: 'Rời khỏi nhóm',
-          danger: true,
-          onPress: () => {
-            if (owner && g.memberCount > 1) {
-              setNewOwner(null)
-              setMemberKw('')
-              setTransferOpen(true)
-            } else setConfirm('leave')
-          },
-        }]
-      : []),
-    ...(owner ? [{ label: 'Xóa nhóm vĩnh viễn', danger: true, onPress: () => setConfirm('delete') }] : []),
+    ...(owner ? [{ label: 'Xóa nhóm vĩnh viễn', danger: true, onPress: () => run(() => groupApi.remove(gid), 'Đã xóa nhóm.', () => router.back()) }] : []),
+    ...(isMember && !owner ? [{ label: 'Rời khỏi nhóm', danger: true, onPress: () => leave.mutate() }] : []),
   ]
 
   const canSee = isMember || g.privacy === 'PUBLIC'
@@ -177,11 +124,11 @@ export default function GroupDetailScreen() {
                     {g.canViewMembers || isMember ? (
                       <Button title="Thành viên" variant="outline" size="sm" icon={<Users size={16} color={t.text} />} onPress={() => router.push({ pathname: '/groups/[id]/members', params: { id } })} style={{ flex: 1, height: 40 }} />
                     ) : null}
-                    {isMember && (g.conversationId || owner) ? (
+                    {g.conversationId && isMember ? (
                       <IconButton
-                        label={g.conversationId ? (g.isConversationMember ? 'Mở chat nhóm' : 'Tham gia chat nhóm') : 'Tạo nhóm chat'}
-                        icon={<MessageCircle size={18} color={g.conversationId ? t.text : t.primary} />}
-                        onPress={() => { if (!chat.isPending) chat.mutate(g.conversationId ? (g.isConversationMember ? 'open' : 'join') : 'create') }}
+                        label="Mở chat nhóm"
+                        icon={<MessageCircle size={18} color={t.text} />}
+                        onPress={() => groupApi.joinChat(gid).then((r) => router.push({ pathname: '/chat/[id]', params: { id: String(r.conversationId) } })).catch((e) => toast.error(errMsg(e)))}
                       />
                     ) : null}
                     <IconButton label="Chia sẻ nhóm" icon={<Share2 size={18} color={t.text} />} onPress={() => setShareOpen(true)} />
@@ -257,46 +204,6 @@ export default function GroupDetailScreen() {
         }}
       />
       <ActionSheet visible={menu} onClose={() => setMenu(false)} actions={actions} />
-      <ActionSheet visible={transferOpen} onClose={() => { if (!leave.isPending) setTransferOpen(false) }} title="Chuyển quyền chủ nhóm">
-        <Txt muted style={{ marginBottom: 12 }}>Bạn là chủ nhóm. Hãy chọn thành viên nhận quyền sở hữu trước khi rời nhóm.</Txt>
-        <SearchBar value={memberKw} onChangeText={setMemberKw} placeholder="Tìm thành viên..." />
-        <View style={{ marginTop: 8, minHeight: 120 }}>
-          {candidates.isLoading ? <Loading /> : transferList.length === 0 ? (
-            <Txt muted style={{ textAlign: 'center', paddingVertical: 24 }}>Không tìm thấy thành viên phù hợp.</Txt>
-          ) : transferList.map((m) => (
-            <Pressable key={m.userId} onPress={() => setNewOwner(m.userId)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 }}>
-              <Avatar uri={m.avatarUrl} name={m.fullName} size={38} />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Txt weight="600" numberOfLines={1}>{m.fullName}</Txt>
-                {m.headline ? <Txt muted size={12} numberOfLines={1}>{m.headline}</Txt> : null}
-              </View>
-              {newOwner === m.userId ? <Check size={20} color={t.primary} /> : null}
-            </Pressable>
-          ))}
-        </View>
-        <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
-          <Button title="Hủy" variant="outline" disabled={leave.isPending} onPress={() => setTransferOpen(false)} style={{ flex: 1 }} />
-          <Button title="Chuyển quyền & rời" variant="danger" disabled={newOwner == null} loading={leave.isPending} onPress={() => { if (newOwner != null) leave.mutate(newOwner) }} style={{ flex: 1 }} />
-        </View>
-      </ActionSheet>
-      <ConfirmSheet
-        visible={confirm === 'leave'}
-        title="Rời khỏi nhóm?"
-        message={owner ? 'Bạn là thành viên duy nhất của nhóm. Sau khi rời, nhóm sẽ không còn quản trị viên.' : 'Bạn sẽ không còn xem được bài viết riêng tư và thông báo của nhóm.'}
-        confirmLabel="Rời nhóm"
-        loading={leave.isPending}
-        onConfirm={() => leave.mutate(undefined)}
-        onClose={() => setConfirm(null)}
-      />
-      <ConfirmSheet
-        visible={confirm === 'delete'}
-        title="Xóa nhóm vĩnh viễn?"
-        message="Toàn bộ bài viết, thành viên và dữ liệu của nhóm sẽ bị xóa. Hành động này không thể hoàn tác."
-        confirmLabel="Xóa nhóm"
-        loading={del.isPending}
-        onConfirm={() => del.mutate()}
-        onClose={() => setConfirm(null)}
-      />
     </Screen>
   )
 }

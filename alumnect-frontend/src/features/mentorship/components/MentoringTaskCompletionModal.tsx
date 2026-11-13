@@ -164,7 +164,7 @@ export function MentoringTaskCompletionModal({
               value={attachmentUrls}
               onChange={(e) => setAttachmentUrls(e.target.value)}
               placeholder="https://drive.google.com/file/...&#10;https://github.com/..."
-              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none tabular-nums text-xs shadow-sm"
+              className="w-full px-3.5 py-2.5 text-xs text-text bg-surface border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none font-mono text-xs shadow-sm"
             />
           </div>
 

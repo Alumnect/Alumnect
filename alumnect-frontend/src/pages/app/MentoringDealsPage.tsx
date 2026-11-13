@@ -33,7 +33,7 @@ function MentoringDealsContent() {
     { value: 'CANCELLED', label: t('mentoring.dealCancelledFilter') },
   ]
 
-  const { data: pageData, isLoading, isError, error, refetch } = useMyDeals(
+  const { data: pageData, isLoading, isError, error, refetch, isFetching } = useMyDeals(
     filter === 'ALL' ? undefined : filter,
     page,
     9,
@@ -48,10 +48,21 @@ function MentoringDealsContent() {
   return (
     <div className="space-y-5">
       <MentorPageHeader
-        scene="deal"
+        icon={<Handshake className="h-4 w-4" />}
+        eyebrow={t('mentoring.dealsEyebrow')}
         title={t('mentoring.dealsPageTitle')}
-
         description={t('mentoring.dealsPageDesc')}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            leftIcon={<RefreshCw className={isFetching ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />}
+          >
+            {t('mentoring.refreshBtn')}
+          </Button>
+        }
       />
 
       <MentoringFilterTabs

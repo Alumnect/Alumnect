@@ -108,7 +108,7 @@ export interface IncomingDetail extends IncomingRequest {
 }
 
 export type DealStatus = 'PROPOSED' | 'STUDENT_CONFIRMED' | 'MENTOR_CONFIRMED' | 'DEAL_CONFIRMED' | 'SUPERSEDED' | 'REJECTED' | 'CANCELLED'
-export const DEAL_STATUS_LABEL: Record<string, string> = { PROPOSED: 'Đã đề xuất', STUDENT_CONFIRMED: 'Sinh viên đã xác nhận', MENTOR_CONFIRMED: 'Mentor đã xác nhận', DEAL_CONFIRMED: 'Đã chốt thỏa thuận', SUPERSEDED: 'Đã thay thế', REJECTED: 'Đã từ chối', CANCELLED: 'Đã hủy' }
+export const DEAL_STATUS_LABEL: Record<string, string> = { PROPOSED: 'Đã đề xuất', STUDENT_CONFIRMED: 'Sinh viên đã xác nhận', MENTOR_CONFIRMED: 'Mentor đã xác nhận', DEAL_CONFIRMED: 'Đã chốt deal', SUPERSEDED: 'Đã thay thế', REJECTED: 'Đã từ chối', CANCELLED: 'Đã hủy' }
 
 export interface Deal {
   id: number

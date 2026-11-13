@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useMemo } from 'react'
-import { Sparkles, Hash, Layers } from 'lucide-react'
+import { Sparkles, Briefcase, Hash, Layers } from 'lucide-react'
 import { Card, Badge } from '@/components/ui'
 import type { MentorDetailData, MentorSkillItem } from '../model/mentorDetailTypes'
 
@@ -47,7 +47,14 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
       </div>
 
       {/* 1. Lĩnh vực hỗ trợ chuẩn (Supported Fields) */}
-      <div>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Briefcase className="h-4 w-4 text-primary-solid" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+            {t('mentoring.mentoringFieldSubheading')}
+          </h3>
+        </div>
+
         {hasFields ? (
           <div className="flex flex-wrap gap-2">
             {mentor.supportedFields.map((field) => (
@@ -61,7 +68,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
             ))}
           </div>
         ) : (
-          <p className="text-xs text-text-subtle">
+          <p className="text-xs text-text-subtle italic">
             {t('mentoring.noMentoringFieldSelected')}
           </p>
         )}
@@ -72,7 +79,7 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
         <div className="space-y-3 border-t border-border pt-4">
           <div className="flex items-center gap-2">
             <Hash className="h-4 w-4 text-danger" />
-            <h3 className="text-xs font-bold text-text-subtle">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
               Chủ đề cố vấn chuyên sâu
             </h3>
           </div>
@@ -90,16 +97,16 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
         </div>
       )}
 
-      {/* 3. Kỹ năng phân theo nhóm — chỉ hiện khi Mentor đã khai báo */}
-      {hasSkills && (
+      {/* 3. Kỹ năng chuyên môn phân theo nhóm (Skills Grouped) */}
       <div className="space-y-4 border-t border-border pt-4">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-success" />
-          <h3 className="text-xs font-bold text-text-subtle">
-            Kỹ năng
+          <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+            Kỹ năng chuyên môn
           </h3>
         </div>
 
+        {hasSkills ? (
           <div className="space-y-3.5">
             {Object.entries(groupedSkills).map(([groupName, skills]) => (
               <div key={groupName} className="space-y-2">
@@ -119,8 +126,12 @@ export function MentorExpertiseSection({ mentor }: MentorExpertiseSectionProps) 
               </div>
             ))}
           </div>
+        ) : (
+          <p className="text-xs text-text-subtle italic">
+            {t('mentoring.noSkillsUpdated')}
+          </p>
+        )}
       </div>
-      )}
     </Card>
   )
 }

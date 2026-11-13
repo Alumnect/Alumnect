@@ -179,7 +179,7 @@ export interface UpdateDealPayload {
  */
 export const proposeDealSchema = z.object({
   taskScope: z
-    .string({ message: 'Phạm vi công việc không được để trống.' })
+    .string({ message: 'Phạm vi công việc (Task Scope) không được để trống.' })
     .trim()
     .min(10, 'Phạm vi công việc phải từ 10 đến 5000 ký tự.')
     .max(5000, 'Phạm vi công việc phải từ 10 đến 5000 ký tự.'),
@@ -187,9 +187,9 @@ export const proposeDealSchema = z.object({
     .number({ message: 'Mức giá thỏa thuận không được để trống.' })
     .min(0, 'Mức giá thỏa thuận phải lớn hơn hoặc bằng 0 VND.'),
   deadline: z
-    .string({ message: 'Hạn hoàn thành không được để trống.' })
+    .string({ message: 'Hạn chót hoàn thành (Deadline) không được để trống.' })
     .refine((val) => !isNaN(Date.parse(val)) && new Date(val).getTime() > Date.now(), {
-      message: 'Hạn hoàn thành phải là một thời điểm trong tương lai.',
+      message: 'Hạn chót hoàn thành (Deadline) phải là một thời điểm trong tương lai.',
     }),
   workingMode: z.enum(['ONLINE', 'OFFLINE', 'BOTH'], {
     message: 'Hình thức làm việc (Working Mode) không được để trống.',
@@ -201,7 +201,7 @@ export const proposeDealSchema = z.object({
     message: 'Loại nhiệm vụ (Task Type) không được để trống.',
   }),
   expectedResult: z
-    .string({ message: 'Kết quả bàn giao không được để trống.' })
+    .string({ message: 'Kết quả kỳ vọng đầu ra (Expected Result) không được để trống.' })
     .trim()
     .min(10, 'Kết quả kỳ vọng đầu ra phải từ 10 đến 3000 ký tự.')
     .max(3000, 'Kết quả kỳ vọng đầu ra phải từ 10 đến 3000 ký tự.'),
@@ -218,7 +218,7 @@ export type ProposeDealFormData = z.infer<typeof proposeDealSchema>
  */
 export const updateDealSchema = z.object({
   taskScope: z
-    .string({ message: 'Phạm vi công việc không được để trống.' })
+    .string({ message: 'Phạm vi công việc (Task Scope) không được để trống.' })
     .trim()
     .min(10, 'Phạm vi công việc phải từ 10 đến 5000 ký tự.')
     .max(5000, 'Phạm vi công việc phải từ 10 đến 5000 ký tự.'),
@@ -226,9 +226,9 @@ export const updateDealSchema = z.object({
     .number({ message: 'Mức giá thỏa thuận không được để trống.' })
     .min(0, 'Mức giá thỏa thuận phải lớn hơn hoặc bằng 0 VND.'),
   deadline: z
-    .string({ message: 'Hạn hoàn thành không được để trống.' })
+    .string({ message: 'Hạn chót hoàn thành (Deadline) không được để trống.' })
     .refine((val) => !isNaN(Date.parse(val)) && new Date(val).getTime() > Date.now(), {
-      message: 'Hạn hoàn thành phải là một thời điểm trong tương lai.',
+      message: 'Hạn chót hoàn thành (Deadline) phải là một thời điểm trong tương lai.',
     }),
   workingMode: z.enum(['ONLINE', 'OFFLINE', 'BOTH'], {
     message: 'Hình thức làm việc (Working Mode) không được để trống.',
@@ -240,7 +240,7 @@ export const updateDealSchema = z.object({
     message: 'Loại nhiệm vụ (Task Type) không được để trống.',
   }),
   expectedResult: z
-    .string({ message: 'Kết quả bàn giao không được để trống.' })
+    .string({ message: 'Kết quả kỳ vọng đầu ra (Expected Result) không được để trống.' })
     .trim()
     .min(10, 'Kết quả kỳ vọng đầu ra phải từ 10 đến 3000 ký tự.')
     .max(3000, 'Kết quả kỳ vọng đầu ra phải từ 10 đến 3000 ký tự.'),

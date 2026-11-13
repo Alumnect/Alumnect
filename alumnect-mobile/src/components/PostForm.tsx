@@ -29,7 +29,6 @@ import {
   X,
 } from '@/components/icons'
 import { BrandIcon, type BrandIconName } from '@/components/BrandIcon'
-import { AnimatedFilterChip, FeedCategoryLogo } from './FeedNavIcons'
 import { DateField } from '@/components/DateField'
 import { PlaceField } from './PlaceField'
 import { PostAiStudioPanel } from './PostAiStudioPanel'
@@ -159,7 +158,6 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       toast.success(existing ? 'Cập nhật bài viết thành công!' : 'Đăng bài viết thành công!')
       if (!existing) AsyncStorage.removeItem(DRAFT_KEY).catch(() => {})
       qc.invalidateQueries({ queryKey: ['feed'] })
-      qc.invalidateQueries({ queryKey: ['user-posts'] })
       if (existing) qc.invalidateQueries({ queryKey: ['post', existing.id] })
       if (existing?.eventId) qc.invalidateQueries({ queryKey: ['event-detail', existing.eventId] })
       router.back()
@@ -379,15 +377,44 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
             >
-              {TYPE_CONFIGS.map((item) => (
-                <AnimatedFilterChip
-                  key={item.type}
-                  category={item.type}
-                  label={item.label}
-                  active={type === item.type}
-                  onPress={() => handleSelectType(item.type)}
-                />
-              ))}
+              {TYPE_CONFIGS.map((item) => {
+                const isSelected = type === item.type
+                return (
+                  <Pressable
+                    key={item.type}
+                    onPress={() => handleSelectType(item.type)}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      paddingVertical: 8,
+                      paddingHorizontal: 14,
+                      borderRadius: radius.full,
+                      backgroundColor: isSelected
+                        ? theme.isDark
+                          ? '#342116'
+                          : '#FFF4EE'
+                        : theme.inputBg,
+                      borderWidth: 1.5,
+                      borderColor: isSelected ? theme.primary : 'transparent',
+                      opacity: pressed ? 0.8 : 1,
+                    })}
+                  >
+                    <BrandIcon name={item.icon} size={22} />
+                    <View>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: isSelected ? '700' : '600',
+                          color: isSelected ? theme.primary : theme.text,
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+                    </View>
+                  </Pressable>
+                )
+              })}
             </ScrollView>
           </View>
 
@@ -850,7 +877,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <FeedCategoryLogo category="achievement" size={34} active />
+                <BrandIcon name="task" size={32} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text }}>
                     Tôn vinh thành tựu

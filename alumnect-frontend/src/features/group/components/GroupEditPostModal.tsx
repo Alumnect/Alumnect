@@ -142,7 +142,7 @@ export function GroupEditPostModal({ post, groupId, topics, onClose }: {
                     className="absolute left-0 right-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-brand-500/15 bg-surface p-1.5 shadow-xl backdrop-blur-xl dark:border-white/10"
                   >
                     <div className="mb-1 flex items-center justify-between px-2 py-1">
-                      <span className="text-xs font-bold text-text-subtle">
+                      <span className="text-xs font-black uppercase tracking-wider text-text-subtle">
                         {t('groups.selectTopic')}
                       </span>
                       <span className="text-xs font-medium text-text-subtle">

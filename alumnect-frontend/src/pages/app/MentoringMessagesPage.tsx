@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
-import { ChevronRight, Search } from 'lucide-react'
+import { ChevronRight, MessageCircle, Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Avatar, EmptyState } from '@/components/ui'
@@ -24,8 +24,10 @@ function MentoringMessagesContent() {
   return (
     <div className="space-y-5">
       <MentorPageHeader
-        scene="chat"
+        icon={<MessageCircle className="h-4 w-4" />}
+        eyebrow={t('mentoring.messagesEyebrow')}
         title={t('mentoring.messagesTitle')}
+        description={t('mentoring.messagesSubtitle')}
       />
 
       <div className="rounded-3xl border border-border bg-surface p-4 shadow-xs sm:p-5">

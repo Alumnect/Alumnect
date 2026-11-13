@@ -226,11 +226,11 @@ export default function EditProfileScreen() {
                 </Pressable>
               </View>
             ))}
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'flex-start' }}>
               <View style={{ flex: 1 }}>
-                <Input value={newLink} onChangeText={setNewLink} placeholder="https://linkedin.com/in/..." autoCapitalize="none" keyboardType="url" error={errors.link} onSubmitEditing={addLink} containerStyle={{ marginBottom: 0 }} />
+                <Input value={newLink} onChangeText={setNewLink} placeholder="https://linkedin.com/in/..." autoCapitalize="none" keyboardType="url" error={errors.link} onSubmitEditing={addLink} />
               </View>
-              <Button title="Thêm" size="md" icon={<Plus size={16} color="#fff" />} onPress={addLink} style={{ height: 50, borderRadius: 12, paddingHorizontal: 16 }} />
+              <Button title="Thêm" size="sm" variant="secondary" icon={<Plus size={14} color={t.primary} />} onPress={addLink} style={{ height: 48 }} />
             </View>
           </SectionCard>
 
@@ -251,14 +251,13 @@ export default function EditProfileScreen() {
               </View>
             ))}
             <View style={{ marginTop: 6, padding: 12, borderRadius: 14, backgroundColor: t.surface }}>
-              <Txt size={13} weight="700" style={{ marginBottom: 12 }}>Thêm kỹ năng</Txt>
+              <Txt size={13} weight="700" style={{ marginBottom: 8 }}>Thêm kỹ năng</Txt>
               <Input label="Nhóm kỹ năng" value={skillGroup} onChangeText={setSkillGroup} placeholder="VD: Programming" />
-              <Txt size={14} weight="500" style={{ color: t.text, marginBottom: 8 }}>Tên kỹ năng</Txt>
-              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
                 <View style={{ flex: 1 }}>
-                  <Input value={skillName} onChangeText={setSkillName} placeholder="VD: ReactJS, Java" onSubmitEditing={addSkill} returnKeyType="done" containerStyle={{ marginBottom: 0 }} />
+                  <Input label="Tên kỹ năng" value={skillName} onChangeText={setSkillName} placeholder="VD: ReactJS, Java" onSubmitEditing={addSkill} returnKeyType="done" />
                 </View>
-                <Button title="Thêm" size="md" icon={<Plus size={16} color="#fff" />} onPress={addSkill} style={{ height: 50, borderRadius: 12, paddingHorizontal: 16 }} />
+                <Button title="Thêm" size="sm" icon={<Plus size={14} color="#fff" />} onPress={addSkill} style={{ height: 48, marginTop: 21 }} />
               </View>
             </View>
           </SectionCard>

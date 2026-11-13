@@ -136,7 +136,7 @@ export function MentoringSubmitSettlementTicketModal({
               {/* Settlement Snapshot Box */}
               <div className="p-4 rounded-xl border border-border bg-surface-2 space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-border">
-                  <span className="text-xs font-semibold text-text-subtle">
+                  <span className="text-xs font-semibold text-text-subtle uppercase tracking-wider">
                     {t('mentoring.settlementAgreedReport')}
                   </span>
                   <span className="text-xs text-text-subtle">
@@ -177,7 +177,7 @@ export function MentoringSubmitSettlementTicketModal({
                 {/* Lý do thỏa thuận */}
                 <div className="p-3 rounded-lg bg-surface border border-border text-xs text-text space-y-1">
                   <span className="font-medium text-text-subtle block">{t('mentoring.unifiedReasonLabel')}</span>
-                  <p className="">&ldquo;{snapshot.reason}&rdquo;</p>
+                  <p className="italic">&ldquo;{snapshot.reason}&rdquo;</p>
                 </div>
               </div>
 

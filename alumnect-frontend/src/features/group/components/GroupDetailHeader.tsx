@@ -91,7 +91,7 @@ export function GroupDetailHeader({
                 )}
               </div>
 
-              <h1 className="mt-1.5 break-words text-2xl font-bold leading-tight tracking-tight text-text sm:text-3xl">
+              <h1 className="mt-1.5 break-words text-2xl font-black leading-tight tracking-tight text-text sm:text-3xl">
                 {group.name}
               </h1>
 

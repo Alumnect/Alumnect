@@ -202,7 +202,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
           <div className="flex items-center justify-between py-1.5 border-b border-border">
             <span className="text-text-subtle">{t('mentoring.accountNumberLabel')}</span>
             <div className="flex items-center gap-2">
-              <span className="tabular-nums font-semibold text-text">
+              <span className="font-mono font-semibold text-text">
                 {effectiveAccountNumber}
               </span>
               <button
@@ -228,7 +228,7 @@ export function MentorPaymentQrCard({ checkout, isPolling = true }: MentorPaymen
         <div className="flex items-center justify-between py-1.5">
           <span className="text-text-subtle">{t('mentoring.transferDescriptionLabel')}</span>
           <div className="flex items-center gap-2">
-            <span className="tabular-nums font-bold text-primary-solid bg-primary-soft px-2 py-0.5 rounded-md text-xs sm:text-sm">
+            <span className="font-mono font-bold text-primary-solid bg-primary-soft px-2 py-0.5 rounded-md text-xs sm:text-sm">
               {effectiveDescription}
             </span>
             <button

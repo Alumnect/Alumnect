@@ -27,7 +27,6 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { Avatar, Button, Skeleton, toast, DialogFrame } from '@/components/ui'
-import { cn } from '@/lib/utils'
 import {
   MessageBubble,
   MessageInput,
@@ -126,6 +125,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
 
   // Trạng thái các modal / dialog
   const [isRequestPanelOpen, setIsRequestPanelOpen] = useState(false)
+  const [isDealMenuOpen, setIsDealMenuOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isAcceptByRequestOpen, setIsAcceptByRequestOpen] = useState(false)
   const [isPaymentOpen, setIsPaymentOpen] = useState(false)
@@ -138,6 +138,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const [adjustTarget, setAdjustTarget] = useState<number | null>(null)
   const [adjustNote, setAdjustNote] = useState('')
   const [ticketModal, setTicketModal] = useState<{ ticket: MentoringTicketData; version: number } | null>(null)
+  const dealMenuRef = useRef<HTMLDivElement | null>(null)
 
   // UC109: Xử lý gia hạn deadline, điều chỉnh task, thỏa thuận dừng task
   const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false)
@@ -197,6 +198,15 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const adjustMutation = useRequestAdjustment()
   const sendMessageMutation = useSendMessage()
 
+  // Đóng menu giao dịch khi bấm ra ngoài
+  useEffect(() => {
+    if (!isDealMenuOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dealMenuRef.current && !dealMenuRef.current.contains(e.target as Node)) setIsDealMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isDealMenuOpen])
 
   // Đóng menu thao tác Task khi bấm ra ngoài
   useEffect(() => {
@@ -534,9 +544,11 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   const viewItems: ActionItem[] = []
   if (ctx.taskId) viewItems.push({ label: t('mentoring.viewTaskAction'), hint: t('mentoring.viewTaskHint'), icon: <ClipboardCheck />, onClick: () => setIsTaskOpen(true) })
   if (deal) viewItems.push({ label: t('mentoring.dealVersionHistoryAction'), icon: <History />, onClick: () => setIsHistoryOpen(true) })
-  // "Chi tiết yêu cầu" đã có sẵn trên dải thông tin yêu cầu, không lặp lại trong menu
-  const openRequestDetail = () =>
-    navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`)
+  viewItems.push({
+    label: t('mentoring.requestDetailsAction'),
+    icon: <FileText />,
+    onClick: () => navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`),
+  })
   if (ctx.taskId && isMentor) viewItems.push({ label: t('mentoring.taskFinancialReportAction'), icon: <FileText />, onClick: () => setIsTaskReportOpen(true) })
 
   const proposalItems: ActionItem[] = []
@@ -562,35 +574,6 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
     supportItems.push({ label: t('mentoring.openDisputeAction'), hint: t('mentoring.openDisputeHint'), icon: <AlertTriangle />, onClick: () => setIsCreateDisputeOpen(true), danger: true })
   }
 
-  // Tiến trình thỏa thuận cho cột "Thỏa thuận": mỗi bước tính từ trạng thái thật của deal/task
-  const isDealConfirmed = deal?.status === 'DEAL_CONFIRMED'
-  const flowSteps = [
-    { key: 'chat', label: t('mentoring.flowStepChat', 'Trao đổi'), done: Boolean(deal), current: !deal },
-    {
-      key: 'proposal',
-      label: t('mentoring.flowStepProposal', 'Đề xuất & xác nhận'),
-      done: Boolean(isDealConfirmed || deal?.isPaid || ctx.taskId),
-      current: Boolean(deal && !isDealConfirmed && !deal.isPaid && !ctx.taskId),
-    },
-    { key: 'payment', label: t('mentoring.flowStepPayment', 'Thanh toán'), done: Boolean(deal?.isPaid || ctx.taskId), current: isDealLockedUnpaid },
-    { key: 'work', label: t('mentoring.flowStepWork', 'Thực hiện'), done: isTaskFinished, current: Boolean(ctx.taskId) && !isTaskFinished },
-    { key: 'done', label: t('mentoring.flowStepDone', 'Hoàn tất'), done: isTaskFinished, current: false },
-  ]
-  const latestActions = deal ? actionsFor(deal.version) : null
-  const studentMustAnswer = Boolean(isStudent && latestActions?.canAct)
-  const mentorCanPropose = isMentor && !ctx.taskId && Boolean(ctx.canCreateDealTicket) && ctx.canSendMessage
-
-  // Gộp cụm tin liên tiếp của cùng một người (cách nhau dưới 5 phút) để avatar và giờ chỉ hiện một lần
-  const isPlainMessage = (it?: TimelineItem): it is Extract<TimelineItem, { kind: 'message' }> =>
-    it?.kind === 'message' && !parseAdjustmentMessage(it.message.content)
-  const joins = (a?: TimelineItem, b?: TimelineItem) =>
-    isPlainMessage(a) && isPlainMessage(b) && a.message.senderId === b.message.senderId && Math.abs(a.at - b.at) < 5 * 60 * 1000
-  const bubblePosition = (index: number) => {
-    const withPrev = joins(timeline[index - 1], timeline[index])
-    const withNext = joins(timeline[index], timeline[index + 1])
-    return withPrev && withNext ? 'middle' : withPrev ? 'last' : withNext ? 'first' : 'single'
-  }
-
   const actionGroups = [
     { title: t('mentoring.viewCategory'), items: viewItems },
     { title: t('mentoring.proposalsCategory'), items: proposalItems },
@@ -598,8 +581,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   ].filter((g) => g.items.length > 0)
 
   return (
-    <div className="flex h-full min-h-0 gap-4">
-    <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm dark:bg-bg">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm dark:bg-bg">
       {/* Header: người trao đổi · một thao tác chính theo ngữ cảnh · menu thao tác */}
       <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
@@ -640,35 +622,14 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
         </div>
 
         <div className="flex items-center gap-2">
-          {deal && !ctx.taskId && <MentoringDealBadge status={deal.status} isLocked={deal.isLocked} isPaid={deal.isPaid} className="lg:hidden" />}
+          {deal && !ctx.taskId && <MentoringDealBadge status={deal.status} isLocked={deal.isLocked} isPaid={deal.isPaid} />}
           {primaryAction && (
-            <Button size="sm" onClick={primaryAction.onClick} leftIcon={primaryAction.icon} className="h-9 rounded-xl text-xs lg:hidden">
+            <Button size="sm" onClick={primaryAction.onClick} leftIcon={primaryAction.icon} className="h-9 rounded-xl text-xs">
               {primaryAction.label}
             </Button>
           )}
-          {/* Giai đoạn thương lượng: hành động gửi đề xuất luôn hiện trên header, không giấu trong menu */}
-          {!primaryAction && isMentor && !ctx.taskId && ctx.canSendMessage && (
-            <>
-              {ctx.canAcceptDealByRequest && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsAcceptByRequestOpen(true)}
-                  title={t('mentoring.priceAndDeadlineByRequest', { price: formatVnd(requestPrice) })}
-                  className="h-9 rounded-xl text-xs lg:hidden"
-                >
-                  {t('mentoring.acceptDealByRequestOption')}
-                </Button>
-              )}
-              {ctx.canCreateDealTicket && (
-                <Button size="sm" onClick={() => setIsFormOpen(true)} leftIcon={<Handshake className="h-3.5 w-3.5" />} className="h-9 rounded-xl text-xs lg:hidden">
-                  {deal ? t('mentoring.redealBtn') : t('mentoring.redealCreateTicketOption')}
-                </Button>
-              )}
-            </>
-          )}
           {actionGroups.length > 0 && (
-            <div className={cn('relative', !ctx.taskId && 'lg:hidden')} ref={taskActionMenuRef}>
+            <div className="relative" ref={taskActionMenuRef}>
               <Button
                 variant="outline"
                 size="sm"
@@ -683,7 +644,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                 <div className="absolute right-0 top-full z-50 mt-1.5 max-h-[min(520px,calc(100vh-200px))] w-72 overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 shadow-2xl">
                   {actionGroups.map((group) => (
                     <div key={group.title} className="py-1">
-                      <p className="px-2.5 pb-1 pt-1.5 text-xs font-medium text-text-subtle">{group.title}</p>
+                      <p className="px-2.5 pb-1 pt-1.5 text-xs font-bold uppercase tracking-wide text-text-subtle">{group.title}</p>
                       {group.items.map((item) => (
                         <button
                           key={item.label}
@@ -711,27 +672,24 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       </div>
 
       {/* Ngữ cảnh Request */}
-      <div className="border-b border-border bg-surface-2 px-4 py-2 text-xs sm:px-6 lg:hidden">
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => setIsRequestPanelOpen((v) => !v)}
-            className="flex min-w-0 items-center gap-2 text-left text-text-muted hover:text-text"
-            aria-expanded={isRequestPanelOpen}
-          >
-            <FileText className="h-4 w-4 shrink-0 text-text-subtle" />
-            <span className="shrink-0 font-semibold text-text">{MENTORING_REQUEST_FLOW_STATUS_LABELS[ctx.requestStatus] || ctx.requestStatus}</span>
-            <span className="text-text-subtle">·</span>
+      <div className="border-b border-border bg-surface-2 px-4 py-2 text-xs sm:px-6">
+        <button
+          type="button"
+          onClick={() => setIsRequestPanelOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 text-left"
+          aria-expanded={isRequestPanelOpen}
+        >
+          <span className="flex min-w-0 items-center gap-2 text-text-muted">
+            <FileText className="h-4 w-4 shrink-0 text-primary-solid" />
+            <span className="shrink-0 font-bold">{MENTORING_REQUEST_FLOW_STATUS_LABELS[ctx.requestStatus] || ctx.requestStatus}</span>
+            <span className="text-text-subtle">•</span>
             <span className="truncate">
               {t('mentoring.budgetBudgetLabel', { budget: requestPrice ? formatVnd(requestPrice) : t('mentoring.negotiableBudget') })}
               {ctx.expectedDeadline ? t('mentoring.desiredBeforeDate', { date: format(new Date(ctx.expectedDeadline), 'dd/MM/yyyy') }) : ''}
             </span>
-            {isRequestPanelOpen ? <ChevronUp className="h-4 w-4 shrink-0 text-text-subtle" /> : <ChevronDown className="h-4 w-4 shrink-0 text-text-subtle" />}
-          </button>
-          <button type="button" onClick={openRequestDetail} className="shrink-0 font-semibold text-text-muted hover:text-text hover:underline">
-            {t('mentoring.openRequestDetailArrow')}
-          </button>
-        </div>
+          </span>
+          {isRequestPanelOpen ? <ChevronUp className="h-4 w-4 text-text-subtle" /> : <ChevronDown className="h-4 w-4 text-text-subtle" />}
+        </button>
         {isRequestPanelOpen && (
           <div className="mt-2 grid gap-2 pb-1 text-text-muted sm:grid-cols-2">
             <p className="sm:col-span-2 whitespace-pre-wrap text-text">{ctx.requestDescription}</p>
@@ -750,6 +708,15 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
               {t('mentoring.mentorResponseChatLabel')}<b>{MENTORING_RESPONSE_STATUS_LABELS[ctx.responseStatus || ''] || ctx.responseStatus}</b>
               {ctx.respondedAt ? t('mentoring.atTimeSuffix', { time: format(new Date(ctx.respondedAt), 'dd/MM/yyyy HH:mm') }) : ''}
             </p>
+            <button
+              type="button"
+              onClick={() =>
+                navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`)
+              }
+              className="justify-self-start font-bold text-primary-solid hover:underline"
+            >
+              {t('mentoring.openRequestDetailArrow')}
+            </button>
           </div>
         )}
       </div>
@@ -843,7 +810,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto bg-[#f8f9fa]/50 px-4 py-4 dark:bg-bg sm:px-6"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#f8f9fa]/50 px-4 py-4 dark:bg-bg sm:px-6"
       >
         {isFetchingNextPage && (
           <div className="flex justify-center py-2">
@@ -872,7 +839,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             </p>
           </div>
         ) : (
-          timeline.map((item, index) => {
+          timeline.map((item) => {
             if (item.kind === 'message') {
               const adj = parseAdjustmentMessage(item.message.content)
               if (adj) {
@@ -898,7 +865,6 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
                   message={item.message}
                   isMe={item.message.senderId === currentUserId}
                   isGroup={isGroupChat}
-                  position={bubblePosition(index)}
                 />
               )
             }
@@ -931,139 +897,71 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
             {isTaskFinished ? t('mentoring.taskEndedCannotChat') : ctx.readOnlyReason || t('mentoring.conversationReadOnly')}
           </div>
         ) : (
-          <MessageInput onSendMessage={handleSendMessage} />
+          <MessageInput
+            onSendMessage={handleSendMessage}
+            leftActions={
+              isMentor ? (
+                <div className="relative" ref={dealMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsDealMenuOpen((v) => !v)}
+                    title={t('mentoring.dealTicketTradeTitle')}
+                    className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-brand-200/90 px-3 text-xs font-bold text-primary-solid transition hover:bg-primary-soft active:scale-95 dark:border-brand-700/40 dark:bg-brand-700/40"
+                  >
+                    <Handshake className="h-4 w-4 shrink-0" />
+                    <span className="font-display font-bold">{t('mentoring.tradeBtnLabel')}</span>
+                    <ChevronUp className={`h-3.5 w-3.5 transition-transform ${isDealMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isDealMenuOpen && (
+                    <div className="absolute bottom-13 left-0 z-40 w-72 space-y-1 rounded-2xl border border-border bg-surface p-2 text-xs shadow-2xl sm:w-80">
+                      <button
+                        type="button"
+                        disabled={!ctx.canAcceptDealByRequest}
+                        onClick={() => {
+                          setIsDealMenuOpen(false)
+                          setIsAcceptByRequestOpen(true)
+                        }}
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <span className="rounded-lg bg-success-soft p-1.5 text-success">
+                          <ThumbsUp className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block font-bold text-text">{t('mentoring.acceptDealByRequestOption')}</span>
+                          <span className="block text-xs text-text-subtle">
+                            {ctx.canAcceptDealByRequest
+                              ? t('mentoring.priceAndDeadlineByRequest', { price: formatVnd(requestPrice) })
+                              : ctx.acceptByRequestUnavailableReason || t('mentoring.notAvailableInCurrentState')}
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!ctx.canCreateDealTicket}
+                        onClick={() => {
+                          setIsDealMenuOpen(false)
+                          setIsFormOpen(true)
+                        }}
+                        className="flex w-full items-start gap-2.5 rounded-xl p-2.5 text-left transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <span className="rounded-lg bg-brand-100/70 p-1.5 text-primary-solid dark:bg-brand-700/60">
+                          <Edit3 className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block font-bold text-text">{t('mentoring.redealCreateTicketOption')}</span>
+                          <span className="block text-xs text-text-subtle">
+                            {ctx.canCreateDealTicket ? t('mentoring.redealInputNewParams') : t('mentoring.dealLockedOrRequestClosed')}
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : undefined
+            }
+          />
         )}
       </div>
-    </div>
-
-      {/* Cột "Thỏa thuận": tiến trình, điều khoản hiện tại và đúng một hành động tiếp theo */}
-      <aside className="hidden w-80 shrink-0 flex-col gap-4 overflow-y-auto lg:flex" aria-label={t('mentoring.chatPanelTitle', 'Thỏa thuận')}>
-        <section className="rounded-3xl border border-border bg-surface p-5">
-          <h3 className="text-sm font-semibold text-text">{t('mentoring.chatPanelTitle', 'Thỏa thuận')}</h3>
-          <ol className="mt-4">
-            {flowSteps.map((s, i) => (
-              <li key={s.key} className="relative flex items-center gap-3 pb-4 last:pb-0">
-                {i < flowSteps.length - 1 && (
-                  <span className={cn('absolute left-3 top-6 h-[calc(100%-1.5rem)] w-px', s.done ? 'bg-success' : 'bg-border')} aria-hidden />
-                )}
-                <span
-                  className={cn(
-                    'relative z-10 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold',
-                    s.done ? 'bg-success text-white' : s.current ? 'bg-primary-solid text-on-primary ring-4 ring-primary-soft' : 'bg-surface-3 text-text-subtle'
-                  )}
-                >
-                  {s.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
-                </span>
-                <span className={cn('text-sm', s.current ? 'font-semibold text-text' : s.done ? 'text-text-muted' : 'text-text-subtle')}>
-                  {s.label}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="shrink-0 overflow-hidden rounded-3xl border border-border bg-surface p-5">
-          {deal ? (
-            <>
-              {/* Giá và trạng thái nổi bật trên nền xanh đậm thương hiệu */}
-              <div className="relative -mx-5 -mt-5 overflow-hidden bg-gradient-to-br from-[#1F2A44] to-[#2B3A5E] px-5 pb-5 pt-4 text-white">
-                <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#F27024]/30 blur-xl" aria-hidden />
-                <p className="relative text-xs text-[#B9C3DA]">
-                  {t('mentoring.dealTicketHeading')}
-                  {t('mentoring.dealTicketVersionSuffix', { version: deal.version })}
-                </p>
-                <p className="relative mt-1 font-display text-[30px] font-bold tabular-nums tracking-tight">{formatVnd(Number(deal.agreedPrice))}</p>
-                <div className="relative mt-2">
-                  <MentoringDealBadge status={deal.status} isLocked={deal.isLocked} isPaid={deal.isPaid} />
-                </div>
-              </div>
-              <dl className="mt-4 space-y-2.5 text-sm">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-text-subtle">{t('mentoring.dealDeadline', 'Hạn hoàn thành')}</dt>
-                  <dd className="font-medium text-text">{deal.deadline ? format(new Date(deal.deadline), 'dd/MM/yyyy') : '—'}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-text-subtle">{t('mentoring.modeLabel').replace(':', '').trim()}</dt>
-                  <dd className="text-right font-medium text-text">
-                    {MENTORING_WORKING_MODE_LABELS[deal.workingMode || ''] || '—'} · {MENTORING_PARTICIPATION_LABELS[deal.participationType || ''] || '—'}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-text-subtle">{t('mentoring.taskTypeShort', 'Loại hỗ trợ')}</dt>
-                  <dd className="text-right font-medium text-text">{MENTORING_TASK_TYPE_LABELS[deal.taskType || ''] || deal.taskType || '—'}</dd>
-                </div>
-              </dl>
-              {deal.taskScope && <p className="mt-4 line-clamp-4 text-sm leading-6 text-text-muted">{deal.taskScope}</p>}
-            </>
-          ) : (
-            <p className="text-sm leading-6 text-text-subtle">
-              {isMentor
-                ? t('mentoring.panelNoDealMentor', 'Chưa có đề xuất. Thống nhất phạm vi, giá và thời hạn với học viên rồi gửi đề xuất.')
-                : t('mentoring.panelNoDealStudent', 'Mentor chưa gửi đề xuất. Khi có, bạn xác nhận và thanh toán ngay tại đây.')}
-            </p>
-          )}
-
-          <div className="mt-5 flex flex-col gap-2">
-            {studentMustAnswer && latestActions?.onConfirm && (
-              <Button
-                onClick={latestActions.onConfirm}
-                disabled={confirmMutation.isPending}
-                leftIcon={confirmMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                className="w-full rounded-xl"
-              >
-                {t('mentoring.confirmAndPayBtn')}
-              </Button>
-            )}
-            {studentMustAnswer && latestActions?.onRevert && (
-              <Button variant="outline" onClick={latestActions.onRevert} className="w-full rounded-xl">
-                {t('mentoring.requestAdjustmentBtn')}
-              </Button>
-            )}
-            {primaryAction && (
-              <Button onClick={primaryAction.onClick} leftIcon={primaryAction.icon} className="w-full rounded-xl">
-                {primaryAction.label}
-              </Button>
-            )}
-            {!primaryAction && mentorCanPropose && (
-              <Button onClick={() => setIsFormOpen(true)} leftIcon={<Handshake className="h-4 w-4" />} className="w-full rounded-xl">
-                {deal ? t('mentoring.redealBtn') : t('mentoring.redealCreateTicketOption')}
-              </Button>
-            )}
-            {!primaryAction && mentorCanPropose && ctx.canAcceptDealByRequest && (
-              <Button variant="outline" onClick={() => setIsAcceptByRequestOpen(true)} className="w-full rounded-xl">
-                {t('mentoring.acceptDealByRequestOption')}
-              </Button>
-            )}
-            {ctx.taskId && (
-              <Button variant="outline" onClick={() => setIsTaskOpen(true)} leftIcon={<ClipboardCheck className="h-4 w-4" />} className="w-full rounded-xl">
-                {t('mentoring.viewTaskBtn')}
-              </Button>
-            )}
-            {studentMustAnswer && latestActions?.onReject && (
-              <button type="button" onClick={latestActions.onReject} className="py-1 text-sm font-semibold text-danger hover:underline">
-                {t('mentoring.rejectBtn')}
-              </button>
-            )}
-            {deal && (
-              <button type="button" onClick={() => setIsHistoryOpen(true)} className="inline-flex items-center justify-center gap-1.5 py-1 text-xs font-semibold text-text-muted hover:text-text">
-                <History className="h-3.5 w-3.5" />
-                {t('mentoring.dealVersionHistoryAction')}
-              </button>
-            )}
-          </div>
-        </section>
-
-        <section className="rounded-3xl border border-border bg-surface p-5 text-sm">
-          <p className="text-xs text-text-subtle">{t('mentoring.requestChatHeading', { id: ctx.requestId, title: '' }).replace(/ · $/, '')}</p>
-          <p className="mt-1 line-clamp-2 font-semibold text-text">{ctx.requestTitle}</p>
-          <p className="mt-2 text-text-subtle">
-            {t('mentoring.budgetBudgetLabel', { budget: requestPrice ? formatVnd(requestPrice) : t('mentoring.negotiableBudget') })}
-          </p>
-          <button type="button" onClick={openRequestDetail} className="mt-3 text-sm font-semibold text-primary-solid hover:underline">
-            {t('mentoring.openRequestDetailArrow')}
-          </button>
-        </section>
-      </aside>
 
       {/* Dialog: Chấp nhận Deal theo Request */}
       {isAcceptByRequestOpen && typeof document !== 'undefined' && <DialogFrame

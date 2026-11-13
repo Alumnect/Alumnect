@@ -113,7 +113,7 @@ export function MentorExperienceTimeline({ experiences }: MentorExperienceTimeli
           ))}
         </div>
       ) : (
-        <p className="text-xs text-text-subtle">
+        <p className="text-xs text-text-subtle italic">
           Mentor chưa cập nhật lịch sử làm việc trên hệ thống.
         </p>
       )}

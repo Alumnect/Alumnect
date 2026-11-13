@@ -12,6 +12,7 @@ import {
   MentorExpertiseSection,
   MentorExperienceTimeline,
   MentorAchievementsCard,
+  MentorRequestActionCard,
   MentorDetailSkeleton,
   MentorDetailErrorState,
 } from '@/features/mentorship'
@@ -105,11 +106,15 @@ function MentorDetailContent() {
               <MentorExperienceTimeline experiences={mentor.experiences} />
             </div>
 
-            {/* CỘT PHỤ (BÊN PHẢI — 1 CỘT): Thành tích & uy tín */}
+            {/* CỘT PHỤ (BÊN PHẢI — 1 CỘT): Achievements, Request Action */}
             <div className="space-y-6 min-w-0 lg:sticky lg:top-20">
               {/* SECTION F — Mentoring Achievements & Reputation (Chỉ số uy tín duy nhất) */}
               <MentorAchievementsCard mentor={mentor} />
 
+              {/* SECTION G — Request Action Box (Thông tin buổi hẹn) */}
+              <div id="mentor-request-card">
+                <MentorRequestActionCard mentor={mentor} />
+              </div>
             </div>
           </div>
         </motion.div>

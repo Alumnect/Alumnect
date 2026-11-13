@@ -3,10 +3,9 @@ import { Animated, FlatList, LayoutAnimation, Pressable, StyleSheet, View, useWi
 import { Image } from 'expo-image'
 import * as Haptics from 'expo-haptics'
 import { useRouter } from 'expo-router'
-import { BadgeCheck, Building2, Coins, Heart, MapPin, MoreHorizontal } from '@/components/icons'
-import { CreativePostTypeBadge, InteractivePostActionButton } from './FeedNavIcons'
+import { Bookmark, Building2, Coins, Heart, MapPin, MessageCircle, MoreHorizontal, Send, BadgeCheck } from '@/components/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Button, Chip, Input, Txt } from './ui'
+import { Avatar, Button, Chip, Input, Tag, Txt } from './ui'
 import { ActionSheet } from './ActionSheet'
 import { feedApi } from '@/api/feed'
 import type { Post } from '@/api/feed'
@@ -249,7 +248,6 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
     onSuccess: () => {
       toast.success('Đã xóa bài viết.')
       qc.invalidateQueries({ queryKey: ['feed'] })
-      qc.invalidateQueries({ queryKey: ['user-posts'] })
       if (detail) router.back()
     },
     onError: (e) => toast.error(errMsg(e)),
@@ -310,10 +308,10 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
           <Avatar uri={post.avatar} name={post.author} size={40} />
         </Pressable>
         <Pressable onPress={openAuthor} style={{ flex: 1, minWidth: 0, marginLeft: 10, justifyContent: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <Txt weight="700" size={15} numberOfLines={1} style={{ flexShrink: 1 }}>{post.author}</Txt>
             {post.verified ? <BadgeCheck size={15} color={t.info} weight="fill" /> : null}
-            <CreativePostTypeBadge type={post.type || 'normal'} />
+            {typeTag ? <Tag label={typeTag[0]} tone={typeTag[1]} style={{ marginLeft: 2 }} /> : null}
           </View>
           {subtitle ? <Txt muted size={12} numberOfLines={1} style={{ marginTop: 1 }}>{subtitle}</Txt> : null}
         </Pressable>
@@ -419,35 +417,45 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
         </Pressable>
       ) : null}
 
-      {/* Thanh hành động tương tác với hiệu ứng hạt nổ & đàn hồi */}
+      {/* Thanh hành động tương tác */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, marginHorizontal: 6, paddingTop: 4, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.divider }}>
-        <InteractivePostActionButton
-          kind="like"
+        <Act
           onPress={toggleLike}
           label={liked ? 'Bỏ thích' : 'Thích'}
           count={likes}
           text="Thích"
           active={liked}
+          activeColor={t.danger}
+          icon={
+            <Animated.View style={{ transform: [{ scale: likeBounce }] }}>
+              <Heart size={22} color={liked ? t.danger : t.textMuted} weight={liked ? 'fill' : 'regular'} />
+            </Animated.View>
+          }
         />
-        <InteractivePostActionButton
-          kind="comment"
-          onPress={openComments || openPost}
+        <Act
+          onPress={openPost}
           label="Bình luận"
           count={post.comments}
           text="Bình luận"
+          icon={<MessageCircle size={22} color={t.textMuted} />}
         />
-        <InteractivePostActionButton
-          kind="share"
+        <Act
           onPress={() => setShareOpen(true)}
           label="Chia sẻ"
           text="Chia sẻ"
+          icon={<Send size={21} color={t.textMuted} />}
         />
         <View style={{ flex: 1 }} />
-        <InteractivePostActionButton
-          kind="save"
+        <Act
           onPress={toggleSave}
           label={saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
           active={saved}
+          activeColor={t.primary}
+          icon={
+            <Animated.View style={{ transform: [{ scale: saveBounce }] }}>
+              <Bookmark size={22} color={saved ? t.primary : t.textMuted} weight={saved ? 'fill' : 'regular'} />
+            </Animated.View>
+          }
         />
       </View>
 

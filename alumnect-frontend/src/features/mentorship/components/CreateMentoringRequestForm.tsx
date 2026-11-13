@@ -775,7 +775,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                     </div>
 
                     {(currentGroupDetail.members || []).filter((m: MentoringGroupMemberData) => m.status === 'JOINED' || m.status === 'ACTIVE').length === 1 && (
-                      <p className="mt-3 text-xs text-text-subtle">
+                      <p className="mt-3 text-xs text-text-subtle italic">
                         * Nhóm hiện chỉ có Trưởng nhóm. Bạn có thể tiếp tục tạo yêu cầu theo diện nhóm một thành viên hoặc mời thêm bạn bè tham gia.
                       </p>
                     )}
@@ -808,7 +808,7 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
                                 <ExternalLink className="h-3.5 w-3.5" />
                                 {t('mentoring.backToGroupToManageInvitations')}
                               </button>
-                              <span className="text-xs text-warning">
+                              <span className="text-xs text-warning italic">
                                 {t('mentoring.continueWithConfirmedMembersHint')}
                               </span>
                             </div>

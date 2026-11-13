@@ -11,11 +11,10 @@
  *
  * Use cases: UC53, UC54, UC55
  */
-import { BrandBanner } from '@/components/brand/BrandBlocks'
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Map as MapIcon, SlidersHorizontal, Search, MapPin, Loader2, GraduationCap, ChevronDown, Check } from 'lucide-react'
-import { Badge, Card, EmptyState, Skeleton, Avatar } from '@/components/ui'
+import { PageHeader, Badge, Card, EmptyState, Skeleton, Avatar } from '@/components/ui'
 import { Reveal } from '@/components/motion'
 import { AlumniMapLibre } from '@/features/alumnimap/components/AlumniMapLibre'
 import { useAlumniMap } from '@/features/alumnimap/hooks/useAlumniMap'
@@ -273,11 +272,11 @@ export function MapPage() {
   return (
     <div className="mx-auto flex min-h-0 w-full flex-col px-1 sm:px-2 xl:h-[calc(100dvh-88px)] xl:overflow-hidden">
       {/* Header siêu tối giản đồng bộ toàn hệ thống */}
-      <BrandBanner
-        scene="map"
-        compact
+      <PageHeader
         title={t('map.title')}
-        className="mb-3 shrink-0"
+        subtitle={t('map.subtitle')}
+        icon={<MapIcon size={18} />}
+        className="mb-2"
       />
 
       {/* 5-Column Grid */}
@@ -367,7 +366,7 @@ export function MapPage() {
             {/* Bộ lọc ngành – compact popover để giữ canvas bản đồ thoáng */}
             <div ref={majorMenuRef} className="absolute top-4 left-4 z-10">
               <div className="flex items-center gap-1.5 rounded-2xl border border-white/80 bg-surface p-1.5 shadow-soft backdrop-blur-xl">
-                <div className="hidden items-center gap-1.5 px-2 text-xs font-bold tracking-[0.12em] text-text-subtle sm:flex">
+                <div className="hidden items-center gap-1.5 px-2 text-xs font-extrabold uppercase tracking-[0.12em] text-text-subtle sm:flex">
                   <SlidersHorizontal size={13} className="text-primary-solid" />
                   <span>{t('nav.more')}</span>
                 </div>
@@ -387,7 +386,7 @@ export function MapPage() {
                   <span className="truncate">{selectedMajor ? selectedMajor.name : t('map.allMajors')}</span>
                   <ChevronDown size={14} className={cn('shrink-0 transition-transform', isMajorMenuOpen && 'rotate-180')} />
                 </button>
-                <span className="hidden min-w-7 rounded-lg bg-surface-2 px-1.5 py-1 text-center text-xs font-bold text-text-subtle sm:inline-block">
+                <span className="hidden min-w-7 rounded-lg bg-surface-2 px-1.5 py-1 text-center text-xs font-extrabold text-text-subtle sm:inline-block">
                   {searchedAlumni.length}
                 </span>
               </div>
@@ -395,7 +394,7 @@ export function MapPage() {
               {isMajorMenuOpen && (
                 <div className="absolute left-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface p-2 shadow-xl backdrop-blur-xl z-20">
                   <div className="border-b border-border px-2 pb-2 pt-1">
-                    <p className="text-xs font-bold text-text">{t('map.selectMajor')}</p>
+                    <p className="text-xs font-extrabold text-text">{t('map.selectMajor')}</p>
                   </div>
                   <div className="mt-1 max-h-64 overflow-y-auto pr-0.5">
                     <button
@@ -408,7 +407,7 @@ export function MapPage() {
                         selectedMajorId === null ? 'bg-primary-soft text-primary-solid' : 'text-text-muted hover:bg-surface-2 hover:text-text',
                       )}
                     >
-                      <span className="grid h-7 min-w-7 place-items-center rounded-lg bg-primary-soft px-1.5 text-xs font-bold text-primary-solid">
+                      <span className="grid h-7 min-w-7 place-items-center rounded-lg bg-primary-soft px-1.5 text-xs font-extrabold text-primary-solid">
                         {rawCountData.length}
                       </span>
                       <span className="flex-1 font-bold">{t('map.allMajors')}</span>
@@ -430,7 +429,7 @@ export function MapPage() {
                               : 'text-text-muted hover:bg-surface-2 hover:text-text',
                           )}
                         >
-                          <span className={cn('grid h-7 min-w-7 place-items-center rounded-lg px-1.5 text-xs font-bold', active ? 'bg-primary-soft text-primary-solid' : 'bg-surface-2 text-text-subtle')}>
+                          <span className={cn('grid h-7 min-w-7 place-items-center rounded-lg px-1.5 text-xs font-extrabold', active ? 'bg-primary-soft text-primary-solid' : 'bg-surface-2 text-text-subtle')}>
                             {majorCounts[major.id] ?? 0}
                           </span>
                           <span className="flex-1 truncate text-xs font-semibold">{major.name}</span>
@@ -471,7 +470,7 @@ export function MapPage() {
             {/* Bộ chuyển đổi chủ đề – floating bottom-left */}
             <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-1.5 bg-surface backdrop-blur-md px-3 py-2 rounded-2xl border border-border shadow-soft">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-text-subtle pr-1">{t('map.themeLabel')}</span>
+                <span className="text-xs font-extrabold text-text-subtle uppercase tracking-wider pr-1">{t('map.themeLabel')}</span>
                 {AVAILABLE_THEMES.map((entry) => (
                   <button
                     key={entry.theme}

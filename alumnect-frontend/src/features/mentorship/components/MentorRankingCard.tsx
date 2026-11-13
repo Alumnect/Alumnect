@@ -97,7 +97,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-warning-soft px-3 py-1.5">
             <Flame className="h-4 w-4 text-warning shrink-0" />
             <div className="text-left">
-              <p className="text-xs font-bold text-warning">{t('mentoring.reputationScore')}</p>
+              <p className="text-xs uppercase font-bold text-warning">{t('mentoring.reputationScore')}</p>
               <p className="text-xs font-bold text-warning">{mentor.reputationScore}</p>
             </div>
           </div>
@@ -106,7 +106,7 @@ export function MentorRankingCard({ mentor }: MentorRankingCardProps) {
           <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-primary-soft px-3 py-1.5">
             <CheckCircle2 className="h-4 w-4 text-primary-solid shrink-0" />
             <div className="text-left">
-              <p className="text-xs font-bold text-primary-solid">{t('mentoring.completedTasks')}</p>
+              <p className="text-xs uppercase font-bold text-primary-solid">{t('mentoring.completedTasks')}</p>
               <p className="text-xs font-bold text-primary-solid">{mentor.completedTasks}</p>
             </div>
           </div>

@@ -27,7 +27,7 @@ import {
 } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { PaymentSheet } from '@/components/PaymentSheet'
-import { TASK_STATUS_LABEL, TICKET_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
+import { TASK_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
 import type { TaskCheckout } from '@/api/mentoringTask'
 import { formatVnd } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
@@ -65,13 +65,6 @@ export default function TaskDetailScreen() {
   })
 
   const d = q.data
-  // Giống Web (MentoringChatForTask): chỉ cho đánh giá khi task COMPLETED và học viên chưa đánh giá.
-  const canReviewMentor = !!d?.permissions.isStudent && d?.overview.status === 'COMPLETED'
-  const myReview = useQuery({
-    queryKey: ['mentoring-review', tid],
-    queryFn: () => taskApi.myReview(tid),
-    enabled: canReviewMentor,
-  })
   if (q.isLoading)
     return (
       <Screen keyboard bg={colors.bg}>
@@ -132,7 +125,7 @@ export default function TaskDetailScreen() {
       ? [
           {
             key: 'amendment',
-            label: 'Điều chỉnh nhiệm vụ',
+            label: 'Điều chỉnh Task',
             icon: <FilePen size={19} color={colors.text} />,
             onPress: () => go('amendment'),
           },
@@ -158,7 +151,7 @@ export default function TaskDetailScreen() {
           },
         ]
       : []),
-    ...(canReviewMentor && !myReview.isLoading && !myReview.data
+    ...(p.isStudent && o.status === 'COMPLETED'
       ? [
           {
             key: 'review',
@@ -183,7 +176,7 @@ export default function TaskDetailScreen() {
 
   return (
     <Screen keyboard bg={colors.bg}>
-      <Header title="Không gian Nhiệm vụ" subtitle={`Nhiệm vụ #${tid}`} />
+      <Header title="Không gian Nhiệm vụ" subtitle={`Task #${tid}`} />
       <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Hero Overview Card (Meetup x Kakao Bento) */}
         <View style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -200,9 +193,8 @@ export default function TaskDetailScreen() {
             </View>
           </View>
 
-          {/* Tiêu đề: chỉ lấy dòng đầu (phần còn lại là mô tả, đã hiện ở mục Phạm vi) */}
-          <Txt size={18} weight="800" style={{ color: colors.text, marginTop: 10, lineHeight: 25 }} numberOfLines={2}>
-            {o.taskTitle.split('\n').map((x) => x.trim()).find(Boolean) ?? o.taskTitle}
+          <Txt size={20} weight="800" style={{ color: colors.text, marginTop: 10, lineHeight: 27 }}>
+            {o.taskTitle}
           </Txt>
 
           {/* Progress Bar */}
@@ -254,15 +246,6 @@ export default function TaskDetailScreen() {
           <ChevronRight size={18} color={colors.textTertiary} weight="bold" />
         </Pressable>
 
-        {canReviewMentor && myReview.data ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 14, backgroundColor: viridianSoft }}>
-            <Star size={16} color={viridian} weight="fill" />
-            <Txt size={13} weight="700" style={{ color: viridian, flex: 1 }} numberOfLines={2}>
-              {`Bạn đã đánh giá mentor ${myReview.data.rating}/5 sao${myReview.data.comment ? ` · “${myReview.data.comment}”` : ''}`}
-            </Txt>
-          </View>
-        ) : null}
-
         {/* Scope & Deliverables */}
         <SectionCard title="Phạm vi & Kết quả kỳ vọng" icon={<Target size={18} color={viridian} weight="bold" />}>
           <Txt size={11} weight="800" style={{ color: viridian, letterSpacing: 0.4 }}>
@@ -283,13 +266,12 @@ export default function TaskDetailScreen() {
         {/* Bento Action Grid */}
         <SectionCard title="Bảng điều khiển Nhiệm vụ" icon={<Zap size={18} color={viridian} weight="fill" />}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 }}>
-            {actions.map((a, i) => (
+            {actions.map((a) => (
               <Pressable
                 key={a.key}
                 onPress={a.onPress}
                 accessibilityRole="button"
-                // Ô lẻ cuối cùng trải đủ chiều ngang để lưới cân đối.
-                style={({ pressed }) => ({ width: actions.length % 2 === 1 && i === actions.length - 1 ? '100%' : '50%', padding: 4, opacity: pressed ? 0.78 : 1 })}
+                style={({ pressed }) => ({ width: '50%', padding: 4, opacity: pressed ? 0.78 : 1 })}
               >
                 <View
                   style={[
@@ -500,7 +482,7 @@ export default function TaskDetailScreen() {
                     size="sm"
                     textColor="#FFFFFF"
                     style={{ flex: 1, backgroundColor: viridian, borderColor: viridian }}
-                    onPress={() => run(() => taskApi.respondCompletion(tid, d.latestCompletion!.id, true, feedback[-1]), 'Đã nghiệm thu nhiệm vụ.')}
+                    onPress={() => run(() => taskApi.respondCompletion(tid, d.latestCompletion!.id, true, feedback[-1]), 'Đã nghiệm thu task.')}
                   />
                   <Button
                     title="Yêu cầu làm lại"
@@ -526,7 +508,7 @@ export default function TaskDetailScreen() {
             }
           >
             <Txt weight="800" color="#DC2626">
-              Phiếu tranh chấp #{d.activeTicket.ticketCode} · {TICKET_STATUS_LABEL[d.activeTicket.status] ?? d.activeTicket.status}
+              Ticket tranh chấp #{d.activeTicket.ticketCode} · {d.activeTicket.status}
             </Txt>
             <Txt weight="600" style={{ marginTop: 4 }}>{d.activeTicket.title}</Txt>
             <Txt size={12} style={{ color: viridian, fontWeight: '700', marginTop: 6 }}>

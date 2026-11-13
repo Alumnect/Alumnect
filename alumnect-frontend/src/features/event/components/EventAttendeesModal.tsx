@@ -269,7 +269,7 @@ export function EventAttendeesModal({
                     {attendee.headline ? (
                       <p className="truncate text-xs text-text-subtle">{attendee.headline}</p>
                     ) : (
-                      <p className="truncate text-xs text-text-subtle">{t('event.alumnectMember')}</p>
+                      <p className="truncate text-xs text-text-subtle italic">{t('event.alumnectMember')}</p>
                     )}
                   </div>
                 </Link>

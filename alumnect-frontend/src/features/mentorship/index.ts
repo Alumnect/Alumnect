@@ -78,6 +78,7 @@ export * from './components/MentorAboutSection'
 export * from './components/MentorExpertiseSection'
 export * from './components/MentorExperienceTimeline'
 export * from './components/MentorAchievementsCard'
+export * from './components/MentorRequestActionCard'
 export * from './components/MentorDetailSkeleton'
 export * from './components/MentorDetailErrorState'
 

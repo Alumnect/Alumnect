@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { AccessibilityInfo, Animated, Pressable, StyleSheet, type PressableProps, type ViewProps } from 'react-native'
-import { DURATION, EASING } from '@/theme/motion'
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, type PressableProps, type ViewProps } from 'react-native'
 
 const ReducedMotion = createContext(true)
 
@@ -27,9 +26,8 @@ export function MotionPressable({ style, onPressIn, onPressOut, disabled, ...pro
   useEffect(() => {
     const animation = Animated.timing(scale, {
       toValue: pressed && !disabled && !reduced ? 0.975 : 1,
-      duration: reduced ? 0 : pressed ? DURATION.instant : 180,
-      easing: EASING.emphasizedDecel,
-      useNativeDriver: true,
+      duration: reduced ? 0 : pressed ? 90 : 180,
+      easing: Easing.out(Easing.cubic), useNativeDriver: true,
     })
     animation.start()
     return () => animation.stop()
@@ -41,39 +39,13 @@ export function MotionPressable({ style, onPressIn, onPressOut, disabled, ...pro
     style={[resolved, { transform: [...(Array.isArray(resolved?.transform) ? resolved.transform : []), { scale }] }]} />
 }
 
-/** Fade + rise on mount theo chuẩn Meetup Content transition (FastOutSlowIn). `delay` staggers siblings. */
-export function Enter({ children, style, delay = 0, duration = 320, ...props }: ViewProps & { delay?: number; duration?: number }) {
+export function Enter({ children, style, ...props }: ViewProps) {
   const reduced = useReducedMotion()
   const [progress] = useState(() => new Animated.Value(0))
   useEffect(() => {
-    const animation = Animated.timing(progress, {
-      toValue: 1,
-      duration: reduced ? 0 : duration,
-      delay: reduced ? 0 : delay,
-      easing: EASING.legacy,
-      useNativeDriver: true,
-    })
+    const animation = Animated.timing(progress, { toValue: 1, duration: reduced ? 0 : 220, easing: Easing.out(Easing.cubic), useNativeDriver: true })
     animation.start()
     return () => animation.stop()
-  }, [progress, reduced, delay, duration])
-  return (
-    <Animated.View
-      {...props}
-      style={[
-        style,
-        {
-          opacity: reduced ? 1 : progress,
-          transform: [
-            {
-              translateY: reduced
-                ? 0
-                : progress.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }),
-            },
-          ],
-        },
-      ]}
-    >
-      {children}
-    </Animated.View>
-  )
+  }, [progress, reduced])
+  return <Animated.View {...props} style={[style, { opacity: reduced ? 1 : progress, transform: [{ translateY: reduced ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>{children}</Animated.View>
 }

@@ -9,8 +9,6 @@ import {
   Clock,
   FileCheck2,
 } from 'lucide-react'
-import { MentorPageHeader } from './MentorPageHeader'
-import { brandButtonClass } from '@/components/brand/brandClasses'
 import {
   useMentorRegistration,
   useMentorIndustries,
@@ -214,49 +212,71 @@ export const MentorRegistrationForm: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
-      {/* Dải đầu trang: trạng thái hồ sơ + hành động tiếp theo */}
-      <MentorPageHeader
-        scene="profile"
-        title={isActive ? t('mentoring.manageMentorProfileTitle') : t('mentoring.registerMentorTitle')}
-        description={
-          <span className="inline-flex items-center gap-2.5">
+      {/* Header Banner: Alumnect Mentorship Hero Banner */}
+      <div className="mentor-page-header relative overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+        {/* Glow decoration */}
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-400/15 blur-3xl dark:bg-brand-500/10" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold-400/10 blur-3xl dark:bg-gold-500/5" />
+
+        <div className="relative z-10 max-w-2xl">
+          <h1 className="text-2xl sm:text-3xl font-bold text-text tracking-tight mb-2">
+            {isActive ? t('mentoring.manageMentorProfileTitle') : t('mentoring.registerMentorTitle')}
+          </h1>
+          <p className="text-sm text-text-muted font-medium leading-relaxed">
+            {isActive
+              ? t('mentoring.manageMentorProfileSubtitle')
+              : t('mentoring.registerMentorSubtitle')}
+          </p>
+        </div>
+
+        {/* Trạng thái hồ sơ & Hành động nhanh */}
+        <div className="mt-6 pt-4 border-t border-brand-500/15 dark:border-border flex flex-wrap items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-2.5">
             <span className="text-xs font-semibold text-text-muted">{t('mentoring.profileStatusPrefix')}</span>
             {isActive ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-success-border bg-success-soft px-3 py-1 text-xs font-bold text-success">
-                <CheckCircle className="h-3.5 w-3.5" />
-                {t('mentoring.statusActiveBadge')}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success-soft text-success border border-success-border text-xs font-bold shadow-xs">
+                <CheckCircle className="w-3.5 h-3.5 text-success" />
+                <span>{t('mentoring.statusActiveBadge')}</span>
               </span>
             ) : isPendingPayment ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-warning-border bg-warning-soft px-3 py-1 text-xs font-bold text-warning">
-                <Clock className="h-3.5 w-3.5" />
-                {t('mentoring.statusPendingPaymentBadge')}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning-soft text-warning border border-warning-border text-xs font-bold shadow-xs">
+                <Clock className="w-3.5 h-3.5 text-warning" />
+                <span>{t('mentoring.statusPendingPaymentBadge')}</span>
               </span>
             ) : data?.hasExistingRegistration ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-soft-border bg-primary-soft px-3 py-1 text-xs font-bold text-primary-solid">
-                <FileCheck2 className="h-3.5 w-3.5" />
-                {t('mentoring.statusDraftBadge')}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft text-primary-solid border border-primary-soft-border text-xs font-bold shadow-xs">
+                <FileCheck2 className="w-3.5 h-3.5 text-primary-solid" />
+                <span>{t('mentoring.statusDraftBadge')}</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-3 px-3 py-1 text-xs font-semibold text-text-muted dark:bg-surface-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-3 dark:bg-surface-2 text-text-muted border border-border dark:border-border-strong text-xs font-semibold">
                 {t('mentoring.statusNotCreatedBadge')}
               </span>
             )}
-          </span>
-        }
-        actions={
-          isActive ? (
-            <button type="button" onClick={() => navigate('/app/mentoring/subscription')} className={brandButtonClass}>
-              {t('mentoring.manageSubscriptionBtn')}
-              <ArrowRight className="h-4 w-4" />
+          </div>
+
+          {isActive ? (
+            <button
+              type="button"
+              onClick={() => navigate('/app/mentoring/subscription')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary text-xs font-bold shadow-md transition cursor-pointer"
+            >
+              <span>{t('mentoring.manageSubscriptionBtn')}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-white" />
             </button>
           ) : isPendingPayment ? (
-            <button type="button" onClick={() => navigate('/app/mentoring/packages')} className={brandButtonClass}>
-              {t('mentoring.selectAndActivatePackage')}
-              <ArrowRight className="h-4 w-4" />
+            <button
+              type="button"
+              onClick={() => navigate('/app/mentoring/packages')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-solid hover:bg-primary-hover text-on-primary text-xs font-bold shadow-md transition cursor-pointer"
+            >
+              <span>{t('mentoring.selectAndActivatePackage')}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-white" />
             </button>
-          ) : undefined
-        }
-      />
+          ) : null}
+        </div>
+      </div>
+
       {/* Form Sections */}
       <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         {/* Phần 1: Thông tin cá nhân cơ bản (đồng bộ từ Hồ sơ cá nhân) */}

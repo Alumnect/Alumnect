@@ -1,4 +1,3 @@
-import { BrandBanner } from '@/components/brand/BrandBlocks'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -6,7 +5,7 @@ import {
   MapPin, Code2, Megaphone, Users, Palette, Briefcase,
   BarChart3, History,
 } from 'lucide-react'
-import { Card, EmptyState, toast, Pagination } from '@/components/ui'
+import { PageHeader, Card, EmptyState, toast, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { cn } from '@/lib/utils'
@@ -153,12 +152,12 @@ export function SalaryPage() {
   const max = rows.length ? Math.max(...rows.map((s) => s.p75)) : 1
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
-      <BrandBanner
-        scene="salary"
-        className="mb-6"
+      <PageHeader
+        icon={<LineChart size={20} />}
         title={t('salary.title')}
+        subtitle={t('salary.subtitle')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -257,7 +256,7 @@ export function SalaryPage() {
               className={cn(
                 'min-h-8 rounded-full px-3 py-1 text-sm font-semibold transition-colors',
                 level === null
-                  ? 'bg-primary-solid text-on-primary shadow-raised'
+                  ? 'bg-text text-bg shadow-raised'
                   : 'bg-surface-2 text-text-muted hover:bg-surface-3'
               )}
             >
@@ -344,10 +343,15 @@ export function SalaryPage() {
                       </div>
 
                       {/* Tóm tắt mức lương rõ ràng, dễ hiểu */}
-                      <div className="mb-2 flex items-baseline gap-1.5">
-                        <span className="text-xs text-text-subtle font-medium">{t('salary.commonSalary')}</span>
-                        <span className="text-base sm:text-lg font-bold text-primary-solid">{s.median} {t('salary.millionVndUnit')}</span>
-                        <span className="text-xs text-text-subtle"> {t('salary.perMonth')}</span>
+                      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xs text-text-subtle font-medium">{t('salary.commonSalary')}</span>
+                          <span className="text-base sm:text-lg font-extrabold text-primary-solid">{s.median} {t('salary.millionVndUnit')}</span>
+                          <span className="text-xs text-text-subtle"> {t('salary.perMonth')}</span>
+                        </div>
+                        <div className="text-xs text-text-subtle">
+                          {t('salary.salaryRangeText', { min: s.p25, max: s.p75 })}
+                        </div>
                       </div>
 
                       {/* Thanh trực quan dải lương */}
@@ -365,9 +369,10 @@ export function SalaryPage() {
                           />
                         </div>
 
-                        {/* Hai đầu dải lương (mức phổ biến đã hiển thị to ở trên) */}
+                        {/* 3 mốc số bên dưới: Khởi điểm | Phổ biến nhất | Cao nhất */}
                         <div className="flex items-center justify-between text-xs text-text-subtle font-medium pt-0.5">
                           <span>{t('salary.fromSalary', { val: s.p25 })}</span>
+                          <span className="text-primary-solid font-bold">{t('salary.medianSalary', { val: s.median })}</span>
                           <span>{t('salary.toSalary', { val: s.p75 })}</span>
                         </div>
                       </div>

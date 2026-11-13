@@ -1,63 +1,33 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
-export interface PageHeaderProps {
-  title: ReactNode
-  subtitle?: ReactNode
-  kicker?: ReactNode
-  kickerIcon?: ReactNode
-  actions?: ReactNode
-  icon?: ReactNode
-  className?: string
-}
-
 /**
- * Khối tiêu đề chuẩn cho toàn bộ các trang Quản trị & Ứng dụng.
- * Chuẩn hóa 100% theo giao diện Quản lý Cố vấn & Gói dịch vụ:
- * - Kicker: text-xs font-bold uppercase tracking-wider text-primary-solid kèm icon size 15
- * - Title: mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white
- * - Subtitle: mt-0.5 text-xs text-text-subtle
+ * Khối tiêu đề trang cho màn app & admin: tên trang luôn nhìn thấy (người dùng biết mình đang ở đâu),
+ * kèm một dòng mô tả ngắn và các nút hành động bên phải (Tạo bài, Đặt câu hỏi…).
  */
 export function PageHeader({
   title,
   subtitle,
-  kicker,
-  kickerIcon,
   actions,
   icon,
   className,
-}: PageHeaderProps) {
+}: {
+  title: ReactNode
+  subtitle?: ReactNode
+  actions?: ReactNode
+  icon?: ReactNode
+  className?: string
+}) {
   return (
-    <div className={cn('mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4', className)}>
-      <div>
-        {(kicker || kickerIcon) && (
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
-            {kickerIcon}
-            <span>{kicker}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-3">
-          {icon && !kicker && (
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary-solid">
-              {icon}
-            </span>
-          )}
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-            {title}
-          </h1>
+    <div className={cn('mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2', className)}>
+      <div className="flex min-w-[min(100%,14rem)] flex-1 items-center gap-3">
+        {icon && <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary-solid">{icon}</span>}
+        <div className="min-w-0">
+          <h1 className="text-xl font-extrabold leading-tight tracking-tight text-text sm:text-2xl">{title}</h1>
+          {subtitle && <p className="mt-0.5 text-sm leading-snug text-text-muted">{subtitle}</p>}
         </div>
-        {subtitle && (
-          <p className="mt-0.5 text-xs text-text-subtle">
-            {subtitle}
-          </p>
-        )}
       </div>
-
-      {actions && (
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          {actions}
-        </div>
-      )}
+      {actions && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )
 }

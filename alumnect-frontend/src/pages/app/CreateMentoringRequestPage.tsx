@@ -1,6 +1,6 @@
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
   MentoringTermsGate,
@@ -30,8 +30,10 @@ function CreateMentoringRequestContent() {
   return (
     <div className="w-full space-y-4 text-left">
       <MentorPageHeader
-        scene="request"
+        icon={<Sparkles className="h-4 w-4" />}
+        eyebrow={t('mentoring.autoConnect')}
         title={t('mentoring.createRequestTitle')}
+        description={t('mentoring.createRequestSubtitle')}
       />
 
       <CreateMentoringRequestForm

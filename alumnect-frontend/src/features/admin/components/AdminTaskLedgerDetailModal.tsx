@@ -177,7 +177,7 @@ export function AdminTaskLedgerDetailModal({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs tabular-nums font-bold px-2 py-0.5 rounded-md bg-primary-soft text-primary-solid dark:bg-orange-950/40 dark:text-orange-300">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-primary-soft text-primary-solid dark:bg-orange-950/40 dark:text-orange-300">
                   TASK #{taskId}
                 </span>
                 {summary && renderTaskStatusBadge(summary.taskStatus)}
@@ -230,7 +230,7 @@ export function AdminTaskLedgerDetailModal({
                     HV
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-text-subtle">Học viên (Student)</p>
+                    <p className="text-xs uppercase font-bold tracking-wider text-text-subtle">Học viên (Student)</p>
                     <p className="text-sm font-semibold text-text truncate">{summary.student?.fullName || '—'}</p>
                     <p className="text-xs text-text-subtle truncate">{summary.student?.email || '—'}</p>
                   </div>
@@ -241,7 +241,7 @@ export function AdminTaskLedgerDetailModal({
                     CV
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-text-subtle">Cố vấn (Mentor)</p>
+                    <p className="text-xs uppercase font-bold tracking-wider text-text-subtle">Cố vấn (Mentor)</p>
                     <p className="text-sm font-semibold text-text truncate">{summary.mentor?.fullName || '—'}</p>
                     <p className="text-xs text-text-subtle truncate">{summary.mentor?.email || '—'}</p>
                   </div>
@@ -252,7 +252,7 @@ export function AdminTaskLedgerDetailModal({
                     <Calendar className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-text-subtle">Hạn chót hoàn thành</p>
+                    <p className="text-xs uppercase font-bold tracking-wider text-text-subtle">Hạn chót hoàn thành</p>
                     <p className="text-sm font-semibold text-text">{formatDateTime(summary.currentDeadline)}</p>
                     <p className="text-xs text-text-subtle">Khởi tạo: {formatDateTime(summary.createdAt)}</p>
                   </div>
@@ -410,7 +410,7 @@ export function AdminTaskLedgerDetailModal({
                     ) : (
                       <div className="rounded-2xl border border-border overflow-hidden bg-surface dark:bg-[#1a1c1e] shadow-xs">
                         <table className="w-full text-left text-sm">
-                          <thead className="bg-surface-2 text-xs font-bold text-text-subtle border-b border-border">
+                          <thead className="bg-surface-2 text-xs font-bold text-text-subtle uppercase tracking-wider border-b border-border">
                             <tr>
                               <th className="px-4 py-3.5">Mã GD</th>
                               <th className="px-4 py-3.5">Thời gian</th>
@@ -424,7 +424,7 @@ export function AdminTaskLedgerDetailModal({
                           <tbody className="divide-y divide-border">
                             {detail.ledgers.map((l) => (
                               <tr key={l.id} className="hover:bg-surface-2 transition-colors">
-                                <td className="px-4 py-3 tabular-nums font-semibold text-xs text-text">
+                                <td className="px-4 py-3 font-mono font-semibold text-xs text-text">
                                   #{l.id}
                                 </td>
                                 <td className="px-4 py-3 text-xs text-text-subtle whitespace-nowrap">
@@ -469,7 +469,7 @@ export function AdminTaskLedgerDetailModal({
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="space-y-0.5">
-                                    <p className="tabular-nums text-xs text-text-muted truncate max-w-[200px]" title={l.providerReference || '—'}>
+                                    <p className="font-mono text-xs text-text-muted truncate max-w-[200px]" title={l.providerReference || '—'}>
                                       Ref: {l.providerReference || '—'}
                                     </p>
                                     {l.deadlineSnapshot && (
@@ -506,7 +506,7 @@ export function AdminTaskLedgerDetailModal({
                           <div key={ext.id} className="p-4 rounded-2xl border border-border bg-surface-2 space-y-2">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <span className="tabular-nums text-xs font-bold text-primary-solid">TICKET GIA HẠN #{ext.id}</span>
+                                <span className="font-mono text-xs font-bold text-primary-solid">TICKET GIA HẠN #{ext.id}</span>
                                 <Badge tone={ext.status === 'CONFIRMED' ? 'success' : ext.status === 'REJECTED' ? 'danger' : 'gold'}>
                                   {ext.status === 'CONFIRMED' ? 'Đã duyệt' : ext.status === 'REJECTED' ? 'Bị từ chối' : 'Chờ phản hồi'}
                                 </Badge>
@@ -532,7 +532,7 @@ export function AdminTaskLedgerDetailModal({
                               {ext.reason || '—'}
                             </p>
                             {ext.responseNote && (
-                              <p className="text-xs text-text-muted bg-slate-100/70 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200/40 dark:border-slate-700/50">
+                              <p className="text-xs text-text-muted italic bg-slate-100/70 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200/40 dark:border-slate-700/50">
                                 Phản hồi ({ext.respondedByName}): "{ext.responseNote}"
                               </p>
                             )}
@@ -558,7 +558,7 @@ export function AdminTaskLedgerDetailModal({
                           <div key={amd.id} className="p-4 rounded-2xl border border-border bg-surface-2 space-y-2">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <span className="tabular-nums text-xs font-bold text-primary-solid">AMENDMENT v{amd.version}</span>
+                                <span className="font-mono text-xs font-bold text-primary-solid">AMENDMENT v{amd.version}</span>
                                 <Badge tone={amd.status === 'APPLIED' ? 'success' : amd.status === 'REJECTED' ? 'danger' : 'gold'}>
                                   {amd.status}
                                 </Badge>
@@ -601,7 +601,7 @@ export function AdminTaskLedgerDetailModal({
                           <div key={t.id} className="p-4 rounded-2xl border border-border bg-surface-2 space-y-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <span className="tabular-nums text-xs font-bold text-primary-solid">TICKET #{t.ticketCode}</span>
+                                <span className="font-mono text-xs font-bold text-primary-solid">TICKET #{t.ticketCode}</span>
                                 <Badge tone={t.status === 'RESOLVED' ? 'success' : t.status === 'IN_REVIEW' ? 'gold' : 'danger'}>
                                   {t.status}
                                 </Badge>
@@ -618,7 +618,7 @@ export function AdminTaskLedgerDetailModal({
                             {/* Khối phán quyết chi tiền của Admin nếu đã RESOLVED */}
                             {t.status === 'RESOLVED' && (
                               <div className="p-3.5 rounded-2xl bg-orange-50/60 dark:bg-orange-950/20 border border-orange-200/80 dark:border-orange-800/50 space-y-2">
-                                <p className="text-xs font-bold text-primary-solid">
+                                <p className="text-xs font-bold text-primary-solid uppercase tracking-wide">
                                   Kết quả quyết toán phân bổ tiền Escrow
                                 </p>
                                 <div className="grid grid-cols-3 gap-2 text-xs">

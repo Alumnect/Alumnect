@@ -245,7 +245,7 @@ function IncomingMentoringRequestDetailContent() {
           </section>
 
           <section className={CARD}>
-            <h2 className="text-xs font-semibold text-text-subtle">{t('mentoring.senderHeading')}</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">{t('mentoring.senderHeading')}</h2>
             <div className="mt-3 flex items-center gap-3">
               <Avatar src={data.studentAvatar || undefined} name={data.studentName} size={44} />
               <div className="min-w-0">

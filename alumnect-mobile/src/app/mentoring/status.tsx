@@ -9,7 +9,6 @@ import { BrandIcon } from '@/components/BrandIcon'
 import { Header } from '@/components/Header'
 import { mentoringApi } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
-import { withAlumniOnly } from '@/components/AlumniOnly'
 
 const STATUS_LABEL: Record<string, string> = {
   INCOMPLETE: 'Chưa hoàn thiện hồ sơ',
@@ -41,7 +40,7 @@ function CheckRow({ ok, label, last }: { ok: boolean; label: string; last?: bool
   )
 }
 
-function MentorStatusScreen() {
+export default function MentorStatusScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
   const router = useRouter()
   const q = useQuery({ queryKey: ['mentoring-status'], queryFn: mentoringApi.status })
@@ -175,5 +174,3 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
   },
 })
-
-export default withAlumniOnly(MentorStatusScreen)

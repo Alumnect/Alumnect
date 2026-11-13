@@ -410,7 +410,7 @@ export function ContributeSalaryModal({
         {/* 4. Phân cách nhẹ cho nhóm thông tin bổ sung */}
         <div className="pt-2 border-t border-border">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">
+            <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
               {t('salary.additionalInfo')}
             </span>
             <span className="text-xs text-text-subtle font-normal">{t('salary.optional')}</span>

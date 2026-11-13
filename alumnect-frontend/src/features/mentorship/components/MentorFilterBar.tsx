@@ -106,7 +106,7 @@ export function MentorFilterBar({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-primary-solid" />
-          <span className="text-xs font-bold text-text-muted">
+          <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
             {t('mentoring.filterCriteria')}
           </span>
           {activeFilterCount > 0 && (

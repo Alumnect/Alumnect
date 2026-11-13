@@ -568,7 +568,7 @@ export interface UpdateAdminMentorPackagePayload {
 
 export interface AdminMentorCvDto {
   mentorProfileId: number
-  userId?: number
+  userId: number
   mentorName: string
   mentorEmail: string
   avatarUrl?: string
@@ -589,7 +589,7 @@ export interface AdminMentorCvDto {
   subscriptionStatus?: string
   subscriptionStartDate?: string
   subscriptionEndDate?: string
-  updatedAt?: string
+  updatedAt: string
   reputationScore?: number
   completedTasks?: number
   rating?: number

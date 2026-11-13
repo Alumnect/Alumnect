@@ -108,7 +108,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-text">Số lượng đăng ký mới</h2>
+            <h2 className="text-base font-extrabold text-text">Số lượng đăng ký mới</h2>
             <Badge tone="mint" size="sm" className="gap-1 font-bold">
               <Activity className="h-3 w-3 text-mint-600" />
               {period === 'WEEK' ? 'Theo ngày' : period === 'MONTH' ? 'Theo tháng' : 'Theo năm'}
@@ -177,7 +177,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
         <div className="flex items-center gap-1.5 text-text-subtle font-semibold">
           <TrendingUp className="h-3.5 w-3.5 text-success" />
           <span>Tổng đăng ký: </span>
-          <span className="font-bold text-text">
+          <span className="font-black text-text">
             {activeData.reduce((acc, d) => acc + d.count, 0).toLocaleString('vi-VN')}
           </span>
         </div>
@@ -275,7 +275,7 @@ export function RegistrationAnalyticsChart({ summary, liveDailyRegs = [] }: Regi
                       className="absolute -top-14 z-30 flex flex-col items-center pointer-events-none"
                     >
                       <div className="rounded-xl bg-text px-3 py-1.5 text-xs font-bold text-text-inverse shadow-xl shadow-black/30 ring-1 ring-white/10 whitespace-nowrap">
-                        <span className="block text-gold-300 font-bold">{d.label}</span>
+                        <span className="block text-gold-300 font-extrabold">{d.label}</span>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span>Đăng ký: <strong className="text-white">{d.count}</strong></span>
                           <span>·</span>

@@ -3,8 +3,8 @@ import { Linking, Pressable, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
-import { BadgeCheck, GraduationCap, MapPin, MessageCircle, Link2, FileText } from '@/components/icons'
-import { Avatar, Button, Card, MenuRow, Tag, Txt } from './ui'
+import { BadgeCheck, GraduationCap, MapPin, MessageCircle, Link2 } from '@/components/icons'
+import { Avatar, Button, Card, Tag, Txt } from './ui'
 import { FollowButton } from './UserRow'
 import type { UserProfile } from '@/api/users'
 import { useTheme } from '@/theme'
@@ -99,16 +99,6 @@ export function ProfileView({ profile, isMe, actions, children }: { profile: Use
       </View>
 
       <View style={{ paddingHorizontal: 16 }}>
-        {/* Giống tab "Bài viết" trên Web: xem bài đăng của người dùng (cả hồ sơ của mình lẫn người khác) */}
-        <Card style={{ marginBottom: 14, borderRadius: 20, paddingVertical: 4, paddingHorizontal: 14 }}>
-          <MenuRow
-            icon={<FileText size={18} />}
-            label={isMe ? 'Bài viết của tôi' : 'Bài viết'}
-            hint={isMe ? 'Xem, sửa hoặc xóa các bài bạn đã đăng' : `Các bài đã đăng của ${profile.fullName}`}
-            onPress={() => router.push({ pathname: '/profile/posts', params: { id: String(profile.userId), name: profile.fullName } })}
-            last
-          />
-        </Card>
         {profile.biography ? (
           <Section title="Một chút về tôi" icon={<BrandIcon name="people2" size={30} />}>
             <Txt size={14} numberOfLines={expandedBio ? undefined : 3} style={{ lineHeight: 23 }}>{profile.biography}</Txt>

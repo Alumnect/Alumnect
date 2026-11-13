@@ -158,7 +158,7 @@ function MentoringTaskDetailContent() {
       {/* Tiêu đề Task & tiến độ */}
       <header className="rounded-3xl border border-border bg-surface p-5 shadow-xs sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-lg bg-surface-3 px-2 py-0.5 tabular-nums text-xs font-semibold text-text-muted">
+          <span className="rounded-lg bg-surface-3 px-2 py-0.5 font-mono text-xs font-semibold text-text-muted">
             Task #{overview.id}
           </span>
           <MentoringTaskBadge status={overview.status} />

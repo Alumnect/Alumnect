@@ -284,7 +284,7 @@ function AnswerBubble({
                 {a.author}
               </Link>
               {a.authorHeadline && (
-                <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-semibold leading-none text-primary-solid">
+                <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-solid">
                   {a.authorHeadline}
                 </span>
               )}
@@ -598,7 +598,7 @@ export function AnswersSection({ questionId, count }: { questionId: string; coun
       {/* Tiêu đề khu vực + huy hiệu số câu trả lời */}
       <div className="mb-4 flex items-center gap-2.5">
         <MessageSquare size={18} className="text-primary-solid" />
-        <h2 className="text-lg font-bold text-text">{t('forum.answers')}</h2>
+        <h2 className="text-lg font-extrabold text-text">{t('forum.answers')}</h2>
         <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-primary-soft px-2 text-xs font-bold text-primary-solid">{total}</span>
       </div>
 

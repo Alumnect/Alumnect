@@ -1,8 +1,7 @@
-import { BrandBanner } from '@/components/brand/BrandBlocks'
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Briefcase, MapPin, Search, Bookmark, Building2, Loader2, X, Coins } from 'lucide-react'
-import { Card, EmptyState, Avatar } from '@/components/ui'
+import { PageHeader, Card, EmptyState, Avatar } from '@/components/ui'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { useFeed, useToggleSavePost } from '@/features/feed'
@@ -118,10 +117,10 @@ export function JobsPage() {
         description="Khám phá cơ hội nghề nghiệp và việc làm chất lượng cao dành riêng cho sinh viên và cựu sinh viên Đại học FPT."
         keywords="việc làm FPT, tuyển dụng FPT, việc làm cựu sinh viên FPT, AlumNect tuyển dụng"
       />
-      <BrandBanner
-        scene="jobs"
-        className="mb-6"
+      <PageHeader
+        icon={<Briefcase size={20} />}
         title={t('jobs.pageTitle')}
+        subtitle={t('jobs.pageSubtitle')}
       />
 
       {/* Search bar đồng bộ dạng dropdown */}
@@ -234,10 +233,11 @@ export function JobsPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <h2 className="text-base sm:text-lg font-bold text-text group-hover:text-primary-solid transition-colors leading-snug dark:group-hover:text-primary-solid">
+                            <span className="text-text-subtle font-semibold">{t('jobs.recruitmentLabel')}</span>
                             <span className="capitalize">{job.title || t('jobs.notUpdated')}</span>
                           </h2>
                           <p className="mt-0.5 text-sm font-semibold text-text-muted">
-                            <span className="text-info font-bold">{job.company || t('jobs.notUpdated')}</span>
+                            {t('jobs.companyLabel')}<span className="text-info font-bold">{job.company || t('jobs.notUpdated')}</span>
                           </p>
                         </div>
                       </div>
@@ -307,6 +307,7 @@ export function JobsPage() {
                         >
                           <MapPin size={13} className="text-primary-solid shrink-0" />
                           <span className="truncate">
+                            <strong className="text-text">{t('jobs.locationLabel')}</strong>{' '}
                             {extractCity(job.location) || job.location}
                           </span>
                         </span>
@@ -318,13 +319,14 @@ export function JobsPage() {
                         className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/90 hover:bg-primary-soft hover:text-primary-solid px-3 py-1.5 text-xs font-medium text-text-muted transition-colors relative z-10 dark:bg-surface-2 dark:border dark:border-border"
                       >
                         <Avatar src={post.avatar} name={post.author} size={18} />
-                        <strong className="text-text hover:text-primary-solid hover:underline">{post.author}</strong>
+                        <span>{t('jobs.postedByLabel')}<strong className="text-text hover:text-primary-solid hover:underline">{post.author}</strong></span>
                       </Link>
                     </div>
 
                     {/* Description Box */}
                     {post.text && (
                       <div className="rounded-xl bg-surface-2 p-3 border border-border text-xs sm:text-sm text-text-muted line-clamp-2 leading-relaxed">
+                        <span className="font-semibold text-text-muted">{t('jobs.descLabel')}</span>
                         {post.text}
                       </div>
                     )}

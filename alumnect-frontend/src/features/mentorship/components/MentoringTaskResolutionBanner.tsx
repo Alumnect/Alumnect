@@ -262,7 +262,7 @@ export function MentoringTaskResolutionBanner({
           <ArrowRight className="h-3.5 w-3.5 text-text-subtle" />
           <span className="font-bold text-info">{formatDt(ext.proposedDeadline)}</span>
         </p>
-        {ext.reason && <p className="">“{ext.reason}”</p>}
+        {ext.reason && <p className="italic">“{ext.reason}”</p>}
       </MentoringActionCard>,
     )
   }
@@ -330,7 +330,7 @@ export function MentoringTaskResolutionBanner({
           </p>
         )}
         {scopeChanged && <p className="line-clamp-2">{t('mentoring.newScopeLabel', { scope: amd.newScope })}</p>}
-        {amd.reason && <p className="">“{amd.reason}”</p>}
+        {amd.reason && <p className="italic">“{amd.reason}”</p>}
       </MentoringActionCard>,
     )
   }
@@ -377,7 +377,7 @@ export function MentoringTaskResolutionBanner({
           <Detail label={t('mentoring.mentorReceives')}>{formatVnd(prop.mentorAmount)}</Detail>
           <Detail label={t('mentoring.studentRefund')}>{formatVnd(prop.studentRefund)}</Detail>
         </p>
-        {prop.reason && <p className="">“{prop.reason}”</p>}
+        {prop.reason && <p className="italic">“{prop.reason}”</p>}
         {needsRefundAccount && (
           <p className="font-semibold text-danger">
             {t('mentoring.refundAccountDeclareNotice')}{' '}
@@ -482,7 +482,7 @@ export function MentoringTaskResolutionBanner({
 
   return (
     <section className="space-y-2 border-b border-border bg-surface px-4 py-3 sm:px-6">
-      <p className="text-xs font-bold text-text-subtle">{t('mentoring.actionRequiredBadge')}</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-text-subtle">{t('mentoring.actionRequiredBadge')}</p>
       {items}
 
       <Modal

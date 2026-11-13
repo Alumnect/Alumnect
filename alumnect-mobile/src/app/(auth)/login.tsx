@@ -3,15 +3,19 @@ import { View } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
 import { useRouter } from 'expo-router'
 import { useMutation } from '@tanstack/react-query'
+import * as LocalAuthentication from 'expo-local-authentication'
+import * as SecureStore from 'expo-secure-store'
 import { AuthButton, AuthFooterButton, AuthLink, AuthScaffold, OrDivider } from '@/components/AuthScaffold'
 import { Button, Input } from '@/components/ui'
-import { Lock, MailIcon } from '@/components/icons'
+import { Fingerprint, Lock, MailIcon } from '@/components/icons'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/authStore'
 import { queryClient } from '@/lib/queryClient'
 import { getGoogleIdToken, isGoogleConfigured } from '@/lib/google'
 import { toast, errMsg } from '@/lib/toast'
 import { useTheme } from '@/theme'
+
+const CRED_KEY = 'alumnect.biometric.cred'
 
 /** Biểu tượng "G" nhiều màu theo nhận diện của Google, dùng trên nút đăng nhập bằng Google. */
 function GoogleMark({ size = 20 }: { size?: number }) {
@@ -35,16 +39,31 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [hasBio, setHasBio] = useState(false)
+
+  React.useEffect(() => {
+    void (async () => {
+      if (!(await SecureStore.isAvailableAsync())) return
+      const [hw, enrolled, cred] = await Promise.all([
+        LocalAuthentication.hasHardwareAsync(),
+        LocalAuthentication.isEnrolledAsync(),
+        SecureStore.getItemAsync(CRED_KEY),
+      ])
+      setHasBio(hw && enrolled && !!cred)
+    })().catch(() => setHasBio(false))
+  }, [])
 
   const mutation = useMutation({
     mutationFn: (v: { email: string; password: string }) => authApi.login(v),
-    onSuccess: async (data) => {
+    onSuccess: async (data, v) => {
       if (data.user.role === 'ADMIN') {
         void authApi.revokeSession(data.refreshToken)
         toast.error(ADMIN_MSG)
         return
       }
       queryClient.clear()
+      // Lưu thông tin để mở khóa nhanh bằng sinh trắc học lần sau.
+      SecureStore.setItemAsync(CRED_KEY, JSON.stringify(v)).catch(() => {})
       login(data)
       toast.success('Đăng nhập thành công!')
     },
@@ -92,6 +111,13 @@ export default function LoginScreen() {
     mutation.mutate(v)
   }
 
+  const biometric = async () => {
+    const res = await LocalAuthentication.authenticateAsync({ promptMessage: 'Mở khóa Alumnect' })
+    if (!res.success) return
+    const raw = await SecureStore.getItemAsync(CRED_KEY)
+    if (raw) submit(JSON.parse(raw))
+  }
+
   const googleOn = isGoogleConfigured()
 
   return (
@@ -128,26 +154,17 @@ export default function LoginScreen() {
         inputRef={(r) => { passwordRef.current = r }}
         error={errors.password}
       />
-      <View style={{ marginTop: 6 }}>
+      <View style={{ marginTop: 4 }}>
         <AuthButton title="Đăng nhập" onPress={() => submit()} loading={mutation.isPending} />
       </View>
-      <View style={{ marginTop: 6, marginBottom: 2 }}>
+      <View style={{ marginTop: 4 }}>
         <AuthLink title="Quên mật khẩu?" onPress={() => router.push('/(auth)/forgot-password')} />
       </View>
-      {googleOn ? <OrDivider /> : null}
-      {googleOn ? (
-        <View style={{ marginTop: 2 }}>
-          <Button
-            title="Tiếp tục với Google"
-            variant="outline"
-            size="lg"
-            icon={<GoogleMark />}
-            onPress={() => google.mutate()}
-            loading={google.isPending}
-            style={{ borderRadius: 999, minHeight: 48 }}
-          />
-        </View>
-      ) : null}
+      {googleOn || hasBio ? <OrDivider /> : null}
+      <View style={{ gap: 12 }}>
+        {googleOn ? <Button title="Tiếp tục với Google" variant="outline" size="lg" icon={<GoogleMark />} onPress={() => google.mutate()} loading={google.isPending} style={{ borderRadius: 999 }} /> : null}
+        {hasBio ? <Button title="Đăng nhập bằng vân tay / khuôn mặt" variant="outline" size="lg" icon={<Fingerprint size={20} color={t.text} />} onPress={biometric} style={{ borderRadius: 999 }} /> : null}
+      </View>
     </AuthScaffold>
   )
 }

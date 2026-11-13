@@ -1,4 +1,4 @@
-
+import { Trophy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { MentorPageHeader } from './MentorPageHeader'
 
@@ -16,9 +16,10 @@ export function MentorRankingHeader({ selectedFieldName, totalMentors }: MentorR
 
   return (
     <MentorPageHeader
-      scene="ranking"
+      icon={<Trophy className="h-4 w-4" />}
+      eyebrow={context || t('mentoring.rankingEyebrow')}
       title={t('mentoring.ranking')}
-      description={context || undefined}
+      description={t('mentoring.rankingSubtitle')}
     />
   )
 }

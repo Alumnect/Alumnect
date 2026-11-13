@@ -32,21 +32,6 @@ const SOURCES = {
   building: require('../../assets/brand/building.webp'),
   video: require('../../assets/brand/video.webp'),
   pray: require('../../assets/brand/pray.webp'),
-  photo: require('../../assets/brand/photo.webp'),
-  music: require('../../assets/brand/music.webp'),
-  painting: require('../../assets/brand/painting.webp'),
-  mentalhealth: require('../../assets/brand/mentalhealth.webp'),
-  tree: require('../../assets/brand/tree.webp'),
-  potion: require('../../assets/brand/potion.webp'),
-  videogame: require('../../assets/brand/videogame.webp'),
-  ball: require('../../assets/brand/ball.webp'),
-  cat: require('../../assets/brand/cat.webp'),
-  pizza: require('../../assets/brand/pizza.webp'),
-  child: require('../../assets/brand/child.webp'),
-  binoculars: require('../../assets/brand/binoculars.webp'),
-  alarm_clock: require('../../assets/brand/alarm_clock.webp'),
-  badge_pro: require('../../assets/brand/badge_pro.webp'),
-  badge_plus: require('../../assets/brand/badge_plus.webp'),
 } as const
 
 export type BrandIconName = keyof typeof SOURCES

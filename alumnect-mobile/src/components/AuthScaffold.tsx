@@ -1,17 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import {
-  ActivityIndicator,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StatusBar as StatusBarRN,
-  TextInput,
-  View,
-  findNodeHandle,
-  useWindowDimensions,
-  type ScrollViewInstance,
-} from 'react-native'
+import React from 'react'
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, View, useWindowDimensions } from 'react-native'
 import { ChevronLeft } from '@/components/icons'
 import { ScrollView } from '@/components/ScrollView'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -24,10 +12,10 @@ import { radius, useTheme } from '@/theme'
 
 /**
  * Khung chung cho các màn đăng nhập / đăng ký / khôi phục mật khẩu.
- * - Tự động tính toán khoảng an toàn với Status Bar trên Android & iOS (tránh đè đồng hồ / pin).
- * - "tall" (đăng nhập): Tỷ lệ tranh minh hoạ FPT University cân đối, giữ form gọn gàng.
- * - "short" (đăng ký / OTP): Thanh header tinh gọn, tối ưu không gian hiển thị biểu mẫu khi mở bàn phím.
- * - Tự động đo độ cao bàn phím trên Android Edge-to-Edge và cuộn mượt đến ô nhập liệu đang focus.
+ * Đầu màn là mảng nền phẳng xanh nhạt (theo nhận diện FPT) có logo + tên Alumnect, tranh minh hoạ toà FPT University Đà Nẵng
+ * và cột biển bốn hướng; biểu mẫu nằm trên tấm nền bo góc phía dưới, nút hành động ghim sát đáy.
+ * `hero`: "tall" (đăng nhập) dùng tranh đầy đủ và khẩu hiệu; "short" (đăng ký, khôi phục mật khẩu) dùng dải tranh thấp.
+ * `onBack` thêm nút quay lại ở góc trên.
  */
 export function AuthScaffold({ title, subtitle, hero = 'tall', onBack, footer, children }: {
   title?: string
@@ -42,93 +30,37 @@ export function AuthScaffold({ title, subtitle, hero = 'tall', onBack, footer, c
   const { width } = useWindowDimensions()
   const field = t.isDark ? '#151D2A' : '#EAF0F8'
   const tall = hero === 'tall'
-  const statusBarH = Platform.OS === 'android' ? (StatusBarRN.currentHeight ?? 24) : insets.top
-  const topSafe = Math.max(insets.top, statusBarH)
-
-  const scrollRef = useRef<ScrollViewInstance>(null)
-  const [kbHeight, setKbHeight] = useState(0)
-  const [baseH, setBaseH] = useState(0)
-  const [rootH, setRootH] = useState(0)
-
-  useEffect(() => {
-    if (Platform.OS !== 'android') return
-    const show = Keyboard.addListener('keyboardDidShow', (e) => {
-      setKbHeight(e.endCoordinates.height)
-      setTimeout(() => {
-        try {
-          const focused = TextInput.State.currentlyFocusedInput()
-          if (focused && scrollRef.current) {
-            const handle = findNodeHandle(focused) ?? (focused as any)
-            scrollRef.current.scrollResponderScrollNativeHandleToKeyboard(handle, 70, true)
-          }
-        } catch {}
-      }, 60)
-    })
-    const hide = Keyboard.addListener('keyboardDidHide', () => {
-      setKbHeight(0)
-    })
-    return () => {
-      show.remove()
-      hide.remove()
-    }
-  }, [])
-
-  const windowResized = baseH > 0 && rootH > 0 && rootH < baseH - 80
-  const androidBottomInset = kbHeight > 0 && !windowResized ? kbHeight : 0
-
   return (
-    <View
-      style={{ flex: 1, backgroundColor: t.card }}
-      onLayout={(e) => {
-        const h = e.nativeEvent.layout.height
-        setRootH(h)
-        if (kbHeight === 0 && h > baseH) setBaseH(h)
-      }}
-    >
+    <View style={{ flex: 1, backgroundColor: t.card }}>
       <StatusBar style={t.isDark ? 'light' : 'dark'} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          ref={scrollRef}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 0 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          // Luôn cho kéo: khi nội dung vừa màn hình thì chỉ giãn / nảy nhẹ rồi về chỗ cũ (cảm giác mượt), không trôi hay để lộ khoảng thừa.
           bounces
           alwaysBounceVertical
           overScrollMode="always"
         >
-          {tall ? (
-            <View style={{ backgroundColor: field, paddingTop: topSafe + 14, paddingBottom: 0 }}>
-              {onBack ? (
-                <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Quay lại" hitSlop={6} style={({ pressed }) => ({ marginLeft: 16, marginBottom: 8, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: t.card, opacity: pressed ? 0.8 : 1 })}>
-                  <ChevronLeft size={22} color={t.text} />
-                </Pressable>
-              ) : null}
-              <View style={{ paddingHorizontal: 24, marginBottom: 6 }}>
-                <Brand stacked />
-              </View>
-              <View style={{ overflow: 'hidden', alignItems: 'center', marginTop: 2 }}>
-                <AuthIllustration width={width} maxHeight={135} />
-              </View>
+          <View style={{ backgroundColor: field, paddingTop: insets.top + (tall ? 16 : 12), paddingBottom: tall ? 0 : 24 }}>
+            {onBack ? (
+              <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Quay lại" hitSlop={6} style={({ pressed }) => ({ marginLeft: 16, marginBottom: 6, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: t.card, opacity: pressed ? 0.8 : 1 })}>
+                <ChevronLeft size={22} color={t.text} />
+              </Pressable>
+            ) : null}
+            <View style={{ paddingHorizontal: 24 }}>
+              {tall ? <Brand stacked /> : <Brand />}
             </View>
-          ) : (
-            <View style={{ backgroundColor: field, paddingTop: topSafe + 10, paddingBottom: 18 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
-                {onBack ? (
-                  <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Quay lại" hitSlop={6} style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: t.card, opacity: pressed ? 0.8 : 1 })}>
-                    <ChevronLeft size={22} color={t.text} />
-                  </Pressable>
-                ) : <View style={{ width: 40 }} />}
-                <Brand centered />
-                <View style={{ width: 40 }} />
-              </View>
+            <View style={{ marginTop: tall ? 0 : 6 }}>
+              <AuthIllustration width={width} strip={!tall} />
             </View>
-          )}
-
-          <View style={{ flex: 1, marginTop: -14, backgroundColor: t.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 22 }}>
+          </View>
+          <View style={{ flex: 1, marginTop: -16, backgroundColor: t.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 24 }}>
             <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
-              {title ? <Txt heading size={24} weight="700" style={{ letterSpacing: -0.3 }}>{title}</Txt> : null}
+              {title ? <Txt heading size={24} weight="600">{title}</Txt> : null}
               {subtitle ? <Txt muted size={14} style={{ marginTop: 6, lineHeight: 21 }}>{subtitle}</Txt> : null}
-              {title || subtitle ? <View style={{ height: 16 }} /> : null}
+              {title || subtitle ? <View style={{ height: 18 }} /> : null}
               {children}
               <View style={{ flexGrow: 1, minHeight: 8 }} />
               {footer ? <View style={{ paddingTop: 8, paddingBottom: Math.max(insets.bottom, 12) + 12 }}>{footer}</View> : <View style={{ height: Math.max(insets.bottom, 12) + 12 }} />}
@@ -136,9 +68,6 @@ export function AuthScaffold({ title, subtitle, hero = 'tall', onBack, footer, c
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      {Platform.OS === 'android' && androidBottomInset > 0 ? (
-        <View style={{ height: androidBottomInset }} />
-      ) : null}
     </View>
   )
 }

@@ -291,7 +291,7 @@ export function MentoringTaskPaymentModal({
                 <Clock className="w-4 h-4 text-primary-solid" />
                 <span>{t('mentoring.remainingPaymentTime')}</span>
                 <span
-                  className={`px-2 py-0.5 rounded-full tabular-nums text-xs ${timeLeft < 180
+                  className={`px-2 py-0.5 rounded-full font-mono text-xs ${timeLeft < 180
                       ? 'bg-danger-soft text-danger'
                       : 'bg-primary-soft text-primary-solid'
                     }`}
@@ -339,7 +339,7 @@ export function MentoringTaskPaymentModal({
                 <div className="p-3 rounded-xl bg-cream-100/60 dark:bg-white/5 border border-border flex items-center justify-between">
                   <div>
                     <p className="text-xs text-text-subtle">{t('mentoring.transferContentOrderCode')}</p>
-                    <p className="tabular-nums font-bold text-text">
+                    <p className="font-mono font-bold text-text">
                       {checkoutData.orderCode}
                     </p>
                   </div>

@@ -107,7 +107,7 @@ export function MentoringDealHistoryTimeline({
                 </div>
 
                 {snap.changeNote && (
-                  <p className="mt-2 rounded-xl bg-cream-100/60 p-2.5 text-xs italic text-text-muted dark:bg-white/5">
+                  <p className="mt-2 rounded-xl bg-cream-100/60 p-2.5 text-xs text-text-muted dark:bg-white/5 italic">
                     &ldquo;{snap.changeNote}&rdquo;
                   </p>
                 )}

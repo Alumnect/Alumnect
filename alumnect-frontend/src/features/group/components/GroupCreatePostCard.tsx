@@ -191,7 +191,7 @@ export function GroupCreatePostCard({ groupId, groupName, topics }: GroupCreateP
                         className="fixed z-[100] w-56 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-brand-500/15 bg-surface p-1.5 shadow-[0_12px_36px_rgba(31,24,48,0.14)] backdrop-blur-xl dark:border-white/10"
                       >
                       <div className="mb-1 flex items-center justify-between px-2 py-1">
-                        <span className="text-xs font-bold tracking-[0.14em] text-text-subtle">{t('groups.selectTopic')}</span>
+                        <span className="text-xs font-black uppercase tracking-[0.14em] text-text-subtle">{t('groups.selectTopic')}</span>
                         <span className="text-xs font-medium text-text-subtle">{t('groups.topicOptionsCount', { count: topics.length })}</span>
                       </div>
                       {[null, ...topics].map((topic, index) => {

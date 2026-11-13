@@ -41,7 +41,7 @@ export function MentorRankingPodium({ topMentors }: MentorRankingPodiumProps) {
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
           <span
             className={cn(
-              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold   shadow-md',
+              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider shadow-md',
               rankStyle.badge,
             )}
           >

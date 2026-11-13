@@ -66,7 +66,7 @@ export function MentorRankingPage() {
       {/* Category Selector theo lĩnh vực */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3 px-1">
-          <h2 className="text-xs font-bold text-text-subtle">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
             {t('mentoring.selectField')}
           </h2>
           <span className="text-xs text-text-subtle">

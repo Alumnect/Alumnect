@@ -1,4 +1,4 @@
-import { ArrowRight, RefreshCw } from 'lucide-react'
+import { Activity, ArrowRight, RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import type { MentorStatusResponse } from '../model/mentorStatusTypes'
@@ -26,31 +26,27 @@ export function MentorStatusHero({ status, onRefresh, isRefreshing }: MentorStat
     }
   }
 
-  // Đang hoạt động: thẻ gói bên dưới đã nói rõ, không cần thêm câu mô tả
-  const description = status.active
-    ? undefined
-    : i18n.language === 'en'
-      ? t('mentoring.mentorStatusDefaultDesc')
+  const description =
+    i18n.language === 'en'
+      ? (status.active ? t('mentoring.mentorStatusActiveDesc') : t('mentoring.mentorStatusDefaultDesc'))
       : (statusMessage || t('mentoring.mentorStatusDefaultDesc'))
 
   return (
     <MentorPageHeader
-      scene="status"
+      icon={<Activity className="h-4 w-4" />}
+      eyebrow={t('mentoring.mentorStatusEyebrow')}
       title={t('mentoring.mentorStatusTitle')}
       description={description}
       actions={
         <>
-          {/* Đang hoạt động thì hành động là "Về tổng quan" — trùng sidebar, không hiện */}
-          {!status.active && (
-            <ButtonLink
-              to={actionUrl}
-              variant="primary"
-              size="sm"
-              rightIcon={<ArrowRight className="h-4 w-4" />}
-            >
-              {getActionLabel()}
-            </ButtonLink>
-          )}
+          <ButtonLink
+            to={actionUrl}
+            variant="primary"
+            size="sm"
+            rightIcon={<ArrowRight className="h-4 w-4" />}
+          >
+            {getActionLabel()}
+          </ButtonLink>
           {onRefresh && (
             <Button
               variant="outline"

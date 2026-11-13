@@ -1,14 +1,12 @@
 import http from '@/lib/http'
 import type { ApiResponse, PageResponse } from '@/lib/http'
 import type { Deal } from './mentoringFlow'
-import type { WorkingMode } from './mentoring'
 
 export type MediaType = 'IMAGE' | 'VIDEO' | 'FILE'
 export type OutgoingAttachment = { mediaType: MediaType; url: string; fileName?: string; fileSize?: number }
 
 export interface MentoringChatContext {
   conversationId: number
-  myRole?: 'STUDENT' | 'MENTOR' | 'GROUP_MEMBER' | string
   readOnly: boolean
   readOnlyReason?: string | null
   canSendMessage: boolean
@@ -18,15 +16,6 @@ export interface MentoringChatContext {
   deal?: { deal: Deal } | null
   taskId?: number | null
   groupId?: number | null
-  requestId?: number | null
-  requestTitle?: string | null
-  requestDescription?: string | null
-  budgetMin?: number | null
-  budgetMax?: number | null
-  expectedDeadline?: string | null
-  workingMode?: WorkingMode | null
-  participationType?: 'INDIVIDUAL' | 'GROUP' | null
-  taskType?: string | null
 }
 
 export interface MessageAttachment {
@@ -63,8 +52,6 @@ export interface Conversation {
   memberCount?: number
   isAccepted?: boolean
   adminId?: number | null
-  communityGroupId?: number | null
-  communityGroupName?: string | null
   lastMessage?: string
   unreadCount: number
 }

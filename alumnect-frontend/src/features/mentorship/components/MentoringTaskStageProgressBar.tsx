@@ -57,7 +57,7 @@ export function MentoringTaskStageProgressBar({
     <div className={cn('rounded-3xl border border-border bg-surface p-5 shadow-xs', className)}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
-          <span className="text-xs font-bold text-text-subtle">
+          <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
             {t('mentoring.mentoringTaskProgressTitle')}
           </span>
           <h4 className="text-base font-bold text-text">
@@ -112,7 +112,7 @@ export function MentoringTaskStageProgressBar({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-text-subtle">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
                     {t('mentoring.stageIndex', { index: idx + 1 })}
                   </span>
                   {isCurrent && (

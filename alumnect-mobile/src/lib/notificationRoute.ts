@@ -4,7 +4,6 @@ import type { Href } from 'expo-router'
 export function routeForTarget(targetType?: string | null, targetId?: string | number | null): Href | null {
   if (!targetType) return null
   const type = targetType.toUpperCase()
-  if (type === 'ALUMNI_VERIFICATION') return '/profile/upgrade-alumni'
   if (type === 'MENTOR_PAYOUT') return '/mentoring/earnings'
   if (type === 'MENTORING_REFUND') return '/mentoring/refunds'
   if (type === 'MENTOR_SUBSCRIPTION') return '/mentoring/plans'

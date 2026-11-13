@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, UserX, AlertTriangle, Search, UserCheck } from 'lucide-react'
+import { ArrowLeft, UserX, AlertTriangle, Search, Sparkles, UserCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Container } from '@/components/ui/primitives'
@@ -313,8 +313,10 @@ function CreateDirectMentoringRequestContent() {
         className="w-full space-y-4 text-left"
       >
         <MentorPageHeader
-          scene="request"
+          icon={<Sparkles className="h-4 w-4" />}
+          eyebrow={t('mentoring.directRequestEyebrow')}
           title={t('mentoring.directRequestTitle')}
+          description={t('mentoring.createRequestSubtitle')}
         />
 
         {/* Selected Mentor Card Display */}
