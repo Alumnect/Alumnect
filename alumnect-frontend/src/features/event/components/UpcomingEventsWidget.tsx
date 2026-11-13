@@ -130,10 +130,10 @@ export function UpcomingEventsWidget({ limit = 3, className }: UpcomingEventsWid
                 className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-surface-2 py-1.5 text-center ring-1 ring-inset ring-border transition-colors group-hover/event:bg-brand-50 group-hover/event:ring-brand-200"
                 title={`Xem chi tiết ${eventTitle}`}
               >
-                <span className="text-xs font-bold uppercase text-primary-solid">
+                <span className="text-xs font-bold text-primary-solid">
                   {dateInfo.month}
                 </span>
-                <span className="text-base font-extrabold text-text">
+                <span className="text-base font-bold text-text">
                   {dateInfo.day}
                 </span>
               </Link>

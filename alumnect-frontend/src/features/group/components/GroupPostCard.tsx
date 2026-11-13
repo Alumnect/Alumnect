@@ -229,7 +229,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               <div className="flex items-center gap-2">
                 <Link
                   to={`/app/profile?userId=${post.author.userId}`}
-                  className="text-sm font-extrabold text-text hover:underline"
+                  className="text-sm font-bold text-text hover:underline"
                 >
                   {post.author.fullName}
                 </Link>
@@ -381,7 +381,7 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
               className={cn(
                 'inline-flex items-center gap-1.5 transition-colors',
                 post.likedByViewer
-                  ? 'text-danger font-extrabold'
+                  ? 'text-danger font-bold'
                   : 'hover:text-danger',
               )}
             >
@@ -558,12 +558,12 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
                                   </Link>
 
                                   {c.author.groupRole === 'OWNER' && (
-                                    <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-[11px] font-semibold leading-none text-warning">
+                                    <span className="rounded-md bg-warning-soft px-1.5 py-0.5 text-xs font-semibold leading-none text-warning">
                                       {t('groups.ownerRole')}
                                     </span>
                                   )}
                                   {c.author.groupRole === 'ADMIN' && (
-                                    <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-solid">
+                                    <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-semibold leading-none text-primary-solid">
                                       {t('groups.adminRole')}
                                     </span>
                                   )}

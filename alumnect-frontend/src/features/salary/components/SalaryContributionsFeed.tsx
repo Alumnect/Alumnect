@@ -318,7 +318,7 @@ export function SalaryContributionsFeed({
 
                         {/* Mức lương + Kinh nghiệm */}
                         <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2">
-                          <span className="text-xs font-extrabold text-primary-solid">
+                          <span className="text-xs font-bold text-primary-solid">
                             {c.grossAmount.toLocaleString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')} {c.currency}
                             <span className="text-xs font-normal text-text-subtle"> {t('salary.perMonth')}</span>
                           </span>

@@ -373,7 +373,6 @@
   },
   "event": {
     "pageTitle": "Sự kiện & Họp mặt",
-    "pageSubtitle": "Tham gia các buổi giao lưu, hội thảo và ngày hội cựu sinh viên FPTU.",
     "tabUpcoming": "Sắp diễn ra",
     "tabThisMonth": "Trong tháng này",
     "tabHistory": "Lịch sử tham gia",
@@ -486,7 +485,6 @@
   },
   "jobs": {
     "pageTitle": "Tuyển dụng việc làm",
-    "pageSubtitle": "Khám phá cơ hội nghề nghiệp dành riêng cho cộng đồng FPTU.",
     "searchPlaceholder": "Chức danh công việc hoặc từ khóa...",
     "allLocations": "Tất cả địa điểm",
     "searchCity": "Tìm tỉnh / thành phố…",
@@ -500,17 +498,12 @@
     "salaryRange": "Từ {{min}} VND đến {{max}} VND",
     "viewDetails": "Xem chi tiết",
     "loadMore": "Tải thêm việc làm",
-    "recruitmentLabel": "Tuyển dụng: ",
-    "companyLabel": "Công ty: ",
     "notUpdated": "Chưa cập nhật",
     "loginToSaveJob": "Đăng nhập để lưu tin tuyển dụng.",
     "saveJobAria": "Lưu công việc",
     "unsaveJobTitle": "Bỏ lưu tin tuyển dụng",
     "saveJobTitle": "Lưu tin tuyển dụng",
-    "applyBtn": "Ứng tuyển",
-    "locationLabel": "Địa điểm: ",
-    "postedByLabel": "Đăng bởi: ",
-    "descLabel": "Mô tả: "
+    "applyBtn": "Ứng tuyển"
   },
   "auth": {
     "welcomeBack": "Chào mừng trở lại",
@@ -600,7 +593,6 @@
   },
   "notification": {
     "title": "Thông báo",
-    "subtitle": "Cập nhật thông báo các hoạt động gần đây.",
     "markAllAsRead": "Đánh dấu tất cả đã đọc",
     "noNotifications": "Chưa có thông báo nào",
     "noNotificationsDesc": "Bạn sẽ nhận được thông báo khi có người thích, bình luận bài viết, theo dõi hoặc trả lời câu hỏi của bạn.",
@@ -791,7 +783,6 @@
   },
   "map": {
     "title": "Bản đồ mạng lưới Alumni",
-    "subtitle": "Khám phá cộng đồng cựu sinh viên FPTU trên toàn cầu.",
     "alumniList": "Danh sách Alumni",
     "results": "{{count}} kết quả",
     "searchPlaceholder": "Tìm theo tên, công ty, vị trí...",
@@ -810,7 +801,6 @@
   },
   "salary": {
     "title": "Bảng lương cộng đồng",
-    "subtitle": "Khám phá mức thu nhập thực tế theo vị trí, ngành nghề và cấp bậc do cựu sinh viên FPTU chia sẻ.",
     "recentContributions": "Đóng góp gần đây",
     "myContributions": "Đóng góp của tôi",
     "contributeData": "Đóng góp dữ liệu",
@@ -867,9 +857,7 @@
     "sharesCount": "{{count}} lượt chia sẻ",
     "commonSalary": "Mức phổ biến:",
     "millionVndUnit": "Triệu",
-    "salaryRangeText": "Khoảng lương: {{min}} – {{max}} Triệu",
     "fromSalary": "Từ {{val}} Tr",
-    "medianSalary": "Phổ biến: {{val}} Tr",
     "toSalary": "Đến {{val}} Tr",
     "contributeSuccess": "Đã ghi nhận đóng góp dữ liệu lương của bạn. Cảm ơn bạn!",
     "updateSuccess": "Đã cập nhật dữ liệu lương thành công!",
@@ -927,7 +915,6 @@
   },
   "forum": {
     "title": "Diễn đàn Hỏi & Đáp",
-    "subtitle": "Hỏi đáp và chia sẻ kiến thức cùng cộng đồng FPTU.",
     "askQuestion": "Đặt câu hỏi",
     "sortRecent": "Mới nhất",
     "sortVotes": "Nhiều bình chọn",
@@ -1017,7 +1004,6 @@
   },
   "groups": {
     "title": "Hội nhóm",
-    "subtitle": "Không gian kết nối và trao đổi chuyên môn dành cho Cựu sinh viên.",
     "createGroup": "Tạo hội nhóm",
     "discoverTab": "Khám phá",
     "myGroupsTab": "Nhóm của tôi",
@@ -1273,7 +1259,6 @@
   },
   "career": {
     "title": "Lộ trình nghề nghiệp",
-    "subtitle": "Tham khảo con đường phát triển sự nghiệp thực tế từ các thế hệ cựu sinh viên FPTU.",
     "searchPlaceholder": "Tìm kiếm cựu sinh viên theo tên, ngành học, chức danh, công ty...",
     "advancedFilter": "Bộ lọc nâng cao",
     "major": "Chuyên ngành",

@@ -29,6 +29,15 @@ export type BannerSceneKey =
   | 'chat'
   | 'profile'
   | 'status'
+  | 'jobs'
+  | 'directory'
+  | 'events'
+  | 'forum'
+  | 'community'
+  | 'map'
+  | 'notifications'
+  | 'salary'
+  | 'career'
 
 const K = {
   orange: '#F27024',
@@ -518,7 +527,198 @@ const SCENES: Record<Exclude<BannerSceneKey, 'campus'>, () => ReactNode> = {
       <Sparkle x={262} y={70} />
     </>
   ),
-}
+  // Việc làm: toà văn phòng + cặp công sở + CV
+  jobs: () => (
+    <>
+      <rect x={196} y={50} width={38} height={96} rx={3} fill={K.navy} />
+      {[0, 1, 2, 3, 4, 5].map((r) => [0, 1, 2].map((c) => <rect key={`${r}-${c}`} x={202 + c * 11} y={58 + r * 14} width={6} height={8} rx={1} fill={r === 2 && c === 1 ? K.gold : '#5B7399'} />))}
+      <rect x={236} y={80} width={30} height={66} rx={3} fill={K.blue} />
+      {[0, 1, 2, 3].map((r) => [0, 1].map((c) => <rect key={`b${r}-${c}`} x={242 + c * 11} y={88 + r * 13} width={6} height={7} rx={1} fill="#C8DCF3" />))}
+      <g transform="rotate(7 168 74)">
+        <rect x={146} y={44} width={42} height={56} rx={5} fill={K.paper} stroke={K.line} />
+        <circle cx={160} cy={58} r={7} fill={K.sky} />
+        <rect x={171} y={54} width={12} height={4} rx={2} fill={K.navy} />
+        <rect x={171} y={61} width={9} height={3} rx={1.5} fill={K.line} />
+        {[72, 79, 86].map((y) => <rect key={y} x={152} y={y} width={30} height={3} rx={1.5} fill={K.line} />)}
+      </g>
+      <rect x={110} y={84} width={20} height={10} rx={4} fill="none" stroke={K.woodDark} strokeWidth={4} />
+      <rect x={90} y={92} width={60} height={50} rx={8} fill={K.orange} />
+      <rect x={90} y={108} width={60} height={6} fill={K.orangeDeep} />
+      <rect x={115} y={104} width={10} height={14} rx={2} fill={K.gold} />
+      <Sparkle x={140} y={58} />
+    </>
+  ),
+  // Danh bạ: mạng lưới chân dung nối với nhau
+  directory: () => {
+    const nodes: Array<[number, number, string]> = [
+      [112, 74, K.orange],
+      [172, 52, K.blue],
+      [234, 78, K.green],
+      [142, 122, K.purple],
+      [208, 124, K.sky],
+    ]
+    const links: Array<[number, number]> = [[0, 1], [1, 2], [0, 3], [3, 4], [4, 2], [1, 4], [0, 4]]
+    return (
+      <>
+        {links.map(([a, b]) => (
+          <path key={`${a}${b}`} d={`M${nodes[a][0]} ${nodes[a][1]} L${nodes[b][0]} ${nodes[b][1]}`} stroke={K.line} strokeWidth={2.5} strokeDasharray="4 4" />
+        ))}
+        {nodes.map(([x, y, c], i) => (
+          <g key={i}>
+            <circle cx={x} cy={y} r={i === 1 ? 20 : 16} fill={K.paper} stroke={c} strokeWidth={3.5} />
+            <circle cx={x} cy={y - 4} r={i === 1 ? 6.5 : 5} fill={c} />
+            <path d={`M${x - (i === 1 ? 11 : 9)} ${y + (i === 1 ? 12 : 10)} Q${x} ${y - 1} ${x + (i === 1 ? 11 : 9)} ${y + (i === 1 ? 12 : 10)}`} fill={c} />
+          </g>
+        ))}
+        <circle cx={250} cy={48} r={11} fill={K.orange} />
+        <path d="M245 48 H255 M250 43 V53" stroke={K.paper} strokeWidth={2.6} strokeLinecap="round" />
+        <Sparkle x={92} y={112} s={0.9} />
+      </>
+    )
+  },
+  // Sự kiện: sân khấu, đèn chiếu, dây cờ, tờ lịch
+  events: () => (
+    <>
+      <path d="M92 50 L130 112 H96 Z" fill="#FFF3C4" opacity={0.85} />
+      <path d="M204 50 L176 112 H212 Z" fill="#FFF3C4" opacity={0.85} />
+      <path d="M86 46 Q150 66 214 46" stroke={K.navy} strokeWidth={1.6} fill="none" />
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+        const x = 94 + i * 18
+        const y = 48 + Math.sin((i / 6) * Math.PI) * 9
+        return <path key={i} d={`M${x} ${y} L${x + 12} ${y + 1} L${x + 6} ${y + 13} Z`} fill={[K.orange, K.blue, K.gold, K.green, K.red, K.sky, K.purple][i]} />
+      })}
+      <rect x={84} y={112} width={136} height={12} rx={3} fill={K.navy} />
+      <rect x={90} y={124} width={124} height={20} fill="#2B3A5E" />
+      <Person x={152} y={112} s={0.95} shirt={K.orange} wave />
+      <circle cx={140} cy={88} r={3} fill={K.navy} />
+      <path d="M140 91 V100" stroke={K.navy} strokeWidth={2} />
+      <rect x={228} y={66} width={40} height={44} rx={6} fill={K.paper} stroke={K.line} />
+      <rect x={228} y={66} width={40} height={13} rx={6} fill={K.red} />
+      <rect x={228} y={74} width={40} height={5} fill={K.red} />
+      <path d="M238 62 V70 M258 62 V70" stroke={K.navy} strokeWidth={3} strokeLinecap="round" />
+      <text x={248} y={102} textAnchor="middle" fontSize={20} fontWeight={800} fill={K.navy} fontFamily="Sora, sans-serif">19</text>
+    </>
+  ),
+  // Hỏi đáp: bong bóng câu hỏi + câu trả lời + bóng đèn ý tưởng
+  forum: () => (
+    <>
+      <path d="M100 44 H160 Q170 44 170 54 V82 Q170 92 160 92 H120 L106 104 L108 92 H100 Q90 92 90 82 V54 Q90 44 100 44 Z" fill={K.navy} />
+      <text x={130} y={80} textAnchor="middle" fontSize={34} fontWeight={800} fill={K.gold} fontFamily="Sora, sans-serif">?</text>
+      <path d="M150 100 H222 Q232 100 232 110 V128 Q232 138 222 138 H214 L216 150 L202 138 H150 Q140 138 140 128 V110 Q140 100 150 100 Z" fill={K.paper} stroke={K.line} />
+      <rect x={152} y={110} width={58} height={4} rx={2} fill={K.green} />
+      <rect x={152} y={119} width={44} height={3.5} rx={1.75} fill={K.line} />
+      <rect x={152} y={127} width={52} height={3.5} rx={1.75} fill={K.line} />
+      <circle cx={232} cy={62} r={15} fill={K.gold} />
+      <rect x={225} y={76} width={14} height={9} rx={2} fill={K.navy} />
+      <path d="M228 89 H236" stroke={K.navy} strokeWidth={3} strokeLinecap="round" />
+      <path d="M227 64 Q232 56 237 64" stroke="#FFF3C4" strokeWidth={2.4} fill="none" strokeLinecap="round" />
+      {[[-24, 0], [24, 0], [0, -24], [-17, -17], [17, -17]].map(([dx, dy]) => (
+        <path key={`${dx}${dy}`} d={`M${232 + dx * 0.78} ${62 + dy * 0.78} L${232 + dx} ${62 + dy}`} stroke={K.gold} strokeWidth={3} strokeLinecap="round" />
+      ))}
+      <Sparkle x={182} y={56} c={K.orange} s={0.9} />
+    </>
+  ),
+  // Nhóm cộng đồng: lá cờ cắm trên đồi + nhóm người + lều
+  community: () => (
+    <>
+      <path d="M150 140 V42" stroke={K.navy} strokeWidth={4} strokeLinecap="round" />
+      <path d="M152 44 Q176 36 198 46 T244 46 V78 Q222 70 198 78 T152 76 Z" fill={K.orange} />
+      <circle cx={186} cy={61} r={9} fill={K.paper} />
+      <path d="M181 66 L186 54 L191 66 M183 62 H189" stroke={K.orange} strokeWidth={2.2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <Person x={112} y={150} s={0.95} shirt={K.blue} wave />
+      <Person x={176} y={152} s={1.02} shirt={K.green} cap />
+      <Person x={206} y={150} s={0.95} shirt={K.purple} bag flip />
+      <path d="M232 148 L254 108 L276 148 Z" fill={K.gold} />
+      <path d="M254 108 L246 148 H262 Z" fill="#E09A1F" />
+      <path d="M254 104 V100" stroke={K.navy} strokeWidth={2.5} strokeLinecap="round" />
+    </>
+  ),
+  // Bản đồ: bản đồ gấp có ghim + la bàn
+  map: () => (
+    <>
+      <path d="M92 66 L132 56 L172 66 L212 56 V126 L172 136 L132 126 L92 136 Z" fill="#DDF1E3" />
+      <path d="M132 56 V126 L172 136 V66 Z" fill="#C6E6D0" />
+      <path d="M212 56 V126 L172 136 V66 Z" fill="#E6F0FB" />
+      <path d="M100 118 Q130 92 150 104 T204 76" stroke={K.paper} strokeWidth={5} fill="none" strokeLinecap="round" />
+      <path d="M100 118 Q130 92 150 104 T204 76" stroke={K.orange} strokeWidth={2} strokeDasharray="4 5" fill="none" strokeLinecap="round" />
+      <path d="M118 98 C108 88 110 74 120 74 C130 74 132 88 122 98 L120 102 Z" fill={K.red} />
+      <circle cx={120} cy={83} r={4} fill={K.paper} />
+      <path d="M190 70 C180 60 182 46 192 46 C202 46 204 60 194 70 L192 74 Z" fill={K.blue} />
+      <circle cx={192} cy={55} r={4} fill={K.paper} />
+      <circle cx={248} cy={102} r={24} fill={K.paper} stroke={K.navy} strokeWidth={4} />
+      <path d="M248 84 L254 102 L248 120 L242 102 Z" fill={K.line} />
+      <path d="M248 84 L254 102 L242 102 Z" fill={K.red} />
+      <circle cx={248} cy={102} r={3} fill={K.navy} />
+      <text x={248} y={74} textAnchor="middle" fontSize={11} fontWeight={800} fill={K.navy} fontFamily="Sora, sans-serif">N</text>
+    </>
+  ),
+  // Thông báo: chuông lớn + chấm đỏ + các thẻ thông báo
+  notifications: () => (
+    <>
+      <path d="M120 112 Q120 66 152 62 Q184 66 184 112 L192 122 H112 Z" fill={K.gold} />
+      <path d="M144 62 Q152 50 160 62" fill={K.gold} />
+      <circle cx={152} cy={128} r={8} fill="#E09A1F" />
+      <path d="M100 74 Q94 92 102 108 M204 74 Q210 92 202 108" stroke={K.orange} strokeWidth={3.5} fill="none" strokeLinecap="round" />
+      <circle cx={178} cy={66} r={11} fill={K.red} />
+      <text x={178} y={70.5} textAnchor="middle" fontSize={12} fontWeight={800} fill={K.paper} fontFamily="Sora, sans-serif">3</text>
+      {[
+        { y: 50, c: K.blue, r: -3 },
+        { y: 80, c: K.green, r: 2 },
+        { y: 110, c: K.orange, r: -2 },
+      ].map((n) => (
+        <g key={n.y} transform={`rotate(${n.r} 244 ${n.y + 11})`}>
+          <rect x={218} y={n.y} width={56} height={22} rx={6} fill={K.paper} stroke={K.line} />
+          <circle cx={229} cy={n.y + 11} r={5} fill={n.c} />
+          <rect x={238} y={n.y + 7} width={28} height={3.5} rx={1.75} fill={K.navy} />
+          <rect x={238} y={n.y + 13} width={20} height={3} rx={1.5} fill={K.line} />
+        </g>
+      ))}
+    </>
+  ),
+  // Lương: phiếu lương + xấp tiền + máy tính
+  salary: () => (
+    <>
+      <path d="M94 46 H146 V136 L140 132 L134 136 L128 132 L122 136 L116 132 L110 136 L104 132 L98 136 L94 132 Z" fill={K.paper} stroke={K.line} />
+      <rect x={102} y={56} width={26} height={5} rx={2.5} fill={K.navy} />
+      {[70, 79, 88, 97].map((y) => (
+        <g key={y}>
+          <rect x={102} y={y} width={20} height={3} rx={1.5} fill={K.line} />
+          <rect x={128} y={y} width={10} height={3} rx={1.5} fill={K.line} />
+        </g>
+      ))}
+      <rect x={100} y={110} width={40} height={10} rx={3} fill="#E3F4E7" />
+      <rect x={104} y={113.5} width={18} height={3} rx={1.5} fill={K.green} />
+      {[0, 1, 2].map((i) => (
+        <g key={i} transform={`translate(${158 + i * 3} ${128 - i * 10}) rotate(${-3 + i * 3})`}>
+          <rect x={0} y={0} width={64} height={30} rx={3} fill={i === 2 ? '#7CC490' : '#5DB074'} stroke="#3E8E57" />
+          <circle cx={32} cy={15} r={8} fill="none" stroke="#E3F4E7" strokeWidth={2} />
+          <rect x={6} y={5} width={8} height={3} rx={1.5} fill="#E3F4E7" />
+        </g>
+      ))}
+      <rect x={236} y={64} width={34} height={62} rx={6} fill={K.navy} />
+      <rect x={241} y={70} width={24} height={12} rx={2} fill="#C6E6D0" />
+      {[0, 1, 2].map((r) => [0, 1, 2].map((c) => <rect key={`${r}${c}`} x={241 + c * 9} y={88 + r * 11} width={6} height={7} rx={1.5} fill={r === 2 && c === 2 ? K.orange : '#5B7399'} />))}
+      <Sparkle x={196} y={60} />
+    </>
+  ),
+  // Lộ trình nghề nghiệp: bậc thang đi lên tới lá cờ
+  career: () => (
+    <>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <rect key={i} x={94 + i * 32} y={130 - i * 18} width={32} height={18 + i * 18} fill={[K.sky, K.blue, K.green, K.orange, K.orangeDeep][i]} />
+      ))}
+      {[0, 1, 2, 3, 4].map((i) => (
+        <rect key={`t${i}`} x={94 + i * 32} y={130 - i * 18} width={32} height={4} fill={K.paper} opacity={0.35} />
+      ))}
+      <path d="M240 58 V26" stroke={K.navy} strokeWidth={3} strokeLinecap="round" />
+      <path d="M239 27 H216 L222 36 L216 45 H239 Z" fill={K.red} />
+      <Person x={158} y={94} s={0.9} shirt={K.navy} bag wave />
+      <path d="M110 92 Q130 70 150 66" stroke={K.orange} strokeWidth={2.5} strokeDasharray="3 4" fill="none" strokeLinecap="round" />
+      <path d="M146 62 L152 66 L146 71" stroke={K.orange} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <Sparkle x={210} y={44} />
+      <Sparkle x={268} y={70} c={K.orange} s={0.8} />
+    </>
+  ),}
 
 export function BannerScene({ scene, className }: { scene: BannerSceneKey; className?: string }) {
   if (scene === 'campus') return <CampusIllustration tone="warm" className={className} />

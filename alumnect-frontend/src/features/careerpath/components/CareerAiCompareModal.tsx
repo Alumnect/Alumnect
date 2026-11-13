@@ -29,7 +29,7 @@ function PersonHeader({ person, isViewer }: { person: PersonCard; isViewer: bool
       <Avatar src={person.avatarUrl ?? undefined} name={person.name} size={48} className="rounded-xl" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <p className="truncate text-sm font-extrabold text-text">{isViewer ? t('career.aiYou') : person.name}</p>
+          <p className="truncate text-sm font-bold text-text">{isViewer ? t('career.aiYou') : person.name}</p>
         </div>
         {isViewer && person.name && <p className="truncate text-xs text-text-subtle">{person.name}</p>}
         <p className="mt-0.5 text-xs text-text-muted">
@@ -37,7 +37,7 @@ function PersonHeader({ person, isViewer }: { person: PersonCard; isViewer: bool
             ? `${person.currentRole}${person.company ? ` · ${person.company}` : ''}`
             : person.majorName || t('career.aiStudentFallback')}
         </p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] font-semibold text-text-subtle">
+        <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs font-semibold text-text-subtle">
           {person.cohort != null && <span>{t('career.cohortLabel', { cohort: person.cohort })}</span>}
           {person.yearsSinceFirstJob != null && <span>· {t('career.aiYearsSince', { count: person.yearsSinceFirstJob })}</span>}
           {person.companyCount > 0 && <span>· {t('career.aiCompanies', { count: person.companyCount })}</span>}
@@ -58,7 +58,7 @@ function Ladder({ steps, accent }: { steps: LadderStep[]; accent: 'viewer' | 'ta
               accent === 'target' ? 'bg-primary-solid' : 'bg-orange-400',
             )}
           />
-          <p className="text-[11px] font-bold uppercase tracking-wide text-text-subtle">{s.period}</p>
+          <p className="text-xs font-bold tracking-wide text-text-subtle">{s.period}</p>
           <p className="text-sm font-bold text-text">{s.title}</p>
           {s.company && (
             <p className="flex items-center gap-1 text-xs text-text-muted">
@@ -88,7 +88,7 @@ function ListCard({
   if (items.length === 0) return null
   return (
     <div className="rounded-2xl border border-border bg-surface p-3.5">
-      <p className={cn('mb-2 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide', tone)}>
+      <p className={cn('mb-2 flex items-center gap-1.5 text-xs font-bold  tracking-wide', tone)}>
         {icon} {title}
       </p>
       <ul className="space-y-1.5">
@@ -169,7 +169,7 @@ export function CareerAiCompareModal({
           {/* Hai lộ trình song song */}
           <div className="grid gap-5 md:grid-cols-2">
             <section>
-              <h3 className="mb-3 text-sm font-extrabold text-text">{t('career.aiYourJourney')}</h3>
+              <h3 className="mb-3 text-sm font-bold text-text">{t('career.aiYourJourney')}</h3>
               {data.viewerLadder.length > 0 ? (
                 <Ladder steps={data.viewerLadder} accent="viewer" />
               ) : (
@@ -193,7 +193,7 @@ export function CareerAiCompareModal({
               )}
             </section>
             <section>
-              <h3 className="mb-3 text-sm font-extrabold text-text">{t('career.aiTargetJourney', { name: data.targetPerson.name })}</h3>
+              <h3 className="mb-3 text-sm font-bold text-text">{t('career.aiTargetJourney', { name: data.targetPerson.name })}</h3>
               {data.historicalLadder.length > 0 ? (
                 <Ladder steps={data.historicalLadder} accent="target" />
               ) : (
@@ -216,7 +216,7 @@ export function CareerAiCompareModal({
             <div className="flex gap-3 rounded-2xl border border-warning-border bg-warning-soft p-4">
               <Lightbulb size={20} className="mt-0.5 shrink-0 text-warning" />
               <div>
-                <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-warning">{t('career.aiAdvice')}</p>
+                <p className="mb-1 text-xs font-bold tracking-wide text-warning">{t('career.aiAdvice')}</p>
                 <p className="text-sm leading-relaxed text-text">{data.actionableAdviceVi}</p>
               </div>
             </div>

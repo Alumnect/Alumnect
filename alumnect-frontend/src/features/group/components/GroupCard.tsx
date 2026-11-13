@@ -51,7 +51,7 @@ export function GroupCard({ group }: { group: GroupCardData }) {
 
         {/* Tiêu đề & Mô tả */}
         <Link to={detailPath} className="group/title block">
-          <h3 className="line-clamp-1 text-base font-extrabold leading-snug text-text transition-colors group-hover/title:text-brand-600 dark:group-hover/title:text-brand-400">
+          <h3 className="line-clamp-1 text-base font-bold leading-snug text-text transition-colors group-hover/title:text-brand-600 dark:group-hover/title:text-brand-400">
             {group.name}
           </h3>
         </Link>
