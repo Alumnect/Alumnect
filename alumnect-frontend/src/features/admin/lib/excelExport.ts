@@ -3,6 +3,7 @@ import type { AdminRevenueOverviewDto, AdminRevenueTransactionDto } from '../api
 const formatDateTime = (value: string) => {
   if (!value) return ''
   const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
   return new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
@@ -11,6 +12,18 @@ const formatDateTime = (value: string) => {
     month: '2-digit',
     year: 'numeric',
   }).format(d)
+}
+
+/** Tải file Blob an toàn (tránh thu hồi ObjectURL trước khi trình duyệt kịp bắt đầu tải). */
+function triggerBlobDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 const escapeXml = (unsafe: string | number | undefined | null) => {
@@ -444,12 +457,7 @@ export function exportFinancialExcel(
 </Workbook>`
 
   const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = filename
-  anchor.click()
-  URL.revokeObjectURL(url)
+  triggerBlobDownload(blob, filename)
 }
 
 /**
@@ -475,11 +483,6 @@ export function exportRevenueCsv(transactions: AdminRevenueTransactionDto[]) {
   ]
   const csv = `\uFEFF${rows.map((row) => row.map(escape).join(',')).join('\n')}`
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = `doanh-thu-alumnect-${new Date().toISOString().slice(0, 10)}.csv`
-  anchor.click()
-  URL.revokeObjectURL(url)
+  triggerBlobDownload(blob, `doanh-thu-alumnect-${new Date().toISOString().slice(0, 10)}.csv`)
 }
 

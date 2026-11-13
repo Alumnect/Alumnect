@@ -19,6 +19,7 @@ import type { AdminRevenueTransactionDto } from '../api/adminApi'
 import { exportFinancialExcel, exportRevenueCsv } from '../lib/excelExport'
 import { AdminPageBanner, StatTile } from './AdminVisuals'
 import { brandButtonClass } from '@/components/brand/brandClasses'
+import { useClickOutside } from '@/hooks/useClickOutside'
 import { cn } from '@/lib/utils'
 
 type Period = 'ALL' | '30D' | '90D' | 'YEAR'
@@ -77,15 +78,16 @@ export function AdminRevenuePage() {
   const [showExportMenu, setShowExportMenu] = useState(false)
   const exportDropdownRef = useRef<HTMLDivElement>(null)
 
+  useClickOutside(exportDropdownRef, () => setShowExportMenu(false), showExportMenu)
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target as Node)) {
-        setShowExportMenu(false)
-      }
+    if (!showExportMenu) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowExportMenu(false)
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showExportMenu])
 
   const handleExportExcel = () => {
     if (!data) return
@@ -136,8 +138,10 @@ export function AdminRevenuePage() {
           <div className="relative inline-block text-left" ref={exportDropdownRef}>
             <button
               type="button"
-              onClick={() => setShowExportMenu(!showExportMenu)}
-              disabled={!transactions.length}
+              aria-expanded={showExportMenu}
+              aria-haspopup="menu"
+              onClick={() => setShowExportMenu((prev) => !prev)}
+              disabled={isLoading || !data}
               className={cn(brandButtonClass, 'disabled:opacity-50')}
             >
               <Download className="h-4 w-4" />
@@ -146,12 +150,17 @@ export function AdminRevenuePage() {
             </button>
 
             {showExportMenu && (
-              <div className="absolute right-0 z-50 mt-1.5 w-68 origin-top-right rounded-2xl border border-border bg-surface p-1.5 shadow-xl animate-in fade-in-80 zoom-in-95">
+              <div
+                role="menu"
+                aria-label="Định dạng trích xuất"
+                className="absolute left-0 z-50 mt-1.5 w-72 origin-top-left rounded-2xl border border-border bg-surface p-1.5 shadow-xl sm:left-auto sm:right-0 sm:origin-top-right animate-in fade-in-80 zoom-in-95"
+              >
                 <div className="px-3 py-1.5 text-xs font-bold text-text-subtle border-b border-border mb-1">
                   Định dạng trích xuất
                 </div>
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={handleExportExcel}
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-text hover:bg-primary-soft hover:text-primary-solid transition text-left cursor-pointer group"
                 >
@@ -166,15 +175,19 @@ export function AdminRevenuePage() {
 
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={handleExportCsv}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-text hover:bg-surface-2 transition text-left cursor-pointer group mt-0.5"
+                  disabled={!transactions.length}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-semibold text-text hover:bg-surface-2 transition text-left cursor-pointer group mt-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition shrink-0">
                     <FileText className="h-4 w-4" />
                   </span>
                   <div>
                     <p className="font-bold text-text">Dữ liệu thô CSV (.csv)</p>
-                    <p className="text-xs text-text-subtle">Danh sách giao dịch định dạng UTF-8</p>
+                    <p className="text-xs text-text-subtle">
+                      {transactions.length ? 'Danh sách giao dịch định dạng UTF-8' : 'Chưa có giao dịch trong bộ lọc hiện tại'}
+                    </p>
                   </div>
                 </button>
               </div>
@@ -235,7 +248,7 @@ export function AdminRevenuePage() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-3xl border border-border bg-surface">
+      <section className="rounded-3xl border border-border bg-surface">
         <div className="flex flex-col gap-3 border-b border-border p-5 md:flex-row md:items-center md:justify-between">
           <div><h2 className="font-display font-bold text-text">Giao dịch doanh thu</h2><p className="text-xs text-text-subtle">{transactions.length} kết quả trong kỳ đang chọn</p></div>
           <div className="flex flex-col gap-2 sm:flex-row"><label className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tên, email hoặc mã..." className="h-9 w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 text-xs outline-none focus:border-primary sm:w-60" /></label><SelectDropdown
@@ -247,11 +260,12 @@ export function AdminRevenuePage() {
                 { value: 'DISPUTE_FEE', label: 'Phí tranh chấp' },
               ]}
               placeholder="Tất cả nguồn thu"
+              align="right"
               className="sm:w-48"
               buttonClassName="h-9 text-xs"
             /></div>
         </div>
-        <div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead className="bg-surface-2 text-xs text-text-subtle"><tr><th className="px-5 py-3">Giao dịch</th><th className="px-5 py-3">Người thanh toán</th><th className="px-5 py-3">Thời gian</th><th className="px-5 py-3">Phương thức</th><th className="px-5 py-3 text-right">Doanh thu</th></tr></thead><tbody className="divide-y divide-border">
+        <div className="overflow-x-auto rounded-b-3xl"><table className="w-full min-w-[820px] text-left text-sm"><thead className="bg-surface-2 text-xs text-text-subtle"><tr><th className="px-5 py-3">Giao dịch</th><th className="px-5 py-3">Người thanh toán</th><th className="px-5 py-3">Thời gian</th><th className="px-5 py-3">Phương thức</th><th className="px-5 py-3 text-right">Doanh thu</th></tr></thead><tbody className="divide-y divide-border">
           {isLoading ? Array.from({ length: 5 }).map((_, index) => <TableSkeleton key={index} />) : transactions.length ? transactions.map((item) => <tr key={item.id} className="hover:bg-surface-2"><td className="px-5 py-4"><p className="font-semibold text-text">{item.description}</p><p className="mt-0.5 text-xs text-text-subtle">#{item.referenceCode}</p></td><td className="px-5 py-4"><p className="font-semibold">{item.payerName}</p><p className="mt-0.5 text-xs text-text-subtle">{item.payerEmail}</p></td><td className="px-5 py-4 text-xs text-text-subtle">{formatDateTime(item.occurredAt)}</td><td className="px-5 py-4"><span className="rounded-full bg-surface-2 px-2.5 py-1 text-xs font-bold text-text-muted">{item.paymentMethod}</span></td><td className="px-5 py-4 text-right font-bold text-success">+{formatVnd(item.amount)}</td></tr>) : <tr><td colSpan={5} className="px-5 py-14 text-center text-sm text-text-subtle">Không có giao dịch doanh thu phù hợp.</td></tr>}
         </tbody></table></div>
       </section>

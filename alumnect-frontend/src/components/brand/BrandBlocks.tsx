@@ -77,22 +77,23 @@ export function BrandBanner({
   return (
     <section
       className={cn(
-        'relative flex items-center justify-between gap-6 overflow-hidden rounded-[24px] border border-[#FFE3D0] pl-5 pr-4 sm:pl-7 dark:border-border',
+        'relative flex items-center justify-between gap-6 rounded-[24px] border border-[#FFE3D0] pl-5 pr-4 sm:pl-7 sm:pr-6 dark:border-border',
         'bg-[radial-gradient(120%_160%_at_90%_0%,#FFE2CC_0%,#FFF3EA_48%,#FFF9F4_100%)] dark:bg-none dark:bg-surface',
         className
       )}
     >
-      {/* Dải đồi chạy suốt cạnh dưới, nối liền với hình minh hoạ bên phải */}
-      <svg
-        viewBox="0 0 1200 48"
-        preserveAspectRatio="none"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-10 w-full dark:opacity-25"
-        aria-hidden
-      >
-        <path d="M0 26 C 220 6, 420 30, 640 20 S 1000 2, 1200 14 L1200 48 L0 48 Z" fill="#FFD9BF" opacity="0.75" />
-        <path d="M0 38 C 260 24, 520 44, 780 34 S 1080 22, 1200 30 L1200 48 L0 48 Z" fill="#FFC7A1" opacity="0.7" />
-      </svg>
-      <div className={cn('relative min-w-0 flex-1', compact ? 'pb-7 pt-4' : 'pb-10 pt-6')}>
+      {/* Dải đồi chạy suốt cạnh dưới, bọc overflow-hidden riêng để không cắt dropdown trong actions */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[23px]" aria-hidden>
+        <svg
+          viewBox="0 0 1200 48"
+          preserveAspectRatio="none"
+          className="absolute inset-x-0 bottom-0 h-10 w-full dark:opacity-25"
+        >
+          <path d="M0 26 C 220 6, 420 30, 640 20 S 1000 2, 1200 14 L1200 48 L0 48 Z" fill="#FFD9BF" opacity="0.75" />
+          <path d="M0 38 C 260 24, 520 44, 780 34 S 1080 22, 1200 30 L1200 48 L0 48 Z" fill="#FFC7A1" opacity="0.7" />
+        </svg>
+      </div>
+      <div className={cn('relative z-10 min-w-0 flex-1', compact ? 'pb-7 pt-4' : 'pb-10 pt-6')}>
         {back}
         <h1 className={cn('font-display font-bold leading-tight tracking-tight text-text', compact ? 'text-xl sm:text-[22px]' : 'text-[22px] sm:text-[26px]')}>{title}</h1>
         {description && <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[#6B5A50] dark:text-text-muted">{description}</p>}

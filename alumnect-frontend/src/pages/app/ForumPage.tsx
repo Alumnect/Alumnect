@@ -249,7 +249,7 @@ export function ForumPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       <SeoHead
         title="Diễn đàn & Hỏi đáp Cựu sinh viên FPT"
         description="Diễn đàn trao đổi học thuật, kinh nghiệm nghề nghiệp, giải đáp thắc mắc và định hướng tương lai dành riêng cho sinh viên và cựu sinh viên Đại học FPT."

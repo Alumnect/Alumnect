@@ -278,7 +278,7 @@ export function NotificationsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-10">
+    <div className="mx-auto max-w-6xl pb-10">
       <BrandBanner
         scene="notifications"
         className="mb-6"
