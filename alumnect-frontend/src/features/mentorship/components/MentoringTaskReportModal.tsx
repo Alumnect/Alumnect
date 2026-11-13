@@ -106,7 +106,7 @@ export function MentoringTaskReportModal({
               <h3 className="text-lg font-bold text-text">
                 {t('mentoring.taskReportTitle', 'Báo cáo kết quả Task & Trạng thái thanh toán')}
               </h3>
-              <span className="text-xs px-2 py-0.5 font-mono font-medium rounded bg-info-soft text-info">
+              <span className="text-xs px-2 py-0.5 tabular-nums font-medium rounded bg-info-soft text-info">
                 Task #{taskId}
               </span>
             </div>
@@ -141,7 +141,7 @@ export function MentoringTaskReportModal({
             {/* Task Title & Status Banner */}
             <div className="p-4 bg-surface-2 rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">
+                <span className="text-xs font-semibold text-text-subtle">
                   {t('mentoring.mentoringTask', 'Nhiệm vụ Mentoring')}
                 </span>
                 <h4 className="text-base font-bold text-text">
@@ -193,7 +193,7 @@ export function MentoringTaskReportModal({
 
             {/* Section 1: Cam kết & Thời hạn */}
             <div className="space-y-3">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h5 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-info" />
                 {t('mentoring.sectionAgreedTerms', '1. Cam kết thỏa thuận & Thời hạn')}
               </h5>
@@ -227,7 +227,7 @@ export function MentoringTaskReportModal({
 
             {/* Section 2: Tiến độ & Kết quả bàn giao */}
             <div className="space-y-3">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h5 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <Award className="w-4 h-4 text-success" />
                 {t('mentoring.sectionProgressAndDeliverables', '2. Tiến độ thực hiện & Bàn giao kết quả')}
               </h5>
@@ -259,7 +259,7 @@ export function MentoringTaskReportModal({
                         {report.completionSummary.status}
                       </span>
                     </div>
-                    <p className="text-text-muted italic">
+                    <p className="text-text-muted">
                       {report.completionSummary.finalSummary || t('mentoring.submittedAllDeliverables', 'Đã nộp đầy đủ sản phẩm theo cam kết.')}
                     </p>
                     {report.completionSummary.deliverables && (
@@ -284,7 +284,7 @@ export function MentoringTaskReportModal({
                     )}
                   </div>
                 ) : (
-                  <div className="pt-2 border-t border-border text-xs text-text-subtle italic">
+                  <div className="pt-2 border-t border-border text-xs text-text-subtle">
                     {t('mentoring.noFinalReportSubmitted', 'Chưa có biên bản nộp sản phẩm hoàn thành chính thức.')}
                   </div>
                 )}
@@ -293,7 +293,7 @@ export function MentoringTaskReportModal({
 
             {/* Section 3: Báo cáo Tài chính & Dòng tiền */}
             <div className="space-y-3">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h5 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <CreditCard className="w-4 h-4 text-info" />
                 {t('mentoring.sectionFinanceAndPayment', '3. Báo cáo tài chính & Trạng thái thanh toán')}
               </h5>
@@ -306,7 +306,7 @@ export function MentoringTaskReportModal({
                     : 'bg-surface border-border'
                 }`}>
                   <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
-                    <span className="font-bold text-xs uppercase tracking-wide text-info">
+                    <span className="font-bold text-xs text-info">
                       {t('mentoring.forStudent', 'Dành cho Học viên (Student)')}
                     </span>
                     {isStudent && (
@@ -344,7 +344,7 @@ export function MentoringTaskReportModal({
                     </div>
                     <div className="flex justify-between items-center text-xs pt-1">
                       <span className="text-text-subtle">{t('mentoring.refundStatus', 'Trạng thái hoàn tiền:')}</span>
-                      <span className="px-2 py-0.5 rounded font-mono font-bold bg-surface-3 text-text-muted">
+                      <span className="px-2 py-0.5 rounded tabular-nums font-bold bg-surface-3 text-text-muted">
                         {report.studentRefundStatus}
                       </span>
                     </div>
@@ -358,7 +358,7 @@ export function MentoringTaskReportModal({
                     : 'bg-surface border-border'
                 }`}>
                   <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
-                    <span className="font-bold text-xs uppercase tracking-wide text-info">
+                    <span className="font-bold text-xs text-info">
                       {t('mentoring.forMentor', 'Dành cho Cố vấn (Mentor)')}
                     </span>
                     {isMentor && (
@@ -388,7 +388,7 @@ export function MentoringTaskReportModal({
                     </div>
                     <div className="flex justify-between items-center text-xs pt-1">
                       <span className="text-text-subtle">{t('mentoring.payoutStatus', 'Trạng thái giải ngân:')}</span>
-                      <span className={`px-2 py-0.5 rounded font-mono font-bold ${
+                      <span className={`px-2 py-0.5 rounded tabular-nums font-bold ${
                         report.mentorPayoutStatus === 'PAID'
                           ? 'bg-success-soft text-success'
                           : report.mentorPayoutStatus === 'ON_HOLD'

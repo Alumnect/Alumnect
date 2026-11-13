@@ -25,6 +25,9 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
   const isOwn = currentUserId ? Number(currentUserId) === user.userId : false
   const [isFollowingLocal, setIsFollowingLocal] = useState(user.isFollowing ?? false)
   const [followersCountLocal, setFollowersCountLocal] = useState(user.followersCount ?? 0)
+  const headlineMentionsCompany = Boolean(
+    user.headline && user.primaryExperience?.company && user.headline.toLowerCase().includes(user.primaryExperience.company.toLowerCase())
+  )
 
   const followMutation = useFollowUser()
   const unfollowMutation = useUnfollowUser()
@@ -95,7 +98,7 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
           <div>
             <Link
               to={`/app/profile?userId=${user.userId}`}
-              className="text-base font-extrabold text-text transition-colors hover:text-primary-solid line-clamp-1"
+              className="text-base font-bold text-text transition-colors hover:text-primary-solid line-clamp-1"
             >
               {user.fullName}
             </Link>
@@ -134,8 +137,8 @@ export function UserDirectoryCard({ user }: UserDirectoryCardProps) {
             ) : null}
           </div>
 
-          {/* Primary Experience / Company */}
-          {user.primaryExperience && (
+          {/* Kinh nghiệm chính: chỉ hiện khi câu giới thiệu chưa nhắc tới công ty này */}
+          {user.primaryExperience && !headlineMentionsCompany && (
             <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-text-muted font-medium line-clamp-1 bg-surface-2 py-1 px-2 rounded-lg">
               <Briefcase size={12} className="shrink-0 text-text-subtle" />
               <span>

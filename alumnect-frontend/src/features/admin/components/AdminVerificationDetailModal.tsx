@@ -308,7 +308,7 @@ export function AdminVerificationDetailModal({
 
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-extrabold text-text truncate">
+                <h2 className="text-base sm:text-lg font-bold text-text truncate">
                   Chi tiết xác minh
                 </h2>
                 <Badge
@@ -361,10 +361,10 @@ export function AdminVerificationDetailModal({
                 className="ring-2 ring-primary/20 shrink-0"
               />
               <div className="min-w-0 flex-1">
-                <h3 className="font-extrabold text-sm text-text truncate">
+                <h3 className="font-bold text-sm text-text truncate">
                   {request.fullName}
                 </h3>
-                <p className="text-xs text-text-subtle dark:text-text-muted truncate font-mono mt-0.5">
+                <p className="text-xs text-text-subtle dark:text-text-muted truncate tabular-nums mt-0.5">
                   {request.email || 'Chưa cung cấp email'}
                 </p>
                 <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-primary-solid">
@@ -380,7 +380,7 @@ export function AdminVerificationDetailModal({
 
             {/* Nhóm 1: Người gửi & Học vấn */}
             <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5 text-primary-solid" />
                 <span>Người gửi & Học vấn</span>
               </h4>
@@ -396,7 +396,7 @@ export function AdminVerificationDetailModal({
                 {request.studentCode && (
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-text-subtle dark:text-text-muted">Mã số sinh viên:</span>
-                    <span className="font-mono font-bold text-text text-right">
+                    <span className="tabular-nums font-bold text-text text-right">
                       {request.studentCode}
                     </span>
                   </div>
@@ -429,7 +429,7 @@ export function AdminVerificationDetailModal({
 
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-text-subtle dark:text-text-muted">Mã người dùng:</span>
-                  <span className="font-mono font-bold text-text-muted dark:text-[#c0c3c7]">
+                  <span className="tabular-nums font-bold text-text-muted dark:text-[#c0c3c7]">
                     #USER-{request.userId}
                   </span>
                 </div>
@@ -438,7 +438,7 @@ export function AdminVerificationDetailModal({
 
             {/* Nhóm 2: Thông tin xác minh */}
             <div className="space-y-3 pt-3 border-t border-border dark:border-border">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary-solid" />
                 <span>Thông tin xác minh</span>
               </h4>
@@ -446,7 +446,7 @@ export function AdminVerificationDetailModal({
               <div className="space-y-2.5 text-xs">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-text-subtle dark:text-text-muted">Mã yêu cầu:</span>
-                  <span className="font-mono font-bold text-text">
+                  <span className="tabular-nums font-bold text-text">
                     #REQ-{request.id}
                   </span>
                 </div>
@@ -469,7 +469,7 @@ export function AdminVerificationDetailModal({
 
             {/* Nhóm 3: Lịch sử xử lý */}
             <div className="space-y-3 pt-3 border-t border-border dark:border-border">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-primary-solid" />
                 <span>Lịch sử xử lý</span>
               </h4>
@@ -504,7 +504,7 @@ export function AdminVerificationDetailModal({
 
                   <div className="space-y-1 pt-1 border-t border-slate-200/50 dark:border-border">
                     <span className="text-text-subtle dark:text-text-muted block">Ghi chú / Nhận xét:</span>
-                    <p className="font-medium text-text dark:text-text italic bg-surface dark:bg-bg p-2 rounded-lg border border-border dark:border-border leading-relaxed">
+                    <p className="font-medium text-text dark:text-text bg-surface dark:bg-bg p-2 rounded-lg border border-border dark:border-border leading-relaxed">
                       "{request.reviewNote || 'Không có ghi chú'}"
                     </p>
                   </div>
@@ -545,7 +545,7 @@ export function AdminVerificationDetailModal({
                     >
                       {fileName}
                     </span>
-                    <span className="px-1.5 py-0.2 rounded text-xs font-black tracking-wider uppercase border bg-slate-200/80 dark:bg-surface-2 text-text-muted border-slate-300/70 dark:border-slate-600">
+                    <span className="px-1.5 py-0.2 rounded text-xs font-bold border bg-slate-200/80 dark:bg-surface-2 text-text-muted border-slate-300/70 dark:border-slate-600">
                       {proofFormat}
                     </span>
                   </div>
@@ -591,7 +591,7 @@ export function AdminVerificationDetailModal({
                     <ZoomOut className="h-3.5 w-3.5" />
                   </button>
 
-                  <span className="px-2 text-xs font-bold font-mono text-text-muted min-w-[42px] text-center select-none">
+                  <span className="px-2 text-xs font-bold tabular-nums text-text-muted min-w-[42px] text-center select-none">
                     {zoom}%
                   </span>
 
@@ -791,7 +791,7 @@ export function AdminVerificationDetailModal({
                   ) : (
                     <AlertTriangle className="h-5 w-5 text-danger" />
                   )}
-                  <h4 className="font-extrabold text-sm text-text">
+                  <h4 className="font-bold text-sm text-text">
                     {inlineAction === 'APPROVING'
                       ? `Xác nhận Phê duyệt hồ sơ cựu sinh viên (${request.fullName})`
                       : `Từ chối hồ sơ xác thực của (${request.fullName})`}
@@ -813,7 +813,7 @@ export function AdminVerificationDetailModal({
               {/* Template gợi ý lý do nhanh khi Từ chối */}
               {inlineAction === 'REJECTING' && (
                 <div className="space-y-1.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+                  <span className="text-xs font-bold text-text-subtle">
                     Gợi ý lý do từ chối nhanh:
                   </span>
                   <div className="flex flex-wrap gap-1.5">

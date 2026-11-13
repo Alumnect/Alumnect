@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { DateField } from '@/components/DateField'
 import { DEAL_TASK_TYPES, dealApi } from '@/api/mentoringFlow'
 import type { DealPayload } from '@/api/mentoringFlow'
+import { chatApi } from '@/api/chat'
 import { WORKING_MODE_LABEL } from '@/api/mentoring'
 import type { WorkingMode } from '@/api/mentoring'
 import { toast, errMsg } from '@/lib/toast'
@@ -40,8 +41,13 @@ export default function DealFormScreen() {
   const { colors, viridian } = useMentoringTheme()
   const router = useRouter()
   const qc = useQueryClient()
-  const { conversationId, dealId, renegotiate } = useLocalSearchParams<{ conversationId?: string; dealId?: string; renegotiate?: string }>()
+  const { conversationId, dealId } = useLocalSearchParams<{ conversationId?: string; dealId?: string }>()
   const existing = useQuery({ queryKey: ['mentoring-deal', dealId], queryFn: () => dealApi.detail(Number(dealId)), enabled: !!dealId })
+  const chatContext = useQuery({
+    queryKey: ['mentoring-chat-context', conversationId],
+    queryFn: () => chatApi.mentoringContext(Number(conversationId)),
+    enabled: !!conversationId && !dealId,
+  })
 
   const [f, setF] = useState({ taskScope: '', expectedResult: '', price: '', changeNote: '' })
   const [deadline, setDeadline] = useState('')
@@ -50,7 +56,9 @@ export default function DealFormScreen() {
   const [taskType, setTaskType] = useState('CONSULTATION')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loaded, setLoaded] = useState(false)
+
   const d = existing.data?.deal
+  const ctx = chatContext.data
   if (d && !loaded) {
     setLoaded(true)
     setF({ taskScope: d.taskScope, expectedResult: d.expectedResult, price: String(d.agreedPrice), changeNote: '' })
@@ -58,15 +66,38 @@ export default function DealFormScreen() {
     setMode(d.workingMode)
     setParticipation(d.participationType)
     setTaskType(d.taskType)
+  } else if (!dealId && ctx && !loaded) {
+    setLoaded(true)
+    const defaultScope = [ctx.requestTitle, ctx.requestDescription].filter(Boolean).join('\n\n')
+    const defaultExpected = ctx.requestTitle ? `Hoàn thành yêu cầu "${ctx.requestTitle}" theo đúng mục tiêu đã thống nhất.` : ''
+    const defaultPrice = ctx.budgetMax != null ? String(ctx.budgetMax) : ctx.budgetMin != null ? String(ctx.budgetMin) : ''
+    const futureDeadline = ctx.expectedDeadline && new Date(ctx.expectedDeadline).getTime() > Date.now()
+      ? ctx.expectedDeadline.slice(0, 19)
+      : ''
+    setF({
+      taskScope: defaultScope,
+      expectedResult: defaultExpected,
+      price: defaultPrice,
+      changeNote: '',
+    })
+    if (futureDeadline) setDeadline(futureDeadline)
+    if (ctx.workingMode) setMode(ctx.workingMode)
+    if (ctx.participationType) setParticipation(ctx.participationType === 'GROUP' ? 'GROUP' : 'INDIVIDUAL')
+    if (ctx.taskType) setTaskType(ctx.taskType)
   }
+
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }))
 
   const m = useMutation({
     mutationFn: () => {
+      const parsedDeadline = new Date(deadline)
+      if (Number.isNaN(parsedDeadline.getTime())) {
+        throw new Error('Hạn chót hoàn thành (Deadline) không hợp lệ.')
+      }
       const p: DealPayload = {
         taskScope: f.taskScope.trim(),
         agreedPrice: Number(f.price),
-        deadline,
+        deadline: parsedDeadline.toISOString(),
         workingMode: mode,
         participationType: participation,
         taskType,
@@ -75,12 +106,13 @@ export default function DealFormScreen() {
       }
       return dealId
         ? dealApi.update(Number(dealId), p)
-        : dealApi.propose({ ...p, conversationId: Number(conversationId), proposalSource: renegotiate ? 'RENEGOTIATION' : 'REQUEST_ACCEPTANCE' })
+        : dealApi.propose({ ...p, conversationId: Number(conversationId), proposalSource: 'RENEGOTIATION' })
     },
     onSuccess: (deal) => {
-      toast.success(dealId ? 'Đã cập nhật điều khoản deal.' : 'Đã gửi đề xuất deal.')
+      toast.success(dealId ? 'Đã cập nhật điều khoản thỏa thuận.' : 'Đã gửi đề xuất thỏa thuận.')
       qc.invalidateQueries({ queryKey: ['mentoring-deal'] })
       qc.invalidateQueries({ queryKey: ['mentoring-deal-conv'] })
+      qc.invalidateQueries({ queryKey: ['mentoring-chat-context'] })
       if (dealId) router.back()
       else router.replace({ pathname: '/mentoring/deal/[id]', params: { id: String(deal.id) } })
     },
@@ -91,11 +123,18 @@ export default function DealFormScreen() {
     const e: Record<string, string> = {}
     if (f.taskScope.trim().length < 10 || f.taskScope.trim().length > 5000) e.taskScope = 'Phạm vi công việc phải từ 10 đến 5000 ký tự.'
     if (f.price === '' || Number(f.price) < 0) e.price = 'Mức giá thỏa thuận phải lớn hơn hoặc bằng 0 VND.'
-    if (!deadline || new Date(deadline).getTime() <= Date.now()) e.deadline = 'Hạn chót hoàn thành (Deadline) phải là một thời điểm trong tương lai.'
+    if (!deadline || Number.isNaN(new Date(deadline).getTime()) || new Date(deadline).getTime() <= Date.now()) {
+      e.deadline = 'Hạn chót hoàn thành (Deadline) phải là một thời điểm trong tương lai.'
+    }
     if (f.expectedResult.trim().length < 10 || f.expectedResult.trim().length > 3000) e.expectedResult = 'Kết quả kỳ vọng đầu ra phải từ 10 đến 3000 ký tự.'
     if (f.changeNote.length > 255) e.changeNote = 'Ghi chú không được vượt quá 255 ký tự.'
     setErrors(e)
-    if (!Object.keys(e).length) m.mutate()
+    if (!Object.keys(e).length) {
+      m.mutate()
+    } else {
+      const firstError = Object.values(e)[0]
+      if (firstError) toast.error(firstError)
+    }
   }
 
   if (dealId && existing.isLoading)
@@ -112,6 +151,34 @@ export default function DealFormScreen() {
         <Empty text="Không tìm thấy thỏa thuận." error={existing.error} onRetry={() => { void existing.refetch() }} />
       </Screen>
     )
+
+  if (dealId && d && !d.canEdit) {
+    return (
+      <Screen bg={colors.bg}>
+        <Header title="Chi tiết thỏa thuận" />
+        <Empty
+          title="Không thể chỉnh sửa"
+          text="Chỉ Mentor mới có quyền chỉnh sửa điều khoản thỏa thuận. Học viên vui lòng phản hồi hoặc từ chối trên chi tiết thỏa thuận."
+          action="Xem chi tiết thỏa thuận"
+          onAction={() => router.replace({ pathname: '/mentoring/deal/[id]', params: { id: String(dealId) } })}
+        />
+      </Screen>
+    )
+  }
+
+  if (!dealId && ctx && !ctx.canCreateDealTicket) {
+    return (
+      <Screen bg={colors.bg}>
+        <Header title="Đề xuất thỏa thuận" />
+        <Empty
+          title="Không có quyền đề xuất"
+          text="Chỉ Mentor mới có quyền khởi tạo thỏa thuận. Học viên vui lòng trao đổi với Mentor qua tin nhắn."
+          action="Quay lại trò chuyện"
+          onAction={() => router.back()}
+        />
+      </Screen>
+    )
+  }
 
   return (
     <Screen bg={colors.bg}>

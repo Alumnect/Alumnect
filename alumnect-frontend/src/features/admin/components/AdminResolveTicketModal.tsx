@@ -162,7 +162,7 @@ export function AdminResolveTicketModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/20 text-on-primary font-semibold">
+                <span className="text-xs tabular-nums px-2 py-0.5 rounded-full bg-white/20 text-on-primary font-semibold">
                   {ticket.ticketCode}
                 </span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30">
@@ -190,7 +190,7 @@ export function AdminResolveTicketModal({
               <span className="text-xs text-text-subtle font-medium block">
                 Tổng quỹ ký quỹ Escrow của Task
               </span>
-              <span className="text-xl font-extrabold text-text mt-0.5 block">
+              <span className="text-xl font-bold text-text mt-0.5 block">
                 {formatVnd(availableFund)}
               </span>
             </div>
@@ -390,7 +390,7 @@ export function AdminResolveTicketModal({
 
           {/* Bảng đối soát tài chính phân bổ */}
           <div className="p-3.5 bg-text text-text-inverse rounded-xl space-y-2">
-            <div className="text-2xs uppercase tracking-wider text-text-subtle font-bold mb-1">
+            <div className="text-2xs text-text-subtle font-bold mb-1">
               Bảng đối soát tài chính phân bổ
             </div>
             <div className="flex justify-between text-xs py-1 border-b border-slate-800">

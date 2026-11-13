@@ -629,7 +629,7 @@ function AlumniClusterMarker({ map, alumni, count, onExpand }: AlumniClusterMark
       <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary-solid">
         <Users size={23} strokeWidth={2.2} />
       </span>
-      <span className="absolute -right-2 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-primary-solid px-1.5 text-xs font-extrabold text-on-primary shadow-sm ring-2 ring-surface">
+      <span className="absolute -right-2 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-primary-solid px-1.5 text-xs font-bold text-on-primary shadow-sm ring-2 ring-surface">
         {count}
       </span>
       <span className="absolute -bottom-1.5 h-3 w-3 rotate-45 border-b border-r border-white bg-surface" />
@@ -723,7 +723,7 @@ function AlumniMarker({
         />
       </div>
       {isGroupLead && groupSize > 1 && (
-        <span className="absolute -right-3 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-primary-solid px-1 text-xs font-extrabold text-on-primary shadow-sm ring-2 ring-surface">
+        <span className="absolute -right-3 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-primary-solid px-1 text-xs font-bold text-on-primary shadow-sm ring-2 ring-surface">
           {groupSize}
         </span>
       )}

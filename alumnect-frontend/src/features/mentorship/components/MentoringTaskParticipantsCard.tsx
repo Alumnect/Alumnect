@@ -30,7 +30,7 @@ export function MentoringTaskParticipantsCard({
           />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="whitespace-nowrap rounded-md bg-primary-soft px-2 py-0.5 text-xs font-bold uppercase text-primary-solid">
+              <span className="whitespace-nowrap rounded-md bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary-solid">
                 {t('mentoring.studentRoleTag', 'Học viên (Student)')}
               </span>
             </div>
@@ -61,7 +61,7 @@ export function MentoringTaskParticipantsCard({
           />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="whitespace-nowrap rounded-md bg-success-soft px-2 py-0.5 text-xs font-bold uppercase text-success">
+              <span className="whitespace-nowrap rounded-md bg-success-soft px-2 py-0.5 text-xs font-bold text-success">
                 {t('mentoring.mentorRoleTag', 'Cố vấn (Mentor)')}
               </span>
             </div>

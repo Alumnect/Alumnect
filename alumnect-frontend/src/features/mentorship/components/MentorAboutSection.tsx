@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { MapPin, Laptop, Users, BookOpen, Quote } from 'lucide-react'
+import { MapPin, Laptop, Users, BookOpen } from 'lucide-react'
 import { Card } from '@/components/ui'
 import type { MentorDetailData } from '../model/mentorDetailTypes'
 
@@ -36,17 +36,13 @@ export function MentorAboutSection({ mentor }: MentorAboutSectionProps) {
 
       {/* Thông điệp từ Mentor */}
       {displayBio ? (
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">
-            <Quote className="h-3.5 w-3.5 text-primary-solid" />
-            <span>{t('mentoring.messageToStudents')}</span>
-          </div>
-          <p className="text-sm leading-relaxed text-text bg-brand-50/30 p-4 rounded-2xl border border-brand-200/40 dark:bg-white/[0.03] dark:border-white/[0.05] italic">
+        <div>
+          <p className="text-sm italic leading-relaxed text-text bg-brand-50/30 p-4 rounded-2xl border border-brand-200/40 dark:bg-white/[0.03] dark:border-white/[0.05]">
             "{displayBio}"
           </p>
         </div>
       ) : (
-        <p className="text-xs text-text-subtle italic">
+        <p className="text-xs text-text-subtle">
           {t('mentoring.noIntroMessage')}
         </p>
       )}
@@ -54,7 +50,7 @@ export function MentorAboutSection({ mentor }: MentorAboutSectionProps) {
       {/* Tiểu sử cá nhân chi tiết (nếu có nội dung khác biệt với bio) */}
       {displaySecondaryBio && (
         <div className="space-y-2 pt-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+          <h3 className="text-xs font-bold text-text-subtle">
             {t('mentoring.careerOverview')}
           </h3>
           <p className="text-sm leading-relaxed text-text-muted whitespace-pre-line">

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Clock, ThumbsUp, MessageSquare, Eye, EyeOff, ShieldAlert, Briefcase, CalendarPlus, MapPin, Users, ExternalLink, Trash2, Building2, Coins, Mail } from 'lucide-react'
-import { PageHeader, Badge, Card, Avatar, EmptyState, Skeleton, ImageCarousel, Modal, toast } from '@/components/ui'
+import { Badge, Card, Avatar, EmptyState, Skeleton, ImageCarousel, Modal, toast } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion'
 import { useAdminPostDetail, useTogglePostHidden } from '../hooks/useAdmin'
+import { AdminPageBanner } from './AdminVisuals'
 import { formatDistanceToNow } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
@@ -95,21 +96,22 @@ export default function AdminPostDetailPage() {
   const postTypeInfo = typeLabels[post.type] || { label: post.type, tone: 'neutral' as BadgeTone }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      {/* Nút quay lại */}
-      <button
-        onClick={() => navigate('/admin/posts')}
-        className="mb-6 flex items-center gap-2 text-sm font-semibold text-text-subtle transition-colors hover:text-gold-400"
-      >
-        <ArrowLeft size={16} />
-        Quay lại danh sách bài viết
-      </button>
-
-      <PageHeader
+    <div className="mx-auto max-w-5xl">
+      <AdminPageBanner
+        back={
+          <button
+            type="button"
+            onClick={() => navigate('/admin/posts')}
+            className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[#B4643A] transition hover:text-[#E3561A]"
+          >
+            <ArrowLeft size={16} />
+            Danh sách bài viết
+          </button>
+        }
         title="Chi tiết bài viết"
-        subtitle="Xem nội dung chi tiết và kiểm duyệt bài viết trên bảng tin cộng đồng."
+        description={`${post.authorName ?? 'Thành viên'} · ${postTypeInfo.label}${post.hidden ? ' · Đang bị ẩn' : ''}`}
+        scene="posts"
       />
-
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Cột trái: Nội dung bài viết */}
         <div className="lg:col-span-2 space-y-6">
@@ -146,7 +148,7 @@ export default function AdminPostDetailPage() {
                           <Briefcase size={20} />
                         </span>
                         <div>
-                          <span className="text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">
+                          <span className="text-xs font-bold text-primary-solid dark:text-orange-400">
                             Cơ hội việc làm
                           </span>
                           <h3 className="text-base font-bold text-text leading-snug">
@@ -204,7 +206,7 @@ export default function AdminPostDetailPage() {
                       {/* Chi tiết Mức lương, Email, Địa điểm */}
                       <div className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 sm:grid-cols-2">
                         <div>
-                          <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Mức lương</p>
+                          <p className="mb-1 text-xs font-bold text-text-subtle">Mức lương</p>
                           <div className="flex items-center gap-1.5 text-xs font-semibold">
                             <Coins size={14} className="text-success shrink-0" />
                             {(post.job.salaryMin || post.job.salaryMax) ? (
@@ -222,7 +224,7 @@ export default function AdminPostDetailPage() {
                         </div>
 
                         <div>
-                          <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Liên hệ tuyển dụng</p>
+                          <p className="mb-1 text-xs font-bold text-text-subtle">Liên hệ tuyển dụng</p>
                           <div className="flex items-center gap-1.5 text-xs font-semibold">
                             <Mail size={14} className="text-info shrink-0" />
                             {post.job.contactEmail ? (
@@ -240,7 +242,7 @@ export default function AdminPostDetailPage() {
 
                         {post.job.location && (
                           <div className="col-span-1 sm:col-span-2 mt-1 border-t border-border pt-3">
-                            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Địa điểm làm việc</p>
+                            <p className="mb-1 text-xs font-bold text-text-subtle">Địa điểm làm việc</p>
                             <p className="flex items-start gap-1.5 text-xs font-medium text-text">
                               <MapPin size={14} className="text-primary-solid shrink-0 mt-0.5" />
                               <span className="leading-relaxed">{post.job.location}</span>
@@ -251,7 +253,7 @@ export default function AdminPostDetailPage() {
 
                       {post.content && (
                         <div>
-                          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-primary-solid dark:text-orange-400">Mô tả công việc</p>
+                          <p className="mb-1.5 text-xs font-bold text-primary-solid dark:text-orange-400">Mô tả công việc</p>
                           <p className="whitespace-pre-line text-xs leading-relaxed text-text">{post.content}</p>
                         </div>
                       )}
@@ -272,7 +274,7 @@ export default function AdminPostDetailPage() {
                       <div className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 sm:grid-cols-2 text-xs">
                         {post.event.startTime && (
                           <div>
-                            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Bắt đầu</p>
+                            <p className="mb-1 text-xs font-bold text-text-subtle">Bắt đầu</p>
                             <p className="flex items-center gap-1.5 font-semibold text-text">
                               <Clock size={14} className="text-violet-500" />
                               {new Date(post.event.startTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
@@ -282,7 +284,7 @@ export default function AdminPostDetailPage() {
                         )}
                         {post.event.endTime ? (
                           <div>
-                            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Kết thúc</p>
+                            <p className="mb-1 text-xs font-bold text-text-subtle">Kết thúc</p>
                             <p className="flex items-center gap-1.5 font-semibold text-text">
                               <Clock size={14} className="text-coral-500" />
                               {new Date(post.event.endTime).toLocaleDateString('vi-VN', { dateStyle: 'medium' })} {' '}
@@ -291,13 +293,13 @@ export default function AdminPostDetailPage() {
                           </div>
                         ) : (
                           <div>
-                            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-subtle">Kết thúc</p>
+                            <p className="mb-1 text-xs font-bold text-text-subtle">Kết thúc</p>
                             <p className="font-semibold text-text-subtle">—</p>
                           </div>
                         )}
                         {(post.event.location || post.event.capacity) && (
                           <div className="col-span-1 sm:col-span-2 mt-2 border-t border-border pt-3">
-                            <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">Địa điểm & Sức chứa</p>
+                            <p className="mb-1.5 text-xs font-bold text-text-subtle">Địa điểm & Sức chứa</p>
                             <div className="flex flex-wrap items-center gap-4 font-medium text-text">
                               {post.event.location && (
                                 <span className="flex items-center gap-1">
@@ -315,7 +317,7 @@ export default function AdminPostDetailPage() {
                       </div>
                       {post.content && (
                         <div>
-                          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-violet-600">Mô tả sự kiện</p>
+                          <p className="mb-1.5 text-xs font-bold text-violet-600">Mô tả sự kiện</p>
                           <p className="whitespace-pre-line text-sm leading-relaxed text-text">{post.content}</p>
                         </div>
                       )}
@@ -368,7 +370,7 @@ export default function AdminPostDetailPage() {
               <div className="space-y-4">
                 {/* Trạng thái hiện tại */}
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-text-subtle block mb-1">
+                  <label className="text-xs font-bold text-text-subtle block mb-1">
                     Trạng thái hiển thị
                   </label>
                   <div className="flex items-center gap-2">
@@ -399,7 +401,7 @@ export default function AdminPostDetailPage() {
 
                 {/* Thời gian tạo bài viết */}
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-text-subtle block mb-1">
+                  <label className="text-xs font-bold text-text-subtle block mb-1">
                     Thời điểm đăng bài
                   </label>
                   <div className="flex items-center gap-1.5 text-xs text-text-muted">
@@ -415,10 +417,10 @@ export default function AdminPostDetailPage() {
 
                 {/* Mã ID bài viết */}
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-text-subtle block mb-1">
+                  <label className="text-xs font-bold text-text-subtle block mb-1">
                     ID bài viết trên hệ thống
                   </label>
-                  <span className="text-xs font-mono font-semibold text-text-muted bg-surface-2 px-2 py-1 rounded">
+                  <span className="text-xs tabular-nums font-semibold text-text-muted bg-surface-2 px-2 py-1 rounded">
                     #{post.id}
                   </span>
                 </div>

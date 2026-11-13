@@ -57,7 +57,7 @@ export function GroupDiscussionsFeed({
       )}
       {sharedPost && !sharedPostError && (
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-primary-solid">{t('groups.sharedPostTitle')}</p>
+          <p className="mb-2 text-xs font-bold tracking-wide text-primary-solid">{t('groups.sharedPostTitle')}</p>
           <GroupPostCard post={sharedPost} groupId={groupId} isActiveMember={isActiveMember} isGroupActive={isGroupActive} topics={topics} />
         </div>
       )}
@@ -72,7 +72,7 @@ export function GroupDiscussionsFeed({
         <Card hover={false} className="bg-surface-2 rounded-3xl border border-primary-soft-border p-5 shadow-card">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <h4 className="text-sm font-extrabold text-text">
+              <h4 className="text-sm font-bold text-text">
                 {t('groups.joinGroupToDiscuss', { name: groupName })}
               </h4>
               <p className="text-xs text-text-subtle">
@@ -92,7 +92,7 @@ export function GroupDiscussionsFeed({
             className={cn(
               'rounded-full px-3.5 py-1 text-xs font-bold transition-colors',
               visibleTopic === 'all'
-                ? 'bg-plum-900 text-white dark:bg-white dark:text-plum-900'
+                ? 'bg-primary-solid text-on-primary'
                 : 'bg-surface-2 text-text-muted hover:bg-surface-3',
             )}
           >

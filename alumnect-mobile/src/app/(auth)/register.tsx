@@ -188,7 +188,7 @@ export default function RegisterScreen() {
           <Txt size={13} color={t.danger}>Không tải được danh sách chuyên ngành. <Txt size={13} weight="700" color={t.primary}>Thử lại</Txt></Txt>
         </Pressable>
       ) : null}
-      <Input variant="float" icon={<IdCard size={20} />} label="Mã số sinh viên" value={f.studentCode} onChangeText={set('studentCode')} autoCapitalize="characters" autoCorrect={false} error={errors.studentCode} hint={errors.studentCode ? undefined : 'Ví dụ SE123456'} />
+      <Input variant="float" icon={<IdCard size={20} />} label="Mã số sinh viên" value={f.studentCode} onChangeText={set('studentCode')} autoCapitalize="characters" autoCorrect={false} returnKeyType="done" error={errors.studentCode} hint={errors.studentCode ? undefined : 'Ví dụ SE123456'} />
 
       {role === 'ALUMNI' ? (
         <View style={{ marginTop: 2, marginBottom: 8 }}>

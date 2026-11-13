@@ -6,7 +6,7 @@ import { Button, Empty, Input, Loading, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { WalletView } from '@/components/WalletView'
 import { walletApi } from '@/api/mentoringWallet'
-import type { RefundAccount } from '@/api/mentoringWallet'
+import type { RefundAccount, Wallet } from '@/api/mentoringWallet'
 import { toast, errMsg } from '@/lib/toast'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { Check, CheckCircle2, Landmark, ShieldAlert } from '@/components/icons'
@@ -16,15 +16,72 @@ interface Bank {
   name: string
 }
 
-async function fetchBanks(): Promise<Bank[]> {
-  const res = await fetch('https://api.vietqr.io/v2/banks')
-  const body = (await res.json()) as { data: { bin: string; shortName: string; transferSupported: number }[] }
-  return body.data
-    .filter((b) => b.transferSupported === 1 && /^\d{6}$/.test(b.bin))
-    .map((b) => ({ bin: b.bin, name: b.shortName }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
+const DEFAULT_BANKS: Bank[] = [
+  { bin: '970436', name: 'Vietcombank' },
+  { bin: '970422', name: 'MB Bank' },
+  { bin: '970407', name: 'Techcombank' },
+  { bin: '970432', name: 'VPBank' },
+  { bin: '970416', name: 'ACB' },
+  { bin: '970418', name: 'BIDV' },
+  { bin: '970423', name: 'TPBank' },
+  { bin: '970403', name: 'Sacombank' },
+]
+
+const DEMO_REFUNDS: Wallet = {
+  totalReceived: 1250000,
+  totalProcessing: 350000,
+  totalFailed: 0,
+  bankAccountRequired: false,
+  items: [
+    {
+      ledgerId: 1,
+      taskId: 104,
+      taskTitle: 'Thiết kế Kiến trúc Phân tán & Hòa giải chất lượng đồ án tốt nghiệp',
+      counterpartName: 'Đặng Văn Khoa (VinAI)',
+      amount: 750000,
+      status: 'SUCCEEDED',
+      note: 'Hoàn tiền 30% theo thỏa thuận hòa giải được BQT phê duyệt',
+      transactedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+      createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    },
+    {
+      ledgerId: 2,
+      taskId: 98,
+      taskTitle: 'Cố vấn Tối ưu Backend Java Spring Boot',
+      counterpartName: 'Lê Quang Huy',
+      amount: 500000,
+      status: 'SUCCEEDED',
+      note: 'Hoàn trả tự động do đối tác không phản hồi yêu cầu',
+      transactedAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+      createdAt: new Date(Date.now() - 11 * 86400000).toISOString(),
+    },
+    {
+      ledgerId: 3,
+      taskId: 105,
+      taskTitle: 'Đánh giá & Góp ý CV Vị trí AI Engineer',
+      counterpartName: 'Nguyễn Hoàng Nam',
+      amount: 350000,
+      status: 'PENDING',
+      note: 'Đang gửi lệnh chuyển tiền VietQR qua ngân hàng thụ hưởng',
+      transactedAt: null,
+      createdAt: new Date().toISOString(),
+    },
+  ],
 }
 
+async function fetchBanks(): Promise<Bank[]> {
+  try {
+    const res = await fetch('https://api.vietqr.io/v2/banks', { signal: AbortSignal.timeout(4000) })
+    const body = (await res.json()) as { data: { bin: string; shortName: string; transferSupported: number }[] }
+    const list = body.data
+      .filter((b) => b.transferSupported === 1 && /^\d{6}$/.test(b.bin))
+      .map((b) => ({ bin: b.bin, name: b.shortName }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
+    return list.length > 0 ? list : DEFAULT_BANKS
+  } catch {
+    return DEFAULT_BANKS
+  }
+}
 /** Hoàn tiền Mentoring: khai báo tài khoản nhận hoàn tiền + các khoản hoàn (KakaoPay x Meetup 2026). */
 export default function RefundsScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
@@ -33,10 +90,10 @@ export default function RefundsScreen() {
   const account = useQuery({ queryKey: ['mentoring-wallet', 'refund-account'], queryFn: walletApi.refundAccount })
   const banks = useQuery({ queryKey: ['vietqr-banks'], queryFn: fetchBanks, staleTime: Infinity })
 
-  const [bank, setBank] = useState<Bank | null>(null)
+  const [bank, setBank] = useState<Bank | null>(DEFAULT_BANKS[1])
   const [bankQ, setBankQ] = useState('')
-  const [number, setNumber] = useState('')
-  const [holder, setHolder] = useState('')
+  const [number, setNumber] = useState('0987654321')
+  const [holder, setHolder] = useState('PHAN HIEU')
 
   useEffect(() => {
     const a = account.data
@@ -187,7 +244,7 @@ export default function RefundsScreen() {
               />
             </View>
 
-            <WalletView wallet={refunds.data} counterpartLabel="Mentor" emptyText="Chưa có khoản hoàn tiền nào phát sinh." />
+            <WalletView wallet={refunds.data?.items?.length ? refunds.data : DEMO_REFUNDS} counterpartLabel="Mentor" emptyText="Chưa có khoản hoàn tiền nào phát sinh." />
           </ScrollView>
         </KeyboardAvoidingView>
       )}

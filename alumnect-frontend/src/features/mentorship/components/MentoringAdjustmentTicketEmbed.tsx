@@ -131,7 +131,7 @@ export function MentoringAdjustmentTicketEmbed({
               <RefreshCw className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="font-display text-sm sm:text-base font-bold uppercase tracking-wider text-text">
+              <h4 className="font-display text-sm sm:text-base font-bold text-text">
                 {t('mentoring.adjustmentTicketHeading')}
               </h4>
               <p className="text-xs text-text-subtle font-medium">
@@ -159,7 +159,7 @@ export function MentoringAdjustmentTicketEmbed({
 
           {/* Chi tiết điều khoản Deal Ticket phiên bản đang điều chỉnh để tiện đối chiếu */}
           <div className="pt-1 space-y-2 text-xs sm:text-sm text-text-muted">
-            <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+            <span className="text-xs font-bold text-text-subtle">
               {t('mentoring.dealTicketInfoToAdjust', { version: ticket.version })}
             </span>
 

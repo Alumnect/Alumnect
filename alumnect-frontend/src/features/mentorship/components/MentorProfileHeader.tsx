@@ -1,15 +1,18 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
-  ShieldCheck,
   GraduationCap,
   Send,
   User,
-  Briefcase,
   MapPin,
+  Settings2,
+  Info,
+  AlertTriangle,
 } from 'lucide-react'
 import { Card, Avatar } from '@/components/ui'
-import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/store/authStore'
+import { brandButtonClass, softButtonClass } from '@/components/brand/brandClasses'
 import type { MentorDetailData } from '../model/mentorDetailTypes'
 
 interface MentorProfileHeaderProps {
@@ -24,7 +27,8 @@ interface MentorProfileHeaderProps {
 export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHeaderProps) {
   const { t } = useTranslation()
   const isMentorActive = mentor.mentorStatus === 'ACTIVE'
-  const primaryField = mentor.supportedFields && mentor.supportedFields.length > 0 ? mentor.supportedFields[0].name : null
+  const currentUser = useAuthStore((s) => s.user)
+  const isSelfMentor = Boolean(currentUser && mentor.userId && String(currentUser.id) === String(mentor.userId))
   const showCity = mentor.city && mentor.city.trim().toLowerCase() !== mentor.academicInfo?.campus?.trim().toLowerCase()
 
   return (
@@ -59,16 +63,7 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
                 {mentor.fullName}
               </h1>
 
-              {/* Verified Alumni Badge */}
-              {mentor.isVerifiedAlumni && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-solid border border-primary-soft-border"
-                  title={t('mentoring.fptVerifiedAlumniTitle')}
-                >
-                  <ShieldCheck className="h-3.5 w-3.5 text-primary-solid" />
-                  <span>{t('mentoring.fptVerifiedBadge')}</span>
-                </span>
-              )}
+
             </div>
 
             {/* Chức danh & Đơn vị công tác */}
@@ -92,12 +87,6 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
                 </span>
               )}
 
-              {primaryField && (
-                <span className="inline-flex items-center gap-1.5 font-medium text-primary-solid">
-                  <Briefcase className="h-3.5 w-3.5 text-primary-solid" />
-                  <span>{t('mentoring.industryFieldLabel', { field: primaryField })}</span>
-                </span>
-              )}
 
               {showCity && (
                 <span className="inline-flex items-center gap-1.5 font-medium text-text-subtle">
@@ -109,35 +98,48 @@ export function MentorProfileHeader({ mentor, onRequestMentor }: MentorProfileHe
           </div>
         </div>
 
-        {/* Khối Phải: Nút CTA & Nút Trang cá nhân tinh gọn */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full sm:w-auto border-t md:border-t-0 pt-4 md:pt-0 border-border">
-          <Button
-            variant="primary"
-            size="md"
-            leftIcon={<Send className="h-4 w-4" />}
-            onClick={onRequestMentor}
-            disabled={!mentor.canReceiveRequest}
-            className={`min-h-11 rounded-xl px-6 py-2.5 font-semibold shadow-sm transition ${
-              mentor.canReceiveRequest
-                ? 'bg-primary-solid hover:bg-primary-hover shadow-raised active:scale-95 dark:text-text-inverse'
-                : 'bg-surface-3 text-text-subtle cursor-not-allowed'
-            }`}
-          >
-            {mentor.canReceiveRequest ? t('mentoring.sendMentoringRequest') : t('mentoring.temporarilyPausedBadge')}
-          </Button>
+        {/* Khối Phải: một hành động chính + trang cá nhân, hai nút cùng cỡ */}
+        <div className="flex w-full shrink-0 flex-col gap-2 border-t border-border pt-4 sm:w-auto md:items-end md:border-t-0 md:pt-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {isSelfMentor ? (
+              <Link to="/app/mentoring/status" className={brandButtonClass}>
+                <Settings2 className="h-4 w-4" />
+                {t('mentoring.manageMentorProfile')}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={onRequestMentor}
+                disabled={!mentor.canReceiveRequest}
+                className={cn(brandButtonClass, 'disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none')}
+              >
+                <Send className="h-4 w-4" />
+                {mentor.canReceiveRequest ? t('mentoring.sendMentoringRequest') : t('mentoring.temporarilyPausedBadge')}
+              </button>
+            )}
 
-          {mentor.userId && (
-            <Link
-              to={`/app/profile?userId=${mentor.userId}`}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-xs font-bold text-text-muted shadow-2xs transition hover:border-primary-soft-border hover:bg-primary-soft hover:text-primary-solid active:scale-95"
-              title={t('mentoring.viewMentorProfileTitle')}
-            >
-              <User className="h-3.5 w-3.5 text-text-subtle" />
-              <span>{t('mentoring.personalProfileBtn')}</span>
-            </Link>
+            {mentor.userId && (
+              <Link to={`/app/profile?userId=${mentor.userId}`} className={softButtonClass} title={t('mentoring.viewMentorProfileTitle')}>
+                <User className="h-4 w-4" />
+                {t('mentoring.personalProfileBtn')}
+              </Link>
+            )}
+          </div>
+
+          {isSelfMentor ? (
+            <p className="inline-flex items-center gap-1.5 text-xs text-text-subtle">
+              <Info className="h-3.5 w-3.5 shrink-0" />
+              {t('mentoring.thisIsYourMentorProfile')}
+            </p>
+          ) : (
+            !mentor.canReceiveRequest && (
+              <p className="inline-flex max-w-xs items-start gap-1.5 text-xs text-danger md:text-right">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                {mentor.availabilityReason || t('mentoring.mentorUnavailableDefault')}
+              </p>
+            )
           )}
-        </div>
-      </div>
+        </div>      </div>
     </Card>
   )
 }

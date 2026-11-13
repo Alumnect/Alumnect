@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Landmark, ShieldAlert } from 'lucide-react'
+import { ShieldAlert } from 'lucide-react'
 import { Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ButtonLink, Container } from '@/components/ui'
@@ -20,8 +20,7 @@ function MentorEarningsContent() {
   return (
     <div className="space-y-5">
       <MentorPageHeader
-        icon={<Landmark className="h-4 w-4" />}
-        eyebrow={t('mentoring.earningsEyebrow')}
+        scene="wallet"
         title={t('mentoring.earningsTitle')}
         description={t('mentoring.earningsSubtitle')}
       />

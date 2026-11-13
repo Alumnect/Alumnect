@@ -14,6 +14,7 @@ import { useTheme } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
 import { routeForTarget } from '@/lib/notificationRoute'
 import { groupApi } from '@/api/mentoringGroups'
+import { requestApi } from '@/api/mentoringFlow'
 
 type NotifFilter = 'all' | 'unread' | 'system'
 
@@ -203,6 +204,26 @@ export default function NotificationsScreen() {
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: ['mentoring-groups'] })
       void qc.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+
+  // Giống Web: Mentor nhận / bỏ qua yêu cầu mentoring ngay trên thông báo (MENTORING_INCOMING_REQUEST chưa đọc).
+  const respondIncoming = useMutation({
+    mutationFn: ({ requestId, accept }: { requestId: number; accept: boolean; notificationId: number }) =>
+      accept ? requestApi.accept(requestId) : requestApi.decline(requestId),
+    onSuccess: (_d, input) => {
+      readOne.mutate(input.notificationId)
+      toast.success(input.accept ? 'Đã nhận yêu cầu Mentoring. Kênh trao đổi đã được mở.' : 'Đã bỏ qua yêu cầu Mentoring.')
+    },
+    onError: (e, input) => {
+      const msg = errMsg(e)
+      // Yêu cầu đã đóng / hết hạn: ẩn nút phản hồi bằng cách đánh dấu đã đọc, tránh bấm lặp.
+      if (/đã đóng|closed|expired/i.test(msg)) readOne.mutate(input.notificationId)
+      else toast.error(msg)
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ['notifications'] })
+      void qc.invalidateQueries({ queryKey: ['mentoring-incoming'] })
     },
   })
 
@@ -464,6 +485,8 @@ export default function NotificationsScreen() {
             const groupId = Number(item.targetId?.split(':')[0])
             const invitation = item.targetType === 'MENTORING_GROUP_INVITATION' && latestInvite.get(groupId) === item.id
             const groupName = invitations.data?.find((g) => g.id === groupId)?.name ?? 'mentoring'
+            const incomingId = Number(item.targetId)
+            const incoming = !item.isRead && item.targetType === 'MENTORING_INCOMING_REQUEST' && Number.isInteger(incomingId) && incomingId > 0
 
             return (
               <View style={{ backgroundColor: item.isRead ? t.card : t.surface }}>
@@ -551,6 +574,29 @@ export default function NotificationsScreen() {
                       >
                         <Txt size={12} weight="600" color={t.text}>
                           Xóa
+                        </Txt>
+                      </Pressable>
+                    </View>
+                  ) : incoming ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Pressable
+                        onPress={() => respondIncoming.mutate({ requestId: incomingId, accept: true, notificationId: item.id })}
+                        disabled={respondIncoming.isPending}
+                        accessibilityLabel="Nhận yêu cầu mentoring"
+                        style={{ height: 30, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#3B82F6', alignItems: 'center', justifyContent: 'center', opacity: respondIncoming.isPending ? 0.6 : 1 }}
+                      >
+                        <Txt size={12} weight="700" color="#FFF">
+                          Nhận
+                        </Txt>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => respondIncoming.mutate({ requestId: incomingId, accept: false, notificationId: item.id })}
+                        disabled={respondIncoming.isPending}
+                        accessibilityLabel="Bỏ qua yêu cầu mentoring"
+                        style={{ height: 30, paddingHorizontal: 10, borderRadius: 8, backgroundColor: t.inputBg, alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Txt size={12} weight="600" color={t.text}>
+                          Bỏ qua
                         </Txt>
                       </Pressable>
                     </View>

@@ -25,6 +25,8 @@ import { ChatCircleIcon as PhChatCircle } from 'phosphor-react-native/src/icons/
 import { ChatsCircleIcon as PhChatsCircle } from 'phosphor-react-native/src/icons/ChatsCircle'
 import { CheckIcon as PhCheck } from 'phosphor-react-native/src/icons/Check'
 import { CheckCircleIcon as PhCheckCircle } from 'phosphor-react-native/src/icons/CheckCircle'
+import { CopySimpleIcon as PhCopySimple } from 'phosphor-react-native/src/icons/CopySimple'
+import { DownloadSimpleIcon as PhDownloadSimple } from 'phosphor-react-native/src/icons/DownloadSimple'
 import { ChecksIcon as PhChecks } from 'phosphor-react-native/src/icons/Checks'
 import { CircleIcon as PhCircle } from 'phosphor-react-native/src/icons/Circle'
 import { ClipboardTextIcon as PhClipboardText } from 'phosphor-react-native/src/icons/ClipboardText'
@@ -93,6 +95,8 @@ import { WarningIcon as PhWarning } from 'phosphor-react-native/src/icons/Warnin
 import { XIcon as PhX } from 'phosphor-react-native/src/icons/X'
 import { FingerprintIcon as PhFingerprint } from 'phosphor-react-native/src/icons/Fingerprint'
 import { StudentIcon as PhStudent } from 'phosphor-react-native/src/icons/Student'
+import { WifiHighIcon as PhWifiHigh } from 'phosphor-react-native/src/icons/WifiHigh'
+import { WifiSlashIcon as PhWifiSlash } from 'phosphor-react-native/src/icons/WifiSlash'
 import { EnvelopeSimpleIcon as PhEnvelopeSimple } from 'phosphor-react-native/src/icons/EnvelopeSimple'
 import { IdentificationCardIcon as PhIdentificationCard } from 'phosphor-react-native/src/icons/IdentificationCard'
 import { XCircleIcon as PhXCircle } from 'phosphor-react-native/src/icons/XCircle'
@@ -157,6 +161,8 @@ export const Camera = make(PhCamera, 'Camera')
 export const Check = make(PhCheck, 'Check')
 export const CheckCheck = make(PhChecks, 'CheckCheck')
 export const CheckCircle2 = make(PhCheckCircle, 'CheckCircle2')
+export const Copy = make(PhCopySimple, 'Copy')
+export const Download = make(PhDownloadSimple, 'Download')
 export const ChevronDown = make(PhCaretDown, 'ChevronDown')
 export const ChevronLeft = make(PhCaretLeft, 'ChevronLeft')
 export const ChevronRight = make(PhCaretRight, 'ChevronRight')
@@ -234,6 +240,8 @@ export const MailIcon = make(PhEnvelopeSimple, 'MailIcon')
 export const IdCard = make(PhIdentificationCard, 'IdCard')
 export const XCircle = make(PhXCircle, 'XCircle')
 export const Zap = make(PhLightning, 'Zap')
+export const Wifi = make(PhWifiHigh, 'Wifi')
+export const WifiOff = make(PhWifiSlash, 'WifiOff')
 
 /**
  * Bộ icon SVG trích xuất từ Instagram/Threads Cotton (E:\Clone UIUX\instagram-clone & ig)
@@ -346,6 +354,33 @@ export function IgBellCheck({ size = 24, color = '#000', style }: IconProps) {
         fillRule="evenodd"
         clipRule="evenodd"
         d="M12,1C13.4,1 14.7,1.7 15.5,2.8C17.1,3.6 18.5,4.9 19.2,6.9L19.3,7.3L19.3,7.4L20,10.5C20.3,11.6 20.6,12.7 21.2,13.7C22.5,16.3 20.6,19.5 17.6,19.5H16C15.7,21.5 14,23 12,23C10,23 8.3,21.5 8,19.5H6.4C3.4,19.5 1.5,16.3 2.8,13.7C3.4,12.7 3.7,11.6 4,10.5L4.7,7.4C4.7,7.4 4.7,7.3 4.7,7.3C5.3,5.1 6.8,3.6 8.5,2.8C9.3,1.7 10.6,1 12,1ZM10.1,19.5C10.3,20.4 11.1,21 12,21C12.9,21 13.7,20.4 13.9,19.5H10.1ZM12,3C11.2,3 10.4,3.4 10.1,4.1C10,4.3 9.8,4.4 9.6,4.5C8.2,5.1 7.1,6.2 6.6,7.8L5.9,10.9C5.7,12.2 5.2,13.4 4.6,14.6C3.9,15.9 4.9,17.5 6.4,17.5H17.6C19.1,17.5 20.1,15.9 19.4,14.6C18.8,13.4 18.3,12.2 18.1,10.9L17.4,7.8C16.9,6.2 15.8,5.1 14.4,4.5C14.2,4.4 14,4.3 13.9,4.1C13.6,3.4 12.8,3 12,3Z"
+      />
+    </Svg>
+  )
+}
+
+export function IgHeart({ size = 24, color = '#000', fill, style }: IconProps) {
+  const isFilled = !!fill && fill !== 'transparent' && fill !== 'none'
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
+      <Path
+        fill={isFilled ? fill : color}
+        d={isFilled
+          ? 'M16.5,2C14.833,2 13.222,2.707 12,3.937C10.778,2.707 9.167,2 7.5,2C3.378,2 0.5,5.084 0.5,9.5C0.5,14.128 4.845,19.462 11.311,22.772C11.527,22.883 11.763,22.938 12,22.938C12.237,22.938 12.473,22.883 12.689,22.772C19.155,19.462 23.5,14.128 23.5,9.5C23.5,5.084 20.622,2 16.5,2Z'
+          : 'M16.5,2C14.833,2 13.222,2.707 12,3.937C10.778,2.707 9.167,2 7.5,2C3.378,2 0.5,5.084 0.5,9.5C0.5,14.128 4.845,19.462 11.311,22.772C11.527,22.883 11.763,22.938 12,22.938C12.237,22.938 12.473,22.883 12.689,22.772C19.155,19.462 23.5,14.128 23.5,9.5C23.5,5.084 20.622,2 16.5,2ZM12,20.876C6.308,17.896 2.5,13.347 2.5,9.5C2.5,6.159 4.463,4 7.5,4C9.5,4 11.25,5.75 12,7.5C12.75,5.75 14.5,4 16.5,4C19.538,4 21.5,6.159 21.5,9.5C21.5,13.347 17.692,17.896 12,20.876Z'}
+      />
+    </Svg>
+  )
+}
+
+export function IgComment({ size = 24, color = '#000', style }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
+      <Path
+        fill={color}
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12,3C7.029,3 3,7.029 3,12C3,16.971 7.029,21 12,21C13.414,21 14.749,20.675 15.937,20.096C16.128,20.003 16.343,19.973 16.551,20.01L20.757,20.762L19.993,16.593C19.954,16.382 19.984,16.163 20.079,15.971C20.669,14.774 21,13.427 21,12C21,7.029 16.971,3 12,3ZM1,12C1,5.925 5.925,1 12,1C18.075,1 23,5.925 23,12C23,13.62 22.649,15.161 22.018,16.549L22.984,21.82C23.043,22.142 22.94,22.473 22.709,22.706C22.477,22.938 22.147,23.042 21.824,22.984L16.512,22.035C15.134,22.655 13.606,23 12,23C5.925,23 1,18.075 1,12Z"
       />
     </Svg>
   )

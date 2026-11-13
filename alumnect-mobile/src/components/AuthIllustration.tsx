@@ -26,7 +26,7 @@ function Palm({ x, base, height, trunk, leaf }: { x: number; base: number; heigh
  * Một ngôn ngữ đồ hoạ duy nhất: hình khối phẳng, không viền, không gradient, màu lấy từ nhận diện FPT.
  * \`strip\` chỉ lấy dải thấp của tranh (đủ toà nhà, cột biển và nhân vật) cho màn đăng ký.
  */
-export function AuthIllustration({ width, strip = false }: { width: number; strip?: boolean }) {
+export function AuthIllustration({ width, strip = false, maxHeight }: { width: number; strip?: boolean; maxHeight?: number }) {
   const t = useTheme()
   const d = t.isDark
   const c = {
@@ -52,11 +52,12 @@ export function AuthIllustration({ width, strip = false }: { width: number; stri
     paper: '#F4F1E8',
   }
   const view = strip ? { x: 0, y: 36, w: 390, h: 178 } : { x: 0, y: 20, w: 390, h: 206 }
-  const height = (width * view.h) / view.w
+  const naturalHeight = (width * view.h) / view.w
+  const height = maxHeight ? Math.min(naturalHeight, maxHeight) : naturalHeight
   const dots: [number, number][] = []
   for (let r = 0; r < 3; r++) for (let q = 0; q < 6; q++) dots.push([100 + q * 4.2, 100 + r * 3.6])
   return (
-    <Svg width={width} height={height} viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <Svg width={width} height={height} viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`} preserveAspectRatio="xMidYMid meet" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       {/* Trời */}
       <Circle cx={330} cy={64} r={22} fill={c.sun} />
       <G fill={c.cloud}>

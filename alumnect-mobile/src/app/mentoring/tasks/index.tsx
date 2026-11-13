@@ -91,7 +91,9 @@ export default function TasksScreen() {
             }
             renderItem={({ item }) => {
               const pct = Math.min(100, item.progressPercentage ?? 0)
-              const other = me?.role === 'STUDENT' ? item.mentorName : item.studentName
+              // Giống Web: so userId với mentorId của task thay vì suy từ role tài khoản.
+              const iAmMentor = me?.id != null && String(me.id) === String(item.mentorId)
+              const other = iAmMentor ? item.studentName : item.mentorName
               const deadline = new Date(item.deadline)
               const late = isPast(deadline) && pct < 100
 
@@ -127,7 +129,7 @@ export default function TasksScreen() {
                   <View style={styles.counterpartRow}>
                     <UserRound size={13} color={colors.textTertiary} />
                     <Txt size={12} style={{ color: colors.textSecondary }}>
-                      {`${me?.role === 'STUDENT' ? 'Mentor đồng hành' : 'Học viên'}: `}
+                      {`${iAmMentor ? 'Học viên' : 'Mentor đồng hành'}: `}
                       <Txt weight="700" size={12} style={{ color: colors.text }}>
                         {other}
                       </Txt>

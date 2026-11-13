@@ -1,7 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ShieldCheck,
   GraduationCap,
   Briefcase,
   Star,
@@ -72,15 +71,6 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
               {mentor.fullName}
             </h2>
 
-            {mentor.isVerifiedAlumni && (
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-solid border border-primary-soft-border"
-                title={t('mentoring.verifiedAlumniTooltip')}
-              >
-                <ShieldCheck className="h-3 w-3 text-primary-solid" />
-                <span>{t('mentoring.fptVerified')}</span>
-              </span>
-            )}
           </div>
 
           <p className="text-sm font-semibold text-text-muted">
@@ -124,7 +114,7 @@ export const SelectedMentorCard: React.FC<SelectedMentorCardProps> = ({ mentor }
           <div>
             <div className="text-xs text-text-subtle">{t('mentoring.rating')}</div>
             <strong className="text-xs sm:text-sm font-bold text-text">
-              {mentor.rating ? Number(mentor.rating).toFixed(1) : '5.0'} ★
+              {mentor.rating ? `${Number(mentor.rating).toFixed(1)} ★` : '—'}
             </strong>
           </div>
         </div>

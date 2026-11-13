@@ -2,17 +2,18 @@ import { useState } from 'react'
 import {
   Wallet,
   Search,
-  RotateCcw,
   Eye,
-  ArrowDownLeft,
-  ArrowUpRight,
   AlertTriangle,
-  RefreshCw,
+  Landmark,
+  Lock,
+  ArrowUpRight,
+  Undo2,
 } from 'lucide-react'
 import { Badge, EmptyState, Pagination, Skeleton, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { useAdminPayoutBalance, useAdminTaskFunds } from '../hooks/useAdmin'
 import { AdminTaskLedgerDetailModal } from './AdminTaskLedgerDetailModal'
+import { AdminPageBanner, StatTile } from './AdminVisuals'
 
 export function AdminMentoringFinancesPage() {
   const [keyword, setKeyword] = useState('')
@@ -25,7 +26,7 @@ export function AdminMentoringFinancesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Lấy danh sách Quỹ Task từ server
-  const { data, isLoading, isError, error, refetch, isFetching } = useAdminTaskFunds({
+  const { data, isLoading, isError, error, refetch } = useAdminTaskFunds({
     keyword: keyword || undefined,
     status: statusFilter !== 'ALL' ? statusFilter : undefined,
     settlementStatus: settlementFilter !== 'ALL' ? settlementFilter : undefined,
@@ -111,104 +112,52 @@ export function AdminMentoringFinancesPage() {
   }
 
   return (
-    <div className="space-y-6 text-text">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-primary-solid text-xs sm:text-sm font-bold tracking-wide uppercase">
-            <Wallet className="w-4 h-4" />
-            <span>Quản trị tài chính Mentoring Task</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-text mt-1">
-            Sổ quỹ & Đối soát tài chính theo Task
-          </h1>
-          <p className="text-xs sm:text-sm text-text-subtle mt-1">
-            Theo dõi dòng tiền ký quỹ Escrow, thù lao chi Cố vấn, hoàn trả Học viên và đối soát sổ quỹ chi tiết từng nhiệm vụ.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
+    <div className="mx-auto max-w-6xl space-y-6 text-text">
+      {/* 1. Dải đầu trang + số dư kênh chi PayOS */}
+      <AdminPageBanner
+        title="Sổ quỹ Mentoring"
+        scene="ledger"
+        actions={
           <div
-            className="rounded-xl border border-border bg-surface dark:bg-bg px-3.5 py-2 text-right shadow-2xs"
-            title={payoutBalance.isError
-              ? (payoutBalance.error as Error)?.message || 'Không đọc được số dư Kênh chi PayOS (kiểm tra key và IP whitelist)'
-              : undefined}
+            className="inline-flex items-center gap-3 rounded-2xl border border-[#F3D9C8] bg-white/80 px-4 py-2.5 backdrop-blur dark:border-border dark:bg-surface"
+            title={
+              payoutBalance.isError
+                ? (payoutBalance.error as Error)?.message || 'Không đọc được số dư Kênh chi PayOS (kiểm tra key và IP whitelist)'
+                : undefined
+            }
           >
-            <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">Số dư Kênh chi PayOS</p>
-            <p className={`text-sm font-extrabold ${payoutBalance.isError ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
-              {payoutBalance.isLoading ? '…' : payoutBalance.isError ? 'Không khả dụng' : formatVnd(payoutBalance.data)}
-            </p>
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#1F2A44] text-white">
+              <Landmark className="h-4 w-4" />
+            </span>
+            <span>
+              <span className="block text-xs text-text-subtle">Số dư kênh chi PayOS</span>
+              <span className={`block font-display text-base font-bold tabular-nums ${payoutBalance.isError ? 'text-danger' : 'text-text'}`}>
+                {payoutBalance.isLoading ? '…' : payoutBalance.isError ? 'Không khả dụng' : formatVnd(payoutBalance.data)}
+              </span>
+            </span>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => { refetch(); payoutBalance.refetch() }}
-            disabled={isFetching}
-            className="gap-2 text-xs font-semibold bg-surface hover:bg-surface-2 text-text-muted border border-border"
-          >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-            Làm mới
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* KPI Highlight Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-success-soft border border-success-border shadow-xs">
-          <div className="flex items-center justify-between text-text-muted">
-            <span className="text-xs font-bold uppercase tracking-wider">Tổng thu ký quỹ (Trang này)</span>
-            <ArrowDownLeft className="w-4 h-4 text-success" />
-          </div>
-          <p className="text-xl font-extrabold text-success mt-2">
-            {formatVnd(pageTotalCollected)}
-          </p>
-          <p className="text-xs text-text-subtle mt-1">
-            Từ {tasks.length} nhiệm vụ trên trang
-          </p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-info-soft border border-info-border shadow-xs">
-          <div className="flex items-center justify-between text-text-muted">
-            <span className="text-xs font-bold uppercase tracking-wider">Đang giữ trong Escrow</span>
-            <Wallet className="w-4 h-4 text-info" />
-          </div>
-          <p className="text-xl font-extrabold text-info mt-2">
-            {formatVnd(pageEscrowHolding)}
-          </p>
-          <p className="text-xs text-text-subtle mt-1">
-            Tiền bảo đảm thực hiện Task
-          </p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-primary-soft border border-primary-soft-border shadow-xs">
-          <div className="flex items-center justify-between text-text-muted">
-            <span className="text-xs font-bold uppercase tracking-wider">Đã chi Cố vấn (Payout)</span>
-            <ArrowUpRight className="w-4 h-4 text-primary-solid" />
-          </div>
-          <p className="text-xl font-extrabold text-primary-solid mt-2">
-            {formatVnd(pageTotalPayout)}
-          </p>
-          <p className="text-xs text-text-subtle mt-1">
-            Thù lao hoàn thành hoặc hòa giải
-          </p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-warning-soft border border-warning-border shadow-xs">
-          <div className="flex items-center justify-between text-text-muted">
-            <span className="text-xs font-bold uppercase tracking-wider">Đã hoàn Học viên (Refund)</span>
-            <RotateCcw className="w-4 h-4 text-warning" />
-          </div>
-          <p className="text-xl font-extrabold text-warning mt-2">
-            {formatVnd(pageTotalRefund)}
-          </p>
-          <p className="text-xs text-text-subtle mt-1">
-            Hoàn tiền hủy Task hoặc hòa giải
-          </p>
+      {/* 2. Tổng tiền của các nhiệm vụ đang hiển thị (API chưa có tổng toàn hệ thống) */}
+      <div>
+        <p className="mb-2.5 text-sm text-text-subtle">Tổng của {tasks.length} nhiệm vụ đang hiển thị</p>
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+          {(
+            [
+              { label: 'Đã thu ký quỹ', value: pageTotalCollected, icon: <Wallet />, tone: 'blue' },
+              { label: 'Đang giữ trong ký quỹ', value: pageEscrowHolding, icon: <Lock />, tone: 'amber' },
+              { label: 'Đã chi cho Mentor', value: pageTotalPayout, icon: <ArrowUpRight />, tone: 'green' },
+              { label: 'Đã hoàn cho học viên', value: pageTotalRefund, icon: <Undo2 />, tone: 'red' },
+            ] as const
+          ).map((s) => (
+            <StatTile key={s.label} icon={s.icon} tone={s.tone} label={s.label} value={formatVnd(s.value)} />
+          ))}
         </div>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="p-4 rounded-2xl border border-border bg-surface dark:bg-bg shadow-xs space-y-4">
+      <div className="space-y-4 rounded-3xl border border-border bg-surface p-4">
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-subtle" />
@@ -268,7 +217,7 @@ export function AdminMentoringFinancesPage() {
       </div>
 
       {/* Main Table */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-surface dark:bg-bg shadow-xs">
+      <div className="overflow-hidden rounded-3xl border border-border bg-surface">
         {isLoading ? (
           <div className="p-6 space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -301,7 +250,7 @@ export function AdminMentoringFinancesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="bg-surface-2 text-xs font-bold text-text-subtle uppercase tracking-wider border-b border-border">
+              <thead className="bg-surface-2 text-xs font-bold text-text-subtle border-b border-border">
                 <tr>
                   <th className="px-4 py-3.5">Mã Task & Tiêu đề</th>
                   <th className="px-4 py-3.5">Các bên tham gia</th>
@@ -320,7 +269,7 @@ export function AdminMentoringFinancesPage() {
                     {/* Mã & Tiêu đề */}
                     <td className="px-4 py-3.5 max-w-xs">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-primary-solid">#{task.taskId}</span>
+                        <span className="tabular-nums text-xs font-bold text-primary-solid">#{task.taskId}</span>
                         {task.activeTicketId && (
                           <span
                             className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-danger-soft text-danger"

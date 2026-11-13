@@ -15,7 +15,7 @@ function Wordmark({ size, alum, nect }: { size: number; alum: string; nect: stri
     <View style={{ flexShrink: 0, paddingRight: Math.round(size * 0.2), overflow: 'visible' }}>
       <Text style={{ ...font, fontSize: size, lineHeight: Math.round(size * 1.13), includeFontPadding: false }}>
         <Text style={{ ...font, color: alum }}>Alum</Text>
-        <Text style={{ ...font, color: nect }}>{'Nect  '}</Text>
+        <Text style={{ ...font, color: nect }}>{'Nect\u00A0\u00A0'}</Text>
       </Text>
     </View>
   )

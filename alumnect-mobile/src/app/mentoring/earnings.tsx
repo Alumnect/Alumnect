@@ -9,9 +9,10 @@ import { Info, ShieldAlert } from '@/components/icons'
 import { WalletView } from '@/components/WalletView'
 import { walletApi } from '@/api/mentoringWallet'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
+import { withAlumniOnly } from '@/components/AlumniOnly'
 
 /** Thu nhập Mentor: thù lao các Task đã nghiệm thu, tự động chi về tài khoản ngân hàng trong hồ sơ Mentor. */
-export default function EarningsScreen() {
+function EarningsScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
   const router = useRouter()
   const q = useQuery({ queryKey: ['mentoring-wallet', 'earnings'], queryFn: walletApi.earnings })
@@ -85,3 +86,5 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 })
+
+export default withAlumniOnly(EarningsScreen)
