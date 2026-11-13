@@ -153,7 +153,7 @@ export function SalaryPage() {
   const max = rows.length ? Math.max(...rows.map((s) => s.p75)) : 1
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       {/* Header */}
       <BrandBanner
         scene="salary"
