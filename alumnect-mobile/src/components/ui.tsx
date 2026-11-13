@@ -380,7 +380,7 @@ export function Card({ children, style, onPress, flat, accessibilityRole = 'butt
   return <View style={[styles.card, body, style]}>{children}</View>
 }
 
-type Tone = 'primary' | 'success' | 'danger' | 'info' | 'warning' | 'neutral'
+export type Tone = 'primary' | 'success' | 'danger' | 'info' | 'warning' | 'neutral'
 
 /** Nhãn nhỏ dạng viên thuốc (loại bài, trạng thái...). */
 export function Tag({ label, tone = 'neutral', icon, style }: { label: string; tone?: Tone; icon?: React.ReactNode; style?: ViewStyle }) {

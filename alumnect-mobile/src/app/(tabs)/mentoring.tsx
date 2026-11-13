@@ -37,6 +37,9 @@ import { Enter, MotionPressable } from '@/components/Motion'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
 import type { MentoringType, WorkingMode } from '@/api/mentoring'
 import { MentoringTermsGate } from '@/components/MentoringTermsGate'
+import { MentoringSwitch, SwitchPane, type MentoringView } from '@/components/MentoringSwitch'
+import { MentoringHub } from '@/components/MentoringHub'
+import { useMentoringHub } from '@/lib/useMentoringHub'
 import { useAuthStore } from '@/store/authStore'
 import { useDebounced } from '@/lib/hooks'
 import { ListSkeleton } from '@/components/Skeleton'
@@ -97,6 +100,11 @@ export default function MentoringTab() {
   const [fieldModal, setFieldModal] = useState(false)
   const [selectedFieldId, setSelectedFieldId] = useState<number | undefined>(undefined)
   const keyword = useDebounced(kw, 350)
+  // Tách 2 phần: "Của tôi" (việc cần xử lý, task đang đồng hành) và "Tìm mentor".
+  // Mặc định theo ngữ cảnh: có hoạt động mentoring → "Của tôi", chưa có gì → "Tìm mentor". Người dùng chọn tay thì giữ nguyên.
+  const hub = useMentoringHub()
+  const [userView, setUserView] = useState<MentoringView | null>(null)
+  const view: MentoringView = userView ?? (hub.ready ? (hub.hasActivity || hub.mentorStats ? 'mine' : 'discover') : 'mine')
 
   const options = useQuery({ queryKey: ['mentor-filter-options'], queryFn: mentoringApi.filterOptions, staleTime: 10 * 60_000 })
   const industries = options.data?.industries ?? []
@@ -154,17 +162,11 @@ export default function MentoringTab() {
   // Danh mục phím tắt luồng Mentoring — đồng bộ MENTORSHIP_NAVIGATION của Web:
   // nhóm "Mentoring của tôi" dùng chung (Cựu sinh viên cũng có thể gửi yêu cầu), nhóm "Dành cho Mentor" chỉ cho ALUMNI.
   const isAlumni = role === 'ALUMNI'
+  // Phần "Tìm mentor" chỉ giữ lối tắt liên quan việc tìm kiếm; các mục quản lý đã chuyển sang "Của tôi".
   const quickShortcuts: { key: string; label: string; brand: BrandIconName; href: string; primary?: boolean }[] = [
-    ...(isAlumni ? [{ key: 'incoming', label: 'Yêu cầu đến', brand: 'writing' as BrandIconName, href: '/mentoring/incoming-requests', primary: true }] : []),
-    { key: 'create', label: 'Tạo yêu cầu', brand: 'pencil', href: '/mentoring/create-request', primary: !isAlumni },
-    { key: 'my-req', label: 'Yêu cầu của tôi', brand: 'writing', href: '/mentoring/my-requests' },
-    { key: 'tasks', label: 'Nhiệm vụ', brand: 'task', href: '/mentoring/tasks' },
-    { key: 'deals', label: 'Thỏa thuận', brand: 'check', href: '/mentoring/deals' },
-    ...(isAlumni ? [{ key: 'earnings', label: 'Thu nhập', brand: 'coin' as BrandIconName, href: '/mentoring/earnings' }] : []),
+    { key: 'create', label: 'Đăng bài toán tìm mentor', brand: 'pencil', href: '/mentoring/create-request', primary: true },
+    { key: 'rank', label: 'Bảng xếp hạng', brand: 'star', href: '/mentoring/rankings' },
     { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
-    { key: 'rank', label: 'Xếp hạng', brand: 'star', href: '/mentoring/rankings' },
-    { key: 'refunds', label: 'Hoàn tiền', brand: 'coin', href: '/mentoring/refunds' },
-    ...(isAlumni ? [{ key: 'status', label: 'Hồ sơ Mentor', brand: 'suitcase' as BrandIconName, href: '/mentoring/status' }] : []),
   ]
 
   const handleSelectField = (fieldId: number | undefined) => {
@@ -213,9 +215,23 @@ export default function MentoringTab() {
             ]}
           >
             <IgMessenger size={20} color={colors.text} />
+            {hub.unread ? (
+              <View style={[styles.headerBadge, { backgroundColor: viridian, borderColor: colors.card }]}>
+                <Txt size={10} weight="800" style={{ color: '#FFFFFF' }}>{hub.unread > 99 ? '99+' : hub.unread}</Txt>
+              </View>
+            ) : null}
           </MotionPressable>
         </View>
       </View>
+      <View style={{ backgroundColor: colors.card, paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSubtle }}>
+        <MentoringSwitch value={view} onChange={setUserView} badge={hub.actionItems.length} />
+      </View>
+
+      <SwitchPane visible={view === 'mine'} direction={-1}>
+        <MentoringHub hub={hub} onDiscover={() => setUserView('discover')} />
+      </SwitchPane>
+
+      <SwitchPane visible={view === 'discover'} direction={1}>
 
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
         <FlashList
@@ -491,6 +507,8 @@ export default function MentoringTab() {
         />
       </View>
 
+      </SwitchPane>
+
       {/* 5. Utility Bottom Sheet: Không gian quản lý & điều hành Cố vấn (Kakao Bento Sheet) */}
       <SheetModal visible={utilitySheet} onClose={() => setUtilitySheet(false)} maxHeight={0.86}>
         <View style={[styles.sheetHeader, { borderBottomColor: colors.borderSubtle }]}>
@@ -732,8 +750,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingBottom: 10,
+  },
+  headerBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerActionBtn: {
     width: 40,

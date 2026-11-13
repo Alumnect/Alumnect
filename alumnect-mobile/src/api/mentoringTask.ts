@@ -7,6 +7,7 @@ export const TASK_STATUS_LABEL: Record<string, string> = {
   PREPARATION: 'Chuẩn bị', IN_PROGRESS: 'Đang thực hiện', SUBMITTED: 'Đã nộp kết quả', COMPLETED: 'Hoàn thành',
   CANCELLED: 'Đã hủy', DISPUTED: 'Đang tranh chấp', RESOLVED: 'Đã giải quyết',
 }
+export const TICKET_STATUS_LABEL: Record<string, string> = { OPEN: 'Đang mở', IN_REVIEW: 'Đang xem xét', RESOLVED: 'Đã giải quyết', REJECTED: 'Bị từ chối', CANCELLED: 'Đã hủy' }
 export const TASK_STAGES: [string | undefined, string][] = [[undefined, 'Tất cả'], ['PREPARATION', 'Chuẩn bị'], ['IN_PROGRESS', 'Đang làm'], ['ENDING', 'Kết thúc']]
 
 export interface Participant { id: number; fullName: string; avatarUrl?: string | null; email: string; role: string; headline?: string | null }

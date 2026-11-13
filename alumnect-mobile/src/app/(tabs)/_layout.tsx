@@ -7,6 +7,19 @@ import { Avatar } from '@/components/ui'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useQuery } from '@tanstack/react-query'
+import { dealApi } from '@/api/mentoringFlow'
+import { chatApi } from '@/api/chat'
+
+/** Chấm báo trên tab Cố vấn: có tin nhắn mentoring chưa đọc hoặc thỏa thuận chờ bạn xác nhận / thanh toán (dùng chung cache với mục "Của tôi"). */
+function useMentoringAttention() {
+  const authed = useAuthStore((s) => s.isAuthenticated)
+  const conv = useQuery({ queryKey: ['conversations', 'mentoring'], queryFn: () => chatApi.conversations('primary', 'MENTORING'), enabled: authed, staleTime: 60_000, refetchInterval: 60_000 })
+  const deals = useQuery({ queryKey: ['mentoring-deals', 'hub'], queryFn: () => dealApi.mine(undefined, 0), enabled: authed, staleTime: 60_000 })
+  const unread = (conv.data?.data ?? []).some((c) => (c.unreadCount ?? 0) > 0)
+  const pending = (deals.data?.content ?? []).some((d) => d.canPay || d.canConfirm)
+  return unread || pending
+}
 
 function AnimatedTabWrap({
   focused,
@@ -170,11 +183,16 @@ export default function TabsLayout() {
     setPulses((prev) => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))
   }
 
+  const mentoringAttention = useMentoringAttention()
+
   const makeNavIcon = (tab: NavTabKey) =>
     function TabIcon({ focused }: { color: unknown; focused: boolean }) {
       return (
         <AnimatedTabWrap focused={focused} pulse={pulses[tab] ?? 0}>
           <CreativeNavGlyph tab={tab} focused={focused} size={26} />
+          {tab === 'mentoring' && mentoringAttention ? (
+            <View style={{ position: 'absolute', top: -2, right: -4, width: 9, height: 9, borderRadius: 4.5, backgroundColor: t.primary, borderWidth: 1.5, borderColor: t.card }} />
+          ) : null}
         </AnimatedTabWrap>
       )
     }
