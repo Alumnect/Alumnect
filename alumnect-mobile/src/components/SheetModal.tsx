@@ -3,12 +3,16 @@ import { Animated, Easing, Keyboard, Modal, PanResponder, Platform, Pressable, S
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/theme'
 import { useReducedMotion } from './Motion'
+import { DURATION, EASING } from '@/theme/motion'
 
-/** Thông số chuyển động dùng chung cho mọi popup dạng bảng trượt để các popup mở/đóng giống hệt nhau. */
-export const SHEET_OPEN_MS = 320
-export const SHEET_CLOSE_MS = 240
-export const SHEET_EASE_OUT = Easing.bezier(0.32, 0.72, 0, 1)
-export const SHEET_EASE_IN = Easing.bezier(0.4, 0, 1, 1)
+/**
+ * Thông số chuyển động chuẩn Material 3 / Meetup (MOTION-SPEC.md §3.2)
+ * Mở 400ms với đường cong emphasizedDecel, đóng 300ms với emphasizedAccel.
+ */
+export const SHEET_OPEN_MS = DURATION.sheetIn
+export const SHEET_CLOSE_MS = DURATION.smooth
+export const SHEET_EASE_OUT = EASING.emphasizedDecel
+export const SHEET_EASE_IN = EASING.emphasizedAccel
 
 /**
  * Khung popup dưới màn hình dùng chung (ActionSheet, Chia sẻ, Bộ lọc, Chọn mục, Bình luận...).

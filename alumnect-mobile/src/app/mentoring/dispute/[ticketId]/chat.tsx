@@ -65,7 +65,7 @@ export default function TicketChatScreen() {
 
   return (
     <Screen edges={['top', 'bottom']} bg={colors.bg}>
-      <Header title="Phòng Phân xử & Khiếu nại" subtitle={`Ticket #${tid} · Ban Quản Trị & Các bên`} />
+      <Header title="Phòng Phân xử & Khiếu nại" subtitle={`Phiếu #${tid} · Ban Quản Trị & các bên`} />
 
       {/* Evidence Strip (Instagram / Kakao Media Rail) */}
       <View style={[styles.evidenceBar, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>

@@ -18,6 +18,8 @@ import { useTheme } from '@/theme'
 import { BrandIcon } from '@/components/BrandIcon'
 import { MeetupScribble } from '@/components/MeetupScribble'
 import { CommunityIntro } from '@/components/SocialUI'
+import { Sparkles } from '@/components/icons'
+import { useAuthStore } from '@/store/authStore'
 
 const year = (d?: string | null) => (d ? d.slice(0, 4) : '')
 
@@ -57,6 +59,9 @@ export default function CareerScreen() {
   const linkKey = `${linked.userId ?? ''}:${linked.name ?? ''}`
   const [activeLink, setActiveLink] = useState(linkKey)
   const [sel, setSel] = useState<CareerSummary | null>(linkedPerson)
+  const viewer = useAuthStore((s) => s.user)
+  // Giống Web: Sinh viên / Cựu sinh viên so sánh được với người khác (không so với chính mình).
+  const canCompare = (viewer?.role === 'STUDENT' || viewer?.role === 'ALUMNI') && !!sel && String(sel.userId) !== viewer?.id
   if (activeLink !== linkKey) { setActiveLink(linkKey); setSel(linkedPerson()) }
   const search = useDebounced(kw, 400)
   const majors = useQuery({ queryKey: ['majors'], queryFn: authApi.getMajors, staleTime: 30 * 60_000 })
@@ -140,6 +145,14 @@ export default function CareerScreen() {
             <ScrollView style={{ maxHeight: 380 }}>
               {detail.data.experiences.length ? <Timeline items={detail.data.experiences.map((e) => ({ key: e.id, title: e.title, company: e.company, start: e.startDate, end: e.endDate, current: e.isCurrent }))} /> : <Txt muted>Chưa có kinh nghiệm được chia sẻ.</Txt>}
             </ScrollView>
+            {canCompare ? (
+              <Button
+                title="So sánh lộ trình với tôi"
+                variant="brand"
+                icon={<Sparkles size={16} color="#fff" />}
+                onPress={() => { const target = sel!; setSel(null); router.push({ pathname: '/career-compare', params: { id: String(target.userId), name: target.fullName } }) }}
+              />
+            ) : null}
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <Button title="Xem hồ sơ" style={{ flex: 1 }} onPress={() => { const id = sel!.userId; setSel(null); router.push({ pathname: '/profile/[id]', params: { id: String(id) } }) }} />
               <Button title="Nhắn tin" variant="secondary" style={{ flex: 1 }} onPress={() => { const id = sel!.userId; setSel(null); router.push({ pathname: '/chat/direct/[userId]', params: { userId: String(id) } }) }} />

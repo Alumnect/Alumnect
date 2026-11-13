@@ -5,9 +5,9 @@ import { Text, TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSegments } from 'expo-router'
-import { ChevronRight, Search, X, Eye, EyeOff } from '@/components/icons'
+import { ChevronRight, Search, X, Eye, EyeOff, AlertTriangle } from '@/components/icons'
 import { useTheme, radius, shadow, lineHeightFor, avatarColors, layout } from '@/theme'
-import { MotionPressable } from './Motion'
+import { MotionPressable, Enter } from './Motion'
 
 /* ------------------------------------------------------------------ */
 /* Khung màn hình & chữ                                               */
@@ -129,7 +129,7 @@ export function Button({
 }) {
   const t = useTheme()
   const bg = { primary: t.action, brand: t.primary, secondary: t.inputBg, outline: t.card, ghost: 'transparent', danger: t.danger }[variant]
-  const fg = textColor ?? { primary: t.onAction, brand: t.onPrimary, secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
+  const fg = textColor ?? { primary: '#FFFFFF', brand: '#FFFFFF', secondary: t.text, outline: t.text, ghost: t.textMuted, danger: t.isDark ? '#1C1917' : '#fff' }[variant]
   const height = { sm: 44, md: 48, lg: 52 }[size]
   return (
     <MotionPressable
@@ -207,7 +207,7 @@ export function IconButton({
 /* Ô nhập                                                             */
 /* ------------------------------------------------------------------ */
 
-export function Input({ label, error, hint, inputRef, icon, variant = 'outline', ...props }: TextInputProps & { label?: string; error?: string; hint?: string; inputRef?: React.ComponentProps<typeof TextInput>['ref']; icon?: React.ReactNode; variant?: 'outline' | 'float' }) {
+export function Input({ label, error, hint, inputRef, icon, variant = 'outline', containerStyle, ...props }: TextInputProps & { label?: string; error?: string; hint?: string; inputRef?: React.ComponentProps<typeof TextInput>['ref']; icon?: React.ReactNode; variant?: 'outline' | 'float'; containerStyle?: ViewStyle }) {
   const t = useTheme()
   const [focus, setFocus] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -241,7 +241,7 @@ export function Input({ label, error, hint, inputRef, icon, variant = 'outline',
     const labelColor = error ? t.danger : focus ? t.info : t.textMuted
     const left = icon ? 48 : 16
     return (
-      <View style={{ marginBottom: 14 }}>
+      <View style={[{ marginBottom: 14 }, containerStyle]}>
         <View style={{ justifyContent: 'center', minHeight: 58, borderRadius: 16, backgroundColor: t.card, borderWidth: focus || error ? 2 : 1, borderColor: accent }}>
           {icon ? <View pointerEvents="none" style={{ position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center' }}>{React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: focus ? t.info : t.textMuted }) : icon}</View> : null}
           {label ? (
@@ -279,7 +279,7 @@ export function Input({ label, error, hint, inputRef, icon, variant = 'outline',
   }
 
   return (
-    <View style={{ marginBottom: 18 }}>
+    <View style={[{ marginBottom: 18 }, containerStyle]}>
       {label ? <Text style={{ color: t.text, fontWeight: '500', marginBottom: 8, fontSize: 14 }}>{label}</Text> : null}
       <View style={{ justifyContent: 'center' }}>
         <TextInput
@@ -380,7 +380,7 @@ export function Card({ children, style, onPress, flat, accessibilityRole = 'butt
   return <View style={[styles.card, body, style]}>{children}</View>
 }
 
-type Tone = 'primary' | 'success' | 'danger' | 'info' | 'warning' | 'neutral'
+export type Tone = 'primary' | 'success' | 'danger' | 'info' | 'warning' | 'neutral'
 
 /** Nhãn nhỏ dạng viên thuốc (loại bài, trạng thái...). */
 export function Tag({ label, tone = 'neutral', icon, style }: { label: string; tone?: Tone; icon?: React.ReactNode; style?: ViewStyle }) {
@@ -579,22 +579,84 @@ export function Loading() {
   )
 }
 
-/** Trạng thái rỗng, có thể kèm icon và nút hành động. */
-export function Empty({ text, title, icon, action, onAction, error, onRetry }: { text: string; title?: string; icon?: React.ReactNode; action?: string; onAction?: () => void; error?: unknown; onRetry?: () => void }) {
-  if (error) return (
-    <View accessibilityRole="alert" style={{ paddingVertical: 32, paddingHorizontal: 24, alignItems: 'center', gap: 10 }}>
-      <Txt size={16} weight="600">Không tải được nội dung</Txt>
-      <Txt muted style={{ textAlign: 'center' }}>{error instanceof Error ? error.message : 'Kiểm tra kết nối rồi thử lại.'}</Txt>
-      {onRetry ? <Button title="Thử lại" variant="outline" onPress={onRetry} style={{ marginTop: 6 }} /> : null}
-    </View>
-  )
+/** Trạng thái rỗng & báo lỗi chuẩn Meetup (MOTION-SPEC.md §6): Hoạt ảnh Enter, minh họa trực quan, typography rõ ràng và nút thử lại có phản hồi. */
+export function Empty({
+  text,
+  title,
+  icon,
+  action,
+  onAction,
+  error,
+  onRetry,
+}: {
+  text: string
+  title?: string
+  icon?: React.ReactNode
+  action?: string
+  onAction?: () => void
+  error?: unknown
+  onRetry?: () => void
+}) {
+  const t = useTheme()
+
+  if (error) {
+    const errorMsg =
+      error instanceof Error ? error.message : typeof error === 'string' ? error : text || 'Vui lòng kiểm tra kết nối mạng rồi thử lại.'
+    return (
+      <Enter duration={360}>
+        <View accessibilityRole="alert" style={{ paddingVertical: 40, paddingHorizontal: 28, alignItems: 'center', gap: 10 }}>
+          {icon ?? (
+            <View
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: 29,
+                backgroundColor: t.dangerTint,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 6,
+              }}
+            >
+              <AlertTriangle size={28} color={t.danger} />
+            </View>
+          )}
+          <Txt size={16} weight="700" style={{ textAlign: 'center' }}>
+            {title ?? 'Không thể tải nội dung'}
+          </Txt>
+          <Txt muted style={{ textAlign: 'center', maxWidth: 290, lineHeight: 20 }}>
+            {errorMsg}
+          </Txt>
+          {onRetry ? (
+            <Button
+              title="Thử lại"
+              variant="outline"
+              size="sm"
+              onPress={onRetry}
+              style={{ marginTop: 8, paddingHorizontal: 24 }}
+            />
+          ) : null}
+        </View>
+      </Enter>
+    )
+  }
+
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 8 }}>
-      {icon ? <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>{icon}</View> : null}
-      {title ? <Txt size={16} weight="700" style={{ textAlign: 'center' }}>{title}</Txt> : null}
-      <Txt muted style={{ textAlign: 'center' }}>{text}</Txt>
-      {action ? <Button title={action} size="sm" variant="secondary" onPress={onAction} style={{ marginTop: 8 }} /> : null}
-    </View>
+    <Enter duration={360}>
+      <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 8 }}>
+        {icon ? <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>{icon}</View> : null}
+        {title ? <Txt size={16} weight="700" style={{ textAlign: 'center' }}>{title}</Txt> : null}
+        <Txt muted style={{ textAlign: 'center', maxWidth: 290, lineHeight: 20 }}>{text}</Txt>
+        {action ? (
+          <Button
+            title={action}
+            size="sm"
+            variant="secondary"
+            onPress={onAction}
+            style={{ marginTop: 10, paddingHorizontal: 20 }}
+          />
+        ) : null}
+      </View>
+    </Enter>
   )
 }
 
