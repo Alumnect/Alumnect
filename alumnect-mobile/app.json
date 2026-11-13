@@ -26,7 +26,15 @@
       "expo-web-browser",
       "expo-local-authentication",
       "@react-native-community/datetimepicker",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Alumnect cần quyền truy cập ảnh để lưu mã QR thanh toán.",
+          "savePhotosPermission": "Alumnect cần quyền lưu ảnh để lưu mã QR thanh toán vào thư viện.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
     ],
     "scheme": "alumnect",
     "experiments": {

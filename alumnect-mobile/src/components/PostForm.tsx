@@ -159,6 +159,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       toast.success(existing ? 'Cập nhật bài viết thành công!' : 'Đăng bài viết thành công!')
       if (!existing) AsyncStorage.removeItem(DRAFT_KEY).catch(() => {})
       qc.invalidateQueries({ queryKey: ['feed'] })
+      qc.invalidateQueries({ queryKey: ['user-posts'] })
       if (existing) qc.invalidateQueries({ queryKey: ['post', existing.id] })
       if (existing?.eventId) qc.invalidateQueries({ queryKey: ['event-detail', existing.eventId] })
       router.back()

@@ -12,6 +12,7 @@ import { uploadFile } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { Briefcase, Check, FileText, Landmark, UserRound } from '@/components/icons'
+import { withAlumniOnly } from '@/components/AlumniOnly'
 
 interface Bank {
   bin: string
@@ -49,7 +50,7 @@ function RegChip({ label, active, onPress }: { label: string; active?: boolean; 
 }
 
 /** UC81: đăng ký / cập nhật hồ sơ mentor (Meetup x Kakao Form — Cam - Trắng - Đen). */
-export default function RegisterMentorScreen() {
+function RegisterMentorScreen() {
   const { colors, viridian, viridianSoft } = useMentoringTheme()
   const router = useRouter()
   const qc = useQueryClient()
@@ -346,3 +347,5 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 })
+
+export default withAlumniOnly(RegisterMentorScreen)

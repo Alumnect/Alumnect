@@ -38,10 +38,44 @@ const mapC = (r: Raw): SalaryContribution => ({
   grossAmount: Number(r.grossAmount ?? 0), currency: r.currency ?? 'VND', createdAt: r.createdAt ?? '',
 })
 
+/** [A1] Kết quả AI kiểm tra mức lương trước khi đóng góp (POST /salaries/ai-check — không lưu dữ liệu). */
+export interface SalaryAiCheck {
+  anomalyPercentage: number
+  isBlocked: boolean
+  requiresConfirmation: boolean
+  status: 'NORMAL' | 'BELOW_MARKET_WARNING' | 'HIGH_ANOMALY_ALLOWED' | 'EXCESSIVE_ANOMALY_BLOCKED'
+  suggestedCorrectedAmountVnd: number | null
+  realMarketRange: { minVnd: number; medianVnd: number; maxVnd: number; percentileEstimate: number }
+  alumnectInternalRange: { minVnd: number | null; medianVnd: number | null; maxVnd: number | null; sampleCount: number } | null
+  marketComparisonVi: string
+  advisoryMessageVi: string
+  source: string
+}
+const num = (v: any): number | null => (v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v))
+const mapAi = (r: Raw): SalaryAiCheck => {
+  const m = r.realMarketRange ?? {}
+  const i = r.alumnectInternalRange
+  const status = ['NORMAL', 'BELOW_MARKET_WARNING', 'HIGH_ANOMALY_ALLOWED', 'EXCESSIVE_ANOMALY_BLOCKED'].includes(r.status) ? r.status : 'NORMAL'
+  return {
+    anomalyPercentage: Number(r.anomalyPercentage ?? 0), isBlocked: !!r.isBlocked, requiresConfirmation: !!r.requiresConfirmation, status,
+    suggestedCorrectedAmountVnd: num(r.suggestedCorrectedAmountVnd),
+    realMarketRange: { minVnd: num(m.minVnd) ?? 0, medianVnd: num(m.medianVnd) ?? 0, maxVnd: num(m.maxVnd) ?? 0, percentileEstimate: Number(m.percentileEstimate ?? 50) },
+    alumnectInternalRange: i ? { minVnd: num(i.minVnd), medianVnd: num(i.medianVnd), maxVnd: num(i.maxVnd), sampleCount: Number(i.sampleCount ?? 0) } : null,
+    marketComparisonVi: r.marketComparisonVi ?? '', advisoryMessageVi: r.advisoryMessageVi ?? '', source: r.source ?? 'LOCAL_FALLBACK',
+  }
+}
+/** Triệu VNĐ, tối đa 1 chữ số thập phân (VD 38, 12.5). */
+export const toMillionText = (vnd: number) => (vnd / 1_000_000).toFixed(1).replace(/\.0$/, '')
+
 export const formatVnd = (n: number) => `${new Intl.NumberFormat('vi-VN').format(Math.round(n))} ₫`
 
 export const salaryApi = {
   industries: async (): Promise<Industry[]> => list(await http.get('/industries')).map((r) => ({ id: Number(r.id), name: r.name ?? '' })),
+  aiCheck: async (i: SalaryInput): Promise<SalaryAiCheck> =>
+    mapAi(unwrap(await http.post('/salaries/ai-check', {
+      industryId: i.industryId ?? undefined, jobTitle: i.jobTitle, company: i.company || undefined, region: i.region || undefined,
+      locationCity: i.locationCity || undefined, yearsExperience: i.yearsExperience ?? undefined, grossAmount: i.grossAmount,
+    }, { timeout: 20000 })) ?? {}),
   create: async (i: SalaryInput) => mapC(unwrap(await http.post('/salary-contributions', i))),
   mine: async () => list(await http.get('/salary-contributions/mine')).map(mapC),
   update: async (id: string, i: SalaryInput) => mapC(unwrap(await http.put(`/salary-contributions/${id}`, i))),

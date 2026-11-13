@@ -14,6 +14,9 @@ export interface Participant { id: number; fullName: string; avatarUrl?: string 
 export interface Task {
   id: number
   dealId: number
+  /** userId của học viên / mentor — dùng để xác định vai trò của người xem (Cựu sinh viên có thể là học viên). */
+  studentId?: number
+  mentorId?: number
   studentName?: string
   studentAvatar?: string | null
   mentorName?: string

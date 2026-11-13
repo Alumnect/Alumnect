@@ -190,8 +190,10 @@ export function ChatWindow({
 
   const context = useQuery({ queryKey: ['mentoring-chat-context', convId], enabled: !!isMentoring && convId != null, queryFn: () => chatApi.mentoringContext(convId!), refetchOnMount: 'always', refetchInterval: 15_000 })
   const deal = context.data?.deal?.deal
-  const isMentor = context.data?.myRole === 'MENTOR' || me?.role === 'ALUMNI'
-  const isStudent = context.data?.myRole === 'STUDENT' || me?.role === 'STUDENT'
+  // Vai trò trong cuộc hội thoại mentoring do BE quyết định (MENTOR / STUDENT / GROUP_MEMBER) — không suy từ role tài khoản,
+  // vì Cựu sinh viên cũng có thể là người gửi yêu cầu (học viên).
+  const isMentor = context.data?.myRole === 'MENTOR'
+  const isStudent = context.data?.myRole === 'STUDENT'
   const canSend = !isMentoring || (!!context.data?.canSendMessage && !context.data.readOnly && !context.isError)
   const { viridian, viridianSoft } = useMentoringTheme()
   const canPropose = canSend && isMentor && (!!context.data?.canCreateDealTicket || !!context.data?.canAcceptDealByRequest)
@@ -716,7 +718,6 @@ export function ChatWindow({
               desc={`Mã #${context.data.requestId}: ${context.data.requestTitle ?? 'Xem bài toán cần hỗ trợ'}`}
               onPress={() => {
                 setActionMenuVisible(false)
-                const isMentor = context.data?.myRole === 'MENTOR' || me?.role === 'ALUMNI'
                 router.push({
                   pathname: isMentor ? '/mentoring/incoming/[id]' : '/mentoring/request/[id]',
                   params: { id: String(context.data?.requestId) },

@@ -39,6 +39,8 @@ export interface GroupDetail extends Omit<GroupCard, 'shortDescription'> {
   canViewMembers: boolean
   pendingRequestCount: number | null
   conversationId: number | null
+  /** Người xem đã ở trong nhóm chat của hội nhóm hay chưa (chưa thì hiện nút "Tham gia chat"). */
+  isConversationMember: boolean
 }
 
 export interface GroupMember { userId: number; fullName: string; avatarUrl: string | null; headline: string | null; role: GroupRole; joinedAt: string | null }
@@ -98,6 +100,7 @@ const detail = (r: Raw): GroupDetail => ({
   ...card(r), description: r.description ?? '', joinRules: r.joinRules ?? null, createdAt: r.createdAt ?? '',
   owner: r.owner ? { userId: Number(r.owner.userId), fullName: r.owner.fullName ?? '', avatarUrl: r.owner.avatarUrl ?? null } : null,
   canViewMembers: !!r.canViewMembers, pendingRequestCount: r.pendingRequestCount ?? null, conversationId: r.conversationId ?? null,
+  isConversationMember: !!r.isConversationMember,
 })
 
 export const GROUP_PAGE_SIZE = 12

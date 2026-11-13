@@ -8,7 +8,7 @@ export type OutgoingAttachment = { mediaType: MediaType; url: string; fileName?:
 
 export interface MentoringChatContext {
   conversationId: number
-  myRole?: 'STUDENT' | 'MENTOR' | string
+  myRole?: 'STUDENT' | 'MENTOR' | 'GROUP_MEMBER' | string
   readOnly: boolean
   readOnlyReason?: string | null
   canSendMessage: boolean
@@ -63,6 +63,8 @@ export interface Conversation {
   memberCount?: number
   isAccepted?: boolean
   adminId?: number | null
+  communityGroupId?: number | null
+  communityGroupName?: string | null
   lastMessage?: string
   unreadCount: number
 }

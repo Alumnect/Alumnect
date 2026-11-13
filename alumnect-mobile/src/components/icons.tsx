@@ -25,6 +25,8 @@ import { ChatCircleIcon as PhChatCircle } from 'phosphor-react-native/src/icons/
 import { ChatsCircleIcon as PhChatsCircle } from 'phosphor-react-native/src/icons/ChatsCircle'
 import { CheckIcon as PhCheck } from 'phosphor-react-native/src/icons/Check'
 import { CheckCircleIcon as PhCheckCircle } from 'phosphor-react-native/src/icons/CheckCircle'
+import { CopySimpleIcon as PhCopySimple } from 'phosphor-react-native/src/icons/CopySimple'
+import { DownloadSimpleIcon as PhDownloadSimple } from 'phosphor-react-native/src/icons/DownloadSimple'
 import { ChecksIcon as PhChecks } from 'phosphor-react-native/src/icons/Checks'
 import { CircleIcon as PhCircle } from 'phosphor-react-native/src/icons/Circle'
 import { ClipboardTextIcon as PhClipboardText } from 'phosphor-react-native/src/icons/ClipboardText'
@@ -159,6 +161,8 @@ export const Camera = make(PhCamera, 'Camera')
 export const Check = make(PhCheck, 'Check')
 export const CheckCheck = make(PhChecks, 'CheckCheck')
 export const CheckCircle2 = make(PhCheckCircle, 'CheckCircle2')
+export const Copy = make(PhCopySimple, 'Copy')
+export const Download = make(PhDownloadSimple, 'Download')
 export const ChevronDown = make(PhCaretDown, 'ChevronDown')
 export const ChevronLeft = make(PhCaretLeft, 'ChevronLeft')
 export const ChevronRight = make(PhCaretRight, 'ChevronRight')

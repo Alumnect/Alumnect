@@ -65,6 +65,13 @@ export default function TaskDetailScreen() {
   })
 
   const d = q.data
+  // Giống Web (MentoringChatForTask): chỉ cho đánh giá khi task COMPLETED và học viên chưa đánh giá.
+  const canReviewMentor = !!d?.permissions.isStudent && d?.overview.status === 'COMPLETED'
+  const myReview = useQuery({
+    queryKey: ['mentoring-review', tid],
+    queryFn: () => taskApi.myReview(tid),
+    enabled: canReviewMentor,
+  })
   if (q.isLoading)
     return (
       <Screen keyboard bg={colors.bg}>
@@ -151,7 +158,7 @@ export default function TaskDetailScreen() {
           },
         ]
       : []),
-    ...(p.isStudent && o.status === 'COMPLETED'
+    ...(canReviewMentor && !myReview.isLoading && !myReview.data
       ? [
           {
             key: 'review',
@@ -245,6 +252,15 @@ export default function TaskDetailScreen() {
           </View>
           <ChevronRight size={18} color={colors.textTertiary} weight="bold" />
         </Pressable>
+
+        {canReviewMentor && myReview.data ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 14, backgroundColor: viridianSoft }}>
+            <Star size={16} color={viridian} weight="fill" />
+            <Txt size={13} weight="700" style={{ color: viridian, flex: 1 }} numberOfLines={2}>
+              {`Bạn đã đánh giá mentor ${myReview.data.rating}/5 sao${myReview.data.comment ? ` · “${myReview.data.comment}”` : ''}`}
+            </Txt>
+          </View>
+        ) : null}
 
         {/* Scope & Deliverables */}
         <SectionCard title="Phạm vi & Kết quả kỳ vọng" icon={<Target size={18} color={viridian} weight="bold" />}>

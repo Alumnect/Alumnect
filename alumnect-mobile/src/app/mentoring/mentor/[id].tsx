@@ -34,7 +34,7 @@ import { useMentoringTheme } from '@/theme/mentoringTheme'
 export default function MentorDetailScreen() {
   const { colors, viridian, viridianSoft, liveGreen, isDark } = useMentoringTheme()
   const router = useRouter()
-  const role = useAuthStore((s) => s.user?.role)
+  const meId = useAuthStore((s) => s.user?.id)
   const { id } = useLocalSearchParams<{ id: string }>()
   const q = useQuery({ queryKey: ['mentor', id], queryFn: () => mentoringApi.mentor(id!) })
   const m = q.data
@@ -56,6 +56,8 @@ export default function MentorDetailScreen() {
 
   const job = [m.currentPosition, m.currentCompany].filter(Boolean).join(' tại ')
   const isAvailable = m.canReceiveRequest !== false
+  // Giống Web: mọi tài khoản (Sinh viên lẫn Cựu sinh viên) đều gửi được yêu cầu, trừ khi đây là hồ sơ Mentor của chính mình.
+  const isSelfMentor = meId != null && String(meId) === String(m.userId)
 
   return (
     <Screen bg={colors.bg}>
@@ -288,37 +290,47 @@ export default function MentorDetailScreen() {
 
       {/* Sticky Bottom Action Bar */}
       <BottomBar>
-        <Button
-          title="Nhắn tin"
-          variant="secondary"
-          icon={<MessageCircle size={18} color={viridian} weight="fill" />}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-            router.push({ pathname: '/chat/direct/[userId]', params: { userId: String(m.userId) } })
-          }}
-          style={{ flex: 1 }}
-        />
-        {role === 'STUDENT' ? (
+        {isSelfMentor ? (
           <Button
-            title="Gửi yêu cầu Cố vấn"
-            textColor="#FFFFFF"
-            icon={<Send size={16} color="#FFFFFF" weight="fill" />}
-            disabled={!isAvailable}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-              router.push({
-                pathname: '/mentoring/mentor/request',
-                params: { id: String(m.mentorId), name: m.fullName },
-              })
-            }}
-            style={{
-              flex: 1.8,
-              paddingHorizontal: 10,
-              backgroundColor: isAvailable ? viridian : colors.border,
-              borderColor: isAvailable ? viridian : colors.border,
-            }}
+            title="Quản lý hồ sơ Mentor"
+            variant="secondary"
+            icon={<BrandIcon name="suitcase" size={20} />}
+            onPress={() => router.push('/mentoring/status')}
+            style={{ flex: 1 }}
           />
-        ) : null}
+        ) : (
+          <>
+            <Button
+              title="Nhắn tin"
+              variant="secondary"
+              icon={<MessageCircle size={18} color={viridian} weight="fill" />}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                router.push({ pathname: '/chat/direct/[userId]', params: { userId: String(m.userId) } })
+              }}
+              style={{ flex: 1 }}
+            />
+            <Button
+              title="Gửi yêu cầu Cố vấn"
+              textColor="#FFFFFF"
+              icon={<Send size={16} color="#FFFFFF" weight="fill" />}
+              disabled={!isAvailable}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                router.push({
+                  pathname: '/mentoring/mentor/request',
+                  params: { id: String(m.mentorId), name: m.fullName },
+                })
+              }}
+              style={{
+                flex: 1.8,
+                paddingHorizontal: 10,
+                backgroundColor: isAvailable ? viridian : colors.border,
+                borderColor: isAvailable ? viridian : colors.border,
+              }}
+            />
+          </>
+        )}
       </BottomBar>
     </Screen>
   )

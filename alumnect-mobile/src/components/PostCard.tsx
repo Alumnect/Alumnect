@@ -249,6 +249,7 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
     onSuccess: () => {
       toast.success('Đã xóa bài viết.')
       qc.invalidateQueries({ queryKey: ['feed'] })
+      qc.invalidateQueries({ queryKey: ['user-posts'] })
       if (detail) router.back()
     },
     onError: (e) => toast.error(errMsg(e)),

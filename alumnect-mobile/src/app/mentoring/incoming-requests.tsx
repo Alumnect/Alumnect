@@ -14,6 +14,7 @@ import { ListSkeleton } from '@/components/Skeleton'
 import { RESPONSE_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
 import { statusTone } from '@/constants/status'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
+import { withAlumniOnly } from '@/components/AlumniOnly'
 
 type Tab = 'ALL' | 'WAITING' | 'ACCEPTED' | 'DECLINED'
 const TABS: [Tab, string][] = [
@@ -24,7 +25,7 @@ const TABS: [Tab, string][] = [
 ]
 
 /** UC93: yêu cầu đến dành cho mentor (Meetup Item x Instagram Pill Tabs x Kakao Action Card). */
-export default function IncomingRequestsScreen() {
+function IncomingRequestsScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('ALL')
@@ -210,3 +211,5 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 })
+
+export default withAlumniOnly(IncomingRequestsScreen)

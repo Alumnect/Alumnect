@@ -78,6 +78,7 @@ export default function TaskActionScreen() {
     toast.success(msg)
     qc.invalidateQueries({ queryKey: ['mentoring-task', tid] })
     qc.invalidateQueries({ queryKey: ['mentoring-tasks'] })
+    qc.invalidateQueries({ queryKey: ['mentoring-review', tid] })
     router.back()
   }
 

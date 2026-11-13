@@ -36,6 +36,7 @@ import { MentoringHeaderBrand, MentorStoryRing } from '@/components/MentoringBra
 import { Enter, MotionPressable } from '@/components/Motion'
 import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
 import type { MentoringType, WorkingMode } from '@/api/mentoring'
+import { MentoringTermsGate } from '@/components/MentoringTermsGate'
 import { useAuthStore } from '@/store/authStore'
 import { useDebounced } from '@/lib/hooks'
 import { ListSkeleton } from '@/components/Skeleton'
@@ -150,26 +151,21 @@ export default function MentoringTab() {
   const active = countActive(filters, ['sort'])
 
   // Danh mục phím tắt luồng Mentoring (Kakao Bento Action Strip)
-  const quickShortcuts: { key: string; label: string; brand: BrandIconName; href: string; primary?: boolean }[] =
-    role === 'STUDENT'
-      ? [
-          { key: 'create', label: 'Tạo yêu cầu', brand: 'pencil', href: '/mentoring/create-request', primary: true },
-          { key: 'my-req', label: 'Yêu cầu của tôi', brand: 'writing', href: '/mentoring/my-requests' },
-          { key: 'tasks', label: 'Nhiệm vụ', brand: 'task', href: '/mentoring/tasks' },
-          { key: 'deals', label: 'Thỏa thuận', brand: 'check', href: '/mentoring/deals' },
-          { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
-          { key: 'rank', label: 'Xếp hạng', brand: 'star', href: '/mentoring/rankings' },
-          { key: 'refunds', label: 'Hoàn tiền', brand: 'coin', href: '/mentoring/refunds' },
-        ]
-      : [
-          { key: 'incoming', label: 'Yêu cầu đến', brand: 'writing', href: '/mentoring/incoming-requests', primary: true },
-          { key: 'tasks', label: 'Nhiệm vụ', brand: 'task', href: '/mentoring/tasks' },
-          { key: 'deals', label: 'Thỏa thuận', brand: 'check', href: '/mentoring/deals' },
-          { key: 'earnings', label: 'Thu nhập', brand: 'coin', href: '/mentoring/earnings' },
-          { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
-          { key: 'rank', label: 'Xếp hạng', brand: 'star', href: '/mentoring/rankings' },
-          { key: 'status', label: 'Hồ sơ Mentor', brand: 'suitcase', href: '/mentoring/status' },
-        ]
+  // Danh mục phím tắt luồng Mentoring — đồng bộ MENTORSHIP_NAVIGATION của Web:
+  // nhóm "Mentoring của tôi" dùng chung (Cựu sinh viên cũng có thể gửi yêu cầu), nhóm "Dành cho Mentor" chỉ cho ALUMNI.
+  const isAlumni = role === 'ALUMNI'
+  const quickShortcuts: { key: string; label: string; brand: BrandIconName; href: string; primary?: boolean }[] = [
+    ...(isAlumni ? [{ key: 'incoming', label: 'Yêu cầu đến', brand: 'writing' as BrandIconName, href: '/mentoring/incoming-requests', primary: true }] : []),
+    { key: 'create', label: 'Tạo yêu cầu', brand: 'pencil', href: '/mentoring/create-request', primary: !isAlumni },
+    { key: 'my-req', label: 'Yêu cầu của tôi', brand: 'writing', href: '/mentoring/my-requests' },
+    { key: 'tasks', label: 'Nhiệm vụ', brand: 'task', href: '/mentoring/tasks' },
+    { key: 'deals', label: 'Thỏa thuận', brand: 'check', href: '/mentoring/deals' },
+    ...(isAlumni ? [{ key: 'earnings', label: 'Thu nhập', brand: 'coin' as BrandIconName, href: '/mentoring/earnings' }] : []),
+    { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
+    { key: 'rank', label: 'Xếp hạng', brand: 'star', href: '/mentoring/rankings' },
+    { key: 'refunds', label: 'Hoàn tiền', brand: 'coin', href: '/mentoring/refunds' },
+    ...(isAlumni ? [{ key: 'status', label: 'Hồ sơ Mentor', brand: 'suitcase' as BrandIconName, href: '/mentoring/status' }] : []),
+  ]
 
   const handleSelectField = (fieldId: number | undefined) => {
     Haptics.selectionAsync()
@@ -177,6 +173,7 @@ export default function MentoringTab() {
   }
 
   return (
+    <MentoringTermsGate header={false}>
     <Screen bg={colors.bg}>
       {/* 1. Header Bar: Brand Logo + Tiện ích & Tin nhắn */}
       <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
@@ -524,81 +521,62 @@ export default function MentoringTab() {
             Luồng Cố vấn chính
           </Txt>
 
-          {role === 'STUDENT' ? (
+          <UtilityRow
+            brandIcon="pencil"
+            icon={<FileText size={20} color="#FFFFFF" weight="bold" />}
+            title="Tạo yêu cầu mới"
+            desc="Đăng bài toán cần mentor hỗ trợ định hướng & giải đáp"
+            primary
+            onPress={() => {
+              setUtilitySheet(false)
+              router.push('/mentoring/create-request')
+            }}
+          />
+          <UtilityRow
+            brandIcon="writing"
+            icon={<ClipboardList size={20} color={viridian} />}
+            title="Yêu cầu của tôi"
+            desc="Theo dõi trạng thái các yêu cầu cố vấn bạn đã tạo"
+            onPress={() => {
+              setUtilitySheet(false)
+              router.push('/mentoring/my-requests')
+            }}
+          />
+          <UtilityRow
+            brandIcon="task"
+            icon={<ListChecks size={20} color={viridian} />}
+            title="Nhiệm vụ của tôi"
+            desc="Tiến độ bài tập và nhiệm vụ đang đồng hành cùng mentor"
+            onPress={() => {
+              setUtilitySheet(false)
+              router.push('/mentoring/tasks')
+            }}
+          />
+          <UtilityRow
+            brandIcon="check"
+            icon={<Handshake size={20} color={viridian} weight="bold" />}
+            title="Thỏa thuận hợp tác"
+            desc="Hợp đồng và điều khoản hướng dẫn đã xác lập"
+            onPress={() => {
+              setUtilitySheet(false)
+              router.push('/mentoring/deals')
+            }}
+          />
+
+          {isAlumni ? (
             <>
-              <UtilityRow
-                brandIcon="pencil"
-                icon={<FileText size={20} color="#FFFFFF" weight="bold" />}
-                title="Tạo yêu cầu mới"
-                desc="Đăng bài toán cần mentor hỗ trợ định hướng & giải đáp"
-                primary
-                onPress={() => {
-                  setUtilitySheet(false)
-                  router.push('/mentoring/create-request')
-                }}
-              />
-              <UtilityRow
-                brandIcon="writing"
-                icon={<ClipboardList size={20} color={viridian} />}
-                title="Yêu cầu của tôi"
-                desc="Theo dõi trạng thái các yêu cầu cố vấn bạn đã tạo"
-                onPress={() => {
-                  setUtilitySheet(false)
-                  router.push('/mentoring/my-requests')
-                }}
-              />
-              <UtilityRow
-                brandIcon="task"
-                icon={<ListChecks size={20} color={viridian} />}
-                title="Nhiệm vụ của tôi"
-                desc="Tiến độ bài tập và nhiệm vụ đang đồng hành cùng mentor"
-                onPress={() => {
-                  setUtilitySheet(false)
-                  router.push('/mentoring/tasks')
-                }}
-              />
-              <UtilityRow
-                brandIcon="check"
-                icon={<Handshake size={20} color={viridian} weight="bold" />}
-                title="Thỏa thuận hợp tác"
-                desc="Hợp đồng và điều khoản hướng dẫn đã xác lập"
-                onPress={() => {
-                  setUtilitySheet(false)
-                  router.push('/mentoring/deals')
-                }}
-              />
-            </>
-          ) : (
-            <>
+              <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 12, marginBottom: 2 }}>
+                Dành cho Mentor
+              </Txt>
               <UtilityRow
                 brandIcon="writing"
                 icon={<ClipboardList size={20} color="#FFFFFF" weight="bold" />}
                 title="Yêu cầu đến"
-                desc="Danh sách yêu cầu hướng dẫn mới từ sinh viên chờ duyệt"
+                desc="Yêu cầu hướng dẫn mới gửi đến bạn đang chờ phản hồi"
                 primary
                 onPress={() => {
                   setUtilitySheet(false)
                   router.push('/mentoring/incoming-requests')
-                }}
-              />
-              <UtilityRow
-                brandIcon="task"
-                icon={<ListChecks size={20} color={viridian} />}
-                title="Nhiệm vụ học viên"
-                desc="Theo dõi tiến độ bài nộp và đánh giá chất lượng sinh viên"
-                onPress={() => {
-                  setUtilitySheet(false)
-                  router.push('/mentoring/tasks')
-                }}
-              />
-              <UtilityRow
-                brandIcon="check"
-                icon={<Handshake size={20} color={viridian} weight="bold" />}
-                title="Thỏa thuận hợp tác"
-                desc="Hợp đồng mentoring và các cam kết đang hoạt động"
-                onPress={() => {
-                  setUtilitySheet(false)
-                  router.push('/mentoring/deals')
                 }}
               />
               <UtilityRow
@@ -622,7 +600,7 @@ export default function MentoringTab() {
                 }}
               />
             </>
-          )}
+          ) : null}
 
           {/* Section: Cộng đồng & Mở rộng */}
           <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 12, marginBottom: 2 }}>
@@ -678,6 +656,7 @@ export default function MentoringTab() {
         }}
       />
     </Screen>
+    </MentoringTermsGate>
   )
 }
 
