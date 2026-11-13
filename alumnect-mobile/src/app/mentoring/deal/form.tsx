@@ -152,6 +152,34 @@ export default function DealFormScreen() {
       </Screen>
     )
 
+  if (dealId && d && !d.canEdit) {
+    return (
+      <Screen bg={colors.bg}>
+        <Header title="Chi tiết thỏa thuận" />
+        <Empty
+          title="Không thể chỉnh sửa"
+          text="Chỉ Mentor mới có quyền chỉnh sửa điều khoản thỏa thuận. Học viên vui lòng phản hồi hoặc từ chối trên chi tiết thỏa thuận."
+          action="Xem chi tiết thỏa thuận"
+          onAction={() => router.replace({ pathname: '/mentoring/deal/[id]', params: { id: String(dealId) } })}
+        />
+      </Screen>
+    )
+  }
+
+  if (!dealId && ctx && !ctx.canCreateDealTicket) {
+    return (
+      <Screen bg={colors.bg}>
+        <Header title="Đề xuất thỏa thuận" />
+        <Empty
+          title="Không có quyền đề xuất"
+          text="Chỉ Mentor mới có quyền khởi tạo thỏa thuận. Học viên vui lòng trao đổi với Mentor qua tin nhắn."
+          action="Quay lại trò chuyện"
+          onAction={() => router.back()}
+        />
+      </Screen>
+    )
+  }
+
   return (
     <Screen bg={colors.bg}>
       <Header
