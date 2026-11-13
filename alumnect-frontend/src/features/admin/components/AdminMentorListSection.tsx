@@ -21,217 +21,6 @@ import { AdminMentorCvModal } from './AdminMentorCvModal'
 import type { AdminMentorCvDto } from '../api/adminApi'
 import { cn } from '@/lib/utils'
 
-export const DEMO_MENTORS: AdminMentorCvDto[] = [
-  {
-    mentorProfileId: 101,
-    mentorName: 'Lê Trần Nhật Huy',
-    mentorEmail: 'letrannh2004@gmail.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
-    currentPosition: 'Senior Software Engineer',
-    currentCompany: 'Google APAC (Singapore)',
-    bio: 'Cựu sinh viên K14 FPTU chuyên ngành Kỹ thuật Phần mềm. Hơn 6 năm kinh nghiệm trong lĩnh vực Distributed Systems, Cloud Architecture (GCP) và thiết kế hệ thống quy mô lớn. Sẵn sàng hỗ trợ các bạn sinh viên định hướng nghề nghiệp, phỏng vấn Big Tech và làm đồ án tốt nghiệp.',
-    workingMode: 'HYBRID',
-    mentoringType: 'ONE_ON_ONE',
-    supportedFields: ['Kỹ thuật phần mềm', 'Hệ thống phân tán', 'Cloud Computing', 'Chuẩn bị phỏng vấn'],
-    topics: ['System Design cơ bản & nâng cao', 'Luyện thuật toán LeetCode', 'Định hướng du học & làm việc tại Big Tech'],
-    reputationScore: 125,
-    completedTasks: 18,
-    rating: 4.9,
-    reviewCount: 24,
-    mentorStatus: 'ACTIVE',
-    packageName: 'Gói Cao Cấp 6 Tháng',
-    subscriptionStatus: 'ACTIVE',
-    subscriptionStartDate: '2026-01-01T00:00:00Z',
-    subscriptionEndDate: '2026-07-01T00:00:00Z',
-    bankName: 'Vietcombank - CN TP.HCM',
-    bankAccountNumber: '0071001234567',
-    bankAccountHolder: 'LE TRAN NHAT HUY',
-    cvUrl: 'https://alumnect.edu.vn/cv/le_tran_nhat_huy.pdf',
-  },
-  {
-    mentorProfileId: 102,
-    mentorName: 'Bình Minh Vũ',
-    mentorEmail: 'vubinhminh04@gmail.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
-    currentPosition: 'Tech Lead & Solutions Architect',
-    currentCompany: 'FPT Software Global',
-    bio: 'K15 FPTU, phụ trách tư vấn giải pháp chuyển đổi số cho các tập đoàn tại Nhật Bản và Châu Âu. Nhiều năm dẫn dắt các dự án quy mô hàng triệu USD. Hỗ trợ kèm cặp 1:1 và cố vấn nhóm sinh viên làm đề tài nghiên cứu.',
-    workingMode: 'ONLINE',
-    mentoringType: 'GROUP',
-    supportedFields: ['Software Architecture', 'Java Spring Boot', 'Microservices', 'DevOps'],
-    topics: ['Kiến trúc Microservices chuẩn doanh nghiệp', 'Quy trình phát triển phần mềm Agile/Scrum', 'Review CV ứng tuyển'],
-    reputationScore: 98,
-    completedTasks: 14,
-    rating: 4.8,
-    reviewCount: 19,
-    mentorStatus: 'ACTIVE',
-    packageName: 'Gói Phổ Biến 3 Tháng',
-    subscriptionStatus: 'ACTIVE',
-    subscriptionStartDate: '2026-02-01T00:00:00Z',
-    subscriptionEndDate: '2026-05-01T00:00:00Z',
-    bankName: 'Techcombank - Hội sở Hà Nội',
-    bankAccountNumber: '19034567891011',
-    bankAccountHolder: 'VU BINH MINH',
-    cvUrl: 'https://alumnect.edu.vn/cv/vu_binh_minh.pdf',
-  },
-  {
-    mentorProfileId: 103,
-    mentorName: 'FierZone (Nguyễn Hải Nam)',
-    mentorEmail: 'fierzone0310@gmail.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
-    currentPosition: 'Senior AI Research Scientist',
-    currentCompany: 'VinAI Research',
-    bio: 'Chuyên gia nghiên cứu Trí tuệ Nhân tạo và Thị giác máy tính (Computer Vision), tác giả của nhiều bài báo tại các hội nghị top-tier CVPR, ICCV. Rất nhiệt tình giúp đỡ sinh viên tiếp cận nghiên cứu khoa học và chuẩn bị hồ sơ xin học bổng Thạc sĩ/Tiến sĩ.',
-    workingMode: 'ONLINE',
-    mentoringType: 'ONE_ON_ONE',
-    supportedFields: ['Trí tuệ nhân tạo', 'Computer Vision', 'Deep Learning', 'Nghiên cứu khoa học'],
-    topics: ['Học sâu với PyTorch', 'Viết bài báo khoa học chuẩn quốc tế', 'Xin học bổng nghiên cứu AI'],
-    reputationScore: 110,
-    completedTasks: 16,
-    rating: 5.0,
-    reviewCount: 15,
-    mentorStatus: 'ACTIVE',
-    packageName: 'Gói Cao Cấp 6 Tháng',
-    subscriptionStatus: 'ACTIVE',
-    subscriptionStartDate: '2026-01-15T00:00:00Z',
-    subscriptionEndDate: '2026-07-15T00:00:00Z',
-    bankName: 'MB Bank (Ngân hàng Quân Đội)',
-    bankAccountNumber: '0987654321001',
-    bankAccountHolder: 'NGUYEN HAI NAM',
-    cvUrl: 'https://alumnect.edu.vn/cv/nguyen_hai_nam.pdf',
-  },
-  {
-    mentorProfileId: 104,
-    mentorName: 'Nguyễn Thanh An',
-    mentorEmail: 'minhvbde180352@fpt.edu.vn',
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&q=80',
-    currentPosition: 'Product Manager (Fintech)',
-    currentCompany: 'VNG Corporation',
-    bio: 'K13 FPTU, quản lý các sản phẩm ví điện tử và thanh toán số. Có kinh nghiệm thực chiến từ lập trình viên chuyển hướng sang Product Management. Tư vấn phát triển kỹ năng phân tích nghiệp vụ, quản lý backlog và tư duy sản phẩm.',
-    workingMode: 'HYBRID',
-    mentoringType: 'ONE_ON_ONE',
-    supportedFields: ['Product Management', 'Phân tích dữ liệu sản phẩm', 'Fintech', 'UI/UX'],
-    topics: ['Lộ trình trở thành Product Manager', 'Phân tích hành vi người dùng A/B Testing', 'Quản trị dự án phần mềm'],
-    reputationScore: 85,
-    completedTasks: 11,
-    rating: 4.7,
-    reviewCount: 12,
-    mentorStatus: 'ACTIVE',
-    packageName: 'Gói Tiêu Chuẩn 1 Tháng',
-    subscriptionStatus: 'PAID',
-    subscriptionStartDate: '2026-02-10T00:00:00Z',
-    subscriptionEndDate: '2026-03-10T00:00:00Z',
-    bankName: 'ACB (Ngân hàng Á Châu)',
-    bankAccountNumber: '23456789012',
-    bankAccountHolder: 'NGUYEN THANH AN',
-    cvUrl: 'https://alumnect.edu.vn/cv/nguyen_thanh_an.pdf',
-  },
-  {
-    mentorProfileId: 105,
-    mentorName: 'Trần Thị Thu Hà',
-    mentorEmail: 'ha.tran@shopee.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=80',
-    currentPosition: 'Lead Product Designer (UI/UX)',
-    currentCompany: 'Shopee Vietnam',
-    bio: 'Tốt nghiệp Thiết kế Mỹ thuật số FPTU K12. Đã thiết kế giao diện cho nhiều tính năng thương mại điện tử lớn với hàng triệu người dùng hằng ngày. Sẵn sàng review portfolio và hướng dẫn xây dựng case study UX chuẩn quốc tế.',
-    workingMode: 'ONLINE',
-    mentoringType: 'GROUP',
-    supportedFields: ['UI/UX Design', 'Design System', 'User Research', 'Figma'],
-    topics: ['Xây dựng Design System từ đầu', 'Tối ưu trải nghiệm thanh toán Checkout', 'Hoàn thiện Portfolio xin việc'],
-    reputationScore: 92,
-    completedTasks: 13,
-    rating: 4.9,
-    reviewCount: 18,
-    mentorStatus: 'ACTIVE',
-    packageName: 'Gói Phổ Biến 3 Tháng',
-    subscriptionStatus: 'ACTIVE',
-    subscriptionStartDate: '2026-01-20T00:00:00Z',
-    subscriptionEndDate: '2026-04-20T00:00:00Z',
-    bankName: 'TPBank (Ngân hàng Tiên Phong)',
-    bankAccountNumber: '01234567899',
-    bankAccountHolder: 'TRAN THI THU HA',
-    cvUrl: 'https://alumnect.edu.vn/cv/tran_thi_thu_ha.pdf',
-  },
-  {
-    mentorProfileId: 106,
-    mentorName: 'Đặng Hoàng Nam',
-    mentorEmail: 'nam.dang@microsoft.com',
-    avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=256&q=80',
-    currentPosition: 'Principal Solutions Architect',
-    currentCompany: 'Microsoft Vietnam',
-    bio: 'K11 FPTU. Hơn 10 năm kinh nghiệm tư vấn kiến trúc đám mây Azure, Kubernetes, bảo mật thông tin và DevOps. Mentor kỳ cựu đã giúp hơn 40 sinh viên FPTU đạt chứng chỉ quốc tế và tìm được việc làm tại các tập đoàn đa quốc gia.',
-    workingMode: 'HYBRID',
-    mentoringType: 'ONE_ON_ONE',
-    supportedFields: ['Cloud Architecture', 'Azure DevOps', 'Cybersecurity', 'Enterprise Architecture'],
-    topics: ['Luyện thi chứng chỉ Azure Solution Architect', 'Bảo mật hệ thống thông tin', 'Chiến lược thăng tiến sự nghiệp IT'],
-    reputationScore: 140,
-    completedTasks: 22,
-    rating: 5.0,
-    reviewCount: 30,
-    mentorStatus: 'ACTIVE',
-    packageName: 'Gói Cố Vấn Doanh Nghiệp VIP',
-    subscriptionStatus: 'ACTIVE',
-    subscriptionStartDate: '2026-01-01T00:00:00Z',
-    subscriptionEndDate: '2027-01-01T00:00:00Z',
-    bankName: 'VietinBank - CN Đống Đa Hà Nội',
-    bankAccountNumber: '108876543210',
-    bankAccountHolder: 'DANG HOANG NAM',
-    cvUrl: 'https://alumnect.edu.vn/cv/dang_hoang_nam.pdf',
-  },
-  {
-    mentorProfileId: 107,
-    mentorName: 'Phạm Quang Minh',
-    mentorEmail: 'minh.pham@momo.vn',
-    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=256&q=80',
-    currentPosition: 'Data Engineering Lead',
-    currentCompany: 'MoMo E-Wallet',
-    bio: 'K13 FPTU. Xây dựng Data Lakehouse, Kafka pipeline xử lý hàng triệu giao dịch thời gian thực. Hướng dẫn các kỹ sư dữ liệu tương lai làm chủ Big Data, Spark, dbt, SQL nâng cao.',
-    workingMode: 'ONLINE',
-    mentoringType: 'GROUP',
-    supportedFields: ['Data Engineering', 'Big Data', 'Apache Spark', 'Data Warehouse'],
-    topics: ['Thiết kế Pipeline dữ liệu thời gian thực', 'Tối ưu hóa truy vấn SQL trên Big Data', 'Kinh nghiệm phỏng vấn vị trí DE'],
-    reputationScore: 76,
-    completedTasks: 9,
-    rating: 4.6,
-    reviewCount: 10,
-    mentorStatus: 'EXPIRED',
-    packageName: 'Gói Phổ Biến 3 Tháng',
-    subscriptionStatus: 'EXPIRED',
-    subscriptionStartDate: '2025-10-01T00:00:00Z',
-    subscriptionEndDate: '2026-01-01T00:00:00Z',
-    bankName: 'VPBank',
-    bankAccountNumber: '1987654321',
-    bankAccountHolder: 'PHAM QUANG MINH',
-    cvUrl: 'https://alumnect.edu.vn/cv/pham_quang_minh.pdf',
-  },
-  {
-    mentorProfileId: 108,
-    mentorName: 'Võ Mai Linh',
-    mentorEmail: 'linh.vo@alumni.fptu.edu.vn',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80',
-    currentPosition: 'Growth Marketing Manager',
-    currentCompany: 'Golden Gate Group',
-    bio: 'K14 FPTU ngành Quản trị Kinh doanh. Chuyên gia Performance Marketing, Branding và tăng trưởng người dùng chuỗi F&B hàng đầu Việt Nam.',
-    workingMode: 'OFFLINE',
-    mentoringType: 'ONE_ON_ONE',
-    supportedFields: ['Digital Marketing', 'Growth Hacking', 'Brand Strategy', 'F&B Business'],
-    topics: ['Lập kế hoạch Marketing tổng thể', 'Tối ưu chiến dịch Performance Ad', 'Kỹ năng thuyết trình trước nhà đầu tư'],
-    reputationScore: 64,
-    completedTasks: 7,
-    rating: 4.8,
-    reviewCount: 8,
-    mentorStatus: 'PAYMENT_PENDING',
-    packageName: 'Gói Tiêu Chuẩn 1 Tháng',
-    subscriptionStatus: 'PENDING_PAYMENT',
-    subscriptionStartDate: '2026-03-01T00:00:00Z',
-    subscriptionEndDate: '2026-04-01T00:00:00Z',
-    bankName: 'Techcombank',
-    bankAccountNumber: '19028374659182',
-    bankAccountHolder: 'VO MAI LINH',
-    cvUrl: 'https://alumnect.edu.vn/cv/vo_mai_linh.pdf',
-  },
-]
-
 /**
  * Component hiển thị Mục 2: Danh sách Mentor (UC96) tích hợp trong Quản lý Cố vấn & Gói dịch vụ.
  * Phong cách thiết kế shadcn-admin / square-ui với bảng 4 cột tích hợp (không cuộn ngang)
@@ -252,10 +41,7 @@ export function AdminMentorListSection() {
     size: 10,
   })
 
-  const rawMentors = useMemo(() => {
-    if (data?.content && data.content.length > 0) return data.content
-    return DEMO_MENTORS
-  }, [data])
+  const rawMentors = useMemo(() => data?.content ?? [], [data])
 
   const filteredMentors = useMemo(() => {
     return rawMentors.filter((m) => {
@@ -389,13 +175,10 @@ export function AdminMentorListSection() {
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-soft text-primary-solid shadow-2xs">
                 <Users size={15} />
               </span>
-              <h2 className="text-base font-extrabold text-slate-950 dark:text-white">
+              <h2 className="text-base font-bold text-text">
                 Danh sách hồ sơ Cố vấn (Mentors)
               </h2>
             </div>
-            <p className="mt-1 text-xs text-text-subtle">
-              Quản lý chi tiết danh sách Cố vấn, chuyên môn hỗ trợ, tình trạng gói đăng ký và tài khoản nhận chi trả.
-            </p>
           </div>
 
           <div className="flex items-center gap-2 text-xs font-semibold text-text-subtle self-start sm:self-center">
@@ -538,7 +321,7 @@ export function AdminMentorListSection() {
           <div className="w-full overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="border-b border-border text-xs uppercase tracking-wider text-text-subtle bg-surface-2/60">
+                <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
                   <th className="px-4 py-3 sm:px-5 font-bold w-[34%]">Cố vấn & Đơn vị</th>
                   <th className="px-4 py-3 sm:px-5 font-bold w-[28%]">Gói dịch vụ & Thời hạn</th>
                   <th className="px-4 py-3 sm:px-5 font-bold text-center w-[20%]">Trạng thái & Uy tín</th>
@@ -570,13 +353,13 @@ export function AdminMentorListSection() {
                             </div>
                           )}
                           <div className="min-w-0 flex-1 space-y-0.5">
-                            <p className="font-extrabold text-xs text-text group-hover/user:text-primary-solid transition-colors truncate">
+                            <p className="font-bold text-xs text-text group-hover/user:text-primary-solid transition-colors truncate">
                               {m.mentorName}
                             </p>
-                            <p className="text-[11px] text-text-subtle truncate">{m.mentorEmail}</p>
+                            <p className="text-xs text-text-subtle truncate">{m.mentorEmail}</p>
                             
                             {/* Chức vụ & Công ty */}
-                            <div className="flex flex-col gap-0.5 pt-1 text-[11px] text-text-muted">
+                            <div className="flex flex-col gap-0.5 pt-1 text-xs text-text-muted">
                               <div className="flex items-center gap-1.5 truncate">
                                 <Briefcase size={11} className="text-primary-solid shrink-0" />
                                 <span className="truncate font-medium">{m.currentPosition || 'Chưa cập nhật'}</span>
@@ -601,14 +384,14 @@ export function AdminMentorListSection() {
                               </span>
                               <span
                                 className={cn(
-                                  'inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold border shadow-2xs whitespace-nowrap',
+                                  'inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-bold border shadow-2xs whitespace-nowrap',
                                   subInfo.className
                                 )}
                               >
                                 {subInfo.text}
                               </span>
                             </div>
-                            <div className="text-[11px] text-text-subtle font-mono flex items-center gap-1">
+                            <div className="text-xs text-text-subtle tabular-nums flex items-center gap-1">
                               <span>Từ: {formatDate(m.subscriptionStartDate)}</span>
                               <span>·</span>
                               <span>Đến: {formatDate(m.subscriptionEndDate)}</span>
@@ -616,8 +399,8 @@ export function AdminMentorListSection() {
                           </div>
                         ) : (
                           <div className="space-y-0.5">
-                            <span className="text-xs text-text-subtle italic block">Chưa đăng ký gói</span>
-                            <span className="inline-block text-[10px] text-text-subtle font-medium bg-surface-2 px-1.5 py-0.5 rounded border border-border/50">
+                            <span className="text-xs text-text-subtle block">Chưa đăng ký gói</span>
+                            <span className="inline-block text-xs text-text-subtle font-medium bg-surface-2 px-1.5 py-0.5 rounded border border-border/50">
                               Chưa kích hoạt
                             </span>
                           </div>
@@ -628,17 +411,17 @@ export function AdminMentorListSection() {
                       <td className="px-4 py-3.5 sm:px-5 text-center">
                         <div className="flex flex-col items-center justify-center gap-1.5">
                           {/* Trạng thái Mentor */}
-                          <Badge tone={statusInfo.tone} className="text-[10px] px-2 py-0.5 font-bold">
+                          <Badge tone={statusInfo.tone} className="text-xs px-2 py-0.5 font-bold">
                             {statusInfo.text}
                           </Badge>
 
                           {/* Điểm uy tín & Số task hoàn thành */}
                           <div className="flex items-center gap-1.5 flex-wrap justify-center">
-                            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60 shadow-2xs whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60 shadow-2xs whitespace-nowrap">
                               <Award size={10} className="text-amber-500" />
                               {m.reputationScore ?? 0} đ
                             </span>
-                            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60 shadow-2xs whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60 shadow-2xs whitespace-nowrap">
                               <CheckCircle2 size={10} className="text-emerald-600" />
                               {m.completedTasks ?? 0} task
                             </span>
@@ -716,7 +499,7 @@ export function AdminMentorListSection() {
                 <Users size={16} />
               </span>
               <div>
-                <h2 className="text-lg font-extrabold text-slate-950 dark:text-white leading-tight">
+                <h2 className="text-lg font-bold text-text leading-tight">
                   Chi tiết hồ sơ Mentor
                 </h2>
                 <p className="text-xs text-text-subtle mt-0.5">
@@ -745,13 +528,13 @@ export function AdminMentorListSection() {
                   className="h-14 w-14 rounded-full object-cover border-2 border-primary-soft-border shrink-0"
                 />
               ) : (
-                <div className="h-14 w-14 rounded-full bg-primary-soft text-primary-solid border border-primary-soft-border flex items-center justify-center font-extrabold text-xl shrink-0 shadow-2xs">
+                <div className="h-14 w-14 rounded-full bg-primary-soft text-primary-solid border border-primary-soft-border flex items-center justify-center font-bold text-xl shrink-0 shadow-2xs">
                   {selectedMentorDetail.mentorName ? selectedMentorDetail.mentorName.charAt(0).toUpperCase() : <User size={24} />}
                 </div>
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-extrabold text-slate-950 dark:text-white">
+                  <h3 className="text-base font-bold text-text">
                     {selectedMentorDetail.mentorName}
                   </h3>
                   <Badge
@@ -782,7 +565,7 @@ export function AdminMentorListSection() {
 
             {/* Nhóm 1: Thông tin chuyên môn */}
             <div className="space-y-2.5">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <Briefcase size={13} className="text-primary-solid" /> Thông tin chuyên môn & Công tác
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
@@ -866,13 +649,13 @@ export function AdminMentorListSection() {
 
             {/* Nhóm 2: Gói dịch vụ & Thời hạn */}
             <div className="space-y-2.5 pt-2 border-t border-border">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <Crown size={13} className="text-amber-500" /> Gói dịch vụ & Thời hạn
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                 <div className="p-3 rounded-xl border border-border bg-surface">
                   <span className="text-text-subtle block mb-1">Gói đăng ký:</span>
-                  <span className="font-extrabold text-text">
+                  <span className="font-bold text-text">
                     {selectedMentorDetail.packageName || 'Chưa đăng ký gói'}
                   </span>
                 </div>
@@ -886,14 +669,14 @@ export function AdminMentorListSection() {
 
                 <div className="p-3 rounded-xl border border-border bg-surface">
                   <span className="text-text-subtle block mb-1">Ngày kích hoạt:</span>
-                  <span className="font-mono font-bold text-text-muted">
+                  <span className="tabular-nums font-bold text-text-muted">
                     {formatDate(selectedMentorDetail.subscriptionStartDate)}
                   </span>
                 </div>
 
                 <div className="p-3 rounded-xl border border-border bg-surface">
                   <span className="text-text-subtle block mb-1">Ngày hết hạn:</span>
-                  <span className="font-mono font-bold text-text-muted">
+                  <span className="tabular-nums font-bold text-text-muted">
                     {formatDate(selectedMentorDetail.subscriptionEndDate)}
                   </span>
                 </div>
@@ -903,7 +686,7 @@ export function AdminMentorListSection() {
             {/* Nhóm 3: Tài khoản thanh toán (nếu có) */}
             {(selectedMentorDetail.bankName || selectedMentorDetail.bankAccountNumber) && (
               <div className="space-y-2.5 pt-2 border-t border-border">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                   <CreditCard size={13} className="text-primary-solid" /> Tài khoản ngân hàng nhận chi trả
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
@@ -916,14 +699,14 @@ export function AdminMentorListSection() {
 
                   <div className="p-3 rounded-xl border border-border bg-surface">
                     <span className="text-text-subtle block mb-1">Số tài khoản:</span>
-                    <span className="font-mono font-extrabold text-text">
+                    <span className="tabular-nums font-bold text-text">
                       {selectedMentorDetail.bankAccountNumber || '—'}
                     </span>
                   </div>
 
                   <div className="p-3 rounded-xl border border-border bg-surface">
                     <span className="text-text-subtle block mb-1">Chủ tài khoản:</span>
-                    <span className="font-bold text-text uppercase">
+                    <span className="font-bold text-text">
                       {selectedMentorDetail.bankAccountHolder || '—'}
                     </span>
                   </div>

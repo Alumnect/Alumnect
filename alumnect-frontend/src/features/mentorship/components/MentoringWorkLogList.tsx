@@ -255,7 +255,7 @@ export function MentoringWorkLogList({
                 {/* Log Header */}
                 <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-border dark:border-white/[0.05]">
                   <div className="flex items-center gap-2.5">
-                    <span className="rounded-lg bg-border px-2.5 py-1 text-xs font-mono font-bold text-text-muted">
+                    <span className="rounded-lg bg-border px-2.5 py-1 text-xs tabular-nums font-bold text-text-muted">
                       Log #{logNumber}
                     </span>
                     <span className="flex items-center gap-1 text-xs font-bold text-text-muted">
@@ -268,7 +268,7 @@ export function MentoringWorkLogList({
                       </span>
                     )}
                     {isLatest && (
-                      <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-bold uppercase text-primary-solid">
+                      <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-bold text-primary-solid">
                         {t('mentoring.newest')}
                       </span>
                     )}
@@ -294,7 +294,7 @@ export function MentoringWorkLogList({
                 {/* Log Content Grid */}
                 <div className="mt-4 space-y-3 text-sm">
                   <div>
-                    <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
+                    <span className="block text-xs font-bold text-text-subtle">
                       {t('mentoring.summaryDescription')}
                     </span>
                     <p className="mt-1 font-bold text-text leading-relaxed">
@@ -303,7 +303,7 @@ export function MentoringWorkLogList({
                   </div>
 
                   <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg">
-                    <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
+                    <span className="block text-xs font-bold text-text-subtle">
                       {t('mentoring.completedWorkContent')}
                     </span>
                     <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed">
@@ -312,7 +312,7 @@ export function MentoringWorkLogList({
                   </div>
 
                   <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg">
-                    <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
+                    <span className="block text-xs font-bold text-text-subtle">
                       {t('mentoring.achievedResultsDeliverables')}
                     </span>
                     <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed">
@@ -322,7 +322,7 @@ export function MentoringWorkLogList({
 
                   {log.nextAction && (
                     <div>
-                      <span className="block text-xs font-bold uppercase tracking-wider text-text-subtle">
+                      <span className="block text-xs font-bold text-text-subtle">
                         {t('mentoring.nextActions')}
                       </span>
                       <p className="mt-1 text-xs text-text-muted leading-relaxed">
@@ -334,7 +334,7 @@ export function MentoringWorkLogList({
                   {/* Attachments Section */}
                   {log.attachments && log.attachments.length > 0 && (
                     <div className="pt-2">
-                      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-text-subtle">
                         <Paperclip className="h-3.5 w-3.5" />
                         {t('mentoring.evidenceAttachmentsHeading', { count: log.attachments.length })}
                       </span>
@@ -433,7 +433,7 @@ export function MentoringWorkLogList({
                                 <span>{formatDateTime(fb.createdAt)}</span>
                               </div>
                               {fb.reason && (
-                                <p className="mt-1 text-foreground/90 italic">
+                                <p className="mt-1 text-foreground/90">
                                   "{fb.reason}"
                                 </p>
                               )}

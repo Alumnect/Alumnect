@@ -92,7 +92,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
         <div className="bg-cream-100/80 dark:bg-bg/60 rounded-2xl p-4.5 border border-cream-300/70 dark:border-border space-y-4">
           {/* Vị trí & Công ty hiện tại */}
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-2">
+            <span className="text-xs font-bold text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-2">
               <Briefcase className="w-3.5 h-3.5 text-primary-solid" />
               <span>{t('mentoring.currentJobPosition')}</span>
               <span className="text-danger">*</span>
@@ -135,7 +135,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
 
           {/* Kỹ năng chuyên môn */}
           <div className="pt-3 border-t border-cream-300/60 dark:border-border">
-            <span className="text-xs font-bold uppercase tracking-wider text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-2.5">
+            <span className="text-xs font-bold text-text-subtle dark:text-text-subtle flex items-center gap-1.5 mb-2.5">
               <Sparkles className="w-3.5 h-3.5 text-warning" />
               <span>{t('mentoring.skillsTitle')}</span>
             </span>
@@ -144,7 +144,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
               <div className="space-y-3 pt-0.5">
                 {Object.entries(skillGroups).map(([groupName, groupSkillList]) => (
                   <div key={groupName} className="space-y-1.5">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle dark:text-text-subtle">
+                    <h4 className="text-xs font-bold text-text-subtle dark:text-text-subtle">
                       {groupName}
                     </h4>
                     <div className="flex flex-wrap gap-2">
@@ -172,7 +172,7 @@ export const MentorProfessionalSection: React.FC<Props> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-text-subtle dark:text-text-subtle italic">
+              <p className="text-xs text-text-subtle dark:text-text-subtle">
                 {t('mentoring.noSkillsInProfile')}
               </p>
             )}

@@ -76,7 +76,8 @@ export const MENTORSHIP_NAVIGATION: MentorshipNavigationSection[] = [
           {
             label: 'Tạo yêu cầu mới',
             to: '/app/mentoring/requests/create',
-            activePaths: ['/app/mentoring/requests/create', '/app/mentoring/mentors'],
+            // Trang /mentors/:id/request được sidebar xử lý riêng; /mentors/:id là xem hồ sơ → thuộc "Khám phá Mentor"
+            activePaths: ['/app/mentoring/requests/create'],
             icon: PlusCircle,
             audience: 'common',
           },

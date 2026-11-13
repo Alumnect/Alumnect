@@ -35,11 +35,17 @@ export const mentorSubscriptionApi = {
 
   /**
    * Lấy thông tin gói Mentor đã chọn / hiện tại của người dùng.
+   * Backend trả 404 khi chưa có gói (hoặc vừa hủy đơn): coi là "chưa có gói" để UI không giữ dữ liệu cũ.
    */
-  getMySubscription: async (): Promise<MentorSubscription> => {
-    const res = await http.get<any, ApiResponse<MentorSubscription>>(
-      '/mentoring/subscriptions/my-subscription'
-    )
-    return res.data
+  getMySubscription: async (): Promise<MentorSubscription | null> => {
+    try {
+      const res = await http.get<any, ApiResponse<MentorSubscription>>(
+        '/mentoring/subscriptions/my-subscription'
+      )
+      return res.data
+    } catch (error) {
+      if ((error as { status?: number }).status === 404) return null
+      throw error
+    }
   },
 }

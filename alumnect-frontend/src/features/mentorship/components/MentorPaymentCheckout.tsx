@@ -191,7 +191,7 @@ export function MentorPaymentCheckout({ initialPackageId, onBack }: MentorPaymen
         <Card hover={false} className="p-6 rounded-3xl border border-border bg-surface shadow-sm space-y-4">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary-solid">
+              <span className="text-xs font-semibold text-primary-solid">
                 {t('mentoring.selectedPackageLabel')}
               </span>
               <h3 className="font-display text-lg font-bold text-text mt-0.5">

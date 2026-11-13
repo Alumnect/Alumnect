@@ -1,24 +1,19 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  ArrowUpRight,
   UserPlus,
   Inbox,
   Flag,
-  Compass,
   Megaphone,
-  Lock,
-  CheckCircle2,
-  Clock,
   ChevronRight,
   RefreshCw,
-  AlertTriangle,
-  ShieldCheck,
-  Sparkles,
-  LayoutDashboard,
+  Scale,
+  GraduationCap,
+  Compass,
+  Lock,
+  TrendingUp,
 } from 'lucide-react'
-import { PageHeader, Badge, Card, EmptyState, Skeleton, Button } from '@/components/ui'
-import { Reveal, Stagger, StaggerItem, Counter } from '@/components/motion'
+import { EmptyState, Skeleton, Button } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
   useAdminOverview,
@@ -26,11 +21,16 @@ import {
   useAdminMentors,
   useAdminSystemNotifications,
   useAdminUsers,
+  useAdminTickets,
+  useAdminRevenueOverview,
 } from '../hooks/useAdmin'
-import { RegistrationAnalyticsChart } from './RegistrationAnalyticsChart'
+import { AdminHero, QueueTile, AreaTrend, Donut } from './AdminVisuals'
+import { brandButtonClass, softButtonClass } from '@/components/brand/brandClasses'
+import { useAuthStore } from '@/store/authStore'
 
 export function AdminOverviewPage() {
   const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
 
   // 1. KPI & Summary Queries
   const {
@@ -134,83 +134,6 @@ export function AdminOverviewPage() {
   const scheduledBroadcastCount = scheduledBroadcasts?.totalElements || 0
   const lockedUserCount = lockedUsers?.totalElements || 0
 
-  const totalActionItems =
-    pendingReportCount + pendingMentorCount + scheduledBroadcastCount + lockedUserCount
-
-  // Danh sách các mục trong Card "Cần xử lý"
-  const actionItems = useMemo(() => {
-    const list = []
-
-    // Mục 1: Báo cáo vi phạm bài viết (ưu tiên cao)
-    if (pendingReportCount > 0) {
-      list.push({
-        id: 'reports',
-        title: 'Báo cáo vi phạm bài viết',
-        description: 'Bài viết cộng đồng bị người dùng báo cáo vi phạm tiêu chuẩn nội dung',
-        count: pendingReportCount,
-        badgeText: 'Cần xử lý ngay',
-        badgeTone: 'rose' as const,
-        icon: <Flag className="h-4 w-4 text-danger" />,
-        iconBg: 'bg-danger-soft',
-        actionLabel: 'Xử lý',
-        actionHref: '/admin/reports',
-        isUrgent: true,
-      })
-    }
-
-    // Mục 2: Mentor chờ kích hoạt / thanh toán gói
-    if (pendingMentorCount > 0) {
-      list.push({
-        id: 'mentors',
-        title: 'Mentor chờ hoàn tất đăng ký / gói',
-        description: 'Hồ sơ Cố vấn cần theo dõi kích hoạt gói dịch vụ hoặc đối chứng CV',
-        count: pendingMentorCount,
-        badgeText: 'Chờ thanh toán',
-        badgeTone: 'gold' as const,
-        icon: <Compass className="h-4 w-4 text-warning" />,
-        iconBg: 'bg-warning-soft',
-        actionLabel: 'Xem danh sách',
-        actionHref: '/admin/mentor-packages',
-        isUrgent: false,
-      })
-    }
-
-    // Mục 3: Thông báo hệ thống đã lên lịch chờ gửi
-    if (scheduledBroadcastCount > 0) {
-      list.push({
-        id: 'broadcasts',
-        title: 'Thông báo hệ thống đã hẹn giờ',
-        description: 'Bản tin thông báo toàn hệ thống đang trong hàng đợi chờ phát tự động',
-        count: scheduledBroadcastCount,
-        badgeText: 'Đã hẹn giờ',
-        badgeTone: 'brand' as const,
-        icon: <Megaphone className="h-4 w-4 text-violet-600 dark:text-violet-400" />,
-        iconBg: 'bg-violet-100 dark:bg-violet-950/50',
-        actionLabel: 'Xem lịch phát',
-        actionHref: '/admin/broadcast',
-        isUrgent: false,
-      })
-    }
-
-    // Mục 4: Tài khoản đang bị khóa
-    if (lockedUserCount > 0) {
-      list.push({
-        id: 'locked-users',
-        title: 'Tài khoản người dùng đang bị khóa',
-        description: 'Tài khoản thành viên bị tạm khóa do vi phạm hoặc yêu cầu bảo mật',
-        count: lockedUserCount,
-        badgeText: 'Đang khóa',
-        badgeTone: 'neutral' as const,
-        icon: <Lock className="h-4 w-4 text-text-muted" />,
-        iconBg: 'bg-surface-2 dark:bg-surface-2',
-        actionLabel: 'Kiểm tra',
-        actionHref: '/admin/users',
-        isUrgent: false,
-      })
-    }
-
-    return list
-  }, [pendingReportCount, pendingMentorCount, scheduledBroadcastCount, lockedUserCount])
 
   // Chuẩn hóa thời gian tương đối
   const formatTimeAgo = (dateStr?: string | null): string => {
@@ -313,396 +236,315 @@ export function AdminOverviewPage() {
     // Sắp xếp thời gian mới nhất lên đầu và lấy 6 mục
     return items
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, 6)
+      .slice(0, 5)
   }, [recentUsersData, recentReportsData, recentNotificationsData])
 
-  // KPIs Data
-  const kpis = summary
-    ? [
-        { label: 'Tổng số người dùng', value: summary.totalUsers, delta: '+12.4%', up: true },
-        { label: 'Sinh viên FPTU', value: summary.totalStudents, delta: '+8.1%', up: true },
-        { label: 'Cựu sinh viên', value: summary.totalAlumni, delta: '+15.3%', up: true },
-        {
-          label: 'Yêu cầu cần xử lý',
-          value: totalActionItems,
-          delta: totalActionItems > 0 ? `${totalActionItems} mục chờ` : 'Đã giải quyết',
-          up: totalActionItems === 0,
-          isWarning: totalActionItems > 0,
-        },
-      ]
-    : []
+  // ---------- Số liệu bổ sung cho trang (đều từ API thật) ----------
+  const { data: openTicketsPage } = useAdminTickets({ status: 'OPEN', page: 0, size: 1 })
+  const { data: revenue } = useAdminRevenueOverview()
 
-  const dailyRegs = summary?.dailyRegistrations || []
-  const isLoadingPendingCards =
-    isLoadingReports || isLoadingMentors || isLoadingBroadcasts || isLoadingLockedUsers
-  const isErrorPendingCards =
-    !!reportsError || !!mentorsError || !!broadcastsError || !!lockedUsersError
-  const isLoadingRecentCards =
-    isLoadingRecentUsers || isLoadingRecentReports || isLoadingRecentNotifications
+  const currentMonth = new Date().getMonth() + 1
+  const newThisMonth = summary?.registrationsByMonth?.[currentMonth - 1]?.count ?? 0
+  const openTicketCount = openTicketsPage?.totalElements ?? 0
+  const pendingVerificationCount = summary?.pendingVerifications ?? 0
+  const formatVnd = (value = 0) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value)
+
+  // Hàng đợi công việc của Quản trị viên: số lượng thật, đi thẳng tới nơi xử lý
+  type Queue = { id: string; label: string; sub: string; short: string; count: number; href: string; action: string; urgent: boolean; icon: React.ReactNode }
+  const queues: Queue[] = [
+    { id: 'reports', label: 'Báo cáo vi phạm', sub: 'chờ xử lý', short: 'báo cáo vi phạm', count: pendingReportCount, href: '/admin/reports', action: 'Xử lý', urgent: true, icon: <Flag /> },
+    { id: 'tickets', label: 'Tranh chấp', sub: 'chờ tiếp nhận', short: 'tranh chấp', count: openTicketCount, href: '/admin/mentoring-tickets', action: 'Tiếp nhận', urgent: true, icon: <Scale /> },
+    { id: 'verifications', label: 'Hồ sơ cựu SV', sub: 'chờ duyệt', short: 'hồ sơ cựu sinh viên', count: pendingVerificationCount, href: '/admin/verifications', action: 'Duyệt', urgent: true, icon: <GraduationCap /> },
+    { id: 'mentors', label: 'Mentor', sub: 'chờ thanh toán gói', short: 'mentor chờ thanh toán', count: pendingMentorCount, href: '/admin/mentor-packages', action: 'Xem', urgent: false, icon: <Compass /> },
+    { id: 'broadcasts', label: 'Thông báo', sub: 'đã hẹn giờ', short: 'thông báo hẹn giờ', count: scheduledBroadcastCount, href: '/admin/broadcast', action: 'Xem lịch', urgent: false, icon: <Megaphone /> },
+    { id: 'locked', label: 'Tài khoản', sub: 'đang khóa', short: 'tài khoản khóa', count: lockedUserCount, href: '/admin/users', action: 'Kiểm tra', urgent: false, icon: <Lock /> },
+  ]
+  const urgentActive = queues.filter((q) => q.urgent && q.count > 0)
+  const firstUrgent = urgentActive[0]
+
+  // Cơ cấu người dùng (phần còn lại là tài khoản quản trị)
+  const totalUsers = summary?.totalUsers ?? 0
+  const composition = [
+    { label: 'Cựu sinh viên', value: summary?.totalAlumni ?? 0, color: '#F27024' },
+    { label: 'Sinh viên', value: summary?.totalStudents ?? 0, color: '#1F6BB8' },
+    { label: 'Quản trị', value: Math.max(0, totalUsers - (summary?.totalAlumni ?? 0) - (summary?.totalStudents ?? 0)), color: '#D9D4CF' },
+  ]
+  const pct = (v: number) => (totalUsers > 0 ? Math.round((v / totalUsers) * 100) : 0)
+  const lastWeek = summary?.registrationsLast7Days ?? summary?.dailyRegistrations ?? []
+  const lastWeekRegistrations = lastWeek.reduce((acc, d) => acc + Number(d.count || 0), 0)
+
+  // Biểu đồ: 12 tháng năm nay (tháng chưa tới = null) hoặc 7 ngày qua
+  const [trendPeriod, setTrendPeriod] = useState<'YEAR' | 'WEEK'>('YEAR')
+  const trendPoints =
+    trendPeriod === 'YEAR'
+      ? (summary?.registrationsByMonth ?? []).map((d, idx) => ({
+          label: d.date.replace('Tháng ', 'T'),
+          value: idx + 1 > currentMonth ? null : Number(d.count || 0),
+        }))
+      : lastWeek.map((d) => {
+          const [, mm, dd] = d.date.split('-')
+          return { label: dd && mm ? `${dd}/${mm}` : d.date, value: Number(d.count || 0) }
+        })
+  const yearTotal = (summary?.registrationsByMonth ?? []).reduce((acc, d) => acc + Number(d.count || 0), 0)
+
+  const hour = new Date().getHours()
+  const greeting = hour < 11 ? 'Chào buổi sáng' : hour < 14 ? 'Chào buổi trưa' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'
+  const todayLabel = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
+  const isLoadingPendingCards = isLoadingReports || isLoadingMentors || isLoadingBroadcasts || isLoadingLockedUsers
+  const isErrorPendingCards = !!reportsError || !!mentorsError || !!broadcastsError || !!lockedUsersError
+  const isLoadingRecentCards = isLoadingRecentUsers || isLoadingRecentReports || isLoadingRecentNotifications
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        kicker="Hệ thống vận hành Alumnect"
-        kickerIcon={<LayoutDashboard size={15} />}
-        title="Tổng quan Quản trị"
-        subtitle="Theo dõi chỉ số vận hành, phân tích tăng trưởng người dùng và xử lý các yêu cầu trên hệ thống."
-      />
+    <div className="mx-auto max-w-7xl space-y-7">
+      {/* 1. Dải chào có minh hoạ campus FPT + tóm tắt việc trong ngày */}
+      <AdminHero
+        eyebrow={<span className="first-letter:uppercase">{todayLabel}</span>}
+        title={
+          <>
+            {greeting},
+            <br />
+            {user?.name || 'Quản trị viên'}
+          </>
+        }
+        actions={
+          <>
+            {firstUrgent && (
+              <button type="button" onClick={() => navigate(firstUrgent.href)} className={brandButtonClass}>
+                <Flag className="h-4 w-4" />
+                {firstUrgent.action} {firstUrgent.short}
+              </button>
+            )}
+            <button type="button" onClick={() => navigate('/admin/broadcast')} className={firstUrgent ? softButtonClass : brandButtonClass}>
+              <Megaphone className="h-4 w-4" />
+              Tạo thông báo
+            </button>
+          </>
+        }
+      >
+        {isLoadingPendingCards ? (
+          'Đang tổng hợp công việc trong ngày…'
+        ) : urgentActive.length > 0 ? (
+          <>
+            Hôm nay có{' '}
+            {urgentActive.map((q, idx) => (
+              <span key={q.id}>
+                {idx > 0 && ', '}
+                <b className="font-semibold text-[#E5484D]">
+                  {q.count} {q.short}
+                </b>
+              </span>
+            ))}{' '}
+            đang chờ bạn.
+          </>
+        ) : (
+          'Không có việc nào đang chờ quyết định.'
+        )}{' '}
+        {newThisMonth > 0 && (
+          <>
+            Cộng đồng có thêm <b className="font-semibold text-text">{newThisMonth} tài khoản mới</b> trong tháng {currentMonth}.
+          </>
+        )}
+      </AdminHero>
 
-      {/* KPI Section */}
-      {isLoadingKpis ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} hover={false} className="p-5">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="mt-2 h-8 w-20" />
-              <Skeleton className="mt-2 h-3 w-32" />
-            </Card>
+      {/* 2. Việc cần làm */}
+      <section>
+        <div className="mb-3.5 flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold text-text">Việc cần làm</h2>
+          {isErrorPendingCards && (
+            <Button size="sm" variant="secondary" onClick={handleRefreshAll} leftIcon={<RefreshCw className="h-3.5 w-3.5" />}>
+              Thử lại
+            </Button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3 xl:grid-cols-6">
+          {queues.map((q) => (
+            <QueueTile
+              key={q.id}
+              icon={q.icon}
+              count={q.count}
+              label={q.label}
+              sub={q.sub}
+              action={q.action}
+              urgent={q.urgent}
+              loading={isLoadingPendingCards}
+              onClick={() => navigate(q.href)}
+            />
           ))}
         </div>
-      ) : kpisError ? (
-        <EmptyState
-          icon={<Inbox size={24} />}
-          title="Không thể tải dữ liệu thống kê"
-          description={kpisError instanceof Error ? kpisError.message : 'Lỗi kết nối máy chủ.'}
-          action={
-            <Button size="sm" variant="secondary" onClick={() => refetchKpis()}>
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Thử lại
-            </Button>
-          }
-        />
-      ) : (
-        <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" gap={0.07}>
-          {kpis.map((k) => (
-            <StaggerItem key={k.label}>
-              <Card hover={false} className="p-5 border border-border shadow-xs">
-                <p className="text-xs font-semibold text-text-subtle dark:text-text-muted">{k.label}</p>
-                <p className="mt-2 text-3xl font-black text-text">
-                  <Counter value={k.value} compactFmt={k.value > 9999} />
-                </p>
-                <p
-                  className={cn(
-                    'mt-2 inline-flex items-center gap-1 text-xs font-bold',
-                    k.isWarning
-                      ? 'text-warning'
-                      : k.up
-                      ? 'text-success'
-                      : 'text-danger'
-                  )}
+      </section>
+
+      {/* 3. Đăng ký mới · Cơ cấu người dùng · Doanh thu */}
+      <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-[1.55fr_1fr_1fr]">
+        <section className="rounded-3xl border border-border bg-surface px-6 py-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm text-text-subtle">
+                Tài khoản đăng ký mới · {trendPeriod === 'YEAR' ? `năm ${new Date().getFullYear()}` : '7 ngày qua'}
+              </p>
+              <p className="mt-1 flex items-baseline gap-2 font-display text-[34px] font-bold tabular-nums text-text">
+                {trendPeriod === 'YEAR' ? yearTotal : lastWeekRegistrations}
+                {trendPeriod === 'YEAR' && newThisMonth > 0 && (
+                  <span className="inline-flex items-center gap-1 font-sans text-sm font-semibold text-success">
+                    <TrendingUp className="h-3.5 w-3.5" />+{newThisMonth} tháng này
+                  </span>
+                )}
+              </p>
+            </div>
+            <div role="tablist" aria-label="Khoảng thời gian" className="flex rounded-xl bg-surface-2 p-1 text-xs font-semibold">
+              {(
+                [
+                  ['WEEK', '7 ngày'],
+                  ['YEAR', 'Năm nay'],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={trendPeriod === key}
+                  onClick={() => setTrendPeriod(key)}
+                  className={cn('rounded-lg px-3 py-1.5 transition', trendPeriod === key ? 'bg-surface text-text shadow-xs' : 'text-text-subtle hover:text-text')}
                 >
-                  <ArrowUpRight size={14} /> {k.delta}
-                  <span className="font-medium text-text-subtle"> so với tháng trước</span>
-                </p>
-              </Card>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      )}
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3">
+            {isLoadingKpis ? (
+              <Skeleton className="h-52 w-full" />
+            ) : trendPoints.length === 0 ? (
+              <p className="py-16 text-center text-sm text-text-subtle">Chưa có số liệu đăng ký.</p>
+            ) : (
+              <AreaTrend points={trendPoints} />
+            )}
+          </div>
+        </section>
 
-      {/* Row 2: Registrations Combo Chart */}
-      <Reveal>
-        <RegistrationAnalyticsChart
-          summary={summary}
-          liveDailyRegs={dailyRegs}
-          isLoading={isLoadingKpis}
-        />
-      </Reveal>
-
-      {/* Row 3: Bố cục 2 Card: "Cần xử lý" (60%) & "Hoạt động gần đây" (40%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* ================= CARD 1: CẦN XỬ LÝ (60% - 7/12 cột desktop) ================= */}
-        <div className="lg:col-span-7">
-          <Reveal>
-            <Card
-              hover={false}
-              className="p-5 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col h-full"
-            >
-              {/* Card Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-border dark:border-border mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-primary-soft text-primary-solid">
-                    <ShieldCheck className="h-5 w-5" />
+        <section className="rounded-3xl border border-border bg-surface px-6 py-5">
+          <p className="text-sm text-text-subtle">Cơ cấu người dùng</p>
+          {kpisError ? (
+            <EmptyState
+              icon={<Inbox size={22} />}
+              title="Không thể tải số liệu"
+              description={kpisError instanceof Error ? kpisError.message : 'Lỗi kết nối máy chủ.'}
+              action={
+                <Button size="sm" variant="secondary" onClick={() => refetchKpis()} leftIcon={<RefreshCw className="h-3.5 w-3.5" />}>
+                  Thử lại
+                </Button>
+              }
+              className="mt-3 border-none"
+            />
+          ) : (
+            <>
+              <div className="my-3 flex justify-center">
+                {isLoadingKpis ? <Skeleton className="h-[172px] w-[172px] rounded-full" /> : <Donut parts={composition} total={totalUsers} caption="người dùng" />}
+              </div>
+              <dl className="space-y-1.5 text-sm">
+                {composition.map((c) => (
+                  <div key={c.label} className="flex items-center gap-2.5">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: c.color }} aria-hidden />
+                    <dt className="flex-1 text-text-muted">{c.label}</dt>
+                    <dd className="font-display font-bold tabular-nums text-text">{c.value}</dd>
+                    <dd className="w-10 text-right tabular-nums text-text-subtle">{pct(c.value)}%</dd>
                   </div>
-                  <div>
-                    <h2 className="font-extrabold text-base text-text flex items-center gap-2">
-                      <span>Cần xử lý</span>
-                      {totalActionItems > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning text-text-inverse">
-                          {totalActionItems}
-                        </span>
-                      )}
-                    </h2>
-                    <p className="text-xs text-text-subtle dark:text-text-muted mt-0.5">
-                      Danh sách công việc và hàng đợi cần Quản trị viên can thiệp
-                    </p>
-                  </div>
-                </div>
+                ))}
+              </dl>
+            </>
+          )}
+        </section>
 
-                {isErrorPendingCards && (
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1F2A44] to-[#2B3A5E] px-6 py-5 text-white">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-[#F27024]/25 blur-xl" aria-hidden />
+          <p className="relative text-sm text-[#B9C3DA]">Doanh thu tháng {currentMonth}</p>
+          <p className="relative mt-1.5 font-display text-[34px] font-bold tabular-nums">{revenue ? formatVnd(revenue.currentMonthRevenue) : '—'}</p>
+          <p className="relative mt-1 text-sm text-[#B9C3DA]">
+            {revenue ? `${revenue.successfulTransactionCount ?? 0} khoản đã ghi nhận` : 'Đang tải…'}
+          </p>
+          <div className="relative mt-6 grid grid-cols-2 gap-2.5">
+            {[
+              ['Mentor', mentorsData?.totalElements ?? 0, '/admin/mentor-packages'],
+              ['Đăng ký 7 ngày', lastWeekRegistrations, '/admin/users'],
+            ].map(([label, value, href]) => (
+              <button
+                key={label as string}
+                type="button"
+                onClick={() => navigate(href as string)}
+                className="rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3 text-left transition hover:bg-white/[0.14]"
+              >
+                <p className="text-xs text-[#B9C3DA]">{label}</p>
+                <p className="mt-0.5 font-display text-[22px] font-bold tabular-nums">{value}</p>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/admin/revenue')}
+            className="relative mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-[#FFB284] hover:underline"
+          >
+            Xem doanh thu
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </section>
+      </div>
+
+      {/* 4. Hoạt động gần đây */}
+      <section className="rounded-3xl border border-border bg-surface px-6 py-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-base font-bold text-text">Hoạt động gần đây</h2>
+          <button type="button" onClick={() => navigate('/admin/users')} className="text-sm font-semibold text-[#E3561A] hover:underline">
+            Xem tất cả
+          </button>
+        </div>
+        {isLoadingRecentCards ? (
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {[1, 2, 3, 4].map((k) => (
+              <Skeleton key={k} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : recentActivities.length === 0 ? (
+          <p className="mt-3 text-sm text-text-subtle">Chưa có hoạt động nào.</p>
+        ) : (
+          <ul className="mt-1 grid gap-x-10 md:grid-cols-2">
+            {recentActivities.map((act) => {
+              const isReport = act.type === 'REPORT'
+              return (
+                <li key={act.id} className="border-b border-dashed border-border last:border-b-0 md:[&:nth-last-child(2):nth-child(odd)]:border-b-0">
                   <button
                     type="button"
-                    onClick={handleRefreshAll}
-                    className="p-1.5 rounded-lg text-text-subtle hover:text-text-muted hover:bg-surface-2 dark:hover:bg-surface-2 transition-colors cursor-pointer"
-                    title="Tải lại dữ liệu"
+                    onClick={() => act.linkUrl && navigate(act.linkUrl)}
+                    className="flex w-full items-center gap-3 py-3 text-left"
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    {act.actorAvatar ? (
+                      <img src={act.actorAvatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <span
+                        className={cn(
+                          'grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold',
+                          isReport ? 'bg-[#FFE9E3] text-[#E5484D]' : 'bg-[#EAF2FF] text-[#1F6BB8]'
+                        )}
+                      >
+                        {(act.actorName || '?')
+                          .split(' ')
+                          .filter(Boolean)
+                          .slice(-2)
+                          .map((w) => w.charAt(0).toUpperCase())
+                          .join('')}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-text">{act.title}</span>
+                      <span className="block truncate text-xs text-text-subtle">{act.description}</span>
+                    </span>
+                    <span className="shrink-0 text-xs text-text-subtle">{act.timeAgo}</span>
                   </button>
-                )}
-              </div>
-
-              {/* Card Body */}
-              <div className="flex-1 flex flex-col justify-center">
-                {/* 1. Loading Skeleton */}
-                {isLoadingPendingCards && (
-                  <div className="space-y-3.5 py-2">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between p-3.5 rounded-xl bg-surface-2 dark:bg-surface border border-border dark:border-border"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="h-9 w-9 rounded-xl" />
-                          <div className="space-y-1.5">
-                            <Skeleton className="h-4 w-40" />
-                            <Skeleton className="h-3 w-56" />
-                          </div>
-                        </div>
-                        <Skeleton className="h-8 w-20 rounded-xl" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 2. Error State */}
-                {!isLoadingPendingCards && isErrorPendingCards && (
-                  <div className="p-6 text-center bg-danger-soft rounded-xl border border-danger-border space-y-3">
-                    <AlertTriangle className="h-8 w-8 text-danger mx-auto" />
-                    <div>
-                      <h4 className="text-sm font-bold text-text">
-                        Không thể tải danh sách công việc
-                      </h4>
-                      <p className="text-xs text-text-subtle mt-0.5">
-                        Đã xảy ra sự cố khi kết nối tới một số dịch vụ hàng đợi.
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={handleRefreshAll}
-                      className="text-xs rounded-xl font-bold cursor-pointer"
-                    >
-                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Thử lại
-                    </Button>
-                  </div>
-                )}
-
-                {/* 3. Empty State (Khi đã xử lý xong hết) */}
-                {!isLoadingPendingCards && !isErrorPendingCards && actionItems.length === 0 && (
-                  <div className="py-10 px-4 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-success-soft text-success flex items-center justify-center mx-auto shadow-inner">
-                      <CheckCircle2 className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-extrabold text-text">
-                        Đã xử lý hết các yêu cầu
-                      </h3>
-                      <p className="text-xs text-text-subtle dark:text-text-muted max-w-sm mx-auto mt-1">
-                        Hiện không có công việc nào tồn đọng đang chờ Quản trị viên xử lý. Hệ thống đang vận hành ổn định!
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. Action Items List */}
-                {!isLoadingPendingCards && !isErrorPendingCards && actionItems.length > 0 && (
-                  <div className="space-y-3">
-                    {actionItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className={cn(
-                          'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl transition border',
-                          item.isUrgent
-                            ? 'bg-danger-soft border-danger-border hover:border-danger-border'
-                            : 'bg-surface-2 dark:bg-surface border-border dark:border-border hover:border-brand-500/40'
-                        )}
-                      >
-                        {/* Icon & Title */}
-                        <div className="flex items-start gap-3 min-w-0 flex-1">
-                          <div
-                            className={cn(
-                              'p-2.5 rounded-xl shrink-0 mt-0.5',
-                              item.iconBg
-                            )}
-                          >
-                            {item.icon}
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-bold text-xs sm:text-sm text-text truncate">
-                                {item.title}
-                              </h3>
-                              <Badge tone={item.badgeTone} className="text-xs font-bold px-2 py-0.2">
-                                {item.count} {item.badgeText}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-text-subtle dark:text-text-muted truncate mt-0.5">
-                              {item.description}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Action Button */}
-                        <div className="shrink-0 self-end sm:self-center">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={item.isUrgent ? 'primary' : 'secondary'}
-                            onClick={() => navigate(item.actionHref)}
-                            className={cn(
-                              'rounded-xl text-xs font-bold px-3.5 py-1.5 transition cursor-pointer flex items-center gap-1.5',
-                              item.isUrgent
-                                ? 'bg-danger text-text-inverse hover:opacity-90 shadow-raised'
-                                : 'bg-surface dark:bg-bg text-text hover:bg-surface-2 dark:hover:bg-surface-2 border border-border'
-                            )}
-                          >
-                            <span>{item.actionLabel}</span>
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Card>
-          </Reveal>
-        </div>
-
-        {/* ================= CARD 2: HOẠT ĐỘNG GẦN ĐÂY (40% - 5/12 cột desktop) ================= */}
-        <div className="lg:col-span-5">
-          <Reveal direction="left">
-            <Card
-              hover={false}
-              className="p-5 sm:p-6 rounded-2xl border border-border shadow-xs flex flex-col h-full"
-            >
-              {/* Card Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-border dark:border-border mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-success-soft text-success">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-extrabold text-base text-text">
-                      Hoạt động gần đây
-                    </h2>
-                    <p className="text-xs text-text-subtle dark:text-text-muted mt-0.5">
-                      Nhật ký thao tác và sự kiện mới nhất
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigate('/admin/users')}
-                  className="text-xs font-bold text-primary-solid hover:underline cursor-pointer flex items-center gap-0.5"
-                >
-                  <span>Xem tất cả</span>
-                  <ChevronRight className="h-3 w-3" />
-                </button>
-              </div>
-
-              {/* Card Body */}
-              <div className="flex-1 flex flex-col justify-center">
-                {/* 1. Loading Skeleton */}
-                {isLoadingRecentCards && (
-                  <div className="space-y-3.5 py-1">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="flex items-center gap-3 py-1">
-                        <Skeleton className="h-9 w-9 rounded-full shrink-0" />
-                        <div className="space-y-1.5 flex-1">
-                          <Skeleton className="h-3.5 w-3/4" />
-                          <Skeleton className="h-3 w-1/2" />
-                        </div>
-                        <Skeleton className="h-3 w-12" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 2. Empty State */}
-                {!isLoadingRecentCards && recentActivities.length === 0 && (
-                  <div className="py-8 text-center space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-surface-2 dark:bg-[#2a2b2d] flex items-center justify-center mx-auto text-text-subtle">
-                      <Sparkles className="h-5 w-5" />
-                    </div>
-                    <p className="text-xs text-text-subtle dark:text-text-muted">
-                      Chưa có hoạt động mới nào được ghi nhận.
-                    </p>
-                  </div>
-                )}
-
-                {/* 3. Activity Feed List */}
-                {!isLoadingRecentCards && recentActivities.length > 0 && (
-                  <ul className="divide-y divide-border dark:divide-[#2e3033]">
-                    {recentActivities.map((act) => (
-                      <li
-                        key={act.id}
-                        onClick={() => act.linkUrl && navigate(act.linkUrl)}
-                        className={cn(
-                          'py-3 flex items-center gap-3 transition-colors rounded-xl px-1.5 -mx-1.5',
-                          act.linkUrl ? 'cursor-pointer hover:bg-surface-2 dark:hover:bg-surface' : ''
-                        )}
-                      >
-                        {/* Avatar or Icon */}
-                        <div className="relative shrink-0">
-                          {act.actorAvatar ? (
-                            <img
-                              src={act.actorAvatar}
-                              alt={act.actorName}
-                              className="h-8.5 w-8.5 rounded-full object-cover ring-1 ring-border"
-                            />
-                          ) : (
-                            <div className="h-8.5 w-8.5 rounded-full bg-surface-2 dark:bg-surface-2 flex items-center justify-center text-xs font-bold text-text-muted">
-                              {act.actorName ? act.actorName.charAt(0).toUpperCase() : 'U'}
-                            </div>
-                          )}
-
-                          {/* Mini tone badge icon */}
-                          <span
-                            className={cn(
-                              'absolute -bottom-1 -right-1 p-0.5 rounded-full ring-2 ring-surface dark:ring-[#1c1d1f]',
-                              act.iconTone
-                            )}
-                          >
-                            {act.icon}
-                          </span>
-                        </div>
-
-                        {/* Content text */}
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-text truncate">
-                            {act.title}
-                          </p>
-                          <p className="text-xs text-text-subtle dark:text-text-muted truncate">
-                            {act.description}
-                          </p>
-                        </div>
-
-                        {/* Time indicator */}
-                        <div className="text-xs font-semibold text-text-subtle shrink-0 whitespace-nowrap pl-1">
-                          {act.timeAgo}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </Card>
-          </Reveal>
-        </div>
-      </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

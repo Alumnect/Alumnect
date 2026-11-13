@@ -29,6 +29,9 @@ import {
 } from '../hooks/useAdmin'
 import type { SystemNotificationDto, SystemNotificationStatus } from '../api/adminApi'
 import { CreateNotificationModal } from './CreateNotificationModal'
+import { AdminPageBanner, StatTile, panelClass } from './AdminVisuals'
+import { brandButtonClass } from '@/components/brand/brandClasses'
+import { fmtCount } from './adminFormat'
 
 const DURATION_LABELS: Record<string, string> = {
   ONE_DAY: '1 ngày',
@@ -52,14 +55,6 @@ const STATUS_CONFIG: Record<
   CANCELLED: { label: 'Đã hủy lịch', tone: 'danger' },
   DRAFT: { label: 'Bản nháp', tone: 'neutral' },
 }
-
-const STATUS_TABS: { label: string; value: SystemNotificationStatus | '' }[] = [
-  { label: 'Tất cả', value: '' },
-  { label: 'Đang hẹn giờ', value: 'SCHEDULED' },
-  { label: 'Đang hoạt động', value: 'ACTIVE' },
-  { label: 'Đã hết hạn', value: 'EXPIRED' },
-  { label: 'Kho lưu trữ', value: 'ARCHIVED' },
-]
 
 const TIME_TABS = [
   { name: 'Tất cả', value: 'ALL' },
@@ -108,6 +103,16 @@ export function AdminBroadcastPage() {
     size: pageSize,
   })
 
+  // Tổng theo từng trạng thái lấy từ API (size 1, chỉ đọc totalElements)
+  const { data: allNotifications } = useAdminSystemNotifications({ page: 0, size: 1 })
+  const { data: scheduledNotifications } = useAdminSystemNotifications({ status: 'SCHEDULED', page: 0, size: 1 })
+  const { data: activeNotifications } = useAdminSystemNotifications({ status: 'ACTIVE', page: 0, size: 1 })
+  const { data: sendingNotifications } = useAdminSystemNotifications({ status: 'SENDING', page: 0, size: 1 })
+  const { data: sentNotifications } = useAdminSystemNotifications({ status: 'SENT', page: 0, size: 1 })
+  const sumTotals = (...pages: Array<{ totalElements?: number } | undefined>) =>
+    pages.some((p) => p === undefined) ? undefined : pages.reduce((acc, p) => acc + (p?.totalElements ?? 0), 0)
+  const { data: expiredNotifications } = useAdminSystemNotifications({ status: 'EXPIRED', page: 0, size: 1 })
+  const { data: archivedNotifications } = useAdminSystemNotifications({ status: 'ARCHIVED', page: 0, size: 1 })
   const cancelMutation = useCancelSystemNotification()
   const archiveMutation = useArchiveSystemNotification()
 
@@ -141,27 +146,6 @@ export function AdminBroadcastPage() {
       return true
     })
   }, [rawNotifications, searchQuery, recipientFilter])
-
-  // Thống kê KPIs từ dữ liệu thông báo
-  const kpiStats = useMemo(() => {
-    let scheduledCount = 0
-    let activeCount = 0
-    let archivedCount = 0
-    let expiredCount = 0
-
-    rawNotifications.forEach((n) => {
-      if (n.status === 'SCHEDULED' || n.status === 'SENDING') scheduledCount++
-      else if (n.status === 'ACTIVE' || n.status === 'SENT') activeCount++
-      else if (n.status === 'ARCHIVED') archivedCount++
-      else if (n.status === 'EXPIRED') expiredCount++
-    })
-
-    return {
-      scheduledCount,
-      activeCount,
-      archivedAndExpired: archivedCount + expiredCount,
-    }
-  }, [rawNotifications])
 
   const handleCancelScheduled = async (id: number) => {
     try {
@@ -207,146 +191,45 @@ export function AdminBroadcastPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* 1. Header & Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-solid">
-            <Megaphone size={15} /> Truyền thông & Phát sóng toàn trường
-          </div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-            Quản lý thông báo hệ thống
-          </h1>
-          <p className="mt-0.5 text-xs text-text-subtle">
-            Hẹn giờ phát sóng, kiểm soát thời hạn hiệu lực và quản lý kho lưu trữ thông báo độc lập.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl text-xs font-bold h-9 px-4 shadow-xs"
-            leftIcon={<Plus size={15} />}
-          >
+      {/* 1. Dải đầu trang + nút tạo thông báo */}
+      <AdminPageBanner
+        title="Thông báo hệ thống"
+        scene="broadcast"
+        actions={
+          <button type="button" onClick={() => setIsCreateModalOpen(true)} className={brandButtonClass}>
+            <Plus className="h-4 w-4" />
             Tạo thông báo mới
-          </Button>
-        </div>
+          </button>
+        }
+      />
+
+      {/* 2. Số liệu theo trạng thái — bấm để lọc */}
+      <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3 xl:grid-cols-5">
+        {(
+          [
+            { key: '', label: 'Tổng thông báo', value: allNotifications?.totalElements, icon: <Megaphone />, tone: 'slate' },
+            { key: 'SCHEDULED', label: 'Đang hẹn giờ', value: sumTotals(scheduledNotifications, sendingNotifications), icon: <Clock />, tone: 'amber' },
+            { key: 'ACTIVE', label: 'Đang hiển thị', value: sumTotals(activeNotifications, sentNotifications), icon: <CheckCircle2 />, tone: 'green' },
+            { key: 'EXPIRED', label: 'Đã hết hạn', value: expiredNotifications?.totalElements, icon: <Hourglass />, tone: 'violet' },
+            { key: 'ARCHIVED', label: 'Kho lưu trữ', value: archivedNotifications?.totalElements, icon: <Archive />, tone: 'blue' },
+          ] as const
+        ).map((tile) => (
+          <StatTile
+            key={tile.key || 'ALL'}
+            icon={tile.icon}
+            tone={tile.tone}
+            label={tile.label}
+            value={fmtCount(tile.value)}
+            active={statusFilter === tile.key}
+            onClick={() => {
+              setStatusFilter(tile.key)
+              setPage(0)
+            }}
+          />
+        ))}
       </div>
-
-      {/* 2. Top 4 Executive KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        {/* Card 1: Tổng số thông báo */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Tổng thông báo</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft text-primary-solid shadow-2xs">
-              <Megaphone size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{totalElements}</span>
-            <span className="text-xs text-text-subtle font-medium">bản ghi</span>
-          </div>
-          <p className="mt-1 text-[11px] text-text-subtle font-medium">
-            Trang {page + 1} / {Math.max(1, totalPages)}
-          </p>
-        </div>
-
-        {/* Card 2: Đang hẹn giờ */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Đang hẹn giờ</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shadow-2xs">
-              <Hourglass size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{kpiStats.scheduledCount}</span>
-            <span className="text-xs text-text-subtle font-medium">lịch chờ gửi</span>
-          </div>
-          <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
-            <Clock size={11} /> Tự động phát khi đến giờ
-          </p>
-        </div>
-
-        {/* Card 3: Đang hoạt động */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Đang hoạt động</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-2xs">
-              <CheckCircle2 size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{kpiStats.activeCount}</span>
-            <span className="text-xs text-text-subtle font-medium">đang phát sóng</span>
-          </div>
-          <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-            <CheckCircle2 size={11} /> Còn trong thời hạn hiệu lực
-          </p>
-        </div>
-
-        {/* Card 4: Lưu trữ & Hết hạn */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Lưu trữ & Hết hạn</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 shadow-2xs">
-              <Archive size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{kpiStats.archivedAndExpired}</span>
-            <span className="text-xs text-text-subtle font-medium">lịch sử</span>
-          </div>
-          <p className="mt-1 text-[11px] text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
-            <Archive size={11} /> Kho lưu trữ bảo lưu dữ liệu
-          </p>
-        </div>
-      </div>
-
       {/* 3. Single Unified Container Card: Tích hợp Header, Filters, Table & Pagination */}
-      <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
-        {/* Card Header: Tabs trạng thái thông báo */}
-        <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between bg-surface">
-          <div>
-            <h2 className="text-base font-extrabold text-text flex items-center gap-2">
-              <span>Danh sách thông báo hệ thống</span>
-              <span className="rounded-full bg-primary-soft text-primary-solid px-2 py-0.5 text-xs font-bold">
-                {totalElements} thông báo
-              </span>
-            </h2>
-            <p className="text-xs text-text-subtle mt-0.5">
-              Theo dõi lịch phát sóng, hủy lịch hẹn trước hoặc chuyển thông báo cũ vào kho lưu trữ.
-            </p>
-          </div>
-
-          {/* Segmented Status Tabs */}
-          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface-2 p-1 shadow-2xs self-start sm:self-auto overflow-x-auto max-w-full">
-            {STATUS_TABS.map((tab) => {
-              const isActive = statusFilter === tab.value
-              return (
-                <button
-                  key={tab.value}
-                  type="button"
-                  onClick={() => {
-                    setStatusFilter(tab.value)
-                    setPage(0)
-                  }}
-                  className={cn(
-                    'relative flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer select-none whitespace-nowrap',
-                    isActive
-                      ? 'bg-primary-solid text-on-primary shadow-xs font-extrabold'
-                      : 'text-text-muted hover:bg-surface hover:text-text'
-                  )}
-                >
-                  <span>{tab.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
+      <div className={panelClass}>
         {/* Toolbar: Tìm kiếm, Bộ lọc Đối tượng & Mốc thời gian */}
         <div className="border-b border-border bg-surface-2/40 p-4 space-y-3.5">
           {/* Row 1: Search Inputs & Recipient Filters */}
@@ -381,7 +264,7 @@ export function AdminBroadcastPage() {
 
             {/* Recipient Segmented Selector */}
             <div className="flex items-center gap-1 rounded-xl border border-border bg-surface p-1 shadow-2xs">
-              <span className="text-[11px] font-bold text-text-subtle px-2 flex items-center gap-1">
+              <span className="text-xs font-bold text-text-subtle px-2 flex items-center gap-1">
                 <Users size={12} className="text-primary-solid" /> Đối tượng:
               </span>
               {[
@@ -451,7 +334,7 @@ export function AdminBroadcastPage() {
                     className={cn(
                       'flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold transition duration-150 cursor-pointer whitespace-nowrap shrink-0 border select-none',
                       isSelected
-                        ? 'bg-text text-text-inverse border-text shadow-xs'
+                        ? 'bg-primary-solid text-on-primary border-primary-solid shadow-2xs'
                         : 'bg-surface text-text-muted border-border hover:bg-surface-2 hover:text-text'
                     )}
                   >
@@ -501,7 +384,7 @@ export function AdminBroadcastPage() {
           <div className="w-full overflow-hidden">
             <table className="w-full table-fixed text-xs text-left">
               <thead>
-                <tr className="border-b border-border text-[11px] uppercase tracking-wider text-text-subtle bg-surface-2/60">
+                <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
                   <th className="px-3.5 py-3 font-bold w-[42%]">Tiêu đề & Nội dung</th>
                   <th className="px-3 py-3 font-bold w-[18%]">Đối tượng nhận</th>
                   <th className="px-3 py-3 font-bold w-[26%]">Tiến trình & Trạng thái</th>
@@ -527,14 +410,14 @@ export function AdminBroadcastPage() {
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="text-[10px] font-bold text-text-subtle uppercase tracking-wider shrink-0">
+                              <span className="text-xs font-bold text-text-subtle shrink-0">
                                 #{item.id}
                               </span>
-                              <h3 className="font-extrabold text-xs text-text truncate group-hover:text-primary-solid transition">
+                              <h3 className="font-bold text-xs text-text truncate group-hover:text-primary-solid transition">
                                 {item.title}
                               </h3>
                             </div>
-                            <div className="rounded-lg border border-border/70 bg-surface-2/40 p-2 text-[11px] text-text leading-relaxed">
+                            <div className="rounded-lg border border-border/70 bg-surface-2/40 p-2 text-xs text-text leading-relaxed">
                               <p className="line-clamp-2">
                                 {item.content}
                               </p>
@@ -550,7 +433,7 @@ export function AdminBroadcastPage() {
                             <span className="inline-flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-0.5 text-xs font-bold text-orange-600 dark:text-orange-400 border border-orange-500/20 shadow-2xs">
                               <Globe size={11} /> Tất cả
                             </span>
-                            <p className="text-[10px] text-text-subtle">Tất cả người dùng</p>
+                            <p className="text-xs text-text-subtle">Tất cả người dùng</p>
                           </div>
                         ) : item.recipientType === 'USER_ROLE' ? (
                           <div className="space-y-0.5">
@@ -567,7 +450,7 @@ export function AdminBroadcastPage() {
                                 <Users size={11} /> Quản trị viên
                               </span>
                             )}
-                            <p className="text-[10px] text-text-subtle">Nhóm vai trò</p>
+                            <p className="text-xs text-text-subtle">Nhóm vai trò</p>
                           </div>
                         ) : (
                           <div className="flex items-start gap-2">
@@ -578,10 +461,10 @@ export function AdminBroadcastPage() {
                               className="shrink-0 ring-1 ring-border mt-0.5"
                             />
                             <div className="min-w-0">
-                              <p className="font-extrabold text-xs text-text truncate max-w-[120px]">
+                              <p className="font-bold text-xs text-text truncate max-w-[120px]">
                                 {item.recipientUser?.fullName || 'Người dùng'}
                               </p>
-                              <p className="text-[10px] text-text-subtle truncate max-w-[120px]" title={item.recipientUser?.email}>
+                              <p className="text-xs text-text-subtle truncate max-w-[120px]" title={item.recipientUser?.email}>
                                 {item.recipientUser?.email}
                               </p>
                             </div>
@@ -594,13 +477,13 @@ export function AdminBroadcastPage() {
                         <div className="space-y-1">
                           {/* Status Badge */}
                           <div>
-                            <Badge tone={statusTone} className="text-[10px] font-bold px-2 py-0.5">
+                            <Badge tone={statusTone} className="text-xs font-bold px-2 py-0.5">
                               {statusLabel}
                             </Badge>
                           </div>
 
                           {/* Time detail rows */}
-                          <div className="space-y-0.5 text-[11px] text-text-subtle">
+                          <div className="space-y-0.5 text-xs text-text-subtle">
                             {item.status === 'SCHEDULED' ? (
                               <div className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
                                 <Clock size={11} className="shrink-0" />
@@ -727,7 +610,7 @@ export function AdminBroadcastPage() {
                 <Megaphone size={18} />
               </span>
               <div>
-                <h3 className="text-base font-extrabold text-text tracking-tight leading-tight">
+                <h3 className="text-base font-bold text-text tracking-tight leading-tight">
                   Chi tiết thông báo hệ thống
                 </h3>
                 <p className="text-xs text-text-subtle font-medium mt-0.5">
@@ -749,10 +632,10 @@ export function AdminBroadcastPage() {
             {/* Tiêu đề & Trạng thái phát hành */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-surface-2 border border-border">
               <div className="space-y-1 min-w-0 flex-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle block">
+                <span className="text-xs font-bold text-text-subtle block">
                   Tiêu đề thông báo
                 </span>
-                <h4 className="text-sm font-black text-text leading-snug">
+                <h4 className="text-sm font-bold text-text leading-snug">
                   {detailItem.title}
                 </h4>
               </div>
@@ -766,7 +649,7 @@ export function AdminBroadcastPage() {
 
             {/* Nội dung thông báo */}
             <div className="rounded-2xl border border-border bg-surface p-4 space-y-2 shadow-2xs">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle block">
+              <span className="text-xs font-bold text-text-subtle block">
                 Nội dung phát sóng
               </span>
               <div className="p-3.5 rounded-xl bg-surface-2 border border-border text-xs font-medium text-text leading-relaxed whitespace-pre-wrap">
@@ -778,7 +661,7 @@ export function AdminBroadcastPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {/* Đối tượng nhận */}
               <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                <span className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                   <Users size={13} className="text-primary-solid" /> Đối tượng nhận thông báo
                 </span>
                 {detailItem.recipientType === 'ALL_USERS' ? (
@@ -839,14 +722,14 @@ export function AdminBroadcastPage() {
 
               {/* Thời hạn hiệu lực */}
               <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                <span className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                   <Hourglass size={13} className="text-gold-500" /> Thời hạn hiệu lực
                 </span>
                 <div>
                   <span className="text-xs font-bold text-text block">
                     {DURATION_LABELS[detailItem.durationType] || detailItem.durationType}
                   </span>
-                  <p className="text-[11px] text-text-subtle mt-1">
+                  <p className="text-xs text-text-subtle mt-1">
                     {detailItem.expiresAt
                       ? `Hết hiệu lực: ${formatDateTime(detailItem.expiresAt)}`
                       : 'Thông báo duy trì vĩnh viễn không giới hạn thời gian'}
@@ -859,7 +742,7 @@ export function AdminBroadcastPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {/* Mốc thời gian */}
               <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-1.5 text-xs">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                <span className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                   <Calendar size={13} className="text-primary-solid" /> Tiến trình thời gian
                 </span>
                 <div className="pt-1 space-y-1.5">
@@ -896,7 +779,7 @@ export function AdminBroadcastPage() {
 
               {/* Quản trị viên phát hành */}
               <div className="p-4 rounded-2xl bg-surface-2 border border-border space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+                <span className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                   <User size={13} className="text-primary-solid" /> Quản trị viên phát hành
                 </span>
                 <div className="flex items-center gap-3 pt-0.5">
@@ -966,7 +849,7 @@ export function AdminBroadcastPage() {
         >
           <div className="flex items-center gap-2.5 mb-2 text-rose-600">
             <AlertTriangle size={20} />
-            <h3 className="text-sm font-extrabold text-text">Xác nhận hủy thông báo hẹn giờ?</h3>
+            <h3 className="text-sm font-bold text-text">Xác nhận hủy thông báo hẹn giờ?</h3>
           </div>
           <p className="text-xs text-text-subtle mt-2 leading-relaxed">
             Thông báo này sẽ không được phát hành tự động nữa. Trạng thái sẽ chuyển sang ĐÃ HỦY LỊCH.
@@ -998,7 +881,7 @@ export function AdminBroadcastPage() {
         >
           <div className="flex items-center gap-2.5 mb-2 text-purple-600">
             <Archive size={20} />
-            <h3 className="text-sm font-extrabold text-text">Lưu trữ thông báo?</h3>
+            <h3 className="text-sm font-bold text-text">Lưu trữ thông báo?</h3>
           </div>
           <p className="text-xs text-text-muted mt-2 leading-relaxed">
             Thông báo sẽ được chuyển vào <strong>Kho lưu trữ</strong> và ngừng hiển thị công khai trên bảng tin.

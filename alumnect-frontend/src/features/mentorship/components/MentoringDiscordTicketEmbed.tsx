@@ -1,19 +1,6 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  FileText,
-  Clock,
-  Calendar,
-  Check,
-  X,
-  ArrowRight,
-  Loader2,
-  CircleDollarSign,
-  MessageSquare,
-  CalendarClock,
-  RefreshCw,
-  CreditCard,
-} from 'lucide-react'
-import { Avatar } from '@/components/ui'
+import { ArrowRight, Check, Clock, CreditCard, Loader2, RefreshCw, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import type { MentoringTicketData } from './MentoringTicketDetailModal'
@@ -21,7 +8,6 @@ import {
   MENTORING_PARTICIPATION_LABELS,
   MENTORING_TASK_TYPE_LABELS,
   MENTORING_WORKING_MODE_LABELS,
-  PROPOSAL_SOURCE_LABELS,
 } from '../model/mentoringFlowLabels'
 
 interface MentoringDiscordTicketEmbedProps {
@@ -39,6 +25,31 @@ interface MentoringDiscordTicketEmbedProps {
   accompanyingText?: string
 }
 
+const formatVND = (amount?: number) =>
+  typeof amount === 'number' ? `${new Intl.NumberFormat('vi-VN').format(amount)}đ` : '—'
+
+const safeFormat = (value: string | undefined, pattern: string) => {
+  if (!value) return ''
+  const d = new Date(value)
+  return isNaN(d.getTime()) ? value : format(d, pattern)
+}
+
+/** Ô thông tin trong lưới điều khoản: nhãn xám nhỏ, giá trị đậm. */
+function Fact({ label, children, strong = false }: { label: string; children: ReactNode; strong?: boolean }) {
+  return (
+    <div className="min-w-0 bg-surface px-3 py-2.5">
+      <dt className="text-xs text-text-subtle">{label}</dt>
+      <dd className={cn('mt-0.5 truncate text-text', strong ? 'text-base font-semibold tabular-nums' : 'text-sm font-medium')}>
+        {children}
+      </dd>
+    </div>
+  )
+}
+
+/**
+ * Thẻ đề xuất (thỏa thuận / gia hạn) hiển thị trong cuộc trò chuyện Mentor – học viên.
+ * Bề mặt phẳng, điều khoản chính trong một lưới 4 ô, một nút chính duy nhất cho bên cần phản hồi.
+ */
 export function MentoringDiscordTicketEmbed({
   ticket,
   isMe = false,
@@ -54,404 +65,180 @@ export function MentoringDiscordTicketEmbed({
   accompanyingText,
 }: MentoringDiscordTicketEmbedProps) {
   const { t } = useTranslation()
-  // Format tiền tệ VND
-  const formatVND = (amount?: number) => {
-    if (typeof amount !== 'number') return '0đ'
-    return new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
-  }
-
-  // Format ngày tháng DD/MM/YYYY
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return t('mentoring.undetermined')
-    try {
-      const d = new Date(dateStr)
-      if (isNaN(d.getTime())) return dateStr
-      return format(d, 'dd/MM/yyyy')
-    } catch {
-      return dateStr
-    }
-  }
-
-  // Format thời gian hiển thị (ví dụ 10:16)
-  const formatTime = (dateStr?: string) => {
-    if (!dateStr) return ''
-    try {
-      const d = new Date(dateStr)
-      if (isNaN(d.getTime())) return ''
-      return format(d, 'HH:mm')
-    } catch {
-      return ''
-    }
-  }
-
   const isExtension = ticket.ticketType === 'EXTENSION'
-  const timeString = formatTime(ticket.createdAt)
+  const timeString = safeFormat(ticket.createdAt, 'HH:mm')
+  const needsMyAnswer = ticket.status === 'PENDING' && canAct && isRecipient
+  const busy = isConfirming || isRejecting
+  // Màn rộng đã có cột "Thỏa thuận" nên thẻ đề xuất thu gọn; thẻ gia hạn giữ đầy đủ vì cột không hiển thị nó
+  const compact = isExtension ? '' : 'lg:hidden'
 
-  // Status badge
-  const renderStatusBadge = () => {
+  const status = (() => {
     switch (ticket.status) {
       case 'CONFIRMED':
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-success-border bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success">
-            <Check className="h-3 w-3" />
-            {t('mentoring.statusConfirmed', 'Đã xác nhận')}
-          </span>
-        )
+        return { label: ticket.isPaid ? t('mentoring.statusPaid', 'Đã thanh toán') : t('mentoring.statusConfirmed', 'Đã xác nhận'), tone: 'bg-success-soft text-success' }
       case 'REJECTED':
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-danger-border bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger">
-            <X className="h-3 w-3" />
-            {t('mentoring.statusRejected', 'Đã từ chối')}
-          </span>
-        )
+        return { label: t('mentoring.statusRejected', 'Đã từ chối'), tone: 'bg-danger-soft text-danger' }
       case 'ADJUSTMENT':
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning">
-            <RefreshCw className="h-3 w-3" />
-            {t('mentoring.statusRequestedAdjustment', 'Đã yêu cầu điều chỉnh')}
-          </span>
-        )
+        return { label: t('mentoring.statusRequestedAdjustment', 'Đã yêu cầu điều chỉnh'), tone: 'bg-warning-soft text-warning' }
       case 'SUPERSEDED':
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-surface-3 px-2.5 py-0.5 text-xs font-semibold text-text-muted dark:bg-surface-2">
-            {t('mentoring.statusSuperseded', 'Đã thay thế')}
-          </span>
-        )
-      case 'PENDING':
+        return { label: t('mentoring.statusSuperseded', 'Đã thay thế'), tone: 'bg-surface-3 text-text-muted' }
       default:
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning">
-            <Clock className="h-3 w-3 text-warning" />
-            {t('mentoring.statusPendingConfirmation', 'Chờ xác nhận')}
-          </span>
-        )
+        return { label: t('mentoring.statusPendingConfirmation', 'Chờ xác nhận'), tone: 'bg-warning-soft text-warning' }
     }
+  })()
+
+  const ghostBtn =
+    'inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-text transition-colors hover:bg-surface-2 disabled:opacity-50'
+  const primaryBtn =
+    'inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primary-solid px-3.5 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50'
+
+  const renderActions = () => {
+    if (needsMyAnswer) {
+      return (
+        <>
+          <button type="button" onClick={onReject} disabled={busy} title={t('mentoring.rejectDealTooltip')} className="h-8 px-2 text-xs font-semibold text-danger hover:underline disabled:opacity-50">
+            {isRejecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('mentoring.rejectBtn')}
+          </button>
+          {onRevert && (
+            <button type="button" onClick={onRevert} disabled={busy} title={t('mentoring.requestAdjustmentTooltip')} className={ghostBtn}>
+              {t('mentoring.requestAdjustmentBtn')}
+            </button>
+          )}
+          <button type="button" onClick={onConfirm} disabled={busy} className={primaryBtn}>
+            {isConfirming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+            {t('mentoring.confirmAndPayBtn')}
+          </button>
+        </>
+      )
+    }
+    if (ticket.status === 'PENDING') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs text-text-subtle">
+          <Clock className="h-3.5 w-3.5" />
+          {t('mentoring.statusWaitingResponse', 'Chờ phản hồi')}
+        </span>
+      )
+    }
+    if (ticket.status === 'CONFIRMED') {
+      if (ticket.isPaid) return null
+      return !ticket.isMentor && onPay ? (
+        <button type="button" onClick={onPay} className={primaryBtn}>
+          <CreditCard className="h-3.5 w-3.5" />
+          {t('mentoring.payTaskNowBtn')}
+        </button>
+      ) : (
+        <span className="text-xs text-text-subtle">{t('mentoring.statusFinalizedAwaitingPayment', 'Đã chốt • Chờ thanh toán')}</span>
+      )
+    }
+    if (ticket.status === 'REJECTED' || ticket.status === 'ADJUSTMENT') {
+      return onRevert ? (
+        <button type="button" onClick={onRevert} title={t('mentoring.redealTooltip')} className={ghostBtn}>
+          <RefreshCw className="h-3.5 w-3.5" />
+          {t('mentoring.redealBtn')}
+        </button>
+      ) : ticket.status === 'ADJUSTMENT' ? (
+        <span className="text-xs text-text-subtle">{t('mentoring.statusWaitingMentorNewVersion', 'Chờ Mentor gửi phiên bản mới')}</span>
+      ) : ticket.handlerName ? (
+        <span className="inline-flex items-center gap-1 text-xs text-text-subtle">
+          <X className="h-3.5 w-3.5" />
+          {ticket.handlerName}
+        </span>
+      ) : null
+    }
+    return null
   }
 
-  return (
-    <div className={cn("flex w-full flex-col gap-1.5 py-2 my-1 animate-fade-in", isMe ? "items-end" : "items-start")}>
-      {/* 1. Header Người gửi tin nhắn (Avatar + Tên + Giờ) */}
-      <div className={cn("flex items-center gap-2.5 px-1", isMe ? "flex-row-reverse" : "flex-row")}>
-        <Avatar
-          src={ticket.senderAvatar || undefined}
-          name={ticket.senderName}
-          size={36}
-          className="ring-1 ring-white/10 shrink-0"
-        />
-        <div className={cn("flex items-baseline gap-2", isMe ? "flex-row-reverse" : "flex-row")}>
-          <span className="text-sm font-bold text-text">
-            {ticket.senderName}
-          </span>
-          {timeString && (
-            <span className="text-xs font-medium text-text-subtle">
-              {timeString}
-            </span>
-          )}
-        </div>
-      </div>
+  const actions = renderActions()
 
-      {/* 2. Tin nhắn văn bản đi kèm (nếu có) */}
+  return (
+    <div className={cn('my-2 flex w-full flex-col gap-1.5', isMe ? 'items-end' : 'items-start')}>
       {accompanyingText && (
-        <div
-          className={cn(
-            'max-w-xl rounded-2xl px-4 py-2 text-sm shadow-2xs',
-            isMe
-              ? 'mr-0 sm:mr-11 bg-primary-solid text-on-primary'
-              : 'ml-0 sm:ml-11 bg-surface-3 dark:bg-[#2b2d31] text-text'
-          )}
-        >
+        <div className={cn('max-w-lg rounded-2xl px-4 py-2 text-sm', isMe ? 'bg-primary-solid text-on-primary' : 'bg-surface-3 text-text')}>
           {accompanyingText}
         </div>
       )}
 
-      {/* 3. Thẻ tương tác Ticket phong cách xám trắng & viền cam */}
-      <div
+      <article
         className={cn(
-          'w-full max-w-xl overflow-hidden rounded-2xl border border-brand-200/90 dark:border-brand-500/30 border-l-4 border-l-brand-500 bg-[#f4f6f8] dark:bg-[#22252d] p-4 sm:p-5 text-text shadow-md',
-          isMe ? 'mr-0 sm:mr-11 self-end' : 'ml-0 sm:ml-11 self-start'
+          'w-full max-w-lg overflow-hidden rounded-2xl border bg-surface',
+          needsMyAnswer ? 'border-primary/50 ring-1 ring-primary/15' : 'border-border',
+          ticket.status === 'SUPERSEDED' && 'opacity-70'
         )}
       >
-        {/* Header Thẻ: Icon + Loại Ticket + Mã + Status */}
-        <div className="flex items-start justify-between gap-3 pb-3 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-solid text-on-primary shadow-xs">
-              {isExtension ? <CalendarClock className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
-            </div>
-            <div>
-              <h4 className="font-display text-sm sm:text-base font-bold uppercase tracking-wider text-text">
-                {isExtension ? t('mentoring.ticketExtension') : t('mentoring.dealTicketHeading')}
-              </h4>
-              <p className="text-xs text-text-subtle font-medium">
-                {ticket.ticketCode}
-                {ticket.version ? t('mentoring.dealTicketVersionSuffix', { version: ticket.version }) : ''}
-              </p>
-            </div>
+        <header className="flex items-start justify-between gap-3 px-4 pt-3.5">
+          <div className="min-w-0">
+            <p className="truncate text-xs text-text-subtle">
+              {ticket.senderName}
+              {timeString ? ` · ${timeString}` : ''}
+            </p>
+            <h4 className="mt-0.5 text-sm font-semibold text-text">
+              {isExtension ? t('mentoring.ticketExtension') : t('mentoring.dealTicketHeading')}
+              {ticket.version ? (
+                <span className="font-normal text-text-subtle">{t('mentoring.dealTicketVersionSuffix', { version: ticket.version })}</span>
+              ) : null}
+              {!isExtension ? (
+                <span className="hidden font-semibold tabular-nums text-text lg:inline"> · {formatVND(ticket.agreedPrice)}</span>
+              ) : null}
+            </h4>
           </div>
+          <span className={cn('shrink-0 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold', status.tone)}>
+            {status.label}
+          </span>
+        </header>
 
-          <div>{renderStatusBadge()}</div>
-        </div>
+        {isExtension ? (
+          <>
+            <dl className="mx-4 mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border">
+              <Fact label={t('mentoring.currentDeadlineLabel').replace(':', '').trim()}>
+                {safeFormat(ticket.currentDeadline, 'dd/MM/yyyy') || t('mentoring.undetermined')}
+              </Fact>
+              <Fact label={t('mentoring.proposedDeadline').replace(':', '').trim()} strong>
+                {safeFormat(ticket.proposedDeadline, 'dd/MM/yyyy') || t('mentoring.undetermined')}
+              </Fact>
+            </dl>
+            {ticket.extensionReason && (
+              <p className="mx-4 mt-3 line-clamp-2 text-sm text-text-muted">{ticket.extensionReason}</p>
+            )}
+          </>
+        ) : (
+          <>
+            {ticket.taskScope && <p className={cn('mx-4 mt-2 line-clamp-3 text-sm leading-6 text-text', compact)}>{ticket.taskScope}</p>}
+            <dl className={cn('mx-4 mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border', compact)}>
+              <Fact label={t('mentoring.agreedPriceShort').replace(':', '').trim()} strong>
+                {formatVND(ticket.agreedPrice)}
+              </Fact>
+              <Fact label={t('mentoring.dealDeadline', 'Thời hạn thỏa thuận')}>
+                {safeFormat(ticket.deadline, 'dd/MM/yyyy') || t('mentoring.undetermined')}
+              </Fact>
+              <Fact label={t('mentoring.modeLabel').replace(':', '').trim()}>
+                {MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || t('mentoring.flexible')} ·{' '}
+                {MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || t('mentoring.individual1on1')}
+              </Fact>
+              <Fact label={t('mentoring.taskTypeShort', 'Loại hỗ trợ')}>
+                {MENTORING_TASK_TYPE_LABELS[ticket.taskType || ''] || ticket.taskType || t('mentoring.defaultTaskLabel')}
+              </Fact>
+            </dl>
+            {ticket.expectedResult && (
+              <p className={cn('mx-4 mt-3 line-clamp-2 text-xs leading-5 text-text-subtle', compact)}>
+                <span className="font-semibold text-text-muted">{t('mentoring.resultLabel')} </span>
+                {ticket.expectedResult}
+              </p>
+            )}
+          </>
+        )}
 
-        {/* Nội dung chính dạng danh sách có icon */}
-        <div className="py-3.5 space-y-2.5 text-xs sm:text-sm text-text">
-          {!isExtension ? (
-            <>
-              {/* Phạm vi */}
-              <div className="flex items-start gap-2.5">
-                <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
-                <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                  <span className="text-text-subtle shrink-0">{t('mentoring.scopeLabel')}</span>
-                  <span className="font-bold text-text line-clamp-2">
-                    {ticket.taskScope || t('mentoring.notProvided')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Giá thỏa thuận */}
-              <div className="flex items-center gap-2.5">
-                <CircleDollarSign className="h-4 w-4 shrink-0 text-primary-solid" />
-                <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">{t('mentoring.agreedPriceShort')}</span>
-                  <span className="font-bold text-primary-solid text-sm sm:text-base">
-                    {formatVND(ticket.agreedPrice)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Deadline */}
-              <div className="flex items-center gap-2.5">
-                <Calendar className="h-4 w-4 shrink-0 text-primary-solid" />
-                <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">Deadline:</span>
-                  <span className="font-bold text-text">
-                    {formatDate(ticket.deadline)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Hình thức */}
-              <div className="flex items-center gap-2.5">
-                <MessageSquare className="h-4 w-4 shrink-0 text-primary-solid" />
-                <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">{t('mentoring.modeLabel')}</span>
-                  <span className="font-semibold text-text">
-                    {MENTORING_WORKING_MODE_LABELS[ticket.workingMode || ''] || t('mentoring.flexible')}
-                    {' · '}
-                    {MENTORING_PARTICIPATION_LABELS[ticket.participationType || ''] || t('mentoring.individual1on1')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Loại công việc & nguồn đề xuất */}
-              <div className="flex items-start gap-2.5">
-                <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-text-muted ring-1 ring-border">
-                    {MENTORING_TASK_TYPE_LABELS[ticket.taskType || ''] || ticket.taskType || t('mentoring.defaultTaskLabel')}
-                  </span>
-                  {ticket.proposalSource && (
-                    <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-solid ring-1 ring-brand-200 dark:ring-brand-700/40">
-                      {PROPOSAL_SOURCE_LABELS[ticket.proposalSource] || ticket.proposalSource}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Kết quả kỳ vọng */}
-              {ticket.expectedResult && (
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
-                  <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                    <span className="text-text-subtle shrink-0">{t('mentoring.resultLabel')}</span>
-                    <span className="font-semibold text-text line-clamp-2">{ticket.expectedResult}</span>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              {/* Deadline hiện tại */}
-              <div className="flex items-center gap-2.5">
-                <Calendar className="h-4 w-4 shrink-0 text-text-subtle" />
-                <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">{t('mentoring.currentDeadlineLabel')}</span>
-                  <span className="font-medium text-text-muted">
-                    {formatDate(ticket.currentDeadline)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Deadline đề xuất */}
-              <div className="flex items-center gap-2.5">
-                <Clock className="h-4 w-4 shrink-0 text-primary-solid" />
-                <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">{t('mentoring.proposedDeadline')}</span>
-                  <span className="font-bold text-primary-solid">
-                    {formatDate(ticket.proposedDeadline)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Lý do */}
-              <div className="flex items-start gap-2.5">
-                <FileText className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
-                <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2">
-                  <span className="text-text-subtle shrink-0">{t('mentoring.reasonLabel')}</span>
-                  <span className="font-semibold text-text line-clamp-2">
-                    {ticket.extensionReason || t('mentoring.notProvided')}
-                  </span>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Footer Thẻ: "Xem chi tiết →" và các nút thao tác */}
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          {/* Nút Xem chi tiết */}
+        <footer className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-2.5">
           <button
             type="button"
             onClick={onViewDetail}
-            className="group flex items-center gap-1 text-xs font-bold text-primary-solid hover:text-primary-solid transition-colors"
+            className="group inline-flex items-center gap-1 text-xs font-semibold text-text-muted hover:text-text"
           >
-            <span>{t('mentoring.viewDetailBtn')}</span>
+            {t('mentoring.viewDetailBtn')}
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </button>
-
-          {/* Nhóm thao tác bên phải */}
-          <div className="flex items-center gap-2">
-            {ticket.status === 'PENDING' ? (
-              canAct && isRecipient ? (
-                <>
-                  {/* Nút Từ chối thỏa thuận */}
-                  <button
-                    type="button"
-                    onClick={onReject}
-                    disabled={isRejecting || isConfirming}
-                    title={t('mentoring.rejectDealTooltip')}
-                    className="inline-flex items-center justify-center rounded-xl border border-danger bg-danger-soft px-3 py-1.5 text-xs font-bold text-danger transition hover:bg-danger-border/60 active:scale-95 disabled:opacity-50"
-                  >
-                    {isRejecting ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      t('mentoring.rejectBtn')
-                    )}
-                  </button>
-
-                  {/* Nút Yêu cầu điều chỉnh (Học viên) */}
-                  {onRevert && (
-                    <button
-                      type="button"
-                      onClick={onRevert}
-                      disabled={isRejecting || isConfirming}
-                      title={t('mentoring.requestAdjustmentTooltip')}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
-                    >
-                      <RefreshCw className="h-3.5 w-3.5 text-warning" />
-                      <span>{t('mentoring.requestAdjustmentBtn')}</span>
-                    </button>
-                  )}
-
-                  {/* Nút Xác nhận cam */}
-                  <button
-                    type="button"
-                    onClick={onConfirm}
-                    disabled={isConfirming || isRejecting}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-solid active:scale-95 disabled:opacity-50"
-                  >
-                    {isConfirming ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      t('mentoring.confirmAndPayBtn')
-                    )}
-                  </button>
-                </>
-              ) : (
-                /* Người gửi: hiển thị trạng thái chờ đối phương phản hồi */
-                <span className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1 text-xs font-semibold text-text-muted shadow-2xs">
-                  <Clock className="h-3 w-3 text-warning" />
-                  {t('mentoring.statusWaitingResponse', 'Chờ phản hồi')}
-                </span>
-              )
-            ) : ticket.status === 'CONFIRMED' ? (
-              <div className="flex items-center gap-2">
-                {!ticket.isPaid ? (
-                  <>
-                    {/* Deal đã khóa: không bên nào được sửa; chỉ còn bước thanh toán (UC105) */}
-                    {!ticket.isMentor && onPay ? (
-                      <button
-                        type="button"
-                        onClick={onPay}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-solid px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs transition hover:bg-primary-hover active:scale-95"
-                      >
-                        <CreditCard className="h-3.5 w-3.5" />
-                        <span>{t('mentoring.payTaskNowBtn')}</span>
-                      </button>
-                    ) : (
-                      <span className="text-xs font-semibold text-success">
-                        {t('mentoring.statusFinalizedAwaitingPayment', 'Đã chốt • Chờ thanh toán')}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-xs font-bold text-success">
-                    {t('mentoring.statusPaid', 'Đã thanh toán')}
-                  </span>
-                )}
-              </div>
-            ) : ticket.status === 'REJECTED' ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-danger">
-                  {t('mentoring.rejectedByHandler', { handler: ticket.handlerName ? `(${ticket.handlerName})` : '' })}
-                </span>
-                {onRevert && (
-                  <button
-                    type="button"
-                    onClick={onRevert}
-                    title={t('mentoring.redealTooltip')}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95 disabled:opacity-50"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5 text-warning" />
-                    <span>{t('mentoring.redealBtn')}</span>
-                  </button>
-                )}
-              </div>
-            ) : ticket.status === 'ADJUSTMENT' ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-warning">
-                  {t('mentoring.statusWaitingMentorNewVersion', 'Chờ Mentor gửi phiên bản mới')}
-                </span>
-                {onRevert && (
-                  <button
-                    type="button"
-                    onClick={onRevert}
-                    title={t('mentoring.sendNewDealTicketTooltip')}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning bg-warning-soft px-3 py-1.5 text-xs font-bold text-warning transition hover:bg-warning-border/60 active:scale-95"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5 text-warning" />
-                    <span>{t('mentoring.redealBtn')}</span>
-                  </button>
-                )}
-              </div>
-            ) : (
-              <span className="text-xs font-medium text-text-subtle">
-                {t('mentoring.statusSupersededByNewVersion', 'Đã thay thế bởi phiên bản mới')}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Hiển thị thời gian gửi dưới thẻ */}
-      {timeString && (
-        <span
-          className={cn(
-            'text-xs text-text-subtle',
-            isMe ? 'mr-1 sm:mr-12 text-right' : 'ml-1 sm:ml-12 text-left'
-          )}
-        >
-          {timeString}
-        </span>
-      )}
+          {actions && <div className={cn('flex flex-wrap items-center justify-end gap-2', compact)}>{actions}</div>}
+        </footer>
+      </article>
     </div>
   )
 }

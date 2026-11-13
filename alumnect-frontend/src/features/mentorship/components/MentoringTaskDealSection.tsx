@@ -40,7 +40,7 @@ export function MentoringTaskDealSection({
             <h4 className="text-base font-bold text-text">
               {t('mentoring.originalDealTitle')}
             </h4>
-            <span className="text-xs font-mono font-bold text-text-subtle">
+            <span className="text-xs tabular-nums font-bold text-text-subtle">
               #DEAL-{deal.id} ({t('mentoring.version')} v{deal.version})
             </span>
           </div>
@@ -59,7 +59,7 @@ export function MentoringTaskDealSection({
 
       <div className="mt-5 space-y-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+          <span className="text-xs font-bold text-text-subtle">
             {t('mentoring.finalizedTaskScope')}
           </span>
           <p className="mt-1 text-sm leading-relaxed text-text">
@@ -68,7 +68,7 @@ export function MentoringTaskDealSection({
         </div>
 
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+          <span className="text-xs font-bold text-text-subtle">
             {t('mentoring.expectedOutputResult')}
           </span>
           <div className="mt-1 flex items-start gap-2 rounded-2xl border border-border bg-cream-100/70 p-3.5 text-sm text-text-muted dark:bg-bg">

@@ -1,24 +1,22 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import {
   Inbox,
   Eye,
   FileImage,
-  ShieldCheck,
   Clock,
-  CheckCircle2,
-  XCircle,
-  FileText,
   Check,
   X,
+  FileText,
 } from 'lucide-react'
 import { PageHeader, Badge, Avatar, EmptyState, Skeleton, toast, Pagination } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
-import { cn } from '@/lib/utils'
 import { ADMIN_SECTIONS } from './adminSectionsData'
 import { useAdminVerifications, useReviewVerification } from '../hooks/useAdmin'
 import type { AdminVerificationRequestDto } from '../api/adminApi'
 import { AdminReportsQueue } from './AdminReportsQueue'
 import { AdminVerificationDetailModal } from './AdminVerificationDetailModal'
+import { AdminPageBanner, StatTile, panelClass } from './AdminVisuals'
+import { fmtCount } from './adminFormat'
 
 /** Trang theo mục quản trị: "Báo cáo" dùng hàng đợi riêng; các mục còn lại dùng khung chung bên dưới. */
 export function AdminSectionPage({ sectionKey }: { sectionKey: keyof typeof ADMIN_SECTIONS }) {
@@ -41,6 +39,11 @@ function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SE
     size: 10,
   })
 
+  // Tổng theo từng trạng thái lấy từ API (size 1, chỉ đọc totalElements)
+  const { data: allVerifications } = useAdminVerifications({ page: 0, size: 1 })
+  const { data: pendingVerifications } = useAdminVerifications({ status: 'PENDING', page: 0, size: 1 })
+  const { data: approvedVerifications } = useAdminVerifications({ status: 'APPROVED', page: 0, size: 1 })
+  const { data: rejectedVerifications } = useAdminVerifications({ status: 'REJECTED', page: 0, size: 1 })
   const reviewMutation = useReviewVerification()
 
   // Detail Modal state (Chi tiết xác minh)
@@ -73,8 +76,6 @@ function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SE
     return (
       <div className="mx-auto max-w-6xl space-y-6">
         <PageHeader
-          kicker="Hàng đợi xử lý tác vụ"
-          kickerIcon={<Icon size={15} />}
           title={s.title}
           subtitle={s.subtitle}
           actions={<Button variant="gold" size="sm">{s.primaryAction}</Button>}
@@ -96,154 +97,41 @@ function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SE
   const totalPages = verificationsData?.totalPages || 0
   const totalElements = verificationsData?.totalElements || 0
 
-  // Thống kê KPIs từ dữ liệu hàng đợi
-  const kpiStats = useMemo(() => {
-    let pendingCount = 0
-    let approvedCount = 0
-    let rejectedCount = 0
-
-    requests.forEach((r) => {
-      if (r.status === 'PENDING') pendingCount++
-      else if (r.status === 'APPROVED') approvedCount++
-      else if (r.status === 'REJECTED') rejectedCount++
-    })
-
-    return { pendingCount, approvedCount, rejectedCount }
-  }, [requests])
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* 1. Header chuẩn hóa theo phong cách Quản lý Cố vấn & Gói dịch vụ */}
-      <PageHeader
-        kicker="Kiểm duyệt hồ sơ tốt nghiệp"
-        kickerIcon={<ShieldCheck size={15} />}
-        title={s.title || "Xác minh cựu sinh viên"}
-        subtitle={s.subtitle || "Kiểm tra bằng cấp, bảng điểm và phê duyệt danh hiệu Cựu sinh viên chính thức cho sinh viên đã tốt nghiệp."}
+      {/* 1. Dải đầu trang */}
+      <AdminPageBanner
+        title={s.title || 'Xác minh cựu sinh viên'}
+        scene="verify"
       />
 
-      {/* 2. Top 4 Executive KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        {/* Card 1: Tổng số yêu cầu */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Tổng hồ sơ</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft text-primary-solid shadow-2xs">
-              <FileText size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">{totalElements}</span>
-            <span className="text-xs text-text-subtle font-medium">yêu cầu</span>
-          </div>
-          <p className="mt-1 text-[11px] text-text-subtle font-medium">
-            Trang {page + 1} / {Math.max(1, totalPages)}
-          </p>
-        </div>
-
-        {/* Card 2: Đang chờ duyệt */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Chờ xét duyệt</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shadow-2xs">
-              <Clock size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">
-              {statusFilter === 'PENDING' ? totalElements : kpiStats.pendingCount}
-            </span>
-            <span className="text-xs text-text-subtle font-medium">hồ sơ chờ</span>
-          </div>
-          <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
-            <Clock size={11} /> Cần kiểm tra minh chứng
-          </p>
-        </div>
-
-        {/* Card 3: Đã chấp thuận */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Đã chấp thuận</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-2xs">
-              <CheckCircle2 size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">
-              {statusFilter === 'APPROVED' ? totalElements : kpiStats.approvedCount}
-            </span>
-            <span className="text-xs text-text-subtle font-medium">đã duyệt</span>
-          </div>
-          <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-            <CheckCircle2 size={11} /> Đã cấp quyền Alumni
-          </p>
-        </div>
-
-        {/* Card 4: Đã từ chối */}
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs hover:shadow-xs transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-subtle">Đã từ chối</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shadow-2xs">
-              <XCircle size={16} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-text tracking-tight">
-              {statusFilter === 'REJECTED' ? totalElements : kpiStats.rejectedCount}
-            </span>
-            <span className="text-xs text-text-subtle font-medium">không đạt</span>
-          </div>
-          <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1">
-            <XCircle size={11} /> Minh chứng không hợp lệ
-          </p>
-        </div>
+      {/* 2. Số liệu toàn hệ thống theo trạng thái — bấm để lọc */}
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        <StatTile icon={<FileText />} tone="slate" label="Tổng hồ sơ" value={fmtCount(allVerifications?.totalElements)} />
+        {(
+          [
+            { key: 'PENDING', label: 'Chờ duyệt', value: pendingVerifications?.totalElements, icon: <Clock />, tone: 'amber' },
+            { key: 'APPROVED', label: 'Đã chấp thuận', value: approvedVerifications?.totalElements, icon: <Check />, tone: 'green' },
+            { key: 'REJECTED', label: 'Đã từ chối', value: rejectedVerifications?.totalElements, icon: <X />, tone: 'red' },
+          ] as const
+        ).map((tile) => (
+          <StatTile
+            key={tile.key}
+            icon={tile.icon}
+            tone={tile.tone}
+            label={tile.label}
+            value={fmtCount(tile.value)}
+            active={statusFilter === tile.key}
+            onClick={() => {
+              setStatusFilter(tile.key)
+              setPage(0)
+            }}
+          />
+        ))}
       </div>
-
       {/* 3. Single Unified Container Card: Tích hợp Header, Tabs, Table & Pagination */}
-      <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
-        {/* Card Header: Tabs trạng thái duyệt */}
-        <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between bg-surface">
-          <div>
-            <h2 className="text-base font-extrabold text-text flex items-center gap-2">
-              <span>Hàng đợi hồ sơ xác minh</span>
-              <span className="rounded-full bg-primary-soft text-primary-solid px-2 py-0.5 text-xs font-bold">
-                {totalElements} hồ sơ
-              </span>
-            </h2>
-            <p className="text-xs text-text-subtle mt-0.5">
-              Kiểm tra thông tin bằng tốt nghiệp, xác thực cựu sinh viên FPTU trước khi nâng cấp tài khoản.
-            </p>
-          </div>
-
-          {/* Segmented Status Tabs */}
-          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface-2 p-1 shadow-2xs self-start sm:self-auto">
-            {[
-              { key: 'PENDING', label: 'Đang chờ duyệt' },
-              { key: 'APPROVED', label: 'Đã chấp thuận' },
-              { key: 'REJECTED', label: 'Đã từ chối' },
-            ].map((tab) => {
-              const isActive = statusFilter === tab.key
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => {
-                    setStatusFilter(tab.key as any)
-                    setPage(0)
-                  }}
-                  className={cn(
-                    'relative flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer select-none whitespace-nowrap',
-                    isActive
-                      ? 'bg-primary-solid text-on-primary shadow-xs font-extrabold'
-                      : 'text-text-muted hover:bg-surface hover:text-text'
-                  )}
-                >
-                  <span>{tab.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
+      <div className={panelClass}>
         {/* Toolbar: Counter tóm tắt */}
         <div className="border-b border-border bg-surface-2/40 px-5 py-3 flex items-center justify-between">
           <div className="text-xs font-semibold text-text-subtle">
@@ -292,7 +180,7 @@ function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SE
           <div className="w-full overflow-hidden">
             <table className="w-full table-fixed text-xs text-left">
               <thead>
-                <tr className="border-b border-border text-[11px] uppercase tracking-wider text-text-subtle bg-surface-2/60">
+                <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
                   <th className="px-3.5 py-3 font-bold w-[36%]">Cựu sinh viên & Mã số</th>
                   <th className="px-3.5 py-3 font-bold w-[28%]">Chuyên ngành & Thời gian</th>
                   <th className="px-3.5 py-3 font-bold w-[20%]">Minh chứng</th>
@@ -319,14 +207,14 @@ function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SE
                         />
                         <div className="min-w-0 flex-1 space-y-0.5">
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[10px] font-bold text-text-subtle uppercase tracking-wider shrink-0">
+                            <span className="text-xs font-bold text-text-subtle shrink-0">
                               #{r.id}
                             </span>
-                            <h3 className="font-extrabold text-xs text-text truncate group-hover:text-primary-solid transition">
+                            <h3 className="font-bold text-xs text-text truncate group-hover:text-primary-solid transition">
                               {r.fullName}
                             </h3>
                           </div>
-                          <p className="text-[11px] text-text-subtle truncate max-w-[190px]" title={r.email}>
+                          <p className="text-xs text-text-subtle truncate max-w-[190px]" title={r.email}>
                             {r.email || 'Chưa cập nhật email'}
                           </p>
                         </div>
@@ -340,7 +228,7 @@ function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SE
                           {r.majorName ? `${r.majorCode} - ${r.majorName}` : r.majorCode}
                         </p>
                         {r.createdAt && (
-                          <p className="text-[11px] text-text-subtle flex items-center gap-1">
+                          <p className="text-xs text-text-subtle flex items-center gap-1">
                             <Clock size={11} className="shrink-0" />
                             <span>{new Date(r.createdAt).toLocaleString('vi-VN')}</span>
                           </p>
@@ -354,7 +242,7 @@ function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SE
                         <button
                           type="button"
                           onClick={() => setDetailReq(r)}
-                          className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-1 text-[11px] font-bold text-text-muted hover:text-text hover:bg-surface-3 border border-border shadow-2xs transition cursor-pointer"
+                          className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-1 text-xs font-bold text-text-muted hover:text-text hover:bg-surface-3 border border-border shadow-2xs transition cursor-pointer"
                           title="Xem chi tiết tài liệu minh chứng"
                         >
                           <FileImage size={12} className="text-primary-solid" />
@@ -364,7 +252,7 @@ function AdminGenericSection({ sectionKey }: { sectionKey: keyof typeof ADMIN_SE
                         <div>
                           <Badge
                             tone={r.status === 'APPROVED' ? 'success' : r.status === 'PENDING' ? 'gold' : 'danger'}
-                            className="px-2 py-0.5 text-[10px] font-bold"
+                            className="px-2 py-0.5 text-xs font-bold"
                           >
                             {r.status === 'APPROVED' ? 'Đã duyệt' : r.status === 'PENDING' ? 'Chờ duyệt' : 'Đã từ chối'}
                           </Badge>

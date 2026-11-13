@@ -83,7 +83,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
               <span>{t('mentoring.phoneNumber')}</span>
             </span>
             <div className="text-sm font-semibold text-text truncate">
-              {personalInfo?.phone || <span className="text-text-subtle dark:text-text-subtle font-normal italic">{t('mentoring.notUpdated')}</span>}
+              {personalInfo?.phone || <span className="text-text-subtle dark:text-text-subtle font-normal">{t('mentoring.notUpdated')}</span>}
             </div>
           </div>
 
@@ -94,7 +94,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
               <span>{t('mentoring.campus')}</span>
             </span>
             <div className="text-sm font-semibold text-text truncate">
-              {personalInfo?.campus || <span className="text-text-subtle dark:text-text-subtle font-normal italic">{t('mentoring.notUpdated')}</span>}
+              {personalInfo?.campus || <span className="text-text-subtle dark:text-text-subtle font-normal">{t('mentoring.notUpdated')}</span>}
             </div>
           </div>
 
@@ -107,7 +107,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
             <div className="text-sm font-semibold text-text flex items-center justify-between gap-2">
               <span className="truncate">{personalInfo?.majorName || t('mentoring.notUpdated')}</span>
               {personalInfo?.studentCode && (
-                <span className="px-1.5 py-0.5 rounded bg-cream-300/70 dark:bg-surface-2 text-text-muted font-mono text-xs shrink-0">
+                <span className="px-1.5 py-0.5 rounded bg-cream-300/70 dark:bg-surface-2 text-text-muted tabular-nums text-xs shrink-0">
                   {personalInfo.studentCode}
                 </span>
               )}
@@ -121,7 +121,7 @@ export const MentorPersonalInfoSection: React.FC<Props> = ({ personalInfo }) => 
               <span>{t('mentoring.graduationYear')}</span>
             </span>
             <div className="text-sm font-semibold text-text truncate">
-              {personalInfo?.graduationYear || <span className="text-text-subtle dark:text-text-subtle font-normal italic">{t('mentoring.notUpdated')}</span>}
+              {personalInfo?.graduationYear || <span className="text-text-subtle dark:text-text-subtle font-normal">{t('mentoring.notUpdated')}</span>}
             </div>
           </div>
         </div>

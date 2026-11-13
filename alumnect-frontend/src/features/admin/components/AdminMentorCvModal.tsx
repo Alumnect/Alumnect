@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   FileText,
   ExternalLink,
@@ -20,7 +20,6 @@ import {
 import { Badge, Skeleton, toast, DialogFrame } from '@/components/ui'
 import { useAdminMentorCv } from '../hooks/useAdmin'
 import { renderAsync } from 'docx-preview'
-import { DEMO_MENTORS } from './AdminMentorListSection'
 import { cn } from '@/lib/utils'
 
 interface AdminMentorCvModalProps {
@@ -42,12 +41,7 @@ export function AdminMentorCvModal({
   // Lấy dữ liệu CV từ API
   const { data: cvData, isLoading } = useAdminMentorCv(mentorProfileId)
 
-  // Fallback lấy mentor từ bộ dữ liệu mẫu khi backend chưa có hoặc offline
-  const fallbackMentor = useMemo(() => {
-    return DEMO_MENTORS.find((m) => m.mentorProfileId === mentorProfileId) || null
-  }, [mentorProfileId])
-
-  const activeMentor = cvData || fallbackMentor
+  const activeMentor = cvData ?? null
 
   // Document Viewer States
   const [zoom, setZoom] = useState<number>(100)
@@ -225,7 +219,7 @@ export function AdminMentorCvModal({
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-soft text-primary-solid shadow-2xs">
               <FileCheck size={18} />
             </span>
-            <h2 className="text-lg font-extrabold text-slate-950 dark:text-white leading-tight">
+            <h2 className="text-lg font-bold text-text leading-tight">
               Hồ sơ CV Cố vấn (Curriculum Vitae)
             </h2>
             {activeMentor?.mentorStatus && (
@@ -266,7 +260,7 @@ export function AdminMentorCvModal({
               className={cn(
                 'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
                 docViewerMode === 'DIGITAL_CV'
-                  ? 'bg-primary-solid text-on-primary shadow-2xs font-extrabold'
+                  ? 'bg-primary-solid text-on-primary shadow-2xs font-bold'
                   : 'text-text-muted hover:bg-surface-2 hover:text-text'
               )}
             >
@@ -280,7 +274,7 @@ export function AdminMentorCvModal({
               className={cn(
                 'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer select-none',
                 docViewerMode === 'ORIGINAL_FILE'
-                  ? 'bg-primary-solid text-on-primary shadow-2xs font-extrabold'
+                  ? 'bg-primary-solid text-on-primary shadow-2xs font-bold'
                   : 'text-text-muted hover:bg-surface-2 hover:text-text'
               )}
             >
@@ -309,7 +303,7 @@ export function AdminMentorCvModal({
               <ZoomOut className="h-3.5 w-3.5" />
             </button>
 
-            <span className="px-2 text-xs font-mono font-bold text-text-muted min-w-[42px] text-center select-none">
+            <span className="px-2 text-xs tabular-nums font-bold text-text-muted min-w-[42px] text-center select-none">
               {zoom}%
             </span>
 
@@ -362,7 +356,7 @@ export function AdminMentorCvModal({
             type="button"
             disabled={isDownloading}
             onClick={handleDownloadCv}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold text-on-primary bg-primary-solid hover:bg-primary-solid/90 rounded-xl transition cursor-pointer disabled:opacity-50 shadow-raised"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-on-primary bg-primary-solid hover:bg-primary-solid/90 rounded-xl transition cursor-pointer disabled:opacity-50 shadow-raised"
           >
             {isDownloading ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -380,7 +374,7 @@ export function AdminMentorCvModal({
         {isLoading && !activeMentor && (
           <div className="w-full max-w-md my-auto p-6 bg-surface rounded-2xl border border-border shadow-xs text-center space-y-3">
             <Loader2 className="h-7 w-7 text-primary-solid animate-spin mx-auto" />
-            <h4 className="font-extrabold text-sm text-text">
+            <h4 className="font-bold text-sm text-text">
               Đang tải hồ sơ CV Cố vấn...
             </h4>
             <div className="space-y-1.5 pt-1">
@@ -404,11 +398,11 @@ export function AdminMentorCvModal({
               {/* Top Resume Header */}
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 border-b border-border pb-6">
                 <div className="space-y-1.5">
-                  <div className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-extrabold bg-primary-soft text-primary-solid border border-primary-soft-border">
+                  <div className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-bold bg-primary-soft text-primary-solid border border-primary-soft-border">
                     <GraduationCap size={13} />
                     <span>CỰU SINH VIÊN ĐẠI HỌC FPT</span>
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text">
                     {safeMentorName}
                   </h1>
                   <p className="text-sm font-bold text-primary-solid">
@@ -430,7 +424,7 @@ export function AdminMentorCvModal({
 
               {/* Tóm tắt chuyên môn */}
               <div className="space-y-2">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-primary-solid flex items-center gap-1.5">
+                <h3 className="text-xs font-bold text-primary-solid flex items-center gap-1.5">
                   <Sparkles size={14} /> 1. Tóm tắt chuyên môn & Kinh nghiệm
                 </h3>
                 <p className="text-xs text-text-muted leading-relaxed font-medium bg-surface-2/60 p-4 rounded-xl border border-border/60">
@@ -441,16 +435,16 @@ export function AdminMentorCvModal({
 
               {/* Kinh nghiệm làm việc & Dự án */}
               <div className="space-y-3">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-primary-solid flex items-center gap-1.5">
+                <h3 className="text-xs font-bold text-primary-solid flex items-center gap-1.5">
                   <Briefcase size={14} /> 2. Kinh nghiệm công tác tiêu biểu
                 </h3>
                 <div className="space-y-3">
                   <div className="border-l-2 border-primary-solid pl-3.5 space-y-1">
                     <div className="flex items-center justify-between text-xs flex-wrap">
-                      <span className="font-extrabold text-text">
+                      <span className="font-bold text-text">
                         {activeMentor.currentPosition || 'Senior Engineer / Specialist'}
                       </span>
-                      <span className="text-[11px] font-bold text-text-subtle font-mono">
+                      <span className="text-xs font-bold text-text-subtle tabular-nums">
                         2022 — Hiện tại
                       </span>
                     </div>
@@ -465,10 +459,10 @@ export function AdminMentorCvModal({
 
                   <div className="border-l-2 border-border pl-3.5 space-y-1">
                     <div className="flex items-center justify-between text-xs flex-wrap">
-                      <span className="font-extrabold text-text">
+                      <span className="font-bold text-text">
                         Software Engineer / Project Lead
                       </span>
-                      <span className="text-[11px] font-bold text-text-subtle font-mono">
+                      <span className="text-xs font-bold text-text-subtle tabular-nums">
                         2019 — 2022
                       </span>
                     </div>
@@ -485,15 +479,15 @@ export function AdminMentorCvModal({
 
               {/* Học vấn & Nền tảng */}
               <div className="space-y-2.5">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-primary-solid flex items-center gap-1.5">
+                <h3 className="text-xs font-bold text-primary-solid flex items-center gap-1.5">
                   <GraduationCap size={14} /> 3. Học vấn & Xuất thân
                 </h3>
                 <div className="p-3.5 rounded-xl border border-border bg-surface-2/40 flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs font-extrabold text-text">Trường Đại học FPT (FPT University)</p>
+                    <p className="text-xs font-bold text-text">Trường Đại học FPT (FPT University)</p>
                     <p className="text-xs text-text-subtle mt-0.5">Cử nhân Kỹ thuật Phần mềm / Công nghệ Thông tin</p>
                   </div>
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 text-[11px] font-extrabold shadow-2xs shrink-0">
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-bold shadow-2xs shrink-0">
                     Tốt nghiệp loại Giỏi
                   </span>
                 </div>
@@ -539,15 +533,15 @@ export function AdminMentorCvModal({
               {/* Cam kết & Chỉ số uy tín */}
               <div className="pt-4 border-t border-border flex items-center justify-between text-xs flex-wrap gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 font-extrabold text-xs shadow-2xs">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 font-bold text-xs shadow-2xs">
                     <Award size={13} className="text-amber-500" /> Điểm uy tín: {activeMentor.reputationScore ?? 0} đ
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 font-extrabold text-xs shadow-2xs">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold text-xs shadow-2xs">
                     <CheckCircle2 size={13} className="text-emerald-600" /> Hoàn thành: {activeMentor.completedTasks ?? 0} task
                   </span>
                 </div>
 
-                <div className="text-[11px] text-text-subtle font-medium">
+                <div className="text-xs text-text-subtle font-medium">
                   Xác thực danh tính bởi <strong className="text-text">AlumNect FPTU Admin</strong>
                 </div>
               </div>
