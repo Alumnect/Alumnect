@@ -373,7 +373,6 @@
   },
   "event": {
     "pageTitle": "Events & Meetups",
-    "pageSubtitle": "Join workshops, seminars, and networking gatherings across the FPTU alumni community.",
     "tabUpcoming": "Upcoming",
     "tabThisMonth": "This Month",
     "tabHistory": "My Attendance",
@@ -486,7 +485,6 @@
   },
   "jobs": {
     "pageTitle": "Job Opportunities",
-    "pageSubtitle": "Discover career opportunities tailored for the FPTU alumni and student network.",
     "searchPlaceholder": "Job title or keywords...",
     "allLocations": "All locations",
     "searchCity": "Search city…",
@@ -500,17 +498,12 @@
     "salaryRange": "{{min}} - {{max}} VND",
     "viewDetails": "View Details",
     "loadMore": "Load more jobs",
-    "recruitmentLabel": "Job: ",
-    "companyLabel": "Company: ",
     "notUpdated": "Not updated",
     "loginToSaveJob": "Please log in to save job postings.",
     "saveJobAria": "Save job",
     "unsaveJobTitle": "Unsave job posting",
     "saveJobTitle": "Save job posting",
-    "applyBtn": "Apply",
-    "locationLabel": "Location: ",
-    "postedByLabel": "Posted by: ",
-    "descLabel": "Description: "
+    "applyBtn": "Apply"
   },
   "auth": {
     "welcomeBack": "Welcome Back",
@@ -600,7 +593,6 @@
   },
   "notification": {
     "title": "Notifications",
-    "subtitle": "Stay updated with your latest activities.",
     "markAllAsRead": "Mark all as read",
     "noNotifications": "No notifications yet",
     "noNotificationsDesc": "You will receive updates when someone likes, comments, follows you, or answers your question.",
@@ -791,7 +783,6 @@
   },
   "map": {
     "title": "Alumni Network Map",
-    "subtitle": "Explore the global FPTU alumni community across cities and countries.",
     "alumniList": "Alumni Directory",
     "results": "{{count}} results",
     "searchPlaceholder": "Search by name, company, position...",
@@ -810,7 +801,6 @@
   },
   "salary": {
     "title": "Community Salary Insights",
-    "subtitle": "Explore transparent compensation across roles, industries, and experience levels shared by FPTU alumni.",
     "recentContributions": "Recent Contributions",
     "myContributions": "My Contributions",
     "contributeData": "Contribute Data",
@@ -867,9 +857,7 @@
     "sharesCount": "{{count}} shares",
     "commonSalary": "Median:",
     "millionVndUnit": "Million",
-    "salaryRangeText": "Salary range: {{min}} – {{max}} Million",
     "fromSalary": "From {{val}}M",
-    "medianSalary": "Median: {{val}}M",
     "toSalary": "Up to {{val}}M",
     "contributeSuccess": "Your salary contribution has been recorded. Thank you!",
     "updateSuccess": "Salary data updated successfully!",
@@ -927,7 +915,6 @@
   },
   "forum": {
     "title": "Q&A Community Forum",
-    "subtitle": "Ask questions, share knowledge, and learn together with the FPTU community.",
     "askQuestion": "Ask Question",
     "sortRecent": "Latest",
     "sortVotes": "Most Upvoted",
@@ -1017,7 +1004,6 @@
   },
   "groups": {
     "title": "Groups & Communities",
-    "subtitle": "Professional circles and interest-based communities for FPTU Alumni.",
     "createGroup": "Create Group",
     "discoverTab": "Discover",
     "myGroupsTab": "My Groups",
@@ -1273,7 +1259,6 @@
   },
   "career": {
     "title": "Career Roadmap",
-    "subtitle": "Explore real career progression paths from FPTU alumni generations.",
     "searchPlaceholder": "Search alumni by name, major, title, company...",
     "advancedFilter": "Advanced Filters",
     "major": "Major",

@@ -113,7 +113,7 @@ export function GroupMembersList({ groupId, canView, viewerRole, viewerUserId }:
         <EmptyState icon={<Search size={22} />} title={t('groups.noMembers')} description={keyword ? t('groups.noMembersMatch') : t('groups.noMembersDesc')} className="py-10" />
       ) : (
         <>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">{t('groups.membersCount', { count: total })}</p>
+          <p className="mb-2 text-xs font-semibold tracking-wide text-text-subtle">{t('groups.membersCount', { count: total })}</p>
           <ul className="divide-y divide-border">
             {members.map((m) => (
               <li key={m.userId} className="flex items-center gap-3 py-3">

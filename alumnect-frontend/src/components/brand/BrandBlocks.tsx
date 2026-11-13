@@ -63,8 +63,11 @@ export function BrandBanner({
   actions,
   back,
   className,
+  compact,
 }: {
   className?: string
+  /** Bản gọn cho trang cần nhiều chiều cao (vd. bản đồ) */
+  compact?: boolean
   title: ReactNode
   description?: ReactNode
   scene?: BannerSceneKey
@@ -74,7 +77,7 @@ export function BrandBanner({
   return (
     <section
       className={cn(
-        'relative flex items-center justify-between gap-6 overflow-hidden rounded-[24px] border border-[#FFE3D0] pl-7 pr-4 dark:border-border',
+        'relative flex items-center justify-between gap-6 overflow-hidden rounded-[24px] border border-[#FFE3D0] pl-5 pr-4 sm:pl-7 dark:border-border',
         'bg-[radial-gradient(120%_160%_at_90%_0%,#FFE2CC_0%,#FFF3EA_48%,#FFF9F4_100%)] dark:bg-none dark:bg-surface',
         className
       )}
@@ -89,15 +92,15 @@ export function BrandBanner({
         <path d="M0 26 C 220 6, 420 30, 640 20 S 1000 2, 1200 14 L1200 48 L0 48 Z" fill="#FFD9BF" opacity="0.75" />
         <path d="M0 38 C 260 24, 520 44, 780 34 S 1080 22, 1200 30 L1200 48 L0 48 Z" fill="#FFC7A1" opacity="0.7" />
       </svg>
-      <div className="relative min-w-0 flex-1 pb-10 pt-6">
+      <div className={cn('relative min-w-0 flex-1', compact ? 'pb-7 pt-4' : 'pb-10 pt-6')}>
         {back}
-        <h1 className="font-display text-[26px] font-bold leading-tight tracking-tight text-text">{title}</h1>
+        <h1 className={cn('font-display font-bold leading-tight tracking-tight text-text', compact ? 'text-xl sm:text-[22px]' : 'text-[22px] sm:text-[26px]')}>{title}</h1>
         {description && <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[#6B5A50] dark:text-text-muted">{description}</p>}
         {actions && <div className="mt-4 flex flex-wrap gap-2.5">{actions}</div>}
       </div>
       {scene && (
         // Mỗi nhóm trang một cảnh riêng (cùng nét vẽ với minh hoạ campus FPT)
-        <div className="relative hidden w-[250px] shrink-0 self-end md:block lg:w-[270px]" aria-hidden>
+        <div className={cn('relative hidden shrink-0 self-end md:block', compact ? 'w-[170px]' : 'w-[250px] lg:w-[270px]')} aria-hidden>
           <BannerScene scene={scene} />
         </div>
       )}

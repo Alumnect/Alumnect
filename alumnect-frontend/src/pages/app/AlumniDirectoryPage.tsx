@@ -1,3 +1,4 @@
+import { BrandBanner } from '@/components/brand/BrandBlocks'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +11,7 @@ import {
   HeartHandshake,
   UserX,
 } from 'lucide-react'
-import { PageHeader, EmptyState, Skeleton, Pagination, Avatar, Card, FadeSwitch } from '@/components/ui'
+import { EmptyState, Skeleton, Pagination, Avatar, Card, FadeSwitch } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import {
   UserSearchFilterBar,
@@ -156,10 +157,10 @@ export function AlumniDirectoryPage() {
         keywords="danh bạ cựu sinh viên, cựu sinh viên FPT, FPT alumni directory, tìm kiếm cựu sinh viên FPT, kết nối alumni"
       />
       {/* Page Header */}
-      <PageHeader
-        icon={<Users size={22} className="text-primary-solid" />}
+      <BrandBanner
+        scene="directory"
+        className="mb-6"
         title={t('directory.title')}
-        subtitle={t('directory.subtitle')}
       />
 
       {/* Main Tabs Navigation - Chỉ hiển thị khi người dùng đã đăng nhập */}
@@ -375,7 +376,7 @@ export function AlumniDirectoryPage() {
                 className={cn(
                   'rounded-xl px-4 py-2 text-xs font-bold transition',
                   networkSubTab === 'following'
-                    ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
+                    ? 'bg-primary-solid text-on-primary shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3',
                 )}
               >
@@ -387,7 +388,7 @@ export function AlumniDirectoryPage() {
                 className={cn(
                   'rounded-xl px-4 py-2 text-xs font-bold transition',
                   networkSubTab === 'followers'
-                    ? 'bg-plum-900 text-white dark:bg-plum-100 dark:text-plum-900 shadow-xs'
+                    ? 'bg-primary-solid text-on-primary shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:bg-surface-3',
                 )}
               >
