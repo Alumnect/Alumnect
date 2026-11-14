@@ -18,7 +18,7 @@ import {
 } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { RESPONSE_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
-import { WORKING_MODE_LABEL, formatVnd } from '@/api/mentoring'
+import { WORKING_MODE_DETAIL_LABEL, formatVnd } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
 import { withAlumniOnly } from '@/components/AlumniOnly'
@@ -106,7 +106,7 @@ function IncomingDetailScreen() {
           <InfoRow
             icon={<Laptop size={17} color={viridian} />}
             label="Hình thức làm việc"
-            value={WORKING_MODE_LABEL[r.workingMode] ?? '—'}
+            value={WORKING_MODE_DETAIL_LABEL[r.workingMode] ?? '—'}
             last={r.budgetMin == null && r.budgetMax == null && !r.expectedDeadline}
           />
           {r.budgetMin != null || r.budgetMax != null ? (

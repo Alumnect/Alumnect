@@ -33,10 +33,19 @@ export interface Task {
 }
 
 export interface WorkLogAttachment { id: number; fileUrl: string; fileName: string; fileSize?: number | null; mediaType: 'IMAGE' | 'VIDEO' | 'FILE' }
+export interface WorkLogFeedback {
+  id: number
+  action: 'CONFIRMED' | 'CLARIFICATION_REQUESTED'
+  reason?: string | null
+  revisionNumber: number
+  studentName?: string
+  createdAt: string
+}
 export interface WorkLog {
   id: number
   taskId: number
   mentorName: string
+  mentorAvatar?: string | null
   logDate: string
   description: string
   workCompleted: string
@@ -44,6 +53,13 @@ export interface WorkLog {
   nextAction?: string | null
   status: 'PENDING_CONFIRMATION' | 'CONFIRMED' | 'REJECTED'
   studentFeedback?: string | null
+  confirmedAt?: string | null
+  confirmedByName?: string | null
+  revisionNumber?: number
+  feedbacks?: WorkLogFeedback[]
+  revisions?: { id: number; revisionNumber: number; createdAt: string }[]
+  createdAt?: string
+  updatedAt?: string
   attachments: WorkLogAttachment[]
   canEdit?: boolean
   canConfirm?: boolean

@@ -270,7 +270,6 @@ export default function ContributeScreen() {
           <Txt muted size={12} style={{ marginBottom: activeCheck ? 14 : 0 }}>
             Nhập mức thu nhập gộp của 1 tháng bằng đồng Việt Nam, chưa trừ thuế và bảo hiểm. AI sẽ đối chiếu với mặt bằng thị trường trước khi gửi.
           </Txt>
-
           {activeCheck ? (
             <SalaryAiCheckPanel
               result={activeCheck}

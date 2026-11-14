@@ -262,12 +262,14 @@ function SuggestCard({ m }: { m: MentorCard }) {
   }
   return (
     <MotionPressable onPress={open} accessibilityRole="button" style={[styles.suggestCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Avatar uri={m.avatarUrl} name={m.fullName} size={56} ring />
-      <Txt size={13.5} weight="800" style={{ color: colors.text, marginTop: 8, textAlign: 'center' }} numberOfLines={1}>{m.fullName}</Txt>
-      <Txt size={11.5} style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 2, minHeight: 30 }} numberOfLines={2}>
+      <View style={{ alignSelf: 'center' }}>
+        <Avatar uri={m.avatarUrl} name={m.fullName} size={56} ring />
+      </View>
+      <Txt size={13.5} weight="800" style={{ color: colors.text, marginTop: 8, textAlign: 'center', alignSelf: 'stretch' }} numberOfLines={1}>{m.fullName}</Txt>
+      <Txt size={11.5} style={{ color: colors.textSecondary, textAlign: 'center', alignSelf: 'stretch', marginTop: 2, minHeight: 30, lineHeight: 15 }} numberOfLines={2}>
         {[m.currentPosition, m.currentCompany].filter(Boolean).join(' · ') || m.headline || m.majorName || 'Mentor AlumNect'}
       </Txt>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 6, minHeight: 18 }}>
         <Star size={12} color="#F59E0B" weight="fill" />
         <Txt size={12} weight="800" style={{ color: colors.text }}>{m.rating ? m.rating.toFixed(1) : 'Mới'}</Txt>
         {m.reviewCount ? <Txt size={11} style={{ color: colors.textTertiary }}>{`(${m.reviewCount})`}</Txt> : null}
@@ -551,7 +553,7 @@ const styles = StyleSheet.create({
   allDone: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   taskCard: { width: 264, padding: 14, borderRadius: 20, borderWidth: 1.5, marginBottom: 18 },
   cardBtn: { height: 36, borderRadius: 11, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  suggestCard: { width: 156, padding: 12, borderRadius: 18, borderWidth: 1, alignItems: 'center' },
+  suggestCard: { width: 156, paddingHorizontal: 12, paddingTop: 14, paddingBottom: 12, borderRadius: 18, borderWidth: 1, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
   emptyCard: { marginHorizontal: 16, marginBottom: 20, padding: 22, borderRadius: 22, borderWidth: 1, alignItems: 'center' },
   bigBtn: { flex: 1, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
 })
