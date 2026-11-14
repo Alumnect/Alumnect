@@ -50,24 +50,16 @@ public class AdminRevenueServiceImpl implements AdminRevenueService {
                 .filter(item -> inRange(item.getPaidAt(), from, to))
                 .map(PaymentTransaction::getAmount)
                 .reduce(ZERO, BigDecimal::add);
-        BigDecimal disputeFeeRevenue = disputeFees.stream()
-                .filter(item -> inRange(item.getResolvedAt(), from, to))
-                .map(MentoringDisputeTicket::getDisputeFee)
-                .reduce(ZERO, BigDecimal::add);
 
         YearMonth currentMonth = YearMonth.now(BUSINESS_ZONE);
         YearMonth previousMonth = currentMonth.minusMonths(1);
-        BigDecimal currentMonthRevenue = revenueForMonth(currentMonth, subscriptions, disputeFees);
-        BigDecimal previousMonthRevenue = revenueForMonth(previousMonth, subscriptions, disputeFees);
+        BigDecimal currentMonthRevenue = revenueForMonth(currentMonth, subscriptions);
+        BigDecimal previousMonthRevenue = revenueForMonth(previousMonth, subscriptions);
 
         List<AdminRevenueOverviewResponse.RevenueTransaction> transactions = new ArrayList<>();
         subscriptions.stream()
                 .filter(item -> inRange(item.getPaidAt(), from, to))
                 .map(this::toSubscriptionTransaction)
-                .forEach(transactions::add);
-        disputeFees.stream()
-                .filter(item -> inRange(item.getResolvedAt(), from, to))
-                .map(this::toDisputeTransaction)
                 .forEach(transactions::add);
         transactions.sort(Comparator.comparing(
                 AdminRevenueOverviewResponse.RevenueTransaction::getOccurredAt,
@@ -76,15 +68,15 @@ public class AdminRevenueServiceImpl implements AdminRevenueService {
         BigDecimal collected = sumLedger(MentoringLedgerTransactionType.ESCROW_COLLECTION, MentoringLedgerStatus.SUCCEEDED);
         BigDecimal paidOut = sumLedger(MentoringLedgerTransactionType.PAYOUT, MentoringLedgerStatus.SUCCEEDED);
         BigDecimal refunded = sumLedger(MentoringLedgerTransactionType.REFUND, MentoringLedgerStatus.SUCCEEDED);
+        // Phí tranh chấp đã giữ lại từ quỹ ký quỹ không còn nằm trong quỹ đang quản lý (không tính vào doanh thu)
         BigDecimal allDisputeFees = disputeFees.stream()
                 .map(MentoringDisputeTicket::getDisputeFee)
                 .reduce(ZERO, BigDecimal::add);
         BigDecimal escrowHolding = collected.subtract(paidOut).subtract(refunded).subtract(allDisputeFees).max(ZERO);
 
         return AdminRevenueOverviewResponse.builder()
-                .totalOwnedRevenue(subscriptionRevenue.add(disputeFeeRevenue))
+                .totalOwnedRevenue(subscriptionRevenue)
                 .subscriptionRevenue(subscriptionRevenue)
-                .disputeFeeRevenue(disputeFeeRevenue)
                 .currentMonthRevenue(currentMonthRevenue)
                 .previousMonthRevenue(previousMonthRevenue)
                 .monthGrowthPercent(growthPercent(currentMonthRevenue, previousMonthRevenue))
@@ -94,51 +86,39 @@ public class AdminRevenueServiceImpl implements AdminRevenueService {
                 .pendingStudentRefund(sumLedger(MentoringLedgerTransactionType.REFUND, MentoringLedgerStatus.PENDING))
                 .from(from)
                 .to(to)
-                .monthlyRevenue(buildMonthlyRevenue(subscriptions, disputeFees))
+                .monthlyRevenue(buildMonthlyRevenue(subscriptions))
                 .transactions(transactions.stream().limit(500).toList())
                 .build();
     }
 
     private List<AdminRevenueOverviewResponse.MonthlyRevenue> buildMonthlyRevenue(
-            List<PaymentTransaction> subscriptions,
-            List<MentoringDisputeTicket> disputeFees) {
+            List<PaymentTransaction> subscriptions) {
         YearMonth now = YearMonth.now(BUSINESS_ZONE);
-        Map<YearMonth, BigDecimal[]> months = new LinkedHashMap<>();
+        Map<YearMonth, BigDecimal> months = new LinkedHashMap<>();
         for (int index = 11; index >= 0; index--) {
-            months.put(now.minusMonths(index), new BigDecimal[]{ZERO, ZERO});
+            months.put(now.minusMonths(index), ZERO);
         }
-        subscriptions.forEach(item -> addToMonth(months, item.getPaidAt(), item.getAmount(), 0));
-        disputeFees.forEach(item -> addToMonth(months, item.getResolvedAt(), item.getDisputeFee(), 1));
+        subscriptions.forEach(item -> addToMonth(months, item.getPaidAt(), item.getAmount()));
 
         DateTimeFormatter labelFormatter = DateTimeFormatter.ofPattern("MM/yyyy", Locale.forLanguageTag("vi-VN"));
-        return months.entrySet().stream().map(entry -> {
-            BigDecimal subscription = entry.getValue()[0];
-            BigDecimal dispute = entry.getValue()[1];
-            return AdminRevenueOverviewResponse.MonthlyRevenue.builder()
-                    .month(entry.getKey().toString())
-                    .label(entry.getKey().format(labelFormatter))
-                    .subscriptionRevenue(subscription)
-                    .disputeFeeRevenue(dispute)
-                    .totalRevenue(subscription.add(dispute))
-                    .build();
-        }).toList();
+        return months.entrySet().stream().map(entry -> AdminRevenueOverviewResponse.MonthlyRevenue.builder()
+                .month(entry.getKey().toString())
+                .label(entry.getKey().format(labelFormatter))
+                .subscriptionRevenue(entry.getValue())
+                .totalRevenue(entry.getValue())
+                .build()).toList();
     }
 
-    private void addToMonth(Map<YearMonth, BigDecimal[]> months, Instant occurredAt, BigDecimal amount, int index) {
+    private void addToMonth(Map<YearMonth, BigDecimal> months, Instant occurredAt, BigDecimal amount) {
         if (occurredAt == null || amount == null) return;
-        BigDecimal[] values = months.get(YearMonth.from(occurredAt.atZone(BUSINESS_ZONE)));
-        if (values != null) values[index] = values[index].add(amount);
+        YearMonth month = YearMonth.from(occurredAt.atZone(BUSINESS_ZONE));
+        if (months.containsKey(month)) months.put(month, months.get(month).add(amount));
     }
 
-    private BigDecimal revenueForMonth(YearMonth month, List<PaymentTransaction> subscriptions,
-                                       List<MentoringDisputeTicket> disputeFees) {
-        BigDecimal subscription = subscriptions.stream()
+    private BigDecimal revenueForMonth(YearMonth month, List<PaymentTransaction> subscriptions) {
+        return subscriptions.stream()
                 .filter(item -> isMonth(item.getPaidAt(), month))
                 .map(PaymentTransaction::getAmount).reduce(ZERO, BigDecimal::add);
-        BigDecimal dispute = disputeFees.stream()
-                .filter(item -> isMonth(item.getResolvedAt(), month))
-                .map(MentoringDisputeTicket::getDisputeFee).reduce(ZERO, BigDecimal::add);
-        return subscription.add(dispute);
     }
 
     private AdminRevenueOverviewResponse.RevenueTransaction toSubscriptionTransaction(PaymentTransaction item) {
@@ -153,21 +133,6 @@ public class AdminRevenueServiceImpl implements AdminRevenueService {
                 .amount(item.getAmount())
                 .occurredAt(item.getPaidAt())
                 .status("PAID")
-                .build();
-    }
-
-    private AdminRevenueOverviewResponse.RevenueTransaction toDisputeTransaction(MentoringDisputeTicket item) {
-        return AdminRevenueOverviewResponse.RevenueTransaction.builder()
-                .id("FEE-" + item.getId())
-                .sourceType("DISPUTE_FEE")
-                .referenceCode(item.getTicketCode())
-                .payerName(displayName(item.getStudent()))
-                .payerEmail(item.getStudent().getEmail())
-                .description("Phí xử lý tranh chấp Mentoring")
-                .paymentMethod("ESCROW")
-                .amount(item.getDisputeFee())
-                .occurredAt(item.getResolvedAt())
-                .status("RECOGNIZED")
                 .build();
     }
 

@@ -101,7 +101,8 @@ export function MentorFilterBar({
   ]
 
   return (
-    <div className="relative z-10 rounded-2xl border border-border bg-surface/70 p-3 sm:p-3.5 shadow-2xs backdrop-blur-md space-y-2.5">
+    // z-10 thường, nâng lên z-40 khi có menu đang mở để menu mở lên trên không bị thẻ tìm kiếm (z-20) đè
+    <div className="relative z-10 has-[[data-popup-open]]:z-40 rounded-2xl border border-border bg-surface/70 p-3 sm:p-3.5 shadow-2xs backdrop-blur-md space-y-2.5">
       {/* Tiêu đề & nút Reset bộ lọc */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">

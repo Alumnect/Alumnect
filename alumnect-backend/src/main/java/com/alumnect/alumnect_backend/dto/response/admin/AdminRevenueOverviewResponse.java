@@ -16,7 +16,6 @@ import java.util.List;
 public class AdminRevenueOverviewResponse {
     private BigDecimal totalOwnedRevenue;
     private BigDecimal subscriptionRevenue;
-    private BigDecimal disputeFeeRevenue;
     private BigDecimal currentMonthRevenue;
     private BigDecimal previousMonthRevenue;
     private BigDecimal monthGrowthPercent;
@@ -37,7 +36,6 @@ public class AdminRevenueOverviewResponse {
         private String month;
         private String label;
         private BigDecimal subscriptionRevenue;
-        private BigDecimal disputeFeeRevenue;
         private BigDecimal totalRevenue;
     }
 

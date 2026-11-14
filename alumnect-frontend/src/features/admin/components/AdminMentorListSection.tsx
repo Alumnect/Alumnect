@@ -167,7 +167,7 @@ export function AdminMentorListSection() {
   return (
     <div className="space-y-4">
       {/* 1 BẢNG DUY NHẤT (Single Unified Card Container) */}
-      <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
+      <div className="rounded-2xl border border-border bg-surface shadow-xs [&>:first-child]:rounded-t-[inherit] [&>:last-child]:rounded-b-[inherit]">
         {/* Card Header & Counter */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border p-5 bg-surface">
           <div>
