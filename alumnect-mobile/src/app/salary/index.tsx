@@ -19,6 +19,7 @@ import {
   JOB_TITLES_BY_INDUSTRY,
   SALARY_LEVELS,
   STANDARD_JOB_TITLES,
+  getJobStyle,
   type SalaryLevel,
 } from '@/constants/jobTitles'
 import { useDebounced } from '@/lib/hooks'
@@ -32,69 +33,6 @@ const SORTS: [string, string][] = [
   ['salaryDesc', 'Lương cao nhất'],
   ['salaryAsc', 'Lương thấp nhất'],
 ]
-
-/** Ánh xạ thông minh mã màu chủ đạo theo từ khóa vị trí công việc, chuẩn hóa 100% như Web. */
-function getJobStyle(role: string, t: ReturnType<typeof useTheme>) {
-  const r = (role || '').toLowerCase()
-  if (r.includes('data') || r.includes('analyst') || r.includes('dữ liệu') || r.includes('bi')) {
-    return {
-      bg: t.infoTint,
-      color: t.info,
-      border: t.isDark ? '#1E3A8A' : '#BFDBFE',
-    }
-  }
-  if (r.includes('design') || r.includes('ui') || r.includes('ux') || r.includes('thiết kế') || r.includes('graphic')) {
-    return {
-      bg: t.dangerTint,
-      color: t.danger,
-      border: t.isDark ? '#7F1D1D' : '#FECDD3',
-    }
-  }
-  if (
-    r.includes('dev') ||
-    r.includes('lập trình') ||
-    r.includes('engineer') ||
-    r.includes('kỹ sư') ||
-    r.includes('software') ||
-    r.includes('frontend') ||
-    r.includes('backend') ||
-    r.includes('fullstack')
-  ) {
-    return {
-      bg: t.primaryTint,
-      color: t.primary,
-      border: t.isDark ? '#7C2D12' : '#FED7AA',
-    }
-  }
-  if (r.includes('market') || r.includes('seo') || r.includes('content') || r.includes('quảng cáo') || r.includes('media')) {
-    return {
-      bg: t.infoTint,
-      color: t.info,
-      border: t.isDark ? '#1E3A8A' : '#BFDBFE',
-    }
-  }
-  if (
-    r.includes('business') ||
-    r.includes('sales') ||
-    r.includes('kinh doanh') ||
-    r.includes('finance') ||
-    r.includes('tài chính') ||
-    r.includes('manager') ||
-    r.includes('quản lý') ||
-    r.includes('pm')
-  ) {
-    return {
-      bg: t.successTint,
-      color: t.success,
-      border: t.isDark ? '#14532D' : '#BBF7D0',
-    }
-  }
-  return {
-    bg: t.warningTint,
-    color: t.warning,
-    border: t.isDark ? '#78350F' : '#FED7AA',
-  }
-}
 
 /** Một thẻ thống kê vị trí công việc: Card bo góc riêng biệt, badge cấp bậc màu theo ngành, thanh khoảng P25–P75 chuẩn Web. */
 function SalaryStatCard({ r, max }: { r: SalaryStatRow; max: number }) {

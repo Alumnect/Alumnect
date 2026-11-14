@@ -85,6 +85,7 @@ import { TargetIcon as PhTarget } from 'phosphor-react-native/src/icons/Target'
 import { TrayIcon as PhTray } from 'phosphor-react-native/src/icons/Tray'
 import { TrendUpIcon as PhTrendUp } from 'phosphor-react-native/src/icons/TrendUp'
 import { TrophyIcon as PhTrophy } from 'phosphor-react-native/src/icons/Trophy'
+import { TrashIcon as PhTrash } from 'phosphor-react-native/src/icons/Trash'
 import { UserIcon as PhUser } from 'phosphor-react-native/src/icons/User'
 import { UserCheckIcon as PhUserCheck } from 'phosphor-react-native/src/icons/UserCheck'
 import { UserFocusIcon as PhUserFocus } from 'phosphor-react-native/src/icons/UserFocus'
@@ -227,6 +228,8 @@ export const SquarePen = make(PhPencilSimpleLine, 'SquarePen')
 export const Star = make(PhStar, 'Star')
 export const Target = make(PhTarget, 'Target')
 export const TrendingUp = make(PhTrendUp, 'TrendingUp')
+export const Trash = make(PhTrash, 'Trash')
+export const Trash2 = make(PhTrash, 'Trash2')
 export const Trophy = make(PhTrophy, 'Trophy')
 export const UserCheck = make(PhUserCheck, 'UserCheck')
 export const UserPlus = make(PhUserPlus, 'UserPlus')

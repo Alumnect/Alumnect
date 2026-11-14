@@ -258,3 +258,100 @@ export const JOB_TITLES_BY_INDUSTRY: Record<string, readonly string[]> = {
   ],
 }
 
+/** Ánh xạ thông minh mã màu chủ đạo theo từ khóa vị trí công việc, chuẩn hóa 100% như Web. */
+export function getJobStyle(role: string, t: {
+  isDark?: boolean
+  info?: string
+  infoTint?: string
+  danger?: string
+  dangerTint?: string
+  primary?: string
+  primaryTint?: string
+  success?: string
+  successTint?: string
+  warning?: string
+  warningTint?: string
+}) {
+  const r = (role || '').toLowerCase()
+  if (
+    r.includes('data') ||
+    r.includes('analyst') ||
+    r.includes('dữ liệu') ||
+    r.includes('bi') ||
+    r.includes('ai') ||
+    r.includes('machine learning') ||
+    r.includes('trí tuệ nhân tạo')
+  ) {
+    return {
+      bg: t.infoTint ?? '#DBEAFE',
+      color: t.info ?? '#2563EB',
+      border: t.isDark ? '#1E3A8A' : '#BFDBFE',
+    }
+  }
+  if (
+    r.includes('design') ||
+    r.includes('ui') ||
+    r.includes('ux') ||
+    r.includes('thiết kế') ||
+    r.includes('graphic') ||
+    r.includes('art')
+  ) {
+    return {
+      bg: t.dangerTint ?? '#FFE4E6',
+      color: t.danger ?? '#E11D48',
+      border: t.isDark ? '#7F1D1D' : '#FECDD3',
+    }
+  }
+  if (
+    r.includes('dev') ||
+    r.includes('lập trình') ||
+    r.includes('engineer') ||
+    r.includes('kỹ sư') ||
+    r.includes('software') ||
+    r.includes('frontend') ||
+    r.includes('backend') ||
+    r.includes('fullstack')
+  ) {
+    return {
+      bg: t.primaryTint ?? '#FFEDD5',
+      color: t.primary ?? '#EA580C',
+      border: t.isDark ? '#7C2D12' : '#FED7AA',
+    }
+  }
+  if (
+    r.includes('market') ||
+    r.includes('seo') ||
+    r.includes('content') ||
+    r.includes('quảng cáo') ||
+    r.includes('media')
+  ) {
+    return {
+      bg: t.infoTint ?? '#DBEAFE',
+      color: t.info ?? '#2563EB',
+      border: t.isDark ? '#1E3A8A' : '#BFDBFE',
+    }
+  }
+  if (
+    r.includes('business') ||
+    r.includes('sales') ||
+    r.includes('kinh doanh') ||
+    r.includes('finance') ||
+    r.includes('tài chính') ||
+    r.includes('manager') ||
+    r.includes('quản lý') ||
+    r.includes('pm')
+  ) {
+    return {
+      bg: t.successTint ?? '#DCFCE7',
+      color: t.success ?? '#16A34A',
+      border: t.isDark ? '#14532D' : '#BBF7D0',
+    }
+  }
+  return {
+    bg: t.warningTint ?? '#FEF3C7',
+    color: t.warning ?? '#D97706',
+    border: t.isDark ? '#78350F' : '#FED7AA',
+  }
+}
+
+
