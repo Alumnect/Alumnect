@@ -97,13 +97,18 @@ function getJobStyle(role: string, t: ReturnType<typeof useTheme>) {
 }
 
 /** Một thẻ thống kê vị trí công việc: Card bo góc riêng biệt, badge cấp bậc màu theo ngành, thanh khoảng P25–P75 chuẩn Web. */
-function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
+function SalaryStatCard({ r, max }: { r: SalaryStatRow; max: number }) {
   const t = useTheme()
   const style = getJobStyle(r.role, t)
 
-  const left = Math.min(96, Math.max(0, (r.p25 / max) * 100))
-  const width = Math.min(100 - left, Math.max(4, ((r.p75 - r.p25) / max) * 100))
-  const mid = Math.min(99, Math.max(1, (r.median / max) * 100))
+  const p25 = Math.max(0, Number(r.p25) || 0)
+  const p75 = Math.max(0, Number(r.p75) || 0)
+  const median = Math.max(0, Number(r.median) || 0)
+  const safeMax = max > 0 ? max : Math.max(1, p75, median, p25)
+
+  const left = Math.min(96, Math.max(0, (p25 / safeMax) * 100))
+  const width = Math.min(100 - left, Math.max(4, ((p75 - p25) / safeMax) * 100))
+  const mid = Math.min(99, Math.max(1, (median / safeMax) * 100))
 
   return (
     <View
@@ -120,7 +125,7 @@ function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-            <Txt weight="700" size={15} numberOfLines={1}>{r.role}</Txt>
+            <Txt weight="700" size={15} numberOfLines={1}>{r.role || 'Chưa rõ vị trí'}</Txt>
             {r.level ? (
               <View
                 style={{
@@ -140,13 +145,13 @@ function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
             ) : null}
           </View>
         </View>
-        <Txt muted size={12} weight="500">{`${r.samples} lượt chia sẻ`}</Txt>
+        <Txt muted size={12} weight="500">{`${r.samples ?? 0} lượt chia sẻ`}</Txt>
       </View>
 
       {/* Mức phổ biến: X Triệu / tháng */}
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5, marginBottom: 8 }}>
         <Txt size={13} weight="500" color={t.textMuted}>Mức phổ biến:</Txt>
-        <Txt weight="800" size={18} color={t.primary}>{`${r.median} Triệu`}</Txt>
+        <Txt weight="800" size={18} color={t.primary}>{`${median} Triệu`}</Txt>
         <Txt size={12} color={t.textMuted}>/ tháng</Txt>
       </View>
 
@@ -180,8 +185,8 @@ function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
 
         {/* Hai đầu dải lương: Từ X Tr - Đến Y Tr */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
-          <Txt size={12} weight="500" color={t.textMuted}>{`Từ ${r.p25} Tr`}</Txt>
-          <Txt size={12} weight="500" color={t.textMuted}>{`Đến ${r.p75} Tr`}</Txt>
+          <Txt size={12} weight="500" color={t.textMuted}>{`Từ ${p25} Tr`}</Txt>
+          <Txt size={12} weight="500" color={t.textMuted}>{`Đến ${p75} Tr`}</Txt>
         </View>
       </View>
     </View>
@@ -320,7 +325,7 @@ export default function SalaryScreen() {
   const items = feed.data?.pages.flatMap((p) => p.items) ?? []
   const s = stats.data
   const rows = s?.rows ?? []
-  const max = Math.max(1, ...rows.map((r) => r.p75))
+  const max = Math.max(1, ...rows.map((r) => Number(r.p75) || 0))
 
   const feedFields: FilterField[] = useMemo(
     () => [
@@ -515,7 +520,13 @@ export default function SalaryScreen() {
             ) : stats.isLoading ? (
               <ListSkeleton variant="row" count={3} />
             ) : rows.length ? (
-              rows.map((r, i) => <StatRow key={`${r.role}-${r.level}-${r.region}-${i}`} r={r} max={max} />)
+              rows.map((r, i) => (
+                <SalaryStatCard
+                  key={`${r.role || 'role'}-${r.level || 'level'}-${r.region || 'region'}-${i}`}
+                  r={r}
+                  max={max}
+                />
+              ))
             ) : (
               <Txt muted style={{ paddingVertical: 24, textAlign: 'center' }}>
                 Chưa có dữ liệu thống kê cho tiêu chí lọc này.
