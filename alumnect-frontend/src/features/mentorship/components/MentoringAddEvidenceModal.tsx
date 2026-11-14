@@ -149,7 +149,7 @@ export function MentoringAddEvidenceModal({
                 <h3 className="text-lg font-bold text-text">
                   {t('mentoring.evidenceModalTitle')}
                 </h3>
-                <span className="text-xs px-2 py-0.5 font-mono font-medium rounded bg-warning-soft text-warning">
+                <span className="text-xs px-2 py-0.5 tabular-nums font-medium rounded bg-warning-soft text-warning">
                   {ticket.ticketCode}
                 </span>
               </div>
@@ -172,7 +172,7 @@ export function MentoringAddEvidenceModal({
           {/* Ticket Information Card */}
           <div className="p-4 bg-surface-2 rounded-xl border border-border space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">
+              <span className="text-xs font-semibold text-text-subtle">
                 {t('mentoring.disputeTitleLabel')}
               </span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-warning-soft text-warning">
@@ -193,7 +193,7 @@ export function MentoringAddEvidenceModal({
           {/* Existing Evidences Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-text-subtle flex items-center gap-1.5">
+              <h4 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                 <Paperclip className="w-3.5 h-3.5" />
                 {t('mentoring.submittedEvidenceCount', { count: evidences.length })}
               </h4>
@@ -265,7 +265,7 @@ export function MentoringAddEvidenceModal({
           ) : (
             <form onSubmit={handleSubmit} className="p-4 bg-warning-soft rounded-xl border border-warning-border space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-warning flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-warning flex items-center gap-1.5">
                   <Send className="w-3.5 h-3.5" />
                   {t('mentoring.submitNewEvidenceHeading')}
                 </h4>
@@ -324,7 +324,7 @@ export function MentoringAddEvidenceModal({
                         value={fileUrl}
                         onChange={(e) => setFileUrl(e.target.value)}
                         placeholder="https://..."
-                        className="w-full text-xs pl-8 pr-3 py-2 bg-surface border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
+                        className="w-full text-xs pl-8 pr-3 py-2 bg-surface border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 tabular-nums"
                       />
                     </div>
                   </div>

@@ -246,12 +246,12 @@ export function MentoringTicketDetailModal({
           /* Nội dung DEAL TICKET hoặc Deal phiên bản cần điều chỉnh */
           <div className="space-y-4 text-sm">
             {isAdjustment && (
-              <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+              <div className="text-xs font-bold text-text-subtle">
                 {t('mentoring.dealVersionAdjInfo', { version: ticket.version, defaultValue: `Thông tin Deal phiên bản ${ticket.version} cần điều chỉnh:` })}
               </div>
             )}
             <div>
-              <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+              <span className="block text-xs font-semibold text-text-subtle mb-1">
                 {t('mentoring.taskScope', 'Phạm vi công việc')}
               </span>
               <p className="font-semibold text-text whitespace-pre-wrap leading-relaxed">
@@ -260,7 +260,7 @@ export function MentoringTicketDetailModal({
             </div>
 
             <div>
-              <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+              <span className="block text-xs font-semibold text-text-subtle mb-1">
                 {t('mentoring.expectedResult', 'Kết quả bàn giao')}
               </span>
               <p className="font-semibold text-text whitespace-pre-wrap leading-relaxed">
@@ -271,7 +271,7 @@ export function MentoringTicketDetailModal({
             {/* 2 Cột: Giá thỏa thuận & Deadline */}
             <div className="grid grid-cols-2 gap-4 pt-1">
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+                <span className="block text-xs font-semibold text-text-subtle mb-1">
                   {t('mentoring.agreedPrice', 'Giá thỏa thuận')}
                 </span>
                 <p className="font-display text-lg font-bold text-text">
@@ -280,7 +280,7 @@ export function MentoringTicketDetailModal({
               </div>
 
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+                <span className="block text-xs font-semibold text-text-subtle mb-1">
                   Deadline
                 </span>
                 <p className="font-display text-lg font-bold text-text">
@@ -290,7 +290,7 @@ export function MentoringTicketDetailModal({
             </div>
 
             <div>
-              <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+              <span className="block text-xs font-semibold text-text-subtle mb-1">
                 {t('mentoring.workingMode', 'Hình thức')}
               </span>
               <p className="font-semibold text-text">
@@ -300,7 +300,7 @@ export function MentoringTicketDetailModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+                <span className="block text-xs font-semibold text-text-subtle mb-1">
                   {t('mentoring.taskType', 'Loại nhiệm vụ')}
                 </span>
                 <p className="font-semibold text-text">
@@ -308,7 +308,7 @@ export function MentoringTicketDetailModal({
                 </p>
               </div>
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+                <span className="block text-xs font-semibold text-text-subtle mb-1">
                   {t('mentoring.proposalSource', 'Nguồn đề xuất')}
                 </span>
                 <p className="font-semibold text-text">
@@ -319,7 +319,7 @@ export function MentoringTicketDetailModal({
 
             {ticket.changeNote && (
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+                <span className="block text-xs font-semibold text-text-subtle mb-1">
                   {t('mentoring.versionNote', 'Ghi chú phiên bản')}
                 </span>
                 <p className="font-medium text-text-muted whitespace-pre-wrap">{ticket.changeNote}</p>
@@ -331,7 +331,7 @@ export function MentoringTicketDetailModal({
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+                <span className="block text-xs font-semibold text-text-subtle mb-1">
                   {t('mentoring.currentDeadline', 'Deadline hiện tại')}
                 </span>
                 <p className="font-display text-base font-bold text-text-muted">
@@ -340,7 +340,7 @@ export function MentoringTicketDetailModal({
               </div>
 
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+                <span className="block text-xs font-semibold text-text-subtle mb-1">
                   {t('mentoring.proposedDeadline', 'Deadline đề xuất')}
                 </span>
                 <p className="font-display text-base font-bold text-info">
@@ -350,7 +350,7 @@ export function MentoringTicketDetailModal({
             </div>
 
             <div>
-              <span className="block text-xs font-semibold uppercase tracking-wider text-text-subtle mb-1">
+              <span className="block text-xs font-semibold text-text-subtle mb-1">
                 {t('mentoring.extensionReason', 'Lý do gia hạn')}
               </span>
               <p className="font-semibold text-text whitespace-pre-wrap leading-relaxed">

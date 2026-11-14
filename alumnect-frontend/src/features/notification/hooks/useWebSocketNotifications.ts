@@ -7,6 +7,9 @@ import type { NotificationItem } from '../model/types'
 import { mentoringRequestApi } from '@/features/mentorship/api/mentoringRequestApi'
 import { toast } from '@/components/ui'
 import { notificationApi } from '../api/notificationApi'
+import { syncQuestionVoteInCache } from '@/features/forum/hooks/useQuestions'
+import { syncAnswerVoteInCache } from '@/features/forum/hooks/useAnswers'
+import { syncPostLikeInCache } from '@/features/feed/hooks/useToggleLike'
 
 /**
  * Hook lắng nghe WebSocket STOMP kênh `/user/queue/notifications` để nhận thông báo thời gian thực.
@@ -97,6 +100,60 @@ export function useWebSocketNotifications() {
             }
           } catch (err) {
             console.error('Lỗi phân tích cú pháp thông báo WebSocket:', err)
+          }
+        })
+
+        // Lắng nghe cập nhật bình chọn (Vote) diễn đàn real-time
+        client.subscribe('/topic/forum/votes', (stompMessage) => {
+          try {
+            const ev = JSON.parse(stompMessage.body) as {
+              targetType?: 'QUESTION' | 'ANSWER'
+              targetId?: number | string
+              questionId?: number | string
+              voteCount?: number
+              voterId?: number | string
+              voted?: boolean
+            }
+            if (typeof ev.voteCount !== 'number' || ev.targetId == null) return
+            const currentUserId = useAuthStore.getState().user?.id
+            const isSelf = currentUserId != null && ev.voterId != null && String(currentUserId) === String(ev.voterId)
+
+            if (ev.targetType === 'QUESTION') {
+              syncQuestionVoteInCache(queryClient, String(ev.targetId), {
+                votes: ev.voteCount,
+                ...(isSelf && typeof ev.voted === 'boolean' ? { voted: ev.voted } : {}),
+              })
+            } else if (ev.targetType === 'ANSWER' && ev.questionId != null) {
+              syncAnswerVoteInCache(queryClient, String(ev.questionId), String(ev.targetId), {
+                votes: ev.voteCount,
+                ...(isSelf && typeof ev.voted === 'boolean' ? { voted: ev.voted } : {}),
+              })
+            }
+          } catch (err) {
+            console.error('Lỗi phân tích sự kiện vote WebSocket:', err)
+          }
+        })
+
+        // Lắng nghe cập nhật lượt thích bài viết bảng tin real-time
+        client.subscribe('/topic/feed', (stompMessage) => {
+          try {
+            const ev = JSON.parse(stompMessage.body) as {
+              type?: string
+              postId?: number | string
+              likeCount?: number
+              userId?: number | string
+              liked?: boolean
+            }
+            if (ev.type === 'POST_LIKE' && ev.postId != null && typeof ev.likeCount === 'number') {
+              const currentUserId = useAuthStore.getState().user?.id
+              const isSelf = currentUserId != null && ev.userId != null && String(currentUserId) === String(ev.userId)
+              syncPostLikeInCache(queryClient, String(ev.postId), {
+                likes: ev.likeCount,
+                ...(isSelf && typeof ev.liked === 'boolean' ? { liked: ev.liked } : {}),
+              })
+            }
+          } catch (err) {
+            console.error('Lỗi phân tích sự kiện feed WebSocket:', err)
           }
         })
       },

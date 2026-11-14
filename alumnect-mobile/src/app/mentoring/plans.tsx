@@ -11,6 +11,7 @@ import type { CheckoutResponse, MentorPackage } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
 import { CheckCircle2, CreditCard, Sparkles } from '@/components/icons'
+import { withAlumniOnly } from '@/components/AlumniOnly'
 
 const DEMO_PACKAGES: MentorPackage[] = [
   {
@@ -34,7 +35,7 @@ const DEMO_PACKAGES: MentorPackage[] = [
 ]
 
 /** UC82–83: chọn gói mentor và thanh toán PayOS (Meetup x Kakao Pricing Cards — Cam - Trắng - Đen). */
-export default function PlansScreen() {
+function PlansScreen() {
   const { colors, viridian, viridianSoft } = useMentoringTheme()
   const router = useRouter()
   const qc = useQueryClient()
@@ -166,3 +167,5 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 })
+
+export default withAlumniOnly(PlansScreen)

@@ -82,7 +82,6 @@ async function fetchBanks(): Promise<Bank[]> {
     return DEFAULT_BANKS
   }
 }
-
 /** Hoàn tiền Mentoring: khai báo tài khoản nhận hoàn tiền + các khoản hoàn (KakaoPay x Meetup 2026). */
 export default function RefundsScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()

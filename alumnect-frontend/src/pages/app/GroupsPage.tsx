@@ -7,10 +7,11 @@
  *  - Chuyển tab "Khám phá" và "Nhóm của tôi" với hoạt họa Framer Motion.
  *  - Lưới thẻ hội nhóm 3 cột chuẩn chỉ, khoảng cách rộng rãi, hiệu ứng lướt nhẹ.
  */
+import { BrandBanner } from '@/components/brand/BrandBlocks'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Compass, Inbox, Loader2, Plus, Search, Users2, X } from 'lucide-react'
-import { Card, PageHeader } from '@/components/ui'
+import { Card } from '@/components/ui'
 import { Stagger, StaggerItem } from '@/components/motion'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -80,11 +81,11 @@ export function GroupsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
-      {/* Tiêu đề trang gọn gàng, tinh tế theo chuẩn PageHeader */}
-      <PageHeader
-        icon={<Users2 size={20} />}
+      {/* Dải đầu trang thương hiệu với minh hoạ cộng đồng */}
+      <BrandBanner
+        scene="community"
+        className="mb-6"
         title={t('groups.title')}
-        subtitle={t('groups.subtitle')}
         actions={
           canCreate ? (
             <Button
@@ -117,7 +118,7 @@ export function GroupsPage() {
                 className={cn(
                   'relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition',
                   isActive
-                    ? 'bg-plum-900 text-white shadow-sm dark:bg-white dark:text-plum-900'
+                    ? 'bg-primary-solid text-on-primary shadow-sm'
                     : 'bg-surface-2 text-text-muted hover:bg-border dark:hover:text-white',
                 )}
               >
@@ -185,7 +186,7 @@ export function GroupsPage() {
             <Inbox size={26} />
           </span>
           <div>
-            <p className="text-base font-extrabold text-text">
+            <p className="text-base font-bold text-text">
               {t('groups.emptyTitle')}
             </p>
             <p className="mt-1 text-sm text-text-subtle">

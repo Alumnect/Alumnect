@@ -1,3 +1,4 @@
+import { BrandBanner } from '@/components/brand/BrandBlocks'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
@@ -20,7 +21,7 @@ import {
   GraduationCap,
   BookOpen,
 } from 'lucide-react'
-import { PageHeader, Card, Avatar, Skeleton, EmptyState, Pagination, SelectDropdown } from '@/components/ui'
+import { Card, Avatar, Skeleton, EmptyState, Pagination, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { useNavigate } from 'react-router-dom'
@@ -134,11 +135,11 @@ export function CareerPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 text-left">
-      <PageHeader
-        icon={<RouteIcon size={20} />}
+    <div className="mx-auto max-w-6xl text-left">
+      <BrandBanner
+        scene="career"
+        className="mb-6"
         title={t('career.title')}
-        subtitle={t('career.subtitle')}
       />
 
       {/* Search & Filter */}
@@ -198,7 +199,7 @@ export function CareerPage() {
                 <div className="mt-4 pt-4 border-t border-border">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                      <label className="block text-xs font-bold text-text-subtle mb-1.5 flex items-center gap-1">
                         <BookOpen size={12} className="text-info" /> {t('career.major')}
                       </label>
                       <SelectDropdown<string | number>
@@ -209,7 +210,7 @@ export function CareerPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                      <label className="block text-xs font-bold text-text-subtle mb-1.5 flex items-center gap-1">
                         <Briefcase size={12} className="text-primary-solid" /> {t('career.titleField')}
                       </label>
                       <input
@@ -221,7 +222,7 @@ export function CareerPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                      <label className="block text-xs font-bold text-text-subtle mb-1.5 flex items-center gap-1">
                         <Building2 size={12} className="text-info" /> {t('career.company')}
                       </label>
                       <input
@@ -233,7 +234,7 @@ export function CareerPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                      <label className="block text-xs font-bold text-text-subtle mb-1.5 flex items-center gap-1">
                         <MapPin size={12} className="text-success" /> {t('career.location')}
                       </label>
                       <input
@@ -245,7 +246,7 @@ export function CareerPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-text-subtle mb-1.5 flex items-center gap-1">
+                      <label className="block text-xs font-bold text-text-subtle mb-1.5 flex items-center gap-1">
                         <GraduationCap size={12} className="text-warning" /> {t('career.cohort')}
                       </label>
                       <input
@@ -364,7 +365,7 @@ export function CareerPage() {
                             )}
                           </div>
                         )}
-                        <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wide transition-colors ${
+                        <div className={`flex items-center gap-1 text-xs font-bold  tracking-wide transition-colors ${
                           isActive ? 'text-primary-solid' : 'text-text-subtle'
                         }`}>
                           <span>{t('career.rolesCount', { count: alumni.totalExperiences })}</span>
@@ -453,7 +454,7 @@ export function CareerPage() {
                       ring
                     />
                     <div className="min-w-0 flex-1 pt-0.5">
-                      <h2 className="text-lg font-extrabold text-text leading-tight">{selectedAlumni.fullName}</h2>
+                      <h2 className="text-lg font-bold text-text leading-tight">{selectedAlumni.fullName}</h2>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
                         <span className="inline-block text-xs font-bold text-primary-solid bg-primary-soft border border-brand-200/50 px-2.5 py-0.5 rounded-full dark:border-brand-500/30">
                           {selectedAlumni.major || t('career.fptUniversity')}
@@ -603,7 +604,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
       {/* Label divider */}
       <div className="flex items-center gap-3 my-5">
         <div className="h-px flex-1 bg-surface-3" />
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary-solid px-3 py-1 rounded-full bg-primary-soft border border-primary-soft-border shadow-xs">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-solid px-3 py-1 rounded-full bg-primary-soft border border-primary-soft-border shadow-xs">
           <RouteIcon size={13} />
           {t('career.careerPathHeading')}
         </span>
@@ -657,7 +658,7 @@ function CareerDetailTimeline({ userId }: { userId: number }) {
                       <div className="flex items-start justify-between gap-2 pr-5">
                         <p className="text-xs font-bold text-text leading-snug">{role.title}</p>
                         {role.isPrimary && (
-                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-gold-300/35 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-gold-700 border border-gold-300/50">
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-gold-300/35 px-2 py-0.5 text-xs font-bold tracking-wide text-gold-700 border border-gold-300/50">
                             <Star size={7} className="fill-warning text-warning" />
                             {t('career.primaryBadge')}
                           </span>

@@ -18,16 +18,16 @@ interface ImageCarouselProps {
   onImageClick?: (url: string, index: number) => void
 }
 
-function isVideoUrl(url?: string): boolean {
+export function isVideoUrl(url?: string): boolean {
   if (!url) return false
-  const lower = url.toLowerCase()
+  const lower = url.toLowerCase().split('?')[0]
   return (
     lower.endsWith('.mp4') ||
     lower.endsWith('.webm') ||
     lower.endsWith('.mov') ||
     lower.endsWith('.avi') ||
     lower.endsWith('.mkv') ||
-    lower.includes('/video/')
+    url.toLowerCase().includes('/video/')
   )
 }
 

@@ -1,60 +1,21 @@
 import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
+import { BrandBanner } from '@/components/brand/BrandBlocks'
+import type { BannerSceneKey } from '@/components/brand/BannerScenes'
 
 interface MentorPageHeaderProps {
   title: ReactNode
+  /** Một câu thông tin thật về dữ liệu/quy tắc của trang; không dùng cho khẩu hiệu */
   description?: ReactNode
-  eyebrow?: ReactNode
-  icon?: ReactNode
   actions?: ReactNode
   className?: string
+  /** Cảnh minh hoạ riêng của trang (mặc định: campus FPT) */
+  scene?: BannerSceneKey
 }
 
 /**
- * Header dùng chung cho toàn bộ không gian Mentoring.
- * Giữ cấu trúc ngắn, một điểm nhấn màu và một vùng hành động rõ ràng.
+ * Tiêu đề dùng chung cho không gian Mentoring: dải kem cam thương hiệu có minh hoạ theo nội dung trang,
+ * câu mô tả ngắn (nếu có) và vùng hành động bên dưới tiêu đề.
  */
-export function MentorPageHeader({
-  title,
-  description,
-  eyebrow,
-  icon,
-  actions,
-  className,
-}: MentorPageHeaderProps) {
-  return (
-    <header
-      className={cn(
-        'mentor-page-header flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6 md:flex-row md:items-center md:justify-between',
-        className,
-      )}
-    >
-      <div className="min-w-0 max-w-3xl">
-        {eyebrow && (
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary-solid">
-            {icon && (
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary-solid">
-                {icon}
-              </span>
-            )}
-            <span>{eyebrow}</span>
-          </div>
-        )}
-        <h1 className="font-display text-2xl font-bold tracking-tight text-text sm:text-3xl">
-          {title}
-        </h1>
-        {description && (
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-text-muted dark:text-text-muted">
-            {description}
-          </p>
-        )}
-      </div>
-
-      {actions && (
-        <div className="flex shrink-0 flex-wrap items-center gap-2 md:justify-end">
-          {actions}
-        </div>
-      )}
-    </header>
-  )
+export function MentorPageHeader({ title, description, actions, className, scene = 'campus' }: MentorPageHeaderProps) {
+  return <BrandBanner className={className} title={title} description={description} actions={actions} scene={scene} />
 }

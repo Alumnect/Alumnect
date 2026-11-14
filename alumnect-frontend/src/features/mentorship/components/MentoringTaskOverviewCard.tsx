@@ -59,7 +59,7 @@ export function MentoringTaskOverviewCard({ overview }: MentoringTaskOverviewCar
 
       {overview.taskScope && (
         <div className="mt-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">{t('mentoring.taskScopeLabel', 'Phạm vi công việc')}</p>
+          <p className="text-xs font-semibold text-text-subtle">{t('mentoring.taskScopeLabel', 'Phạm vi công việc')}</p>
           <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-text-muted">{overview.taskScope}</p>
         </div>
       )}

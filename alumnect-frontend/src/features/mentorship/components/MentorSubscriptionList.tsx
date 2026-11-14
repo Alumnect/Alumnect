@@ -94,10 +94,8 @@ export function MentorSubscriptionList() {
   return (
     <div className="space-y-3.5">
       <MentorPageHeader
-        icon={<Award className="h-4 w-4" />}
-        eyebrow={t('mentoring.packagesEyebrow')}
+        scene="packages"
         title={t('mentoring.packagesTitle')}
-        description={t('mentoring.packagesSubtitle')}
       />
 
       {/* 1. Thông báo gói Mentor hiện tại nếu đã kích hoạt hoặc đang chờ thanh toán (không hiển thị đơn đã hủy) */}

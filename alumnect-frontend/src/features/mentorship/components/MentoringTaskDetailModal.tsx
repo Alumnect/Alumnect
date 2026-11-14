@@ -76,12 +76,12 @@ export function MentoringTaskDetailModal({ isOpen, onClose, taskId }: MentoringT
         ) : (
           <div className="space-y-4 text-sm">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">{t('mentoring.scopeOfWork')}</p>
+              <p className="text-xs font-bold text-text-subtle">{t('mentoring.scopeOfWork')}</p>
               <p className="mt-1 whitespace-pre-wrap text-text">{overview.taskScope}</p>
             </div>
             {deal && (
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-text-subtle">{t('mentoring.expectedDeliverable')}</p>
+                <p className="text-xs font-bold text-text-subtle">{t('mentoring.expectedDeliverable')}</p>
                 <p className="mt-1 whitespace-pre-wrap text-text">{deal.expectedResult}</p>
               </div>
             )}

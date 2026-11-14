@@ -21,6 +21,7 @@ import { RESPONSE_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentorin
 import { WORKING_MODE_LABEL, formatVnd } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
+import { withAlumniOnly } from '@/components/AlumniOnly'
 
 const DEMO_INCOMING_DETAIL = (rid: number) => ({
   id: rid || 301,
@@ -47,7 +48,7 @@ const DEMO_INCOMING_DETAIL = (rid: number) => ({
 })
 
 /** UC93: mentor xem chi tiết, chấp nhận / từ chối yêu cầu (Meetup x Kakao 2026). */
-export default function IncomingDetailScreen() {
+function IncomingDetailScreen() {
   const { colors, viridian } = useMentoringTheme()
   const router = useRouter()
   const qc = useQueryClient()
@@ -121,8 +122,16 @@ export default function IncomingDetailScreen() {
           {r.budgetMin != null || r.budgetMax != null ? (
             <InfoRow
               icon={<Wallet size={17} color={viridian} />}
-              label="Dự toán ngân sách"
-              value={`${formatVnd(r.budgetMin)} – ${formatVnd(r.budgetMax)}`}
+              label="Ngân sách dự kiến"
+              value={
+                r.budgetMin != null && r.budgetMax != null && r.budgetMin === r.budgetMax
+                  ? r.budgetMin === 0
+                    ? 'Miễn phí'
+                    : formatVnd(r.budgetMin)
+                  : r.budgetMin != null && r.budgetMax != null
+                  ? `${formatVnd(r.budgetMin)} – ${formatVnd(r.budgetMax)}`
+                  : formatVnd(r.budgetMin ?? r.budgetMax)
+              }
               last={!r.expectedDeadline}
             />
           ) : null}
@@ -199,3 +208,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
 })
+
+export default withAlumniOnly(IncomingDetailScreen)

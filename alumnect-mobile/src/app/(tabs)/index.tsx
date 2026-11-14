@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Animated, LayoutAnimation, Pressable, StyleSheet, View } from 'react-native'
+import { Animated, Easing, LayoutAnimation, Pressable, StyleSheet, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import type { FlashListRef } from '@shopify/flash-list'
 import { useNavigation, useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Bell, Bookmark, BriefcaseBusiness, CalendarDays, Compass, IgBell, IgClose, IgMessenger, IgPlus, IgSearch, LayoutGrid, MessageCircle, Trophy } from '@/components/icons'
+import { Bookmark, IgBell, IgClose, IgMessenger, IgPlus, IgSearch, MessageCircle } from '@/components/icons'
+import { AnimatedFilterChip } from '@/components/FeedNavIcons'
+import { MeetupScribble } from '@/components/MeetupScribble'
 import { ActionSheet } from '@/components/ActionSheet'
 import { Empty, Screen, SearchBar, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
@@ -27,14 +29,6 @@ const FILTERS: [FeedFilter, string][] = [
   ['recruitment', 'Tuyển dụng'],
   ['event', 'Sự kiện'],
 ]
-
-const FILTER_ICON: Record<FeedFilter, typeof Bell> = {
-  all: LayoutGrid,
-  normal: MessageCircle,
-  achievement: Trophy,
-  recruitment: BriefcaseBusiness,
-  event: CalendarDays,
-}
 
 const DISCOVER: { label: string; icon: BrandIconName | 'saved'; href: string }[] = [
   { label: 'Việc làm', icon: 'suitcase', href: '/jobs' },
@@ -76,7 +70,7 @@ function DiscoverSheet({ visible, onClose }: { visible: boolean; onClose: () => 
   )
 }
 
-/** Một hàng duy nhất: nút Khám phá cố định bên trái + các chip lọc loại bài cuộn ngang bên phải. */
+/** Một hàng duy nhất: nút Khám phá cố định bên trái + các chip lọc loại bài cuộn ngang bên phải với bộ logo sáng tạo & hiệu ứng nảy. */
 function FeedBar({ filter, onFilter, onDiscover }: { filter: FeedFilter; onFilter: (f: FeedFilter) => void; onDiscover: () => void }) {
   const t = useTheme()
   return (
@@ -85,34 +79,18 @@ function FeedBar({ filter, onFilter, onDiscover }: { filter: FeedFilter; onFilte
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: t.card,
-        paddingLeft: 14,
+        paddingLeft: 12,
         marginBottom: 8,
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: t.border,
       }}
     >
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
-          onDiscover()
-        }}
-        accessibilityRole="button"
-        accessibilityLabel="Khám phá"
-        style={({ pressed }) => ({
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 6,
-          height: 36,
-          paddingHorizontal: 13,
-          borderRadius: 18,
-          backgroundColor: t.primary,
-          opacity: pressed ? 0.88 : 1,
-          transform: [{ scale: pressed ? 0.96 : 1 }],
-        })}
-      >
-        <Compass size={17} color={t.onPrimary} weight="fill" />
-        <Txt size={13} weight="600" color={t.onPrimary}>Khám phá</Txt>
-      </Pressable>
+      <AnimatedFilterChip
+        category="explore"
+        label="Khám phá"
+        active={false}
+        onPress={onDiscover}
+      />
       <View style={{ width: 1, height: 22, backgroundColor: t.border, marginLeft: 10 }} />
       <ScrollView
         horizontal
@@ -120,44 +98,26 @@ function FeedBar({ filter, onFilter, onDiscover }: { filter: FeedFilter; onFilte
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingLeft: 10, paddingRight: 14, paddingVertical: 10, alignItems: 'center', gap: 8 }}
       >
-        {FILTERS.map(([k, label]) => {
-          const active = k === filter
-          const Icon = FILTER_ICON[k]
-          return (
-            <Pressable
-              key={k}
-              onPress={() => {
-                if (k !== filter) {
-                  Haptics.selectionAsync().catch(() => {})
-                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
-                  onFilter(k)
-                }
-              }}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-                height: 36,
-                paddingHorizontal: 12,
-                borderRadius: 18,
-                backgroundColor: active ? t.text : t.inputBg,
-                opacity: pressed ? 0.85 : 1,
-                transform: [{ scale: pressed ? 0.96 : 1 }],
-              })}
-            >
-              <Icon size={16} color={active ? t.card : t.textMuted} weight={active ? 'fill' : 'regular'} />
-              <Txt size={13} weight="600" color={active ? t.card : t.text}>{label}</Txt>
-            </Pressable>
-          )
-        })}
+        {FILTERS.map(([k, label]) => (
+          <AnimatedFilterChip
+            key={k}
+            category={k}
+            label={label}
+            active={k === filter}
+            onPress={() => {
+              if (k !== filter) {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+                onFilter(k)
+              }
+            }}
+          />
+        ))}
       </ScrollView>
     </View>
   )
 }
 
-/** Nút hành động trên thanh topbar theo phong cách Instagram Cotton (E:\Clone UIUX\instagram-clone). */
+/** Nút hành động trên thanh topbar với hiệu ứng sóng lan toả & lắc nhún khi chạm. */
 function HeaderActionBtn({
   icon,
   label,
@@ -172,13 +132,16 @@ function HeaderActionBtn({
   onPress: () => void
 }) {
   const t = useTheme()
-  const [scale] = useState(() => new Animated.Value(1))
+  const scale = useRef(new Animated.Value(1)).current
+  const tilt = useRef(new Animated.Value(0)).current
+  const ripple = useRef(new Animated.Value(0)).current
+  const [rippling, setRippling] = useState(false)
 
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 0.86,
+      toValue: 0.82,
       useNativeDriver: true,
-      speed: 40,
+      speed: 45,
       bounciness: 6,
     }).start()
   }
@@ -187,29 +150,78 @@ function HeaderActionBtn({
     Animated.spring(scale, {
       toValue: 1,
       useNativeDriver: true,
-      speed: 28,
-      bounciness: 10,
+      friction: 3.8,
+      tension: 200,
     }).start()
   }
 
+  const handlePress = () => {
+    tilt.setValue(-1)
+    Animated.spring(tilt, {
+      toValue: 0,
+      friction: 3.5,
+      tension: 200,
+      useNativeDriver: true,
+    }).start()
+    setRippling(true)
+    ripple.setValue(0)
+    Animated.timing(ripple, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setRippling(false)
+    })
+    onPress()
+  }
+
+  const rotate = tilt.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-16deg', '0deg', '16deg'],
+  })
+  const rippleScale = ripple.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.5, 1.85],
+  })
+  const rippleOpacity = ripple.interpolate({
+    inputRange: [0, 0.3, 1],
+    outputRange: [0.65, 0.4, 0],
+  })
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       hitSlop={4}
       accessibilityRole="button"
       accessibilityLabel={label}
       style={({ pressed }) => ({
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 38,
+        height: 38,
+        borderRadius: 19,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: active ? t.inputBg : pressed ? t.bg : 'transparent',
+        backgroundColor: active ? t.primaryTint : pressed ? t.inputBg : 'transparent',
       })}
     >
-      <Animated.View style={{ transform: [{ scale }], alignItems: 'center', justifyContent: 'center' }}>
+      {rippling && (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            borderWidth: 1.8,
+            borderColor: t.primary,
+            opacity: rippleOpacity,
+            transform: [{ scale: rippleScale }],
+          }}
+        />
+      )}
+      <Animated.View style={{ transform: [{ scale }, { rotate }], alignItems: 'center', justifyContent: 'center' }}>
         {icon}
         {badge && badge > 0 ? (
           <View
@@ -376,7 +388,7 @@ export default function FeedScreen() {
               <Empty
                 error={q.error}
                 onRetry={() => { void q.refetch() }}
-                icon={<MessageCircle size={28} color={t.primary} weight="duotone" />}
+                icon={<MeetupScribble name={searching ? 'no_search_map_result' : 'two_chat_bubbles'} size={52} color={t.primary} />}
                 title={searching ? 'Không tìm thấy bài viết' : 'Bảng tin còn trống'}
                 text={searching ? 'Thử từ khoá khác hoặc bỏ bộ lọc.' : 'Hãy là người đầu tiên chia sẻ điều gì đó với cộng đồng.'}
                 action={searching ? undefined : 'Tạo bài viết'}

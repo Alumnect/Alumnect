@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Briefcase, Handshake, RefreshCw, Search } from 'lucide-react'
+import { Briefcase, RefreshCw, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Button, ButtonLink, Container, EmptyState, Pagination } from '@/components/ui'
+import { Button, Container, EmptyState, Pagination } from '@/components/ui'
 import { MentoringTermsGate, MentorPageHeader, MentoringTaskCard, useMyTasks } from '@/features/mentorship'
 import { MentoringFilterTabs, type MentoringFilterOption } from '@/features/mentorship/components/MentoringUi'
 import { MENTORING_INPUT } from '@/features/mentorship/model/mentoringUiUtils'
@@ -38,7 +38,7 @@ function MyMentoringTasksContent() {
     [t],
   )
 
-  const { data: pageData, isLoading, isError, error, refetch, isFetching } = useMyTasks(
+  const { data: pageData, isLoading, isError, error, refetch } = useMyTasks(
     filter === 'ACTIVE' || filter === 'CLOSED' ? filter : undefined,
     filter === 'DISPUTED' ? 'DISPUTED' : undefined,
     page,
@@ -61,26 +61,8 @@ function MyMentoringTasksContent() {
   return (
     <div className="space-y-5">
       <MentorPageHeader
-        icon={<Briefcase className="h-4 w-4" />}
-        eyebrow={t('mentoring.tasksEyebrow')}
+        scene="tasks"
         title={t('mentoring.tasksTitle')}
-        description={t('mentoring.tasksSubtitle')}
-        actions={
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              leftIcon={<RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />}
-            >
-              {t('mentoring.refreshBtn')}
-            </Button>
-            <ButtonLink to="/app/mentoring/deals" variant="outline" size="sm" leftIcon={<Handshake className="h-4 w-4" />}>
-              {t('mentoring.dealsBtn')}
-            </ButtonLink>
-          </>
-        }
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

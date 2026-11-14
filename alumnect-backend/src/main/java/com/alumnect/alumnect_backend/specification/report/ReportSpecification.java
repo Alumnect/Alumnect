@@ -114,16 +114,30 @@ public class ReportSpecification {
             // 7. Lọc theo mức rủi ro ngay trong truy vấn để phân trang và tổng số luôn đúng
             ModerationRiskLevel level = ModerationRiskLevel.parse(riskLevel);
             if (level != null) {
-                if (level.getMinScore() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.<Double>get("aiScore"), level.getMinScore()));
-                }
-                if (level.getMaxScore() != null) {
-                    predicates.add(cb.lessThan(root.<Double>get("aiScore"), level.getMaxScore()));
+                if (level == ModerationRiskLevel.HIGH) {
+                    predicates.add(cb.or(
+                            cb.greaterThanOrEqualTo(root.<Double>get("aiScore"), 0.85),
+                            cb.like(cb.coalesce(root.get("detectedKeywords"), ""), "%[Ảnh vi phạm]%")
+                    ));
+                } else if (level == ModerationRiskLevel.MEDIUM) {
+                    predicates.add(cb.and(
+                            cb.greaterThanOrEqualTo(root.<Double>get("aiScore"), 0.40),
+                            cb.lessThan(root.<Double>get("aiScore"), 0.85),
+                            cb.notLike(cb.coalesce(root.get("detectedKeywords"), ""), "%[Ảnh vi phạm]%")
+                    ));
+                } else if (level == ModerationRiskLevel.LOW) {
+                    predicates.add(cb.and(
+                            cb.or(
+                                    cb.isNull(root.get("aiScore")),
+                                    cb.lessThan(root.<Double>get("aiScore"), 0.40)
+                            ),
+                            cb.notLike(cb.coalesce(root.get("detectedKeywords"), ""), "%[Ảnh vi phạm]%")
+                    ));
                 }
             }
 
-            // Mặc định sắp xếp ưu tiên theo điểm rủi ro cao nhất (aiScore giảm dần), sau đó đến ngày tạo (createdAt giảm dần)
-            criteriaQuery.orderBy(cb.desc(root.get("aiScore")), cb.desc(root.get("createdAt")));
+            // Báo cáo mới nhất được xử lý trước; ID là khóa phụ để thứ tự ổn định khi cùng thời điểm.
+            criteriaQuery.orderBy(cb.desc(root.get("createdAt")), cb.desc(root.get("id")));
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

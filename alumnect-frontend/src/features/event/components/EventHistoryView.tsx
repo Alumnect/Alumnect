@@ -225,10 +225,10 @@ export function EventHistoryView() {
 
                     {/* Date badge */}
                     <div className="absolute left-3 top-3 flex w-14 flex-col items-center rounded-xl glass-strong py-1.5 text-center shadow-sm">
-                      <span className="text-xs font-bold uppercase text-warning">
+                      <span className="text-xs font-bold text-warning">
                         {dateInfo.month}
                       </span>
-                      <span className="text-xl font-extrabold text-text">{dateInfo.day}</span>
+                      <span className="text-xl font-bold text-text">{dateInfo.day}</span>
                     </div>
 
                     {/* Attendance status badge */}

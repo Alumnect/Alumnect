@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BookOpen, Plus, RefreshCw, Send } from 'lucide-react'
+import { BookOpen, Plus, RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button, ButtonLink, Container, EmptyState, Pagination, Skeleton, FadeSwitch } from '@/components/ui'
 import {
@@ -10,7 +10,6 @@ import {
   type MentoringRequestType,
 } from '@/features/mentorship'
 import { MentoringFilterTabs, type MentoringFilterOption } from '@/features/mentorship/components/MentoringUi'
-import { cn } from '@/lib/utils'
 
 type RequestFilter = 'ALL' | MentoringRequestType
 
@@ -25,12 +24,12 @@ function MyMentoringRequestsContent() {
     () => [
       { value: 'ALL', label: t('mentoring.tabAll') },
       { value: 'GENERAL', label: t('mentoring.tabGeneral') },
-      { value: 'DIRECT', label: t('mentoring.tabDirect'), icon: <Send /> },
+      { value: 'DIRECT', label: t('mentoring.tabDirect') },
     ],
     [t],
   )
 
-  const { data, isLoading, isError, error, refetch, isFetching } = useMyMentoringRequests({ page, size: pageSize })
+  const { data, isLoading, isError, error, refetch } = useMyMentoringRequests({ page, size: pageSize })
 
   const requests = useMemo(() => data?.content ?? [], [data?.content])
   // Lọc theo loại yêu cầu trong trang đang xem
@@ -44,25 +43,12 @@ function MyMentoringRequestsContent() {
   return (
     <div className="space-y-5">
       <MentorPageHeader
-        icon={<BookOpen className="h-4 w-4" />}
-        eyebrow={t('mentoring.menteeEyebrow')}
+        scene="sent"
         title={t('mentoring.myRequestsTitle')}
-        description={t('mentoring.myRequestsDesc')}
         actions={
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              leftIcon={<RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />}
-            >
-              {t('mentoring.refresh')}
-            </Button>
-            <ButtonLink to="/app/mentoring/requests/create" size="sm" leftIcon={<Plus className="h-4 w-4" />}>
-              {t('mentoring.createRequest')}
-            </ButtonLink>
-          </>
+          <ButtonLink to="/app/mentoring/requests/create" size="sm" leftIcon={<Plus className="h-4 w-4" />}>
+            {t('mentoring.createRequest')}
+          </ButtonLink>
         }
       />
 

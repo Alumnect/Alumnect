@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import type { ReactNode } from 'react'
 import { AlertTriangle, CheckCircle2, Clock, Wallet } from 'lucide-react'
 import { EmptyState } from '@/components/ui'
-import { cn, vnd } from '@/lib/utils'
+import { vnd } from '@/lib/utils'
 import { MentoringBadge } from './MentoringUi'
+import { StatTile } from '@/components/brand/BrandBlocks'
 import type { MentoringWallet, MentoringWalletItem } from '../model/mentoringWalletTypes'
 
 const PROVIDER_STATUS_KEY_MAP: Record<string, string> = {
@@ -30,18 +30,6 @@ interface Props {
 function formatDate(value?: string | null) {
   if (!value) return '—'
   return new Date(value).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
-function Summary({ icon, label, value, tone }: { icon: ReactNode; label: string; value: number; tone: string }) {
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs">
-      <p className={cn('flex items-center gap-1.5 text-xs font-medium [&>svg]:h-3.5 [&>svg]:w-3.5', tone)}>
-        {icon}
-        {label}
-      </p>
-      <p className="mt-1 font-display text-xl font-bold text-text">{vnd(value)}</p>
-    </div>
-  )
 }
 
 function StatusCell({ item }: { item: MentoringWalletItem }) {
@@ -77,9 +65,9 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Summary icon={<CheckCircle2 />} label={t('mentoring.walletSummaryReceived')} value={wallet?.totalReceived ?? 0} tone="text-success" />
-        <Summary icon={<Clock />} label={t('mentoring.walletSummaryProcessing')} value={wallet?.totalProcessing ?? 0} tone="text-warning" />
-        <Summary icon={<AlertTriangle />} label={t('mentoring.walletSummaryFailed')} value={wallet?.totalFailed ?? 0} tone="text-danger" />
+        <StatTile icon={<CheckCircle2 />} tone="green" label={t('mentoring.walletSummaryReceived')} value={vnd(wallet?.totalReceived ?? 0)} />
+        <StatTile icon={<Clock />} tone="amber" label={t('mentoring.walletSummaryProcessing')} value={vnd(wallet?.totalProcessing ?? 0)} />
+        <StatTile icon={<AlertTriangle />} tone="red" label={t('mentoring.walletSummaryFailed')} value={vnd(wallet?.totalFailed ?? 0)} />
       </div>
 
       {items.length === 0 ? (

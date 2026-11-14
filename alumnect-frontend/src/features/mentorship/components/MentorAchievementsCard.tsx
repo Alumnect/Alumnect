@@ -1,89 +1,57 @@
 import { useTranslation } from 'react-i18next'
+import type { ReactNode } from 'react'
 import { Flame, CheckCircle2, Star, Award, MessageSquare } from 'lucide-react'
 import { Card } from '@/components/ui'
+import { cn } from '@/lib/utils'
 import type { MentorDetailData } from '../model/mentorDetailTypes'
 
 interface MentorAchievementsCardProps {
   mentor: MentorDetailData
 }
 
+function Metric({ icon, label, value, iconClass }: { icon: ReactNode; label: string; value: ReactNode; iconClass: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface-2/50 p-3.5">
+      <p className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
+        <span className={cn('[&>svg]:h-3.5 [&>svg]:w-3.5', iconClass)}>{icon}</span>
+        {label}
+      </p>
+      <p className="mt-1 font-display text-2xl font-bold tabular-nums text-text">{value}</p>
+    </div>
+  )
+}
+
 /**
- * Hiển thị thẻ Thống kê thành tích & Chỉ số uy tín của Mentor (UC99).
- * Đồng bộ cách tính và ý nghĩa với UC97 Mentor Ranking.
+ * Thẻ chỉ số uy tín & hoạt động của Mentor (UC99), đồng bộ cách tính với UC97 Mentor Ranking.
+ * Chỉ hiển thị số thật: chưa có điểm đánh giá thì hiện "—" (cùng điều kiện với MentorCard).
  */
 export function MentorAchievementsCard({ mentor }: MentorAchievementsCardProps) {
   const { t } = useTranslation()
+  const hasRating = mentor.rating > 0
   return (
-    <Card
-      hover={false}
-      className="border border-border bg-surface p-6 text-left space-y-4"
-    >
+    <Card hover={false} className="border border-border bg-surface p-6 text-left space-y-4">
       <div className="flex items-center gap-2.5 border-b border-border pb-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-warning-soft text-warning">
           <Award className="h-4 w-4" />
         </span>
-        <h3 className="font-display text-base font-bold text-text">
-          {t('mentoring.reputationAndActivityTitle')}
-        </h3>
+        <h3 className="font-display text-base font-bold text-text">{t('mentoring.reputationAndActivityTitle')}</h3>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {/* Điểm uy tín */}
-        <div className="rounded-2xl bg-warning-soft p-3.5 border border-warning-border text-left">
-          <div className="flex items-center gap-1.5 text-warning">
-            <Flame className="h-4 w-4 fill-warning text-warning" />
-            <span className="text-xs font-bold uppercase tracking-wider">{t('mentoring.reputationLabel')}</span>
-          </div>
-          <p className="mt-1 text-2xl font-bold text-warning">
-            {mentor.reputationScore}
-          </p>
-          <p className="mt-0.5 text-xs text-warning">
-            {t('mentoring.rankingSystemLabel')}
-          </p>
-        </div>
-
-        {/* Nhiệm vụ hoàn thành */}
-        <div className="rounded-2xl bg-success-soft p-3.5 border border-success-border text-left">
-          <div className="flex items-center gap-1.5 text-success">
-            <CheckCircle2 className="h-4 w-4 text-success" />
-            <span className="text-xs font-bold uppercase tracking-wider">{t('mentoring.taskMetricsLabel')}</span>
-          </div>
-          <p className="mt-1 text-2xl font-bold text-success">
-            {mentor.completedTasks}
-          </p>
-          <p className="mt-0.5 text-xs text-success">
-            {t('mentoring.sessionsCompletedLabel')}
-          </p>
-        </div>
-
-        {/* Điểm đánh giá */}
-        <div className="rounded-2xl bg-primary-soft p-3.5 border border-brand-200/50 text-left dark:border-brand-700/30">
-          <div className="flex items-center gap-1.5 text-primary-solid">
-            <Star className="h-4 w-4 fill-brand-400 text-primary-solid" />
-            <span className="text-xs font-bold uppercase tracking-wider">{t('mentoring.reviewMetricsLabel')}</span>
-          </div>
-          <p className="mt-1 text-2xl font-bold text-primary-solid">
-            {mentor.rating > 0 ? Number(mentor.rating).toFixed(1) : '5.0'}
-            <span className="text-xs font-normal text-brand-600/70">/5</span>
-          </p>
-          <p className="mt-0.5 text-xs text-brand-700/80 dark:text-brand-300/80">
-            {t('mentoring.supportQualityLabel')}
-          </p>
-        </div>
-
-        {/* Lượt đánh giá */}
-        <div className="rounded-2xl bg-cream-100/60 p-3.5 border border-border text-left dark:bg-white/[0.03] dark:border-white/[0.05]">
-          <div className="flex items-center gap-1.5 text-text-muted">
-            <MessageSquare className="h-4 w-4 text-text-subtle" />
-            <span className="text-xs font-bold uppercase tracking-wider">{t('mentoring.responseMetricsLabel')}</span>
-          </div>
-          <p className="mt-1 text-2xl font-bold text-text">
-            {mentor.reviewCount}
-          </p>
-          <p className="mt-0.5 text-xs text-text-subtle">
-            {t('mentoring.studentRequestsSentLabel')}
-          </p>
-        </div>
+        <Metric icon={<Flame />} iconClass="text-warning" label={t('mentoring.reputationLabel')} value={mentor.reputationScore} />
+        <Metric icon={<CheckCircle2 />} iconClass="text-success" label={t('mentoring.taskMetricsLabel')} value={mentor.completedTasks} />
+        <Metric
+          icon={<Star />}
+          iconClass="text-primary-solid"
+          label={t('mentoring.reviewMetricsLabel')}
+          value={hasRating ? (
+            <>
+              {Number(mentor.rating).toFixed(1)}
+              <span className="text-xs font-normal text-text-subtle">/5</span>
+            </>
+          ) : '—'}
+        />
+        <Metric icon={<MessageSquare />} iconClass="text-info" label={t('mentoring.responseMetricsLabel')} value={mentor.reviewCount} />
       </div>
     </Card>
   )
