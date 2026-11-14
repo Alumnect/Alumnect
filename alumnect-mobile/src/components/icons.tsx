@@ -128,6 +128,7 @@ export type { IconWeight }
 
 function make(Glyph: PhosphorIcon, name: string) {
   const C = ({ size = 24, color, strokeWidth, fill, weight, ...rest }: IconProps) => {
+    if (!Glyph || typeof Glyph !== 'function') return null
     const filled = !!fill && fill !== 'transparent' && fill !== 'none'
     const w: IconWeight = weight ?? (filled ? 'fill' : strokeWidth && strokeWidth >= 2.5 ? 'bold' : 'regular')
     return <Glyph size={size} color={color} weight={w} {...rest} />

@@ -146,7 +146,7 @@ function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
             justifyContent: 'center',
           }}
         >
-          <IconComponent size={18} color={style.color} />
+          {IconComponent ? <IconComponent size={18} color={style.color} /> : null}
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -171,7 +171,7 @@ function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
               ) : null}
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-              <Users size={12} color={t.textMuted} />
+              {Users ? <Users size={12} color={t.textMuted} /> : null}
               <Txt muted size={12}>{`${r.samples} lượt chia sẻ`}</Txt>
             </View>
           </View>
