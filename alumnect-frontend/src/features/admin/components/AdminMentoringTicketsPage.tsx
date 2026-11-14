@@ -267,8 +267,8 @@ export function AdminMentoringTicketsPage() {
               }}
               options={[
                 { value: 'ALL', label: 'Tất cả loại Ticket' },
-                { value: 'DISPUTE', label: 'Khiếu nại / Tranh chấp (DISPUTE)' },
-                { value: 'SETTLEMENT', label: 'Thỏa thuận Hòa giải (SETTLEMENT)' },
+                { value: 'DISPUTE', label: 'Khiếu nại / Tranh chấp' },
+                { value: 'SETTLEMENT', label: 'Thỏa thuận Hòa giải' },
               ]}
               placeholder="Tất cả loại Ticket"
               className="w-full sm:w-56"
@@ -284,11 +284,11 @@ export function AdminMentoringTicketsPage() {
               }}
               options={[
                 { value: 'ALL', label: 'Tất cả trạng thái xử lý' },
-                { value: 'OPEN', label: 'Chờ tiếp nhận (OPEN)' },
-                { value: 'IN_REVIEW', label: 'Đang xử lý (IN_REVIEW)' },
-                { value: 'RESOLVED', label: 'Đã giải quyết (RESOLVED)' },
-                { value: 'REJECTED', label: 'Bị từ chối (REJECTED)' },
-                { value: 'CANCELLED', label: 'Đã hủy (CANCELLED)' },
+                { value: 'OPEN', label: 'Chờ tiếp nhận' },
+                { value: 'IN_REVIEW', label: 'Đang xử lý' },
+                { value: 'RESOLVED', label: 'Đã giải quyết' },
+                { value: 'REJECTED', label: 'Bị từ chối' },
+                { value: 'CANCELLED', label: 'Đã hủy' },
               ]}
               placeholder="Tất cả trạng thái xử lý"
               className="w-full sm:w-56"
@@ -454,8 +454,11 @@ export function AdminMentoringTicketsPage() {
                           </span>
 
                           {/* Cán bộ phụ trách */}
-                          <p className="text-xs text-text-subtle truncate max-w-[140px] pt-0.5">
-                            {t.handledByName ? `Phụ trách: ${t.handledByName}` : 'Chưa phân công'}
+                          {/* Backend trả người phụ trách trong `handledBy` (object), không có `handledByName` */}
+                          <p className="text-xs text-text-subtle truncate max-w-[140px] pt-0.5" title={t.handledBy?.fullName ?? t.handledByName ?? undefined}>
+                            {t.handledBy?.fullName ?? t.handledByName
+                              ? `Phụ trách: ${t.handledBy?.fullName ?? t.handledByName}`
+                              : 'Chưa phân công'}
                           </p>
                         </div>
                       </td>

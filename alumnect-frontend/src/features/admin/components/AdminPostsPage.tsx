@@ -498,7 +498,7 @@ export function AdminPostsPage() {
             />
           </div>
         ) : (
-          <div className="w-full">
+          <div className="w-full overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead>
                 <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
@@ -699,7 +699,7 @@ export function AdminPostsPage() {
         )}
 
         {/* Card Footer: Pagination */}
-        <div className="border-t border-border p-4 bg-surface flex items-center justify-between">
+        <div className="border-t border-border p-4 bg-surface flex items-center justify-end">
           <Pagination
             page={page}
             totalPages={totalPages}

@@ -64,7 +64,8 @@ export function MentorSearchHeader({
       />
 
       {/* Thanh Search Bar & Sort Dropdown gọn gàng bọc Card chuẩn */}
-      <Card hover={false} className="p-3.5 sm:p-4 relative z-20">
+      {/* overflow-visible: menu sắp xếp dài hơn thẻ nên không được cắt. Thẻ chứa menu đang mở được nâng lên trên thẻ bộ lọc kế bên. */}
+      <Card hover={false} className="p-3.5 sm:p-4 relative z-20 overflow-visible has-[[data-popup-open]]:z-40">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
           {/* Input ô tìm kiếm */}
           <div className="relative flex-1">

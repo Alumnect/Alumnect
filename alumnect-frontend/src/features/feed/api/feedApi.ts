@@ -15,7 +15,7 @@ import type { AiStudioResult } from '../model/aiStudio'
  */
 
 /** Số bài viết mỗi trang (đồng bộ với tham số `size` gửi lên backend). */
-export const PAGE_SIZE = 5
+export const PAGE_SIZE = 10
 
 /**
  * Trích mảng bài viết thô từ nhiều biến thể phong bì (envelope) phản hồi:

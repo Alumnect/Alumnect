@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useAuthStore } from '@/store/authStore'
 import { feedApi } from '../api/feedApi'
 import type { FeedFilter } from '../model/post'
 
@@ -15,8 +16,10 @@ export function useFeed(
   size?: number,
   eventFilter?: string,
 ) {
+  const userId = useAuthStore((s) => s.user?.id ?? 'guest')
+
   return useInfiniteQuery({
-    queryKey: ['feed', { filter, keyword, size, eventFilter }],
+    queryKey: ['feed', { userId, filter, keyword, size, eventFilter }],
     queryFn: ({ pageParam }) => feedApi.getFeed({ page: pageParam, filter, keyword, size, eventFilter }),
     initialPageParam: 0,
     // Trang kế tiếp = số trang hiện tại + 1, hoặc dừng khi hết dữ liệu.
