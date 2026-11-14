@@ -29,13 +29,16 @@ function formatSalaryPreview(amt: string): string {
   return `${n.toLocaleString('vi-VN')} VNĐ / tháng`
 }
 
-/** UC47–48: đóng góp / sửa dữ liệu lương (truyền `id` để sửa) + [A1] AI kiểm tra mức lương trước khi gửi (giống Web). */
+/** UC47–48: đóng góp / sửa dữ liệu lương (truyền `id` để sửa) + [A1] AI kiểm tra mức lương trước khi gửi. */
 export default function ContributeScreen() {
   const t = useTheme()
   const router = useRouter()
   const qc = useQueryClient()
   const { id } = useLocalSearchParams<{ id?: string }>()
+
+  // Lấy dữ liệu ngành nghề và thống kê thực tế từ database
   const industries = useQuery({ queryKey: ['industries'], queryFn: salaryApi.industries })
+  const baseStats = useQuery({ queryKey: ['salary-stats-base'], queryFn: () => salaryApi.statistics({}), staleTime: 5 * 60_000 })
   const mine = useQuery({ queryKey: ['salary-mine'], queryFn: salaryApi.mine, enabled: !!id })
   const existing = id ? mine.data?.find((c) => c.id === id) : undefined
 
@@ -71,21 +74,32 @@ export default function ContributeScreen() {
     return industries.data?.find((i) => i.id === industryId)?.name ?? ''
   }, [industries.data, industryId])
 
+  // Chức danh: Ưu tiên các chức danh thực tế có trong database + danh mục chuẩn theo ngành
   const jobTitleOptions = useMemo(() => {
+    const dbRoles = Array.from(new Set((baseStats.data?.rows ?? []).map((r) => r.role).filter(Boolean)))
     const list = selectedIndustryName && JOB_TITLES_BY_INDUSTRY[selectedIndustryName]
       ? JOB_TITLES_BY_INDUSTRY[selectedIndustryName]
       : STANDARD_JOB_TITLES
 
+    const merged = Array.from(new Set([...dbRoles, ...list])).sort((a, b) => a.localeCompare(b, 'vi'))
+
     return [
-      ...list.map((title) => ({ value: title, label: title })),
+      ...merged.map((title) => ({ value: title, label: title })),
       { value: OTHER_JOB_TITLE_ID, label: 'Chức danh khác (tự nhập)...' },
     ]
-  }, [selectedIndustryName])
+  }, [baseStats.data?.rows, selectedIndustryName])
 
-  const regionOptions = useMemo(() => [
-    { value: 'Remote / Làm từ xa', label: 'Remote / Làm từ xa' },
-    ...VN_CITIES.map((c) => ({ value: c, label: c })),
-  ], [])
+  // Khu vực: Ưu tiên các thành phố thực tế có trong database + danh mục toàn quốc + Remote
+  const regionOptions = useMemo(() => {
+    const dbCities = Array.from(new Set((baseStats.data?.rows ?? []).map((r) => r.region).filter(Boolean)))
+    const remaining = VN_CITIES.filter((c) => !dbCities.includes(c))
+
+    return [
+      { value: 'Remote / Làm từ xa', label: 'Remote / Làm từ xa' },
+      ...dbCities.map((c) => ({ value: c, label: c })),
+      ...remaining.map((c) => ({ value: c, label: c })),
+    ]
+  }, [baseStats.data?.rows])
 
   const effectiveJobTitle = selectedTitleId === OTHER_JOB_TITLE_ID
     ? customJobTitle.trim()
@@ -113,6 +127,7 @@ export default function ContributeScreen() {
       qc.invalidateQueries({ queryKey: ['salary-mine'] })
       qc.invalidateQueries({ queryKey: ['salary-feed'] })
       qc.invalidateQueries({ queryKey: ['salary-stats'] })
+      qc.invalidateQueries({ queryKey: ['salary-stats-base'] })
       router.back()
     },
     onError: (e) => toast.error(errMsg(e)),
@@ -177,10 +192,9 @@ export default function ContributeScreen() {
             label="Ngành nghề"
             placeholder={industries.isLoading ? 'Đang tải ngành nghề...' : 'Chọn lĩnh vực của bạn'}
             value={industryId == null ? null : String(industryId)}
-            options={(industries.data ?? []).map((i) => ({ value: String(i.id), label: i.name }))}
+            options={(industries.data ?? []).filter((i) => i.name.trim().toLowerCase() !== 'khác').map((i) => ({ value: String(i.id), label: i.name }))}
             onChange={(v) => {
               setIndustryId(v ? Number(v) : null)
-              // Reset chức danh nếu đổi ngành nghề
               setSelectedTitleId(null)
               setCustomJobTitle('')
             }}

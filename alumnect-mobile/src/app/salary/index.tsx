@@ -110,7 +110,7 @@ function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
   )
 }
 
-/** UC50–51: thống kê lương (lọc chức danh, ngành, khu vực, cấp bậc) và các đóng góp ẩn danh. */
+/** UC50–51: thống kê lương (lọc chức danh, ngành, khu vực, cấp bậc) lấy 100% từ database như Web. */
 export default function SalaryScreen() {
   const t = useTheme()
   const router = useRouter()
@@ -138,37 +138,21 @@ export default function SalaryScreen() {
     setLevel(null)
   }
 
+  // 1. Lấy danh sách ngành nghề trực tiếp từ database (/industries)
   const industries = useQuery({
     queryKey: ['industries'],
     queryFn: salaryApi.industries,
     staleTime: 30 * 60_000,
   })
 
-  const selectedIndustryName = useMemo(() => {
-    return industries.data?.find((i) => i.id === industryId)?.name ?? ''
-  }, [industries.data, industryId])
+  // 2. Lấy số liệu thống kê gốc toàn bộ từ database để trích xuất danh mục động (khớp 100% Web SalaryPage.tsx)
+  const baseStats = useQuery({
+    queryKey: ['salary-stats-base'],
+    queryFn: () => salaryApi.statistics({}),
+    staleTime: 5 * 60_000,
+  })
 
-  const jobTitleOptions = useMemo(() => {
-    const list = selectedIndustryName && JOB_TITLES_BY_INDUSTRY[selectedIndustryName]
-      ? JOB_TITLES_BY_INDUSTRY[selectedIndustryName]
-      : STANDARD_JOB_TITLES
-
-    return [
-      { value: '', label: 'Tất cả chức danh' },
-      ...list.map((title) => ({ value: title, label: title })),
-    ]
-  }, [selectedIndustryName])
-
-  const industryOptions = useMemo(() => [
-    { value: '', label: 'Tất cả ngành nghề' },
-    ...(industries.data ?? []).map((i) => ({ value: String(i.id), label: i.name })),
-  ], [industries.data])
-
-  const regionOptions = useMemo(() => [
-    { value: '', label: 'Tất cả khu vực' },
-    ...VN_CITIES.map((c) => ({ value: c, label: c })),
-  ], [])
-
+  // Thống kê lương theo bộ lọc hiện tại từ database
   const stats = useQuery({
     queryKey: ['salary-stats', industryId, region, jobTitle, level],
     queryFn: () => salaryApi.statistics({
@@ -178,6 +162,71 @@ export default function SalaryScreen() {
       level: level || undefined,
     }),
   })
+
+  const baseRows = useMemo(() => {
+    if (baseStats.data?.rows?.length) return baseStats.data.rows
+    if (stats.data?.rows?.length) return stats.data.rows
+    return []
+  }, [baseStats.data?.rows, stats.data?.rows])
+
+  const selectedIndustryName = useMemo(() => {
+    return industries.data?.find((i) => i.id === industryId)?.name ?? ''
+  }, [industries.data, industryId])
+
+  // 3. Dropdown Khu vực / Thành phố: Lấy các tỉnh/thành CÓ TRONG DATABASE từ baseRows (khớp Web SalaryPage.tsx)
+  const regionOptions = useMemo(() => {
+    const dbCities = Array.from(
+      new Set(baseRows.map((r) => r.region).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b, 'vi'))
+
+    const cities = dbCities.length > 0 ? dbCities : VN_CITIES
+
+    return [
+      { value: '', label: 'Tất cả khu vực' },
+      ...cities.map((city) => ({ value: city, label: city })),
+    ]
+  }, [baseRows])
+
+  // 4. Dropdown Chức danh: Lấy các chức danh CÓ TRONG DATABASE từ baseRows
+  const jobTitleOptions = useMemo(() => {
+    const dbRoles = Array.from(
+      new Set(baseRows.map((r) => r.role).filter(Boolean))
+    )
+
+    let roles: readonly string[] = dbRoles
+    if (industryId != null && selectedIndustryName) {
+      const industryTitles = JOB_TITLES_BY_INDUSTRY[selectedIndustryName] ?? []
+      const matched = dbRoles.filter((r) =>
+        industryTitles.some((t) => t.toLowerCase().includes(r.toLowerCase()) || r.toLowerCase().includes(t.toLowerCase()))
+      )
+      roles = matched.length > 0 ? matched : industryTitles
+    } else if (roles.length === 0) {
+      roles = STANDARD_JOB_TITLES
+    }
+
+    const sortedRoles = Array.from(new Set(roles)).sort((a, b) => a.localeCompare(b, 'vi'))
+
+    return [
+      { value: '', label: 'Tất cả chức danh' },
+      ...sortedRoles.map((title) => ({ value: title, label: title })),
+    ]
+  }, [baseRows, industryId, selectedIndustryName])
+
+  // 5. Cấp bậc: Chỉ hiển thị các cấp bậc thực tế có trong database (khớp Web)
+  const availableLevels = useMemo(() => {
+    const present = new Set(baseRows.map((r) => r.level))
+    const list = SALARY_LEVELS.filter((lv) => present.has(lv))
+    return list.length > 0 ? list : SALARY_LEVELS
+  }, [baseRows])
+
+  // 6. Ngành nghề: Đổ từ database, loại bỏ 'Khác' nếu có
+  const industryOptions = useMemo(() => {
+    const list = (industries.data ?? []).filter((i) => i.name.trim().toLowerCase() !== 'khác')
+    return [
+      { value: '', label: 'Tất cả ngành' },
+      ...list.map((i) => ({ value: String(i.id), label: i.name })),
+    ]
+  }, [industries.data])
 
   const feedSortBy = (feedFilters.sort as string) ?? 'latest'
   const feedIndustryId = feedFilters.industry ? Number(feedFilters.industry) : null
@@ -215,7 +264,7 @@ export default function SalaryScreen() {
 
   const controls = tab === 'stats' ? (
     <View style={{ backgroundColor: t.card, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, gap: 10 }}>
-      {/* 1. Dropdown Chức danh */}
+      {/* 1. Dropdown Chức danh (lấy từ database) */}
       <SelectField
         label="Chức danh"
         placeholder="Tất cả chức danh"
@@ -224,7 +273,7 @@ export default function SalaryScreen() {
         onChange={(v) => setJobTitle(v ? v : null)}
       />
 
-      {/* 2. Dropdown Ngành nghề & Khu vực (2 cột) */}
+      {/* 2. Dropdown Ngành nghề & Khu vực (đều lấy từ database) */}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1 }}>
           <SelectField
@@ -249,7 +298,7 @@ export default function SalaryScreen() {
         </View>
       </View>
 
-      {/* 3. Cấp bậc filter chips + Nút Xóa lọc */}
+      {/* 3. Cấp bậc filter chips (lấy từ database) + Nút Xóa lọc */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, paddingTop: 4 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           <Txt size={12} weight="600" muted>Cấp bậc:</Txt>
@@ -264,7 +313,7 @@ export default function SalaryScreen() {
           >
             <Txt size={12} weight="600" color={level === null ? '#fff' : t.textMuted}>Tất cả</Txt>
           </Pressable>
-          {SALARY_LEVELS.map((lv) => {
+          {availableLevels.map((lv) => {
             const active = level === lv
             return (
               <Pressable
@@ -310,7 +359,7 @@ export default function SalaryScreen() {
     <View style={{ paddingTop: 16 }}>
       {tab === 'stats' ? (
         <View style={{ paddingHorizontal: 16 }}>
-          {/* Card Hero: GÓC NHÌN THU NHẬP - Đồng bộ hiển thị "X Triệu" */}
+          {/* Card Hero: GÓC NHÌN THU NHẬP - Lấy từ database, hiển thị X Triệu */}
           <Enter style={{ borderRadius: 24, padding: 22, backgroundColor: t.primaryTint, marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ flex: 1 }}>
@@ -355,7 +404,7 @@ export default function SalaryScreen() {
             </View>
           ) : null}
 
-          {/* Danh sách: Mức lương theo vị trí - Đồng bộ tiêu đề & đơn vị */}
+          {/* Danh sách: Mức lương theo vị trí từ database - Đồng bộ tiêu đề & đơn vị */}
           <Card style={{ paddingVertical: 12, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Txt weight="700" size={16}>Mức lương theo vị trí</Txt>
@@ -402,8 +451,11 @@ export default function SalaryScreen() {
           <ScrollView
             refreshControl={
               <RefreshControl
-                refreshing={stats.isRefetching}
-                onRefresh={() => void stats.refetch()}
+                refreshing={stats.isRefetching || baseStats.isRefetching}
+                onRefresh={() => {
+                  void stats.refetch()
+                  void baseStats.refetch()
+                }}
                 tintColor={t.primary}
                 colors={[t.primary]}
               />

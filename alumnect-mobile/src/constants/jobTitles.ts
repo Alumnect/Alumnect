@@ -257,3 +257,4 @@ export const JOB_TITLES_BY_INDUSTRY: Record<string, readonly string[]> = {
     'Instructional Designer (Thiết kế bài giảng)',
   ],
 }
+
