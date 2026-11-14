@@ -524,7 +524,7 @@ export default function SalaryScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Txt size={11} weight="700" color={t.primary} style={{ letterSpacing: 1.2 }}>GÓC NHÌN THU NHẬP</Txt>
-                <Txt size={14} weight="600" style={{ marginTop: 6 }}>{`Lương trung vị${region ? ` · ${region}` : ''}`}</Txt>
+                <Txt size={14} weight="600" style={{ marginTop: 6 }}>{`Lương phổ biến${region ? ` · ${region}` : ''}`}</Txt>
               </View>
               <BrandIcon name="coin" size={56} />
             </View>
