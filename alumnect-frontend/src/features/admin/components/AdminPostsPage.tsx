@@ -699,7 +699,7 @@ export function AdminPostsPage() {
         )}
 
         {/* Card Footer: Pagination */}
-        <div className="border-t border-border p-4 bg-surface flex items-center justify-between">
+        <div className="border-t border-border p-4 bg-surface flex items-center justify-end">
           <Pagination
             page={page}
             totalPages={totalPages}
