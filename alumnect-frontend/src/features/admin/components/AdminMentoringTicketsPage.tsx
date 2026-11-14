@@ -213,10 +213,10 @@ export function AdminMentoringTicketsPage() {
           />
         ))}
       </div>
-      {/* 3. BẢNG DUY NHẤT (Single Unified Card Container) */}
-      <div className={panelClass}>
+      {/* 3. Khung 1: tiêu đề + bộ lọc (không overflow-hidden để dropdown không bị che) */}
+      <div className="rounded-3xl border border-border bg-surface">
         {/* Card Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border p-5 bg-surface">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border p-5 bg-surface rounded-t-3xl">
           <h2 className="text-base font-semibold text-text">Danh sách ticket</h2>
 
           <div className="flex items-center gap-2 self-start sm:self-center">
@@ -227,7 +227,7 @@ export function AdminMentoringTicketsPage() {
         </div>
 
         {/* Toolbar: Tìm kiếm & Bộ lọc Dropdowns */}
-        <div className="border-b border-border bg-surface-2/40 p-4">
+        <div className="rounded-b-3xl bg-surface-2/40 p-4">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
             {/* Search Input */}
             <div className="relative flex-1 min-w-[220px]">
@@ -267,8 +267,8 @@ export function AdminMentoringTicketsPage() {
               }}
               options={[
                 { value: 'ALL', label: 'Tất cả loại Ticket' },
-                { value: 'DISPUTE', label: 'Khiếu nại / Tranh chấp (DISPUTE)' },
-                { value: 'SETTLEMENT', label: 'Thỏa thuận Hòa giải (SETTLEMENT)' },
+                { value: 'DISPUTE', label: 'Khiếu nại / Tranh chấp' },
+                { value: 'SETTLEMENT', label: 'Thỏa thuận Hòa giải' },
               ]}
               placeholder="Tất cả loại Ticket"
               className="w-full sm:w-56"
@@ -284,11 +284,11 @@ export function AdminMentoringTicketsPage() {
               }}
               options={[
                 { value: 'ALL', label: 'Tất cả trạng thái xử lý' },
-                { value: 'OPEN', label: 'Chờ tiếp nhận (OPEN)' },
-                { value: 'IN_REVIEW', label: 'Đang xử lý (IN_REVIEW)' },
-                { value: 'RESOLVED', label: 'Đã giải quyết (RESOLVED)' },
-                { value: 'REJECTED', label: 'Bị từ chối (REJECTED)' },
-                { value: 'CANCELLED', label: 'Đã hủy (CANCELLED)' },
+                { value: 'OPEN', label: 'Chờ tiếp nhận' },
+                { value: 'IN_REVIEW', label: 'Đang xử lý' },
+                { value: 'RESOLVED', label: 'Đã giải quyết' },
+                { value: 'REJECTED', label: 'Bị từ chối' },
+                { value: 'CANCELLED', label: 'Đã hủy' },
               ]}
               placeholder="Tất cả trạng thái xử lý"
               className="w-full sm:w-56"
@@ -309,7 +309,10 @@ export function AdminMentoringTicketsPage() {
             )}
           </div>
         </div>
+      </div>
 
+      {/* Khung 2: danh sách ticket */}
+      <div className={panelClass}>
         {/* Loading Skeleton */}
         {isLoading && (
           <div className="p-6 space-y-4">
