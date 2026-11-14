@@ -454,8 +454,11 @@ export function AdminMentoringTicketsPage() {
                           </span>
 
                           {/* Cán bộ phụ trách */}
-                          <p className="text-xs text-text-subtle truncate max-w-[140px] pt-0.5">
-                            {t.handledByName ? `Phụ trách: ${t.handledByName}` : 'Chưa phân công'}
+                          {/* Backend trả người phụ trách trong `handledBy` (object), không có `handledByName` */}
+                          <p className="text-xs text-text-subtle truncate max-w-[140px] pt-0.5" title={t.handledBy?.fullName ?? t.handledByName ?? undefined}>
+                            {t.handledBy?.fullName ?? t.handledByName
+                              ? `Phụ trách: ${t.handledBy?.fullName ?? t.handledByName}`
+                              : 'Chưa phân công'}
                           </p>
                         </div>
                       </td>
