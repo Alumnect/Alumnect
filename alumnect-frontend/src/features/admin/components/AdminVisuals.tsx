@@ -186,5 +186,10 @@ export function Donut({
 // Dải đầu trang, minh hoạ nhỏ và ô số liệu dùng chung với Mentoring
 export { BrandBanner as AdminPageBanner, BrandHero as AdminHero, StatTile } from '@/components/brand/BrandBlocks'
 
-/** Khung nội dung chính (bảng, danh sách) */
-export const panelClass = 'overflow-hidden rounded-3xl border border-border bg-surface'
+/**
+ * Khung nội dung chính (bảng, danh sách).
+ * Không dùng overflow-hidden: khi bảng ít dòng, menu thả xuống của thanh bộ lọc dài hơn khung nên sẽ bị cắt cụt.
+ * Thay vào đó bo góc cho phần tử đầu/cuối để nền không lòi ra ngoài viền bo tròn.
+ */
+export const panelClass =
+  'rounded-3xl border border-border bg-surface [&>:first-child]:rounded-t-[inherit] [&>:last-child]:rounded-b-[inherit]'
