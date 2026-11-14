@@ -56,6 +56,13 @@ function onChatMessage(m: IMessage) {
     queryClient.invalidateQueries({ queryKey: ['messages', convId] })
     queryClient.invalidateQueries({ queryKey: ['conversations'] })
     if (msg.type === 'SYSTEM') queryClient.invalidateQueries({ queryKey: ['group-members', convId] })
+    // Tin hệ thống về Deal / Task (gửi Deal, xác nhận, gia hạn...) → làm mới ngay ngữ cảnh mentoring của cuộc trò chuyện
+    if (msg.type === 'SYSTEM' || msg.content?.includes('Deal')) {
+      queryClient.invalidateQueries({ queryKey: ['mentoring-chat-context', convId] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-deal'] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-deals'] })
+      queryClient.invalidateQueries({ queryKey: ['mentoring-task'] })
+    }
   } catch {
     /* bỏ qua frame hỏng */
   }

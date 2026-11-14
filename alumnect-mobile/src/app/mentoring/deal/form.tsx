@@ -14,7 +14,7 @@ import type { WorkingMode } from '@/api/mentoring'
 import { toast, errMsg } from '@/lib/toast'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { Check, Handshake, Send } from '@/components/icons'
-import { BrandIcon } from '@/components/BrandIcon'
+import { formatMoneyInput, parseMoneyInput } from '@/lib/money'
 
 function DealChip({ label, active, onPress }: { label: string; active?: boolean; onPress: () => void }) {
   const { colors, viridian, isDark } = useMentoringTheme()
@@ -67,7 +67,7 @@ export default function DealFormScreen() {
   const ctx = chatContext.data
   if (d && !loaded) {
     setLoaded(true)
-    setF({ taskScope: d.taskScope, expectedResult: d.expectedResult, price: String(d.agreedPrice), changeNote: '' })
+    setF({ taskScope: d.taskScope, expectedResult: d.expectedResult, price: String(Math.round(Number(d.agreedPrice) || 0)), changeNote: '' })
     setDeadline(d.deadline.slice(0, 19))
     setMode(d.workingMode)
     setParticipation(d.participationType)
@@ -76,7 +76,7 @@ export default function DealFormScreen() {
     setLoaded(true)
     const defaultScope = [ctx.requestTitle, ctx.requestDescription].filter(Boolean).join('\n\n')
     const defaultExpected = ctx.requestTitle ? `Hoàn thành yêu cầu "${ctx.requestTitle}" theo đúng mục tiêu đã thống nhất.` : ''
-    const defaultPrice = ctx.budgetMax != null ? String(ctx.budgetMax) : ctx.budgetMin != null ? String(ctx.budgetMin) : ''
+    const defaultPrice = ctx.budgetMax != null ? String(Math.round(Number(ctx.budgetMax))) : ctx.budgetMin != null ? String(Math.round(Number(ctx.budgetMin))) : ''
     const futureDeadline = ctx.expectedDeadline && new Date(ctx.expectedDeadline).getTime() > Date.now()
       ? ctx.expectedDeadline.slice(0, 19)
       : ''
@@ -225,9 +225,9 @@ export default function DealFormScreen() {
             </Txt>
             <Input
               label="Giá trị thỏa thuận (VND)"
-              placeholder="VD: 300000"
-              value={f.price}
-              onChangeText={(v) => set('price')(v.replace(/\D/g, ''))}
+              placeholder="VD: 300.000"
+              value={formatMoneyInput(f.price)}
+              onChangeText={(v) => set('price')(parseMoneyInput(v))}
               keyboardType="number-pad"
               error={errors.price}
             />

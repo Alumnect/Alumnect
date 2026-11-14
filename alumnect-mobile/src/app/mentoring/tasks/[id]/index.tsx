@@ -8,7 +8,6 @@ import { SectionCard, StatBox, StatRow } from '@/components/DetailBits'
 import { statusTone } from '@/constants/status'
 import {
   BarChart3,
-  CalendarDays,
   CalendarPlus,
   ChevronRight,
   Clock,
@@ -27,6 +26,7 @@ import {
 } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { PaymentSheet } from '@/components/PaymentSheet'
+import { WorkLogCard } from '@/components/WorkLogCard'
 import { TASK_STATUS_LABEL, TICKET_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
 import type { TaskCheckout } from '@/api/mentoringTask'
 import { formatVnd } from '@/api/mentoring'
@@ -562,77 +562,34 @@ export default function TaskDetailScreen() {
           />
         ) : null}
 
-        {d.workLogs.map((w) => (
-          <Card key={w.id} style={{ marginHorizontal: 16, marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <CalendarDays size={15} color={viridian} weight="bold" />
-              <Txt weight="800" style={{ flex: 1, color: colors.text }}>
-                {new Date(w.logDate).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}
-              </Txt>
-              <Tag
-                label={w.status === 'CONFIRMED' ? 'Đã xác nhận' : w.status === 'REJECTED' ? 'Cần làm rõ' : 'Chờ xác nhận'}
-                tone={w.status === 'CONFIRMED' ? 'success' : w.status === 'REJECTED' ? 'danger' : 'warning'}
-              />
-            </View>
-            <Txt style={{ marginTop: 8, lineHeight: 21, color: colors.text }}>{w.description}</Txt>
-            <View style={{ marginTop: 8, padding: 12, borderRadius: 12, backgroundColor: colors.surface, gap: 4 }}>
-              <Txt size={13}>
-                <Txt size={13} weight="700" style={{ color: viridian }}>Đã làm: </Txt>
-                {w.workCompleted}
-              </Txt>
-              <Txt size={13}>
-                <Txt size={13} weight="700" style={{ color: viridian }}>Kết quả: </Txt>
-                {w.result}
-              </Txt>
-              {w.nextAction ? (
-                <Txt size={13}>
-                  <Txt size={13} weight="700" style={{ color: viridian }}>Tiếp theo: </Txt>
-                  {w.nextAction}
-                </Txt>
-              ) : null}
-            </View>
-            {w.studentFeedback ? (
-              <Txt size={13} color={viridian} weight="600" style={{ marginTop: 6 }}>
-                {`Phản hồi: ${w.studentFeedback}`}
-              </Txt>
-            ) : null}
-            {w.canConfirm || w.canReject ? (
-              <View style={{ marginTop: 10 }}>
-                <Input
-                  value={feedback[w.id] ?? ''}
-                  onChangeText={(v) => setFeedback({ ...feedback, [w.id]: v })}
-                  placeholder="Nhập phản hồi (bắt buộc khi yêu cầu làm rõ)"
-                />
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  {w.canConfirm ? (
-                    <Button
-                      title="Xác nhận tiến độ"
-                      size="sm"
-                      textColor="#FFFFFF"
-                      style={{ flex: 1, backgroundColor: viridian, borderColor: viridian }}
-                      onPress={() => run(() => taskApi.confirmWorkLog(tid, w.id, feedback[w.id]), 'Đã xác nhận nhật ký.')}
-                    />
-                  ) : null}
-                  {w.canReject ? (
-                    <Button
-                      title="Yêu cầu làm rõ"
-                      size="sm"
-                      variant="outline"
-                      style={{ flex: 1 }}
-                      onPress={() =>
-                        feedback[w.id]?.trim()
-                          ? run(() => taskApi.rejectWorkLog(tid, w.id, feedback[w.id]), 'Đã gửi yêu cầu làm rõ.')
-                          : toast.error('Vui lòng nhập lý do cần làm rõ.')
-                      }
-                    />
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
-            {w.canEdit ? (
-              <Button title="Chỉnh sửa nhật ký" size="sm" variant="ghost" onPress={() => go('worklog', { workLogId: String(w.id) })} />
-            ) : null}
-          </Card>
+        {d.workLogs.map((w, i) => (
+          <WorkLogCard
+            key={w.id}
+            log={w}
+            number={d.workLogs.length - i}
+            isLatest={i === 0}
+            onEdit={() => go('worklog', { workLogId: String(w.id) })}
+            onConfirm={async (fb) => {
+              try {
+                await taskApi.confirmWorkLog(tid, w.id, fb)
+                toast.success('Đã xác nhận nghiệm thu nhật ký.')
+                refresh()
+              } catch (e) {
+                toast.error(errMsg(e))
+                throw e
+              }
+            }}
+            onReject={async (reason) => {
+              try {
+                await taskApi.rejectWorkLog(tid, w.id, reason)
+                toast.success('Đã gửi yêu cầu điều chỉnh.')
+                refresh()
+              } catch (e) {
+                toast.error(errMsg(e))
+                throw e
+              }
+            }}
+          />
         ))}
 
         {/* Activity Timeline */}

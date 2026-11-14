@@ -8,6 +8,17 @@ export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED' | 'CANCELL
 
 export const WORKING_MODE_LABEL: Record<string, string> = { ONLINE: 'Trực tuyến', OFFLINE: 'Trực tiếp', BOTH: 'Cả hai' }
 export const MENTORING_TYPE_LABEL: Record<string, string> = { INDIVIDUAL: '1-1', GROUP: 'Nhóm', BOTH: 'Cả hai' }
+/** Nhãn đầy đủ dùng cho màn hình chi tiết — đồng bộ với web. */
+export const WORKING_MODE_DETAIL_LABEL: Record<string, string> = {
+  ONLINE: 'Trực tuyến (Online)',
+  OFFLINE: 'Gặp mặt (Offline)',
+  BOTH: 'Linh hoạt (Online & Offline)',
+}
+export const MENTORING_TYPE_DETAIL_LABEL: Record<string, string> = {
+  INDIVIDUAL: 'Kèm 1-1 cá nhân',
+  GROUP: 'Theo nhóm nhỏ',
+  BOTH: 'Cả 1-1 & Theo nhóm',
+}
 export const formatVnd = (n?: number | null) => `${new Intl.NumberFormat('vi-VN').format(Math.round(n ?? 0))} ₫`
 
 export interface TermsStatus { currentVersion: string; accepted: boolean; acceptedAt?: string | null }

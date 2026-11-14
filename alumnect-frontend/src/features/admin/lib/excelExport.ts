@@ -54,9 +54,7 @@ export function exportFinancialExcel(
 
   const totalRev = overview.totalOwnedRevenue || 0
   const subRev = overview.subscriptionRevenue || 0
-  const disputeRev = overview.disputeFeeRevenue || 0
   const subPercent = totalRev > 0 ? ((subRev / totalRev) * 100).toFixed(1) + '%' : '0.0%'
-  const disputePercent = totalRev > 0 ? ((disputeRev / totalRev) * 100).toFixed(1) + '%' : '0.0%'
 
   // XML Header & Styles
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -281,13 +279,6 @@ export function exportFinancialExcel(
     <Cell ss:StyleID="TableCellCenter"><Data ss:Type="String">${subPercent}</Data></Cell>
     <Cell ss:StyleID="TableCell"><Data ss:Type="String">Thanh toán gói cước hồ sơ chuyên gia PayOS</Data></Cell>
    </Row>
-   <Row ss:Height="22">
-    <Cell ss:StyleID="TableCellCenter"><Data ss:Type="Number">2</Data></Cell>
-    <Cell ss:StyleID="TableCell"><Data ss:Type="String">Phí giải quyết tranh chấp &amp; Khiếu nại (Dispute Fees)</Data></Cell>
-    <Cell ss:StyleID="TableCellCurrency"><Data ss:Type="Number">${disputeRev}</Data></Cell>
-    <Cell ss:StyleID="TableCellCenter"><Data ss:Type="String">${disputePercent}</Data></Cell>
-    <Cell ss:StyleID="TableCell"><Data ss:Type="String">Phí nền tảng khấu trừ sau phán quyết ticket</Data></Cell>
-   </Row>
    <Row ss:Height="24">
     <Cell ss:StyleID="TableTotalLabel"><Data ss:Type="String"></Data></Cell>
     <Cell ss:StyleID="TableTotalLabel"><Data ss:Type="String">TỔNG CỘNG DOANH THU THỰC NHẬN NỀN TẢNG</Data></Cell>
@@ -343,7 +334,6 @@ export function exportFinancialExcel(
    <Row ss:Height="22">
     <Cell ss:StyleID="TableHead"><Data ss:Type="String">Tháng</Data></Cell>
     <Cell ss:StyleID="TableHead"><Data ss:Type="String">Gói Thành Viên Mentor (VNĐ)</Data></Cell>
-    <Cell ss:StyleID="TableHead"><Data ss:Type="String">Phí Tranh Chấp (VNĐ)</Data></Cell>
     <Cell ss:MergeAcross="1" ss:StyleID="TableHead"><Data ss:Type="String">Tổng Doanh Thu Tháng (VNĐ)</Data></Cell>
    </Row>
    ${overview.monthlyRevenue
@@ -352,7 +342,6 @@ export function exportFinancialExcel(
    <Row ss:Height="20">
     <Cell ss:StyleID="TableCellCenter"><Data ss:Type="String">${escapeXml(m.label || m.month)}</Data></Cell>
     <Cell ss:StyleID="${idx % 2 === 0 ? 'TableCellCurrency' : 'TableCellCurrency'}"><Data ss:Type="Number">${m.subscriptionRevenue || 0}</Data></Cell>
-    <Cell ss:StyleID="${idx % 2 === 0 ? 'TableCellCurrency' : 'TableCellCurrency'}"><Data ss:Type="Number">${m.disputeFeeRevenue || 0}</Data></Cell>
     <Cell ss:MergeAcross="1" ss:StyleID="TableCellCurrency"><Data ss:Type="Number">${m.totalRevenue || 0}</Data></Cell>
    </Row>`,
      )
@@ -428,7 +417,7 @@ export function exportFinancialExcel(
      .map((t, index) => {
        const isZebra = index % 2 === 1
        const cStyle = isZebra ? 'TableCellZebra' : 'TableCell'
-       const sourceLabel = t.sourceType === 'MENTOR_SUBSCRIPTION' ? 'Gói Hội Viên Mentor' : 'Phí Tranh Chấp'
+       const sourceLabel = 'Gói Hội Viên Mentor'
        return `
    <Row ss:Height="22">
     <Cell ss:StyleID="TableCellCenter"><Data ss:Type="Number">${index + 1}</Data></Cell>
@@ -471,7 +460,7 @@ export function exportRevenueCsv(transactions: AdminRevenueTransactionDto[]) {
     ...transactions.map((item) => [
       item.id,
       item.referenceCode,
-      item.sourceType === 'MENTOR_SUBSCRIPTION' ? 'Gói Mentor' : 'Phí tranh chấp',
+      'Gói Mentor',
       item.description,
       item.payerName,
       item.payerEmail,

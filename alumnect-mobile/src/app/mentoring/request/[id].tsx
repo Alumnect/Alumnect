@@ -21,7 +21,7 @@ import {
 } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { REQUEST_STATUS_LABEL, RESPONSE_STATUS_LABEL, requestApi, taskTypeLabel } from '@/api/mentoringFlow'
-import { WORKING_MODE_LABEL, formatVnd } from '@/api/mentoring'
+import { WORKING_MODE_DETAIL_LABEL, formatVnd } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
 
@@ -110,7 +110,7 @@ export default function RequestDetailScreen() {
           <InfoRow
             icon={<Laptop size={17} color={viridian} />}
             label="Hình thức làm việc"
-            value={WORKING_MODE_LABEL[r.workingMode] ?? '—'}
+            value={WORKING_MODE_DETAIL_LABEL[r.workingMode] ?? '—'}
             last={r.budgetMin == null && r.budgetMax == null && !r.expectedDeadline}
           />
           {r.budgetMin != null || r.budgetMax != null ? (
@@ -223,12 +223,12 @@ export default function RequestDetailScreen() {
               </View>
             ) : null}
 
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
               <Button
                 title="Xem hồ sơ"
                 size="sm"
                 variant="outline"
-                style={{ flex: 1 }}
+                style={styles.compactBtn}
                 onPress={() => router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(m.mentorProfileId) } })}
               />
               {m.canMessage && m.conversationId ? (
@@ -236,8 +236,8 @@ export default function RequestDetailScreen() {
                   title="Nhắn tin & Chốt deal"
                   size="sm"
                   textColor="#FFFFFF"
-                  icon={<MessageCircle size={15} color="#FFFFFF" weight="fill" />}
-                  style={{ flex: 1.6, backgroundColor: viridian, borderColor: viridian }}
+                  icon={<MessageCircle size={14} color="#FFFFFF" weight="fill" />}
+                  style={{ ...styles.compactBtn, backgroundColor: viridian, borderColor: viridian }}
                   onPress={() => router.push({ pathname: '/chat/[id]', params: { id: String(m.conversationId) } })}
                 />
               ) : null}
@@ -262,6 +262,12 @@ export default function RequestDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  compactBtn: {
+    minHeight: 36,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
   heroCard: {
     marginHorizontal: 16,
     marginTop: 14,
