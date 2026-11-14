@@ -4,7 +4,7 @@ import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { Building2, CheckCircle2, Sparkles, Target, Zap } from '@/components/icons'
-import { Avatar, Button, Card, Empty, Screen, Tag, Txt } from '@/components/ui'
+import { Avatar, Card, Empty, Screen, Tag, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { ListSkeleton } from '@/components/Skeleton'
 import { exploreApi } from '@/api/explore'
@@ -140,11 +140,6 @@ export default function CareerCompareScreen() {
               </View>
             </View>
           ) : null}
-
-          <Txt muted size={11} style={{ textAlign: 'center', marginTop: 16 }}>
-            {d.source === 'GEMINI' ? 'Phân tích bởi Gemini AI' : 'Phân tích từ dữ liệu hồ sơ (AI tạm thời không phản hồi)'}
-          </Txt>
-          <Button title="Phân tích lại" variant="ghost" onPress={() => { void q.refetch() }} loading={q.isRefetching} style={{ marginTop: 4 }} />
         </ScrollView>
       )}
     </Screen>

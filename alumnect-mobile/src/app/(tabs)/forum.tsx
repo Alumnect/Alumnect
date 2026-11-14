@@ -31,8 +31,8 @@ import { radius, shadow, useTheme } from '@/theme'
 type SortKey = 'recent' | 'votes' | 'answers'
 const SORTS: [SortKey, string][] = [
   ['recent', 'Mới nhất'],
-  ['votes', 'Nổi bật'],
-  ['answers', 'Nhiều trả lời'],
+  ['votes', 'Nhiều bình chọn'],
+  ['answers', 'Nhiều câu trả lời'],
 ]
 
 const cardFrame = { marginHorizontal: 12, marginBottom: 10, borderRadius: 18, borderWidth: StyleSheet.hairlineWidth }

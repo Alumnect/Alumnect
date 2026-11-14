@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { NavLink, useLocation } from 'react-router-dom'
-import { ChevronDown, Menu, Sparkles, X } from 'lucide-react'
+import { ChevronDown, Menu, X } from 'lucide-react'
+import { GraduationCap } from '@/components/icons'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -196,7 +197,9 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
   return (
     <div className="flex min-h-full flex-col">
       <div className="mb-3 flex items-center gap-2.5 px-2 pt-1">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-sm"><Sparkles className="h-4 w-4" /></span>
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-[#F27024] to-[#D45105] text-white shadow-xs ring-1 ring-inset ring-white/20">
+          <GraduationCap size={18} weight="fill" />
+        </span>
         <div className="min-w-0"><p className="text-sm font-bold text-text">{t('mentoring.sidebarBrand')}</p></div>
       </div>
 

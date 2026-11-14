@@ -32,9 +32,11 @@ import {
   MessageCircle,
   Bookmark,
   Flag,
+  Play,
 } from 'lucide-react'
 import { TRANSITION } from '@/lib/motion'
 import { Avatar, FadeSwitch, toast, ImageViewerModal } from '@/components/ui'
+import { isVideoUrl } from '@/components/ui/ImageCarousel'
 import { Button } from '@/components/ui/Button'
 import { UpcomingEventsWidget, CancelEventModal, useCancelEvent, EventRsvpButton } from '@/features/event'
 
@@ -104,6 +106,51 @@ function Composer({ viewer, onOpen }: { viewer: AuthUser; onOpen: (type?: PostTy
           </button>
         ))}
       </div>
+    </div>
+  )
+}
+
+function FeedMediaItem({
+  url,
+  alt,
+  className,
+  onClick,
+}: {
+  url: string
+  alt: string
+  className?: string
+  onClick?: (e: React.MouseEvent) => void
+}) {
+  const isVid = isVideoUrl(url)
+  return (
+    <div
+      className={cn('relative cursor-pointer overflow-hidden bg-black/5', className)}
+      onClick={onClick}
+    >
+      {isVid ? (
+        <>
+          <video
+            src={url}
+            muted
+            playsInline
+            preload="metadata"
+            className="h-full w-full object-cover transition-opacity hover:opacity-95"
+          />
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur-sm">
+              <Play size={18} className="ml-0.5 fill-current" />
+            </div>
+          </div>
+        </>
+      ) : (
+        <img
+          src={url}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover transition-opacity hover:opacity-95"
+        />
+      )}
     </div>
   )
 }
@@ -424,7 +471,7 @@ export function PostCard({
         </div>
       )}
 
-      {/* --- Phần 4: Ảnh đính kèm (Lưới ảnh thông minh kiểu Facebook/Cộng đồng hiện đại) --- */}
+      {/* --- Phần 4: Ảnh / Video đính kèm --- */}
       {(() => {
         const imgs = post.images && post.images.length > 0
           ? post.images
@@ -434,40 +481,20 @@ export function PostCard({
           <div className="px-4 pb-1 pt-3 sm:px-5">
             <div className="overflow-hidden rounded-2xl border border-border">
               {imgs.length === 1 && (
-                <img
-                  src={imgs[0]}
-                  alt={t('feed.postImage', 'Ảnh bài viết')}
-                  loading="lazy"
-                  decoding="async"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setPreviewImage(imgs[0])
-                  }}
-                  className="max-h-[460px] w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
-                />
-              )}
-
-              {imgs.length === 2 && (
-                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
-                  {imgs.map((url, i) => (
-                    <img
-                      key={i}
-                      src={url}
-                      alt={t('feed.postImage', 'Ảnh bài viết')}
-                      loading="lazy"
-                      decoding="async"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setPreviewImage(url)
-                      }}
-                      className="h-64 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                isVideoUrl(imgs[0]) ? (
+                  <div
+                    className="relative max-h-[500px] w-full bg-black"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <video
+                      src={imgs[0]}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="max-h-[500px] w-full object-contain"
                     />
-                  ))}
-                </div>
-              )}
-
-              {imgs.length === 3 && (
-                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
+                  </div>
+                ) : (
                   <img
                     src={imgs[0]}
                     alt={t('feed.postImage', 'Ảnh bài viết')}
@@ -477,20 +504,49 @@ export function PostCard({
                       e.stopPropagation()
                       setPreviewImage(imgs[0])
                     }}
-                    className="col-span-2 h-64 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                    className="max-h-[460px] w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
                   />
-                  {imgs.slice(1).map((url, i) => (
-                    <img
+                )
+              )}
+
+              {imgs.length === 2 && (
+                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
+                  {imgs.map((url, i) => (
+                    <FeedMediaItem
                       key={i}
-                      src={url}
+                      url={url}
                       alt={t('feed.postImage', 'Ảnh bài viết')}
-                      loading="lazy"
-                      decoding="async"
+                      className="h-64 w-full"
                       onClick={(e) => {
                         e.stopPropagation()
                         setPreviewImage(url)
                       }}
-                      className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
+                    />
+                  ))}
+                </div>
+              )}
+
+              {imgs.length === 3 && (
+                <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
+                  <FeedMediaItem
+                    url={imgs[0]}
+                    alt={t('feed.postImage', 'Ảnh bài viết')}
+                    className="col-span-2 h-64 w-full"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPreviewImage(imgs[0])
+                    }}
+                  />
+                  {imgs.slice(1).map((url, i) => (
+                    <FeedMediaItem
+                      key={i}
+                      url={url}
+                      alt={t('feed.postImage', 'Ảnh bài viết')}
+                      className="h-44 w-full"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPreviewImage(url)
+                      }}
                     />
                   ))}
                 </div>
@@ -499,17 +555,15 @@ export function PostCard({
               {imgs.length >= 4 && (
                 <div className="grid grid-cols-2 gap-0.5 bg-surface-3">
                   {imgs.slice(0, 3).map((url, i) => (
-                    <img
+                    <FeedMediaItem
                       key={i}
-                      src={url}
+                      url={url}
                       alt={t('feed.postImage', 'Ảnh bài viết')}
-                      loading="lazy"
-                      decoding="async"
+                      className="h-44 w-full"
                       onClick={(e) => {
                         e.stopPropagation()
                         setPreviewImage(url)
                       }}
-                      className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-95"
                     />
                   ))}
                   <div
@@ -519,15 +573,13 @@ export function PostCard({
                       setPreviewImage(imgs[3])
                     }}
                   >
-                    <img
-                      src={imgs[3]}
+                    <FeedMediaItem
+                      url={imgs[3]}
                       alt={t('feed.postImage', 'Ảnh bài viết')}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover transition-opacity hover:opacity-95"
+                      className="h-full w-full"
                     />
                     {imgs.length > 4 && (
-                      <div className="absolute inset-0 grid place-items-center bg-black/50 text-xl font-black text-white">
+                      <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/50 text-xl font-black text-white">
                         +{imgs.length - 3}
                       </div>
                     )}

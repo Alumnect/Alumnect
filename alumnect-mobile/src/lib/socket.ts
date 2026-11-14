@@ -8,6 +8,8 @@ import type { ApiResponse } from './http'
 import { toast, errMsg } from './toast'
 import { requestApi } from '@/api/mentoringFlow'
 import { notificationApi } from '@/api/notifications'
+import { syncAnswerVoteInCache, syncQuestionVoteInCache } from '@/api/forum'
+import { syncPostLikeInCache } from '@/api/feed'
 
 const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? 'ws://10.0.2.2:8080/ws'
 
@@ -133,6 +135,55 @@ export function connectSocket() {
       topicSubs.clear()
       client!.subscribe('/user/queue/messages', onChatMessage)
       client!.subscribe('/user/queue/notifications', onNotification)
+      client!.subscribe('/topic/forum/votes', (m) => {
+        try {
+          const ev = JSON.parse(m.body) as {
+            targetType?: 'QUESTION' | 'ANSWER'
+            targetId?: number | string
+            questionId?: number | string
+            voteCount?: number
+            voterId?: number | string
+            voted?: boolean
+          }
+          if (typeof ev.voteCount !== 'number' || ev.targetId == null) return
+          const myId = useAuthStore.getState().user?.id
+          const isMe = myId != null && ev.voterId != null && String(myId) === String(ev.voterId)
+          if (ev.targetType === 'QUESTION') {
+            syncQuestionVoteInCache(String(ev.targetId), {
+              votes: ev.voteCount,
+              ...(isMe && typeof ev.voted === 'boolean' ? { voted: ev.voted } : {}),
+            })
+          } else if (ev.targetType === 'ANSWER' && ev.questionId != null) {
+            syncAnswerVoteInCache(String(ev.questionId), String(ev.targetId), {
+              votes: ev.voteCount,
+              ...(isMe && typeof ev.voted === 'boolean' ? { voted: ev.voted } : {}),
+            })
+          }
+        } catch {
+          /* bỏ qua */
+        }
+      })
+      client!.subscribe('/topic/feed', (m) => {
+        try {
+          const ev = JSON.parse(m.body) as {
+            type?: string
+            postId?: number | string
+            likeCount?: number
+            userId?: number | string
+            liked?: boolean
+          }
+          if (ev.type === 'POST_LIKE' && ev.postId != null && typeof ev.likeCount === 'number') {
+            const myId = useAuthStore.getState().user?.id
+            const isMe = myId != null && ev.userId != null && String(myId) === String(ev.userId)
+            syncPostLikeInCache(String(ev.postId), {
+              likes: ev.likeCount,
+              ...(isMe && typeof ev.liked === 'boolean' ? { liked: ev.liked } : {}),
+            })
+          }
+        } catch {
+          /* bỏ qua */
+        }
+      })
       topicListeners.forEach((_s, dest) => attach(dest))
     },
     onStompError: (f) => {

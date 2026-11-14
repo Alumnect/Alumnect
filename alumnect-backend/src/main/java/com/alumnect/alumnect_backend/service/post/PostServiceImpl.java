@@ -49,8 +49,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
 import com.alumnect.alumnect_backend.common.util.VietnameseStringUtils;
 import com.alumnect.alumnect_backend.dao.user.FollowRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -114,6 +116,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private ContentModerationService contentModerationService;
+
+    @Autowired(required = false)
+    private SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -698,6 +703,7 @@ public class PostServiceImpl implements PostService {
             postRepository.incrementLikeCount(postId);
             post.setLikeCount(post.getLikeCount() + 1);
             notificationService.sendLikeNotification(user, post);
+            broadcastPostLike(postId, post.getLikeCount(), user.getId(), true);
         }
         return LikeResponse.builder().liked(true).likeCount(post.getLikeCount()).build();
     }
@@ -712,8 +718,25 @@ public class PostServiceImpl implements PostService {
             postRepository.decrementLikeCount(postId);
             post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
             notificationService.handleUnlikeNotification(user, post);
+            broadcastPostLike(postId, post.getLikeCount(), user.getId(), false);
         }
         return LikeResponse.builder().liked(false).likeCount(post.getLikeCount()).build();
+    }
+
+    private void broadcastPostLike(Long postId, int likeCount, Long userId, boolean liked) {
+        if (messagingTemplate != null) {
+            try {
+                messagingTemplate.convertAndSend(WebSocketDestinations.TOPIC_COMMUNITY_FEED, (Object) Map.of(
+                        "type", "POST_LIKE",
+                        "postId", postId,
+                        "likeCount", likeCount,
+                        "userId", userId,
+                        "liked", liked
+                ));
+            } catch (Exception e) {
+                log.warn("Không thể phát sóng WebSocket thích bài viết id={}: {}", postId, e.getMessage());
+            }
+        }
     }
 
     private User resolveMemberOrThrow(String email, String forbiddenMessage) {

@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.service.forum;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.common.constant.WebSocketDestinations;
 import com.alumnect.alumnect_backend.common.enums.QuestionStatus;
 import com.alumnect.alumnect_backend.common.enums.VoteTargetType;
 import com.alumnect.alumnect_backend.dao.forum.ForumTopicRepository;
@@ -34,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,6 +82,9 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Autowired
     private ContentModerationService contentModerationService;
+
+    @Autowired(required = false)
+    private SimpMessagingTemplate messagingTemplate;
 
     /** Độ dài tối đa cho phép của từ khóa tìm kiếm (UC44 - Search questions), khớp độ dài tối đa của title. */
     private static final int KEYWORD_MAX_LENGTH = 250;
@@ -360,6 +365,7 @@ public class QuestionServiceImpl implements QuestionService {
             questionRepository.incrementVoteCount(questionId);
             newVoteCount = newVoteCount + 1;
             log.info("Bình chọn câu hỏi: id={}, người bình chọn={}", questionId, email);
+            broadcastQuestionVote(questionId, newVoteCount, user.getId(), true);
         }
         return VoteResponse.builder().voted(true).voteCount(newVoteCount).build();
     }
@@ -384,8 +390,26 @@ public class QuestionServiceImpl implements QuestionService {
             questionRepository.decrementVoteCount(questionId);
             newVoteCount = Math.max(0, newVoteCount - 1);
             log.info("Bỏ bình chọn câu hỏi: id={}, người bỏ bình chọn={}", questionId, email);
+            broadcastQuestionVote(questionId, newVoteCount, user.getId(), false);
         }
         return VoteResponse.builder().voted(false).voteCount(newVoteCount).build();
+    }
+
+    private void broadcastQuestionVote(Long questionId, int voteCount, Long voterId, boolean voted) {
+        if (messagingTemplate != null) {
+            try {
+                messagingTemplate.convertAndSend(WebSocketDestinations.TOPIC_FORUM_VOTES, (Object) Map.of(
+                        "targetType", "QUESTION",
+                        "targetId", questionId,
+                        "questionId", questionId,
+                        "voteCount", voteCount,
+                        "voterId", voterId,
+                        "voted", voted
+                ));
+            } catch (Exception e) {
+                log.warn("Không thể phát sóng WebSocket bình chọn câu hỏi id={}: {}", questionId, e.getMessage());
+            }
+        }
     }
 
     /**

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Animated, Pressable } from 'react-native'
 import * as Haptics from 'expo-haptics'
 import { useMutation } from '@tanstack/react-query'
@@ -18,6 +18,10 @@ export function VoteButton({ voted, votes, onVote, onUnvote, compact, pill }: { 
   const reduced = useReducedMotion()
   const [state, setState] = useState({ voted, votes })
   const [bump] = useState(() => new Animated.Value(1))
+
+  useEffect(() => {
+    setState({ voted, votes })
+  }, [voted, votes])
   const m = useMutation({
     mutationFn: (next: boolean) => (next ? onVote() : onUnvote()),
     onSuccess: (_d, next) => {

@@ -45,6 +45,9 @@ public final class WebSocketDestinations {
     /** Kênh phát sóng cập nhật bảng tin cộng đồng real-time */
     public static final String TOPIC_COMMUNITY_FEED = "/topic/feed";
 
+    /** Kênh phát sóng cập nhật bình chọn (vote) câu hỏi & câu trả lời diễn đàn real-time */
+    public static final String TOPIC_FORUM_VOTES = "/topic/forum/votes";
+
     /** Kênh cập nhật trạng thái hoạt động người dùng */
     public static final String TOPIC_ONLINE_STATUS = "/topic/online-users";
 

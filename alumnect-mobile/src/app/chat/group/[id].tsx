@@ -149,6 +149,16 @@ export default function GroupChatInfoScreen() {
             <Txt muted size={13} style={{ marginTop: 2 }}>
               {isCommunity ? `Nhóm chat của hội nhóm${conv?.communityGroupName ? ` · ${conv.communityGroupName}` : ''}` : `${list.length} thành viên`}
             </Txt>
+            {isCommunity && conv?.communityGroupId != null ? (
+              <Button
+                title={`Đến trang hội nhóm${conv.communityGroupName ? `: ${conv.communityGroupName}` : ''}`}
+                size="sm"
+                variant="secondary"
+                icon={<Users size={15} color={t.primary} />}
+                onPress={() => router.push({ pathname: '/groups/[id]', params: { id: String(conv.communityGroupId) } })}
+                style={{ marginTop: 10 }}
+              />
+            ) : null}
             {uploading ? <Txt muted size={12} style={{ marginTop: 4 }}>Đang tải ảnh lên...</Txt> : null}
           </View>
 

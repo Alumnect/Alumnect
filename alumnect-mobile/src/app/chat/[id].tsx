@@ -17,5 +17,5 @@ export default function ChatScreen() {
   const conv = q.data?.data.find((c) => c.id === convId) ?? mconv ?? rq.data?.data.find((c) => c.id === convId)
   if (!conv && (q.isLoading || mq.isLoading || rq.isLoading)) return <Screen><Header title="Tin nhắn" /><Loading /></Screen>
   if (!conv) return <Screen><Header title="Tin nhắn" /><Empty title="Không thể mở cuộc trò chuyện" text="Cuộc trò chuyện không còn trong hộp thư hoặc bạn không có quyền truy cập." error={q.error ?? mq.error ?? rq.error} action="Thử lại" onAction={() => { void q.refetch(); void mq.refetch(); void rq.refetch() }} /></Screen>
-  return <ChatWindow key={convId} conversationId={convId} recipientId={conv.recipientId} avatarUrl={convAvatar(conv)} title={convName(conv)} isGroupChat={isGroup(conv)} isMentoring={mentoring === '1' || !!mconv || conv.type === 'MENTORING'} />
+  return <ChatWindow key={convId} conversationId={convId} recipientId={conv.recipientId} avatarUrl={convAvatar(conv)} title={convName(conv)} isGroupChat={isGroup(conv)} communityGroupId={conv.communityGroupId} communityGroupName={conv.communityGroupName} isMentoring={mentoring === '1' || !!mconv || conv.type === 'MENTORING'} />
 }
