@@ -1,4 +1,6 @@
+import type { InfiniteData } from '@tanstack/react-query'
 import http from '@/lib/http'
+import { queryClient } from '@/lib/queryClient'
 
 export interface Question {
   id: string
@@ -96,6 +98,72 @@ const mapDetail = (r: Raw): QuestionDetail => ({
   votes: r.votes ?? 0, voted: !!r.voted, answers: r.answers, time: r.time, createdAt: r.createdAt,
 })
 
+export function syncQuestionVoteInCache(questionId: string, patch: { votes: number; voted?: boolean }) {
+  const qid = String(questionId)
+  queryClient.setQueriesData<InfiniteData<{ items: Question[]; page: number; hasMore: boolean; total: number }>>(
+    { queryKey: ['forum'] },
+    (old) => {
+      if (!old?.pages) return old
+      return {
+        ...old,
+        pages: old.pages.map((p) => ({
+          ...p,
+          items: p.items.map((q) =>
+            String(q.id) === qid
+              ? { ...q, votes: patch.votes, ...(patch.voted !== undefined ? { voted: patch.voted } : {}) }
+              : q,
+          ),
+        })),
+      }
+    },
+  )
+  queryClient.setQueryData<QuestionDetail>(['question', qid], (old) => {
+    if (!old) return old
+    return {
+      ...old,
+      votes: patch.votes,
+      ...(patch.voted !== undefined ? { voted: patch.voted } : {}),
+    }
+  })
+}
+
+export function syncAnswerVoteInCache(
+  questionId: string,
+  answerId: string,
+  patch: { votes: number; voted?: boolean },
+) {
+  const qid = String(questionId)
+  const aid = String(answerId)
+  queryClient.setQueryData<InfiniteData<{ items: Answer[]; page: number; hasMore: boolean; total: number }>>(
+    ['question', qid, 'answers'],
+    (old) => {
+      if (!old?.pages) return old
+      return {
+        ...old,
+        pages: old.pages.map((p) => ({
+          ...p,
+          items: p.items.map((a) => {
+            if (String(a.id) === aid) {
+              return { ...a, votes: patch.votes, ...(patch.voted !== undefined ? { voted: patch.voted } : {}) }
+            }
+            if (a.replies?.length) {
+              return {
+                ...a,
+                replies: a.replies.map((r) =>
+                  String(r.id) === aid
+                    ? { ...r, votes: patch.votes, ...(patch.voted !== undefined ? { voted: patch.voted } : {}) }
+                    : r,
+                ),
+              }
+            }
+            return a
+          }),
+        })),
+      }
+    },
+  )
+}
+
 export const forumApi = {
   /** Lọc nhiều thể loại / nhiều ngành: backend nhận danh sách id phân tách bằng dấu phẩy (giống Web). */
   list: async (o: { page?: number; sort?: string; keyword?: string; topicId?: number; topicIds?: number[]; majorIds?: number[] }) => {
@@ -114,13 +182,41 @@ export const forumApi = {
   create: async (i: QuestionInput) => mapDetail(unwrap(await http.post('/questions', i))),
   update: async (id: string, i: QuestionInput) => mapDetail(unwrap(await http.put(`/questions/${id}`, i))),
   remove: (id: string) => http.delete(`/questions/${id}`),
-  vote: (id: string) => http.post(`/questions/${id}/vote`),
-  unvote: (id: string) => http.delete(`/questions/${id}/vote`),
+  vote: async (id: string) => {
+    const res = await http.post(`/questions/${id}/vote`)
+    const d = unwrap(res)
+    if (d && typeof d.voteCount === 'number') {
+      syncQuestionVoteInCache(id, { votes: d.voteCount, voted: !!d.voted })
+    }
+    return res
+  },
+  unvote: async (id: string) => {
+    const res = await http.delete(`/questions/${id}/vote`)
+    const d = unwrap(res)
+    if (d && typeof d.voteCount === 'number') {
+      syncQuestionVoteInCache(id, { votes: d.voteCount, voted: !!d.voted })
+    }
+    return res
+  },
   answers: async (qid: string, p = 0) => page(await http.get(`/questions/${qid}/answers`, { params: { page: p, size: PAGE_SIZE } }), mapAnswer, p),
   answer: async (qid: string, body: string, parentId?: string) =>
     mapAnswer(unwrap(await http.post(`/questions/${qid}/answers`, { body, ...(parentId ? { parentId: Number(parentId) } : {}) }))),
   updateAnswer: async (qid: string, aid: string, body: string) => mapAnswer(unwrap(await http.put(`/questions/${qid}/answers/${aid}`, { body }))),
   deleteAnswer: (qid: string, aid: string) => http.delete(`/questions/${qid}/answers/${aid}`),
-  voteAnswer: (qid: string, aid: string) => http.post(`/questions/${qid}/answers/${aid}/vote`),
-  unvoteAnswer: (qid: string, aid: string) => http.delete(`/questions/${qid}/answers/${aid}/vote`),
+  voteAnswer: async (qid: string, aid: string) => {
+    const res = await http.post(`/questions/${qid}/answers/${aid}/vote`)
+    const d = unwrap(res)
+    if (d && typeof d.voteCount === 'number') {
+      syncAnswerVoteInCache(qid, aid, { votes: d.voteCount, voted: !!d.voted })
+    }
+    return res
+  },
+  unvoteAnswer: async (qid: string, aid: string) => {
+    const res = await http.delete(`/questions/${qid}/answers/${aid}/vote`)
+    const d = unwrap(res)
+    if (d && typeof d.voteCount === 'number') {
+      syncAnswerVoteInCache(qid, aid, { votes: d.voteCount, voted: !!d.voted })
+    }
+    return res
+  },
 }

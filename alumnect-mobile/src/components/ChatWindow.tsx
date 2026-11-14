@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Keyboard, Linking, Platform, Pressable, View } from 'react-native'
+import { WebView as RNWebView } from 'react-native-webview'
 import * as DocumentPicker from 'expo-document-picker'
 import * as Haptics from 'expo-haptics'
 import { TextInput } from '@/components/AppText'
@@ -8,7 +9,7 @@ import type { FlashListRef } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, ChevronLeft, ChevronRight, FileText, Handshake, History, ImageIcon, Info, ListChecks, MoreHorizontal, Paperclip, Send, X } from '@/components/icons'
+import { ChevronDown, ChevronLeft, ChevronRight, FileText, Handshake, History, ImageIcon, Info, ListChecks, MoreHorizontal, Paperclip, Send, Users, X } from '@/components/icons'
 import { Avatar, Button, Empty, Loading, Screen, Txt } from './ui'
 import { MotionPressable } from './Motion'
 import { SheetModal } from './SheetModal'
@@ -22,6 +23,45 @@ import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { DEAL_STATUS_LABEL } from '@/api/mentoringFlow'
 import { pickImage, uploadFile, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
+
+const WebView = RNWebView as unknown as React.ComponentType<any>
+
+function isVideoAttachment(a: { mediaType?: string; url?: string; fileName?: string }) {
+  if (a.mediaType === 'VIDEO') return true
+  const raw = `${a.url ?? ''} ${a.fileName ?? ''}`.split('?')[0]
+  return /\.(mp4|mov|webm|mkv|avi|m4v)$/i.test(raw)
+}
+
+function ChatVideoPlayer({ url, style }: { url: string; style?: object }) {
+  if (Platform.OS === 'web') {
+    return React.createElement('video', {
+      src: url,
+      controls: true,
+      playsInline: true,
+      preload: 'metadata',
+      style: { width: 220, height: 280, borderRadius: 14, backgroundColor: '#000', objectFit: 'contain', ...(style as object) },
+    })
+  }
+  const safeUrl = url.replace(/"/g, '&quot;')
+  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}video{width:100%;height:100%;object-fit:contain;background:#000}</style></head><body><video src="${safeUrl}#t=0.1" controls playsinline webkit-playsinline preload="metadata"></video></body></html>`
+  return (
+    <View style={[{ width: 220, height: 280, borderRadius: 14, overflow: 'hidden', backgroundColor: '#000' }, style]}>
+      <WebView
+        source={{ html, baseUrl: 'https://alumnect.local' }}
+        originWhitelist={['*']}
+        allowsFullscreenVideo
+        allowsInlineMediaPlayback
+        mediaPlaybackRequiresUserAction={false}
+        scrollEnabled={false}
+        bounces={false}
+        javaScriptEnabled
+        domStorageEnabled
+        mixedContentMode="always"
+        style={{ flex: 1, backgroundColor: '#000' }}
+      />
+    </View>
+  )
+}
 
 async function openAttachment(url: string) {
   try {
@@ -45,18 +85,33 @@ const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupCha
     )
   }
   const shared = item.isDeleted ? null : parseSharedLink(item.content)
+  const textBody = shared ? shared.note : item.content
   const cardOnly = !!shared && !shared.note && !(item.attachments?.length)
+  const hasOnlyMedia =
+    !item.isDeleted &&
+    !textBody &&
+    !shared &&
+    !!item.attachments?.length &&
+    item.attachments.every((a) => a.mediaType === 'IMAGE' || isVideoAttachment(a))
+  const unboxed = cardOnly || hasOnlyMedia
+  const hasVideo = !item.isDeleted && !!item.attachments?.some((a) => isVideoAttachment(a))
+  const BubbleContainer: React.ElementType = hasVideo ? View : Pressable
+  const containerProps = hasVideo
+    ? {}
+    : {
+        onPress: onToggleTime,
+        accessibilityRole: 'button' as const,
+        accessibilityLabel: `Tin nhắn của ${item.senderName}, ${new Date(item.createdAt).toLocaleString('vi-VN')}`,
+        accessibilityHint: 'Chạm để hiện hoặc ẩn thời gian',
+      }
   return (
     <View style={{ flexDirection: mine ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8, marginTop: 2, marginBottom: grouped ? 1 : 8 }}>
       {!mine ? <View style={{ width: 28 }}>{!grouped ? <Avatar uri={item.senderAvatar} name={item.senderName} size={28} /> : null}</View> : null}
-      <Pressable
-        onPress={onToggleTime}
-        accessibilityRole="button"
-        accessibilityLabel={`Tin nhắn của ${item.senderName}, ${new Date(item.createdAt).toLocaleString('vi-VN')}`}
-        accessibilityHint="Chạm để hiện hoặc ẩn thời gian"
+      <BubbleContainer
+        {...containerProps}
         style={
-          cardOnly
-            ? { maxWidth: '88%' }
+          unboxed
+            ? { maxWidth: '88%', alignItems: mine ? 'flex-end' : 'flex-start' }
             : {
                 maxWidth: '80%',
                 backgroundColor: mine ? t.primary : (t.isDark ? '#262626' : '#F1F3F5'),
@@ -74,28 +129,30 @@ const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupCha
         ) : (
           <>
             {item.attachments?.map((a) =>
-              a.mediaType === 'IMAGE' ? (
-                <Image key={a.id} source={{ uri: a.url }} style={{ width: 180, maxWidth: '100%', aspectRatio: 1, borderRadius: 10, marginBottom: item.content ? 6 : 0 }} contentFit="cover" />
+              isVideoAttachment(a) ? (
+                <ChatVideoPlayer key={a.id} url={a.url} style={{ marginBottom: textBody ? 6 : 0 }} />
+              ) : a.mediaType === 'IMAGE' ? (
+                <Image key={a.id} source={{ uri: a.url }} style={{ width: 200, maxWidth: '100%', aspectRatio: 1, borderRadius: 14, marginBottom: textBody ? 6 : 0 }} contentFit="cover" />
               ) : (
-                <Pressable key={a.id} accessibilityRole="link" accessibilityLabel={`${a.mediaType === 'VIDEO' ? 'Xem video' : 'Mở tệp'} ${a.fileName ?? ''}`} onPress={() => void openAttachment(a.url)} style={{ minHeight: 44, justifyContent: 'center' }}>
-                  <Txt size={13} color={mine ? '#FFFFFF' : t.primary}>{a.mediaType === 'VIDEO' ? 'Xem video · ' : ''}{a.fileName ?? 'Tệp đính kèm'}</Txt>
+                <Pressable key={a.id} accessibilityRole="link" accessibilityLabel={`Mở tệp ${a.fileName ?? ''}`} onPress={() => void openAttachment(a.url)} style={{ minHeight: 44, justifyContent: 'center' }}>
+                  <Txt size={13} color={mine ? '#FFFFFF' : t.primary}>{a.fileName ?? 'Tệp đính kèm'}</Txt>
                 </Pressable>
               ),
             )}
-            {(shared ? shared.note : item.content) ? (
-              <Txt size={14.5} color={mine ? '#FFFFFF' : t.text} style={{ lineHeight: 20 }}>
-                {shared ? shared.note : item.content}
+            {textBody ? (
+              <Txt onPress={hasVideo ? onToggleTime : undefined} size={14.5} color={mine ? '#FFFFFF' : t.text} style={{ lineHeight: 20 }}>
+                {textBody}
               </Txt>
             ) : null}
             {shared ? <View style={{ marginTop: shared.note ? 8 : 0 }}><SharedCard link={shared} mine={mine} /></View> : null}
           </>
         )}
         {showTime ? (
-          <Txt size={11} color={mine && !cardOnly ? 'rgba(255,255,255,0.75)' : t.textMuted} style={{ marginTop: 4, alignSelf: mine ? 'flex-end' : 'flex-start' }}>
+          <Txt size={11} color={mine && !unboxed ? 'rgba(255,255,255,0.75)' : t.textMuted} style={{ marginTop: 4, alignSelf: mine ? 'flex-end' : 'flex-start' }}>
             {new Date(item.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
           </Txt>
         ) : null}
-      </Pressable>
+      </BubbleContainer>
     </View>
   )
 })
@@ -162,6 +219,8 @@ export function ChatWindow({
   recipientId,
   title,
   isGroupChat,
+  communityGroupId,
+  communityGroupName,
   isMentoring,
   avatarUrl,
 }: {
@@ -169,6 +228,8 @@ export function ChatWindow({
   recipientId?: number | null
   title: string
   isGroupChat?: boolean
+  communityGroupId?: number | null
+  communityGroupName?: string | null
   isMentoring?: boolean
   avatarUrl?: string | null
 }) {
@@ -314,7 +375,9 @@ export function ChatWindow({
                 ? `Yêu cầu #${context.data.requestId ?? ''} · ${context.data.requestTitle}`
                 : 'Mentoring'
               : isGroupChat
-                ? 'Trò chuyện nhóm'
+                ? communityGroupId != null
+                  ? 'Nhóm cộng đồng'
+                  : 'Trò chuyện nhóm'
                 : recipientId
                   ? 'Xem trang cá nhân'
                   : 'Tin nhắn'}
@@ -344,9 +407,36 @@ export function ChatWindow({
             </Txt>
           </MotionPressable>
         ) : ((!isMentoring && isGroupChat) || context.data?.groupId) && convId != null ? (
-          <Pressable accessibilityRole="button" accessibilityLabel="Thông tin nhóm" onPress={() => context.data?.groupId ? router.push({ pathname: '/mentoring/groups/[id]', params: { id: String(context.data.groupId) } }) : !isMentoring && router.push({ pathname: '/chat/group/[id]', params: { id: String(convId) } })} hitSlop={10}>
-            <Info size={22} color={t.text} />
-          </Pressable>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {!isMentoring && isGroupChat && communityGroupId != null ? (
+              <MotionPressable
+                onPress={() => router.push({ pathname: '/groups/[id]', params: { id: String(communityGroupId) } })}
+                accessibilityRole="button"
+                accessibilityLabel={`Đến trang hội nhóm: ${communityGroupName || title}`}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: t.isDark ? '#4A382B' : '#FEC7A8',
+                  backgroundColor: t.isDark ? '#2D2621' : '#FFF4EC',
+                  maxWidth: 132,
+                }}
+              >
+                <Users size={13} color={t.primary} weight="bold" />
+                <Txt size={11.5} weight="700" color={t.primary} numberOfLines={1} style={{ flexShrink: 1 }}>
+                  {communityGroupName || 'Hội nhóm'}
+                </Txt>
+                <ChevronRight size={12} color={t.primary} />
+              </MotionPressable>
+            ) : null}
+            <Pressable accessibilityRole="button" accessibilityLabel="Thông tin nhóm" onPress={() => context.data?.groupId ? router.push({ pathname: '/mentoring/groups/[id]', params: { id: String(context.data.groupId) } }) : !isMentoring && router.push({ pathname: '/chat/group/[id]', params: { id: String(convId) } })} hitSlop={10}>
+              <Info size={22} color={t.text} />
+            </Pressable>
+          </View>
         ) : undefined}
       </View>
       {isMentoring && convId != null ? (

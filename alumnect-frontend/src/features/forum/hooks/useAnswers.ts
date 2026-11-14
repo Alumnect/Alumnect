@@ -1,7 +1,8 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { InfiniteData } from '@tanstack/react-query'
 import { forumApi } from '../api/forumApi'
 import type { VoteResult } from '../api/forumApi'
-import type { CreateAnswerInput, UpdateAnswerInput } from '../model/answer'
+import type { AnswerPageResult, CreateAnswerInput, UpdateAnswerInput } from '../model/answer'
 
 /**
  * Hook lấy danh sách câu trả lời của một câu hỏi (UC41 - Answer a question) theo phân trang vô hạn.
@@ -34,6 +35,7 @@ export function useCreateAnswer(questionId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['answers', questionId] })
       queryClient.invalidateQueries({ queryKey: ['question', questionId] })
+      queryClient.invalidateQueries({ queryKey: ['questions'] })
     },
   })
 }
@@ -56,23 +58,66 @@ export function useUpdateAnswer(questionId: string) {
 }
 
 /**
+ * Đồng bộ số bình chọn (votes) và trạng thái đã bình chọn (voted) của một câu trả lời / reply
+ * vào cache `['answers', questionId]`.
+ */
+export function syncAnswerVoteInCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  questionId: string,
+  answerId: string,
+  patch: { voted?: boolean; votes: number },
+) {
+  const qid = String(questionId)
+  const aid = String(answerId)
+
+  queryClient.setQueryData<InfiniteData<AnswerPageResult>>(['answers', qid], (old) => {
+    if (!old?.pages) return old
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        items: page.items.map((item) => {
+          const updatedReplies = item.replies?.map((r) =>
+            String(r.id) === aid
+              ? { ...r, votes: patch.votes, ...(patch.voted !== undefined ? { voted: patch.voted } : {}) }
+              : r,
+          ) ?? []
+          if (String(item.id) === aid) {
+            return {
+              ...item,
+              votes: patch.votes,
+              ...(patch.voted !== undefined ? { voted: patch.voted } : {}),
+              replies: updatedReplies,
+            }
+          }
+          return { ...item, replies: updatedReplies }
+        }),
+      })),
+    }
+  })
+}
+
+/**
  * Hook bình chọn/bỏ bình chọn một câu trả lời hoặc reply (UC43 - Vote on an answer).
  *
  * Bọc `useMutation` của TanStack Query: chọn endpoint theo cờ `vote`
- * (POST /vote khi bình chọn, DELETE /vote khi bỏ bình chọn) và trả về trạng thái
- * bình chọn mới do backend xác nhận ({ voted, voteCount }).
- *
- * UI dùng cập nhật lạc quan (optimistic) cục bộ ở component — cùng pattern với
- * `useToggleVoteQuestion` (UC42) / `useToggleLike` (UC17): đổi trạng thái ngay khi
- * bấm, đồng bộ theo `onSuccess`, hoàn tác (rollback) ở `onError`.
+ * (POST /vote khi bình chọn, DELETE /vote khi bỏ bình chọn) và đồng bộ thẳng
+ * vào cache `['answers', questionId]`.
  *
  * @param questionId ID câu hỏi chứa câu trả lời (cố định cho cả phiên bấm vote trong 1 trang chi tiết)
  * @return Đối tượng mutation (mutate, isPending, ...) nhận `{ answerId, vote }`
  */
 export function useToggleVoteAnswer(questionId: string) {
+  const queryClient = useQueryClient()
   return useMutation<VoteResult, Error, { answerId: string; vote: boolean }>({
     mutationFn: ({ answerId, vote }) =>
       vote ? forumApi.voteAnswer({ questionId, answerId }) : forumApi.unvoteAnswer({ questionId, answerId }),
+    onSuccess: (data, { answerId }) => {
+      syncAnswerVoteInCache(queryClient, questionId, answerId, {
+        voted: data.voted,
+        votes: data.voteCount,
+      })
+    },
   })
 }
 
@@ -90,6 +135,7 @@ export function useDeleteAnswer(questionId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['answers', questionId] })
       queryClient.invalidateQueries({ queryKey: ['question', questionId] })
+      queryClient.invalidateQueries({ queryKey: ['questions'] })
     },
   })
 }

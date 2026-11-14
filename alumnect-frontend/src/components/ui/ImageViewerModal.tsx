@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
+import { isVideoUrl } from './ImageCarousel'
 
 interface ImageViewerModalProps {
   isOpen: boolean
@@ -45,6 +46,7 @@ export function ImageViewerModal({
   counter,
 }: ImageViewerModalProps) {
   const { t } = useTranslation()
+  const isVideo = isVideoUrl(src)
   const resolvedAlt = alt || t('common.image')
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
@@ -266,21 +268,31 @@ export function ImageViewerModal({
             exit={{ scale: 0.92, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
-            onDoubleClick={handleDoubleClick}
-            onMouseDown={handleMouseDown}
+            onDoubleClick={!isVideo ? handleDoubleClick : undefined}
+            onMouseDown={!isVideo ? handleMouseDown : undefined}
             style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotation}deg)`,
-              cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in',
+              transform: !isVideo ? `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotation}deg)` : undefined,
+              cursor: !isVideo ? (zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in') : 'default',
               transition: isDragging ? 'none' : 'transform 0.15s ease-out',
             }}
             className="inline-block max-h-[86vh] max-w-[90vw] select-none"
           >
-            <img
-              src={src}
-              alt={resolvedAlt}
-              draggable={false}
-              className="max-h-[84vh] max-w-[88vw] rounded-xl object-contain shadow-2xl ring-1 ring-white/10"
-            />
+            {isVideo ? (
+              <video
+                src={src}
+                controls
+                autoPlay
+                playsInline
+                className="max-h-[84vh] max-w-[88vw] rounded-xl object-contain shadow-2xl ring-1 ring-white/10 bg-black"
+              />
+            ) : (
+              <img
+                src={src}
+                alt={resolvedAlt}
+                draggable={false}
+                className="max-h-[84vh] max-w-[88vw] rounded-xl object-contain shadow-2xl ring-1 ring-white/10"
+              />
+            )}
           </motion.div>
         </div>
 
@@ -313,55 +325,59 @@ export function ImageViewerModal({
           className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 rounded-full bg-[#242526]/95 border border-white/15 px-3 py-1.5 shadow-2xl backdrop-blur-md"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Thu nhỏ */}
-          <button
-            type="button"
-            onClick={handleZoomOut}
-            disabled={zoom <= 0.6}
-            title={`${t('common.zoomOut')} (-)`}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent"
-          >
-            <ZoomOut size={17} />
-          </button>
+          {!isVideo && (
+            <>
+              {/* Thu nhỏ */}
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                disabled={zoom <= 0.6}
+                title={`${t('common.zoomOut')} (-)`}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ZoomOut size={17} />
+              </button>
 
-          {/* Hiển thị tỉ lệ Zoom & Reset */}
-          <button
-            type="button"
-            onClick={handleReset}
-            title={t('common.resetZoom')}
-            className="min-w-[50px] px-1.5 py-1 text-center text-xs font-semibold text-white/90 hover:bg-white/10 rounded-lg transition-colors"
-          >
-            {Math.round(zoom * 100)}%
-          </button>
+              {/* Hiển thị tỉ lệ Zoom & Reset */}
+              <button
+                type="button"
+                onClick={handleReset}
+                title={t('common.resetZoom')}
+                className="min-w-[50px] px-1.5 py-1 text-center text-xs font-semibold text-white/90 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
 
-          {/* Phóng to */}
-          <button
-            type="button"
-            onClick={handleZoomIn}
-            disabled={zoom >= 3.5}
-            title={`${t('common.zoomIn')} (+)`}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent"
-          >
-            <ZoomIn size={17} />
-          </button>
+              {/* Phóng to */}
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                disabled={zoom >= 3.5}
+                title={`${t('common.zoomIn')} (+)`}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ZoomIn size={17} />
+              </button>
 
-          <div className="mx-1 h-4 w-px bg-white/20" />
+              <div className="mx-1 h-4 w-px bg-white/20" />
 
-          {/* Xoay ảnh 90 độ */}
-          <button
-            type="button"
-            onClick={handleRotate}
-            title={`${t('common.rotateImage')} (R)`}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
-          >
-            <RotateCw size={17} />
-          </button>
+              {/* Xoay ảnh 90 độ */}
+              <button
+                type="button"
+                onClick={handleRotate}
+                title={`${t('common.rotateImage')} (R)`}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+              >
+                <RotateCw size={17} />
+              </button>
+            </>
+          )}
 
           {/* Tải xuống */}
           <button
             type="button"
             onClick={handleDownload}
-            title={t('common.downloadImage')}
+            title={isVideo ? t('common.downloadVideo', 'Tải video') : t('common.downloadImage')}
             className="flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
           >
             <Download size={17} />
