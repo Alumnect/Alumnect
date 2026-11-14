@@ -13,20 +13,7 @@ import { toast, errMsg } from '@/lib/toast'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { Briefcase, Check, FileText, Landmark, UserRound } from '@/components/icons'
 import { withAlumniOnly } from '@/components/AlumniOnly'
-
-interface Bank {
-  bin: string
-  name: string
-}
-
-async function fetchBanks(): Promise<Bank[]> {
-  const res = await fetch('https://api.vietqr.io/v2/banks')
-  const body = (await res.json()) as { code: string; data: { bin: string; shortName: string; transferSupported: number }[] }
-  return body.data
-    .filter((b) => b.transferSupported === 1 && /^\d{6}$/.test(b.bin))
-    .map((b) => ({ bin: b.bin, name: b.shortName }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
-}
+import { BankSelectField } from '@/components/BankSelectField'
 
 function RegChip({ label, active, onPress }: { label: string; active?: boolean; onPress: () => void }) {
   const { colors, viridian, isDark } = useMentoringTheme()
@@ -56,7 +43,6 @@ function RegisterMentorScreen() {
   const qc = useQueryClient()
   const reg = useQuery({ queryKey: ['mentor-registration'], queryFn: mentoringApi.registration })
   const industries = useQuery({ queryKey: ['mentoring-industries'], queryFn: mentoringApi.industries })
-  const banks = useQuery({ queryKey: ['vietqr-banks'], queryFn: fetchBanks, staleTime: Infinity })
 
   const [f, setF] = useState({ phone: '', campus: '', graduationYear: '', bio: '', topics: '', accountNumber: '', accountHolder: '' })
   const [mode, setMode] = useState<WorkingMode | null>(null)
@@ -64,8 +50,7 @@ function RegisterMentorScreen() {
   const [fieldIds, setFieldIds] = useState<number[]>([])
   const [cv, setCv] = useState('')
   const [cvName, setCvName] = useState('')
-  const [bank, setBank] = useState<Bank | null>(null)
-  const [bankQ, setBankQ] = useState('')
+  const [bank, setBank] = useState<{ bin: string; name: string } | null>(null)
   const [uploading, setUploading] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }))
@@ -169,7 +154,6 @@ function RegisterMentorScreen() {
         <Empty text="Không tải được hồ sơ mentor." error={reg.error} onRetry={() => { void reg.refetch() }} />
       </Screen>
     )
-  const shownBanks = (banks.data ?? []).filter((b) => b.name.toLowerCase().includes(bankQ.toLowerCase())).slice(0, 8)
 
   return (
     <Screen bg={colors.bg}>
@@ -277,15 +261,11 @@ function RegisterMentorScreen() {
                 Tài khoản ngân hàng nhận thù lao
               </Txt>
             </View>
-            <Txt size={12} weight="700" style={{ color: colors.textSecondary, marginBottom: 6 }}>
-              Ngân hàng đã chọn: <Txt size={12} weight="800" style={{ color: viridian }}>{bank?.name ?? 'Chưa chọn'}</Txt>
-            </Txt>
-            <Input value={bankQ} onChangeText={setBankQ} placeholder="Tìm nhanh ngân hàng..." />
-            <View style={[styles.chipWrap, { marginBottom: 14 }]}>
-              {shownBanks.map((b) => (
-                <RegChip key={b.bin} label={b.name} active={bank?.bin === b.bin} onPress={() => setBank(b)} />
-              ))}
-            </View>
+            <BankSelectField
+              value={bank?.bin}
+              savedName={bank?.name}
+              onChange={(b) => setBank({ bin: b.bin, name: b.name })}
+            />
             <Input
               label="Số tài khoản ngân hàng"
               value={f.accountNumber}
@@ -295,7 +275,7 @@ function RegisterMentorScreen() {
             <Input
               label="Tên chủ tài khoản (Không dấu, IN HOA)"
               value={f.accountHolder}
-              onChangeText={set('accountHolder')}
+              onChangeText={(v) => set('accountHolder')(v.toUpperCase())}
               autoCapitalize="characters"
             />
           </View>

@@ -364,7 +364,8 @@ export function Avatar({ uri, name, size = 40, ring }: { uri?: string | null; na
     </View>
   )
   if (!ring) return inner
-  return <View style={{ padding: 2, borderRadius: size, borderWidth: 2, borderColor: t.primary }}>{inner}</View>
+  // Kích thước cố định + alignSelf để vòng viền luôn tròn, không bị kéo dài khi nằm trong hàng flex (stretch)
+  return <View style={{ width: size + 8, height: size + 8, padding: 2, borderRadius: (size + 8) / 2, borderWidth: 2, borderColor: t.primary, flexShrink: 0 }}>{inner}</View>
 }
 
 export function Card({ children, style, onPress, flat, accessibilityRole = 'button' }: { children: React.ReactNode; style?: ViewStyle; onPress?: () => void; flat?: boolean; accessibilityRole?: 'button' | 'link' }) {

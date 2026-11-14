@@ -24,8 +24,10 @@ import {
   ImagePlus,
   Link2,
   MapPin,
+  Play,
   Sparkles,
   Users,
+  VideoCamera,
   X,
 } from '@/components/icons'
 import { BrandIcon, type BrandIconName } from '@/components/BrandIcon'
@@ -38,10 +40,11 @@ import { Header } from './Header'
 import { feedApi } from '@/api/feed'
 import type { CreatePostInput, Post, PostType } from '@/api/feed'
 import type { GeocodedPlace } from '@/lib/places'
-import { pickImage, uploadImage } from '@/lib/upload'
+import { isVideoUrl, pickImage, pickVideo, uploadImage, uploadVideo } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 import { useAuthStore } from '@/store/authStore'
 import { radius, useTheme } from '@/theme'
+import { formatMoneyInput, parseMoneyInput } from '@/lib/money'
 
 type TypeConfig = {
   type: PostType
@@ -134,7 +137,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
         const d = JSON.parse(raw) as { content?: string; type?: PostType }
         if (d.content) setContent(d.content)
         if (d.type) setType(d.type)
-      } catch {}
+      } catch { }
     })
   }, [existing])
 
@@ -145,7 +148,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       if (content || type !== 'normal') {
         AsyncStorage.setItem(DRAFT_KEY, JSON.stringify({ content, type }))
           .then(() => setDraftSaved(true))
-          .catch(() => {})
+          .catch(() => { })
       }
     }, 600)
     return () => clearTimeout(id)
@@ -155,9 +158,9 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
     mutationFn: (input: CreatePostInput) =>
       existing ? feedApi.editPost(existing.id, input) : feedApi.createPost(input),
     onSuccess: () => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { })
       toast.success(existing ? 'Cập nhật bài viết thành công!' : 'Đăng bài viết thành công!')
-      if (!existing) AsyncStorage.removeItem(DRAFT_KEY).catch(() => {})
+      if (!existing) AsyncStorage.removeItem(DRAFT_KEY).catch(() => { })
       qc.invalidateQueries({ queryKey: ['feed'] })
       qc.invalidateQueries({ queryKey: ['user-posts'] })
       if (existing) qc.invalidateQueries({ queryKey: ['post', existing.id] })
@@ -165,12 +168,16 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       router.back()
     },
     onError: (e) => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {})
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
       toast.error(errMsg(e))
     },
   })
 
   const addImages = async () => {
+    if (media.length >= 10) {
+      toast.info('Tối đa 10 hình ảnh hoặc video cho một bài viết.')
+      return
+    }
     const picked = await pickImage(true)
     if (!picked.length) return
     setUploading(true)
@@ -180,7 +187,39 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
         picked.slice(0, remaining).map((p) => uploadImage(p, 'posts'))
       )
       setMedia((m) => [...m, ...urls])
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { })
+    } catch (e) {
+      toast.error(errMsg(e))
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const addVideos = async () => {
+    if (media.length >= 10) {
+      toast.info('Tối đa 10 hình ảnh hoặc video cho một bài viết.')
+      return
+    }
+    try {
+      const picked = await pickVideo(true)
+      if (!picked.length) return
+      setUploading(true)
+      const remaining = 10 - media.length
+      const toUpload = picked.slice(0, remaining)
+      const urls: string[] = []
+      for (const item of toUpload) {
+        if (item.size && item.size > 100 * 1024 * 1024) {
+          toast.error(`Video "${item.name}" vượt quá giới hạn 100MB.`)
+          continue
+        }
+        const url = await uploadVideo(item, 'posts')
+        urls.push(url)
+      }
+      if (urls.length > 0) {
+        setMedia((m) => [...m, ...urls])
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { })
+        toast.success(`Đã đính kèm ${urls.length} video.`)
+      }
     } catch (e) {
       toast.error(errMsg(e))
     } finally {
@@ -189,12 +228,12 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
   }
 
   const removeImage = (url: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => { })
     setMedia((m) => m.filter((x) => x !== url))
   }
 
   const handleSelectType = (newType: PostType) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { })
     setType(newType)
     setDraftSaved(false)
   }
@@ -207,7 +246,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       e.content = `Nội dung bài viết không được vượt quá ${MAX} ký tự`
     }
     if (type === 'normal' && !text && media.length === 0) {
-      e.content = 'Nội dung bài viết hoặc hình ảnh không được để trống'
+      e.content = 'Nội dung bài viết hoặc hình ảnh/video không được để trống'
     }
     if (type === 'recruitment') {
       if (!job.title.trim()) e.jobTitle = 'Bắt buộc nhập chức danh'
@@ -238,7 +277,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
 
     setErrors(e)
     if (Object.keys(e).length > 0) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {})
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => { })
       return
     }
 
@@ -255,10 +294,15 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       }
     }
     if (type === 'event') {
+      const toUtcIso = (val?: string) => {
+        if (!val || !val.trim()) return undefined
+        const d = new Date(val)
+        return isNaN(d.getTime()) ? val.trim() : d.toISOString()
+      }
       input.event = {
         title: ev.title.trim(),
-        startTime: ev.startTime,
-        endTime: ev.endTime || undefined,
+        startTime: toUtcIso(ev.startTime) ?? ev.startTime,
+        endTime: toUtcIso(ev.endTime),
         location: ev.location.trim() || undefined,
         capacity: ev.capacity ? Number(ev.capacity) : undefined,
       }
@@ -434,7 +478,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
             </View>
           </View>
 
-          {/* 5. Bộ sưu tập hình ảnh đính kèm (Instagram carousel preview) */}
+          {/* 5. Bộ sưu tập hình ảnh & video đính kèm (Instagram carousel preview) */}
           <View style={{ backgroundColor: theme.card, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border }}>
             {media.length > 0 ? (
               <ScrollView
@@ -442,136 +486,239 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
               >
-                {media.map((uri, idx) => (
-                  <View
-                    key={uri}
-                    style={{
-                      width: 100,
-                      height: 100,
-                      borderRadius: radius.md,
-                      overflow: 'hidden',
-                      position: 'relative',
-                      borderWidth: StyleSheet.hairlineWidth,
-                      borderColor: theme.border,
-                    }}
-                  >
-                    <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                    <Pressable
-                      onPress={() => removeImage(uri)}
-                      style={({ pressed }) => ({
-                        position: 'absolute',
-                        top: 5,
-                        right: 5,
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
-                        backgroundColor: 'rgba(0,0,0,0.65)',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: pressed ? 0.7 : 1,
-                      })}
-                      accessibilityLabel="Xóa ảnh"
-                    >
-                      <X size={14} color="#fff" />
-                    </Pressable>
+                {media.map((uri, idx) => {
+                  const isVid = isVideoUrl(uri)
+                  return (
                     <View
+                      key={uri}
                       style={{
-                        position: 'absolute',
-                        bottom: 4,
-                        left: 4,
-                        backgroundColor: 'rgba(0,0,0,0.5)',
-                        paddingHorizontal: 6,
-                        paddingVertical: 1,
-                        borderRadius: radius.sm,
+                        width: 100,
+                        height: 100,
+                        borderRadius: radius.md,
+                        overflow: 'hidden',
+                        position: 'relative',
+                        borderWidth: StyleSheet.hairlineWidth,
+                        borderColor: theme.border,
+                        backgroundColor: isVid ? '#0f172a' : theme.surface,
                       }}
                     >
-                      <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>
-                        {idx + 1}
-                      </Text>
+                      {isVid ? (
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                          <View
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 18,
+                              backgroundColor: 'rgba(255,255,255,0.25)',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Play size={18} color="#fff" weight="fill" style={{ marginLeft: 2 }} />
+                          </View>
+                          <View
+                            style={{
+                              position: 'absolute',
+                              bottom: 4,
+                              right: 4,
+                              backgroundColor: 'rgba(0,0,0,0.75)',
+                              paddingHorizontal: 5,
+                              paddingVertical: 1,
+                              borderRadius: 4,
+                            }}
+                          >
+                            <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>
+                              VIDEO
+                            </Text>
+                          </View>
+                        </View>
+                      ) : (
+                        <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                      )}
+                      <Pressable
+                        onPress={() => removeImage(uri)}
+                        style={({ pressed }) => ({
+                          position: 'absolute',
+                          top: 5,
+                          right: 5,
+                          width: 24,
+                          height: 24,
+                          borderRadius: 12,
+                          backgroundColor: 'rgba(0,0,0,0.65)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: pressed ? 0.7 : 1,
+                        })}
+                        accessibilityLabel="Xóa phương tiện"
+                      >
+                        <X size={14} color="#fff" />
+                      </Pressable>
+                      <View
+                        style={{
+                          position: 'absolute',
+                          bottom: 4,
+                          left: 4,
+                          backgroundColor: 'rgba(0,0,0,0.6)',
+                          paddingHorizontal: 6,
+                          paddingVertical: 1,
+                          borderRadius: radius.sm,
+                        }}
+                      >
+                        <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>
+                          {idx + 1}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  )
+                })}
 
                 {media.length < 10 && (
-                  <Pressable
-                    onPress={addImages}
-                    disabled={uploading}
-                    style={({ pressed }) => ({
-                      width: 100,
-                      height: 100,
-                      borderRadius: radius.md,
-                      borderWidth: 1.5,
-                      borderStyle: 'dashed',
-                      borderColor: theme.controlBorder,
-                      backgroundColor: theme.inputBg,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                      opacity: pressed ? 0.7 : 1,
-                    })}
-                  >
-                    {uploading ? (
-                      <ActivityIndicator size="small" color={theme.primary} />
-                    ) : (
-                      <>
-                        <ImagePlus size={24} color={theme.textMuted} />
-                        <Text style={{ fontSize: 11, fontWeight: '600', color: theme.textMuted }}>
-                          Thêm ảnh
-                        </Text>
-                        <Text style={{ fontSize: 10, color: theme.textSubtle }}>
-                          {media.length}/10
-                        </Text>
-                      </>
-                    )}
-                  </Pressable>
+                  <>
+                    <Pressable
+                      onPress={addImages}
+                      disabled={uploading}
+                      style={({ pressed }) => ({
+                        width: 86,
+                        height: 100,
+                        borderRadius: radius.md,
+                        borderWidth: 1.5,
+                        borderStyle: 'dashed',
+                        borderColor: theme.controlBorder,
+                        backgroundColor: theme.inputBg,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 3,
+                        opacity: pressed ? 0.7 : 1,
+                      })}
+                    >
+                      <ImagePlus size={20} color={theme.textMuted} />
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: theme.textMuted }}>
+                        + Ảnh
+                      </Text>
+                      <Text style={{ fontSize: 10, color: theme.textSubtle }}>
+                        {media.length}/10
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={addVideos}
+                      disabled={uploading}
+                      style={({ pressed }) => ({
+                        width: 86,
+                        height: 100,
+                        borderRadius: radius.md,
+                        borderWidth: 1.5,
+                        borderStyle: 'dashed',
+                        borderColor: theme.controlBorder,
+                        backgroundColor: theme.inputBg,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 3,
+                        opacity: pressed ? 0.7 : 1,
+                      })}
+                    >
+                      {uploading ? (
+                        <ActivityIndicator size="small" color={theme.primary} />
+                      ) : (
+                        <>
+                          <VideoCamera size={20} color={theme.textMuted} />
+                          <Text style={{ fontSize: 11, fontWeight: '600', color: theme.textMuted }}>
+                            + Video
+                          </Text>
+                          <Text style={{ fontSize: 10, color: theme.textSubtle }}>
+                            {media.length}/10
+                          </Text>
+                        </>
+                      )}
+                    </Pressable>
+                  </>
                 )}
               </ScrollView>
             ) : (
-              <Pressable
-                onPress={addImages}
-                disabled={uploading}
-                style={({ pressed }) => ({
+              <View
+                style={{
                   marginHorizontal: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  paddingVertical: 12,
+                  paddingVertical: 14,
                   paddingHorizontal: 14,
                   borderRadius: radius.md,
                   backgroundColor: theme.surface,
                   borderWidth: 1,
                   borderColor: theme.border,
-                  opacity: pressed ? 0.7 : 1,
-                })}
+                }}
               >
-                <View
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    backgroundColor: theme.inputBg,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ImagePlus size={20} color={theme.primary} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: theme.inputBg,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ImagePlus size={20} color={theme.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text }}>
+                      Đính kèm hình ảnh & video
+                    </Text>
+                    <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
+                      Tối đa 10 ảnh hoặc video chất lượng cao
+                    </Text>
+                  </View>
+                  {uploading && <ActivityIndicator size="small" color={theme.primary} />}
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: theme.text }}>
-                    Đính kèm hình ảnh
-                  </Text>
-                  <Text style={{ fontSize: 12, color: theme.textMuted }}>
-                    Tối đa 10 hình ảnh chất lượng cao
-                  </Text>
+
+                {/* 2 nút Thêm ảnh và Thêm video */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <Pressable
+                    onPress={addImages}
+                    disabled={uploading}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      paddingVertical: 9,
+                      borderRadius: radius.md,
+                      backgroundColor: theme.card,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <ImagePlus size={16} color={theme.primary} />
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: theme.text }}>
+                      Thêm ảnh
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={addVideos}
+                    disabled={uploading}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      paddingVertical: 9,
+                      borderRadius: radius.md,
+                      backgroundColor: theme.card,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <VideoCamera size={16} color={theme.primary} />
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: theme.text }}>
+                      Thêm video
+                    </Text>
+                  </Pressable>
                 </View>
-                {uploading ? (
-                  <ActivityIndicator size="small" color={theme.primary} />
-                ) : (
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: theme.primary }}>
-                    Chọn ảnh
-                  </Text>
-                )}
-              </Pressable>
+              </View>
             )}
           </View>
 
@@ -647,8 +794,8 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
                 <View style={{ flex: 1 }}>
                   <Input
                     label="Lương tối thiểu (VND)"
-                    value={job.salaryMin}
-                    onChangeText={(v) => setJob({ ...job, salaryMin: v.replace(/\D/g, '') })}
+                    value={formatMoneyInput(job.salaryMin)}
+                    onChangeText={(v) => setJob({ ...job, salaryMin: parseMoneyInput(v) })}
                     keyboardType="number-pad"
                     placeholder="15000000"
                     error={errors.salaryMin}
@@ -657,8 +804,8 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
                 <View style={{ flex: 1 }}>
                   <Input
                     label="Lương tối đa (VND)"
-                    value={job.salaryMax}
-                    onChangeText={(v) => setJob({ ...job, salaryMax: v.replace(/\D/g, '') })}
+                    value={formatMoneyInput(job.salaryMax)}
+                    onChangeText={(v) => setJob({ ...job, salaryMax: parseMoneyInput(v) })}
                     keyboardType="number-pad"
                     placeholder="30000000"
                     error={errors.salaryMax}
@@ -889,25 +1036,53 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
           borderTopColor: theme.border,
         }}
       >
-        <Pressable
-          onPress={addImages}
-          disabled={uploading || media.length >= 10}
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-            paddingHorizontal: 14,
-            paddingVertical: 8,
-            borderRadius: radius.full,
-            backgroundColor: theme.inputBg,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <ImagePlus size={18} color={theme.text} />
-          <Text style={{ fontSize: 13, fontWeight: '600', color: theme.text }}>
-            {media.length > 0 ? `Ảnh (${media.length}/10)` : 'Thêm ảnh'}
-          </Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Pressable
+            onPress={addImages}
+            disabled={uploading || media.length >= 10}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: radius.full,
+              backgroundColor: theme.inputBg,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <ImagePlus size={16} color={theme.text} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: theme.text }}>
+              Thêm ảnh
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={addVideos}
+            disabled={uploading || media.length >= 10}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: radius.full,
+              backgroundColor: theme.inputBg,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <VideoCamera size={16} color={theme.text} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: theme.text }}>
+              Thêm video
+            </Text>
+          </Pressable>
+
+          {media.length > 0 && (
+            <Text style={{ fontSize: 11, color: theme.textMuted, fontWeight: '600' }}>
+              ({media.length}/10)
+            </Text>
+          )}
+        </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <BrandIcon name={currentConfig.icon} size={20} />
