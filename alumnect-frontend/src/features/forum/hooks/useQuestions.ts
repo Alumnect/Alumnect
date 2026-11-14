@@ -1,7 +1,8 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { InfiniteData } from '@tanstack/react-query'
 import { forumApi } from '../api/forumApi'
 import type { VoteResult } from '../api/forumApi'
-import type { CreateQuestionInput, SortOption, UpdateQuestionInput } from '../model/question'
+import type { CreateQuestionInput, QuestionDetail, QuestionPageResult, SortOption, UpdateQuestionInput } from '../model/question'
 
 /**
  * Hook lấy danh sách câu hỏi diễn đàn theo phân trang vô hạn (infinite scroll).
@@ -107,20 +108,60 @@ export function useDeleteQuestion() {
 }
 
 /**
+ * Đồng bộ số bình chọn (votes) và trạng thái đã bình chọn (voted) của một câu hỏi
+ * vào toàn bộ cache React Query (`['questions']`, `['question', id]`).
+ */
+export function syncQuestionVoteInCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  questionId: string,
+  patch: { voted?: boolean; votes: number },
+) {
+  const qid = String(questionId)
+
+  queryClient.setQueriesData<InfiniteData<QuestionPageResult>>(
+    { queryKey: ['questions'] },
+    (old) => {
+      if (!old?.pages) return old
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          items: page.items.map((item) =>
+            String(item.id) === qid
+              ? { ...item, votes: patch.votes, ...(patch.voted !== undefined ? { voted: patch.voted } : {}) }
+              : item,
+          ),
+        })),
+      }
+    },
+  )
+
+  queryClient.setQueryData<QuestionDetail>(['question', qid], (old) =>
+    old
+      ? { ...old, votes: patch.votes, ...(patch.voted !== undefined ? { voted: patch.voted } : {}) }
+      : old,
+  )
+}
+
+/**
  * Hook bình chọn/bỏ bình chọn một câu hỏi (UC42 - Vote on a question).
  *
  * Bọc `useMutation` của TanStack Query: chọn endpoint theo cờ `vote`
- * (POST /vote khi bình chọn, DELETE /vote khi bỏ bình chọn) và trả về trạng thái
- * bình chọn mới do backend xác nhận ({ voted, voteCount }).
- *
- * UI dùng cập nhật lạc quan (optimistic) cục bộ ở component — cùng pattern với
- * `useToggleLike` (UC17): đổi trạng thái ngay khi bấm, đồng bộ theo `onSuccess`,
- * hoàn tác (rollback) ở `onError`. Hook không tự invalidate cache danh sách/chi tiết.
+ * (POST /vote khi bình chọn, DELETE /vote khi bỏ bình chọn), đồng bộ thẳng
+ * vào cache `['questions']` và `['question', id]` để khi chuyển qua lại
+ * giữa Danh sách <-> Chi tiết câu hỏi không bao giờ bị mất trạng thái.
  *
  * @return Đối tượng mutation (mutate, isPending, ...) nhận `{ questionId, vote }`
  */
 export function useToggleVoteQuestion() {
+  const queryClient = useQueryClient()
   return useMutation<VoteResult, Error, { questionId: string; vote: boolean }>({
     mutationFn: ({ questionId, vote }) => (vote ? forumApi.voteQuestion(questionId) : forumApi.unvoteQuestion(questionId)),
+    onSuccess: (data, { questionId }) => {
+      syncQuestionVoteInCache(queryClient, questionId, {
+        voted: data.voted,
+        votes: data.voteCount,
+      })
+    },
   })
 }

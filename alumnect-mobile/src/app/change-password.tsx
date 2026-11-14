@@ -74,8 +74,7 @@ export default function ChangePasswordScreen() {
           <View style={{ width: 64, height: 64, borderRadius: 22, backgroundColor: t.isDark ? '#302540' : '#F0EAFB', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
             <Lock size={30} color={t.isDark ? '#C4A7FF' : '#7250A2'} />
           </View>
-          <Txt size={24} weight="700">An tâm kết nối.</Txt>
-          <Txt muted size={13} style={{ lineHeight: 21, marginTop: 6, marginBottom: 26 }}>Một mật khẩu riêng cho Alumnect giúp bảo vệ những kết nối của bạn.</Txt>
+          <Txt size={24} weight="700" style={{ marginBottom: 24 }}>An tâm kết nối.</Txt>
         </Enter>
         <Input label="Mật khẩu hiện tại" placeholder="Nhập mật khẩu đang dùng" value={f.oldPassword} onChangeText={set('oldPassword')} secureTextEntry autoCapitalize="none" autoCorrect={false} autoComplete="current-password" editable={!m.isPending} error={errors.oldPassword} />
         <Input label="Mật khẩu mới" placeholder="Tạo mật khẩu mới" value={f.newPassword} onChangeText={set('newPassword')} secureTextEntry autoCapitalize="none" autoCorrect={false} autoComplete="new-password" maxLength={100} editable={!m.isPending} error={errors.newPassword} />

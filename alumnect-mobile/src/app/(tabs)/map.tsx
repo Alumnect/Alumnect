@@ -163,7 +163,7 @@ export default function MapScreen() {
     <Screen>
       <View style={{ backgroundColor: t.card, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, gap: 12 }}>
         <BrandIcon name="world" size={42} />
-        <View style={{ flex: 1 }}><Txt size={21} weight="700">Bản đồ Alumni</Txt><Txt muted size={12}>Cùng một trường. Muôn nơi kết nối.</Txt></View>
+        <View style={{ flex: 1 }}><Txt size={21} weight="700">Bản đồ Cựu sinh viên</Txt><Txt muted size={12}>Cùng một trường. Muôn nơi kết nối.</Txt></View>
       </View>
       <View style={{ flex: 1 }}>
         <WebView
@@ -246,20 +246,60 @@ export default function MapScreen() {
                 <X size={16} color={t.textMuted} />
               </Pressable>
             </View>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Button title="Xem hồ sơ" variant="brand" size="sm" icon={<UserRound size={15} color={t.onPrimary} />} style={{ flex: 1 }} onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(sel.userId) } })} />
-              <Button title="Lộ trình sự nghiệp" size="sm" variant="outline" icon={<GraduationCap size={15} color={t.text} />} style={{ flex: 1 }} onPress={() => router.push({ pathname: '/career', params: { userId: String(sel.userId), name: sel.fullName } })} />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <MotionPressable
+                accessibilityRole="button"
+                accessibilityLabel="Xem hồ sơ"
+                onPress={() => router.push({ pathname: '/profile/[id]', params: { id: String(sel.userId) } })}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  height: 38,
+                  borderRadius: 11,
+                  backgroundColor: t.primary,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  paddingHorizontal: 10,
+                  opacity: pressed ? 0.85 : 1,
+                })}
+              >
+                <UserRound size={14} color={t.onPrimary} />
+                <Txt size={12.5} weight="700" color={t.onPrimary} numberOfLines={1}>Xem hồ sơ</Txt>
+              </MotionPressable>
+              <MotionPressable
+                accessibilityRole="button"
+                accessibilityLabel="Lộ trình sự nghiệp"
+                onPress={() => router.push({ pathname: '/career', params: { userId: String(sel.userId), name: sel.fullName } })}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  height: 38,
+                  borderRadius: 11,
+                  backgroundColor: t.card,
+                  borderWidth: 1,
+                  borderColor: t.controlBorder,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  paddingHorizontal: 10,
+                  opacity: pressed ? 0.85 : 1,
+                })}
+              >
+                <GraduationCap size={14} color={t.text} />
+                <Txt size={12.5} weight="700" color={t.text} numberOfLines={1}>Lộ trình sự nghiệp</Txt>
+              </MotionPressable>
             </View>
           </Enter>
         ) : (
           <>
             <View style={{ paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <View style={{ flex: 1 }}><Txt size={15} weight="700">Khám phá cộng đồng</Txt><Txt size={12} muted>{q.isLoading ? 'Đang tìm alumni...' : `${points.length} alumni · ${cityHubs.length} thành phố`}</Txt></View>
+              <View style={{ flex: 1 }}><Txt size={15} weight="700">Khám phá cộng đồng</Txt><Txt size={12} muted>{q.isLoading ? 'Đang tìm cựu sinh viên...' : `${points.length} cựu sinh viên · ${cityHubs.length} thành phố`}</Txt></View>
               <MotionPressable accessibilityRole="button" disabled={q.isLoading || q.isError} onPress={() => { setHub(null); setListTab('alumni'); setSheet('list') }} style={{ minHeight: 44, justifyContent: 'center' }}><Txt size={12} weight="600" color={t.primary}>Xem tất cả</Txt></MotionPressable>
             </View>
             <RNScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
-              {cityHubs.slice(0, 8).map((h, i) => <MotionPressable key={h.city} accessibilityRole="button" accessibilityLabel={`${h.city}, ${h.count} alumni`} onPress={() => { setHub(h.city); setListTab('alumni'); setSheet('list') }} style={{ width: 144, padding: 12, borderRadius: 17, backgroundColor: t.isDark ? t.surface : i % 2 ? '#F0EDF8' : '#FDF0E7', gap: 5 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}><MapPin size={16} color={i % 2 ? (t.isDark ? '#C8ADEB' : '#806291') : t.primary} /><Txt size={12} muted>{h.count} alumni</Txt></View>
+              {cityHubs.slice(0, 8).map((h, i) => <MotionPressable key={h.city} accessibilityRole="button" accessibilityLabel={`${h.city}, ${h.count} cựu sinh viên`} onPress={() => { setHub(h.city); setListTab('alumni'); setSheet('list') }} style={{ minWidth: 154, padding: 12, borderRadius: 17, backgroundColor: t.isDark ? t.surface : i % 2 ? '#F0EDF8' : '#FDF0E7', gap: 5 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}><MapPin size={16} color={i % 2 ? (t.isDark ? '#C8ADEB' : '#806291') : t.primary} /><Txt size={12} muted>{h.count} cựu sinh viên</Txt></View>
                 <Txt size={13} weight="600" numberOfLines={1}>{h.city.split(',')[0]}</Txt>
               </MotionPressable>)}
             </RNScrollView>
@@ -301,11 +341,11 @@ export default function MapScreen() {
         </View>
       </ActionSheet>
 
-      {/* Danh sách alumni + thành phố tập trung */}
-      <ActionSheet visible={sheet === 'list'} title={hub ? hub.split(',')[0] : 'Danh sách Alumni'} onClose={() => setSheet('none')}>
+      {/* Danh sách cựu sinh viên + thành phố tập trung */}
+      <ActionSheet visible={sheet === 'list'} title={hub ? hub.split(',')[0] : 'Danh sách Cựu sinh viên'} onClose={() => setSheet('none')}>
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {([['alumni', `Alumni · ${visiblePoints.length}`], ['hubs', 'Thành phố']] as const).map(([k, label]) => (
+            {([['alumni', `Cựu sinh viên · ${visiblePoints.length}`], ['hubs', 'Thành phố']] as const).map(([k, label]) => (
               <Pressable key={k} onPress={() => setListTab(k)} accessibilityRole="tab" accessibilityState={{ selected: listTab === k }} style={{ flex: 1, minHeight: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: listTab === k ? t.action : t.inputBg }}>
                 <Txt size={13} weight="700" color={listTab === k ? t.onAction : t.textMuted}>{label}</Txt>
               </Pressable>
@@ -328,7 +368,7 @@ export default function MapScreen() {
                   </View>
                 </Pressable>
               )
-            }) : <Txt muted style={{ textAlign: 'center', paddingVertical: 24 }}>Không tìm thấy alumni nào khớp với từ khóa.</Txt>
+            }) : <Txt muted style={{ textAlign: 'center', paddingVertical: 24 }}>Không tìm thấy cựu sinh viên nào khớp với từ khóa.</Txt>
           ) : (
             <View style={{ gap: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
