@@ -566,6 +566,12 @@ export function AdminBroadcastPage() {
                               <Archive size={12} />
                             </Button>
                           )}
+
+                          {/* Dòng không có nút phụ: chừa ô trống bằng kích thước nút để nút "Xem" thẳng hàng với các dòng khác */}
+                          {item.status !== 'SCHEDULED' &&
+                            item.status !== 'SENT' &&
+                            item.status !== 'ACTIVE' &&
+                            item.status !== 'EXPIRED' && <span aria-hidden="true" className="h-7 w-7 shrink-0" />}
                         </div>
                       </td>
                     </tr>
