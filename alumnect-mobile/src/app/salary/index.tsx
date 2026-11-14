@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Pressable, RefreshControl, View } from 'react-native'
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
@@ -12,7 +12,7 @@ import { FilterButton, FilterSheet, countActive, type FilterField, type FilterVa
 import { Header } from '@/components/Header'
 import { ListSkeleton } from '@/components/Skeleton'
 import { formatVnd, salaryApi } from '@/api/salary'
-import type { SalaryStatRow } from '@/api/salary'
+import type { SalaryContribution, SalaryStatRow } from '@/api/salary'
 import { useAuthStore } from '@/store/authStore'
 import { VN_CITIES } from '@/constants/filters'
 import {
@@ -188,6 +188,136 @@ function SalaryStatCard({ r, max }: { r: SalaryStatRow; max: number }) {
           <Txt size={12} weight="500" color={t.textMuted}>{`Từ ${p25} Tr`}</Txt>
           <Txt size={12} weight="500" color={t.textMuted}>{`Đến ${p75} Tr`}</Txt>
         </View>
+      </View>
+    </View>
+  )
+}
+
+function formatFeedTimeAgo(iso?: string) {
+  if (!iso) return ''
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000)
+  if (m < 1) return 'Vừa xong'
+  if (m < 60) return `${m} phút trước`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h} giờ trước`
+  const d = Math.floor(h / 24)
+  if (d < 30) return `${d} ngày trước`
+  const dt = new Date(iso)
+  return `${dt.getDate()}/${dt.getMonth() + 1}/${dt.getFullYear()}`
+}
+
+/** Thẻ một lượt đóng góp gần đây chuẩn hóa 100% màu sắc và bố cục theo Web AlumNect. */
+function SalaryFeedCard({ item }: { item: SalaryContribution }) {
+  const t = useTheme()
+  const style = getJobStyle(item.jobTitle, t)
+  const timeAgo = formatFeedTimeAgo(item.createdAt)
+
+  return (
+    <View
+      style={{
+        marginHorizontal: 16,
+        marginBottom: 12,
+        padding: 16,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: t.border,
+        backgroundColor: t.card,
+      }}
+    >
+      {/* Tiêu đề vị trí & Thời gian đăng */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+        <Txt weight="700" size={15} numberOfLines={1} style={{ flex: 1 }}>
+          {item.jobTitle}
+        </Txt>
+        {timeAgo ? (
+          <Txt size={12} color={t.textMuted} weight="500">
+            {timeAgo}
+          </Txt>
+        ) : null}
+      </View>
+
+      {/* Badges: Ngành nghề (đổi màu badge theo style Web) & Công ty */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 8 }}>
+        {item.industry ? (
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2.5,
+              borderRadius: 6,
+              backgroundColor: style.bg,
+              borderWidth: 1,
+              borderColor: style.border,
+            }}
+          >
+            <Txt size={11} weight="600" color={style.color}>
+              {item.industry}
+            </Txt>
+          </View>
+        ) : null}
+        {item.company ? (
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2.5,
+              borderRadius: 6,
+              backgroundColor: t.isDark ? '#26242E' : '#F3F4F6',
+              borderWidth: 1,
+              borderColor: t.border,
+            }}
+          >
+            <Txt size={11} weight="500" color={t.textMuted} numberOfLines={1}>
+              {item.company}
+            </Txt>
+          </View>
+        ) : null}
+      </View>
+
+      {/* Địa điểm */}
+      {item.region ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 }}>
+          <MapPin size={12} color={t.textMuted} />
+          <Txt size={12} color={t.textMuted}>
+            {item.region}
+          </Txt>
+        </View>
+      ) : null}
+
+      {/* Mức lương (màu cam FPT chuẩn Web) & Kinh nghiệm */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          marginTop: 12,
+          paddingTop: 10,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: t.divider,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+          <Txt weight="800" size={16} color={t.primary}>
+            {formatVnd(item.grossAmount)}
+          </Txt>
+          <Txt size={12} color={t.textMuted}>
+            / tháng
+          </Txt>
+        </View>
+        {item.yearsExperience != null ? (
+          <View
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 2.5,
+              borderRadius: 6,
+              backgroundColor: t.primaryTint,
+              borderWidth: 1,
+              borderColor: t.isDark ? '#7C2D12' : '#FED7AA',
+            }}
+          >
+            <Txt size={11} weight="600" color={t.primary}>
+              {item.yearsExperience > 0 ? `${item.yearsExperience} năm KN` : 'Chưa có KN'}
+            </Txt>
+          </View>
+        ) : null}
       </View>
     </View>
   )
@@ -593,42 +723,7 @@ export default function SalaryScreen() {
                 />
               ) : null
             }
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  marginHorizontal: 16,
-                  marginBottom: 12,
-                  padding: 16,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: t.border,
-                  backgroundColor: t.card,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Txt weight="800" size={15}>{item.jobTitle}</Txt>
-                    {item.company ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                        <Briefcase size={13} color={t.textMuted} />
-                        <Txt muted size={13}>{item.company}</Txt>
-                      </View>
-                    ) : null}
-                    {item.region ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                        <MapPin size={13} color={t.textMuted} />
-                        <Txt muted size={13}>{item.region}</Txt>
-                      </View>
-                    ) : null}
-                  </View>
-                  <Txt weight="800" size={16} color={t.success}>{formatVnd(item.grossAmount)}</Txt>
-                </View>
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
-                  {item.industry ? <Tag label={item.industry} tone="neutral" /> : null}
-                  {item.yearsExperience != null ? <Tag label={`${item.yearsExperience} năm KN`} tone="info" /> : null}
-                </View>
-              </View>
-            )}
+            renderItem={({ item }) => <SalaryFeedCard item={item} />}
           />
         )}
       </View>
