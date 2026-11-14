@@ -46,7 +46,7 @@ const SORTS: [string, string][] = [
 
 /** Ánh xạ thông minh icon và mã màu chủ đạo theo từ khóa vị trí công việc, chuẩn hóa 100% như Web. */
 function getJobStyle(role: string, t: ReturnType<typeof useTheme>) {
-  const r = role.toLowerCase()
+  const r = (role || '').toLowerCase()
   if (r.includes('data') || r.includes('analyst') || r.includes('dữ liệu') || r.includes('bi')) {
     return {
       Icon: BarChart3,
@@ -506,7 +506,7 @@ export default function SalaryScreen() {
             >
               <View style={{ flex: 1 }}>
                 <Txt size={18} weight="700">{s?.totalContributions ?? '—'}</Txt>
-                <Txt size={12} muted>lượt chia sẻ</Txt>
+                <Txt size={12} muted>đóng góp ẩn danh</Txt>
               </View>
               <View style={{ flex: 1 }}>
                 <Txt size={18} weight="700">{s?.trackedPositions ?? '—'}</Txt>
