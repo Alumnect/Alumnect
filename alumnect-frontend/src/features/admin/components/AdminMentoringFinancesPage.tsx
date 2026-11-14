@@ -13,7 +13,7 @@ import { Badge, EmptyState, Pagination, Skeleton, SelectDropdown } from '@/compo
 import { Button } from '@/components/ui/Button'
 import { useAdminPayoutBalance, useAdminTaskFunds } from '../hooks/useAdmin'
 import { AdminTaskLedgerDetailModal } from './AdminTaskLedgerDetailModal'
-import { AdminPageBanner, StatTile } from './AdminVisuals'
+import { AdminPageBanner } from './AdminVisuals'
 
 export function AdminMentoringFinancesPage() {
   const [keyword, setKeyword] = useState('')
@@ -140,21 +140,25 @@ export function AdminMentoringFinancesPage() {
       />
 
       {/* 2. Tổng tiền của các nhiệm vụ đang hiển thị (API chưa có tổng toàn hệ thống) */}
-      <div>
-        <p className="mb-2.5 text-sm text-text-subtle">Tổng của {tasks.length} nhiệm vụ đang hiển thị</p>
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
-          {(
-            [
-              { label: 'Đã thu ký quỹ', value: pageTotalCollected, icon: <Wallet />, tone: 'blue' },
-              { label: 'Đang giữ trong ký quỹ', value: pageEscrowHolding, icon: <Lock />, tone: 'amber' },
-              { label: 'Đã chi cho Mentor', value: pageTotalPayout, icon: <ArrowUpRight />, tone: 'green' },
-              { label: 'Đã hoàn cho học viên', value: pageTotalRefund, icon: <Undo2 />, tone: 'red' },
-            ] as const
-          ).map((s) => (
-            <StatTile key={s.label} icon={s.icon} tone={s.tone} label={s.label} value={formatVnd(s.value)} />
+      <section aria-label="Tổng tiền của các nhiệm vụ đang hiển thị" className="overflow-hidden rounded-2xl border border-border bg-surface">
+        <p className="px-4 pt-4 text-sm text-text-subtle">Tổng của {tasks.length} nhiệm vụ đang hiển thị</p>
+        <dl className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4">
+          {([
+            { label: 'Đã thu ký quỹ', value: pageTotalCollected, icon: <Wallet /> },
+            { label: 'Đang giữ trong ký quỹ', value: pageEscrowHolding, icon: <Lock /> },
+            { label: 'Đã chi cho Mentor', value: pageTotalPayout, icon: <ArrowUpRight /> },
+            { label: 'Đã hoàn cho học viên', value: pageTotalRefund, icon: <Undo2 /> },
+          ] as const).map((item) => (
+            <div key={item.label} className="flex min-w-0 items-center gap-3 px-4 py-4">
+              <span className="shrink-0 text-text-subtle">{item.icon}</span>
+              <div className="min-w-0">
+                <dt className="text-xs text-text-subtle">{item.label}</dt>
+                <dd className="mt-1 whitespace-nowrap text-base font-semibold tabular-nums text-text">{formatVnd(item.value)}</dd>
+              </div>
+            </div>
           ))}
-        </div>
-      </div>
+        </dl>
+      </section>
 
       {/* Filter Toolbar */}
       <div className="space-y-4 rounded-3xl border border-border bg-surface p-4">

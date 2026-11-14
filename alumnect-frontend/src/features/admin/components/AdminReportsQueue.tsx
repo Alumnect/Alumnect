@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   Inbox, Eye, EyeOff, X, 
   Flag, ArrowRight, ShieldAlert, Check, Ban,
@@ -292,6 +292,44 @@ const reporterDetail = (report: AdminReportDto) => report.reporterEmail ?? 'Tự
 /** Kiểm tra báo cáo này do AI phát hiện ảnh nhạy cảm/bạo lực (nhị phân, không chấm thang điểm). */
 const isImageAiViolation = (report: AdminReportDto) => Boolean(report.detectedKeywords?.includes('[Ảnh vi phạm]'))
 
+const getReportRiskLevel = (report: AdminReportDto): 'HIGH' | 'MEDIUM' | 'LOW' => {
+  if (isImageAiViolation(report)) return 'HIGH'
+  if (report.aiScore != null) {
+    if (report.aiScore >= 0.85) return 'HIGH'
+    if (report.aiScore >= 0.4) return 'MEDIUM'
+    return 'LOW'
+  }
+  return report.riskLevel ?? 'LOW'
+}
+
+const REPORT_RISK_CONFIG = {
+  HIGH: {
+    label: 'Cao',
+    tone: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60',
+  },
+  MEDIUM: {
+    label: 'Nghi vấn',
+    tone: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60',
+  },
+  LOW: {
+    label: 'Thấp',
+    tone: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60',
+  },
+} as const
+
+const formatReportDateTime = (createdAt: string) => {
+  const date = new Date(createdAt)
+  if (Number.isNaN(date.getTime())) return createdAt
+
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
 export function AdminReportsQueue() {
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | 'DISMISSED'>('PENDING')
   const [reasonFilter, setReasonFilter] = useState<string>('ALL')
@@ -464,19 +502,8 @@ export function AdminReportsQueue() {
   const totalPages = reportsData?.totalPages || 0
   const totalElements = reportsData?.totalElements || 0
 
-  // Client-side fallback: Đảm bảo lọc mức rủi ro chính xác 100% theo tiêu chuẩn ModerationRiskLevel
-  const reports = useMemo(() => {
-    if (riskFilter === 'ALL') return rawReports
-    return rawReports.filter((r) => {
-      const isHigh = r.riskLevel === 'HIGH' || (r.aiScore != null && r.aiScore >= 0.85) || isImageAiViolation(r)
-      const isMedium = !isHigh && (r.riskLevel === 'MEDIUM' || (r.aiScore != null && r.aiScore >= 0.40))
-      const isLow = !isHigh && !isMedium
-      if (riskFilter === 'HIGH') return isHigh
-      if (riskFilter === 'MEDIUM') return isMedium
-      if (riskFilter === 'LOW') return isLow
-      return true
-    })
-  }, [rawReports, riskFilter])
+  // Backend applies risk filtering before pagination, so rows and totals stay aligned.
+  const reports = rawReports
 
   const activeWillHide = getSelectedReportWillHide()
 
@@ -629,9 +656,9 @@ export function AdminReportsQueue() {
           <div className="h-px bg-border/60" />
 
           {/* Row 2: AI Risk Level Chips & Result Summary */}
-          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
             {/* Risk Level Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <span className="flex items-center gap-1.5 pr-1.5 text-xs font-bold text-text-subtle shrink-0">
                 <Sparkles size={13} className="text-gold-500" /> Mức rủi ro:
               </span>
@@ -713,7 +740,7 @@ export function AdminReportsQueue() {
           </div>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full text-sm text-left">
+            <table className="w-full min-w-[960px] text-sm text-left">
               <thead>
                 <tr className="border-b border-border text-xs text-text-subtle bg-surface-2/60">
                   <th className="px-4 py-3 sm:px-5 font-bold w-[30%]">Người gửi & Phân loại</th>
@@ -727,6 +754,7 @@ export function AdminReportsQueue() {
                   const reasonInfo = REASON_LABELS[r.reason] || { label: r.reason, tone: 'neutral' }
                   const catCfg = getCategoryConfig(r.postType)
                   const CatIcon = catCfg.icon
+                  const riskConfig = REPORT_RISK_CONFIG[getReportRiskLevel(r)]
 
                   const localWillHide = willHideMap[r.id]
                   const currentStatus = localWillHide !== undefined 
@@ -748,6 +776,13 @@ export function AdminReportsQueue() {
                             <div>
                               <p className="font-bold text-xs text-text truncate leading-tight">{reporterLabel(r)}</p>
                               <p className="text-xs text-text-subtle truncate">{reporterDetail(r)}</p>
+                              <time
+                                className="block text-xs text-text-subtle tabular-nums"
+                                dateTime={r.createdAt}
+                                title={new Date(r.createdAt).toLocaleString('vi-VN')}
+                              >
+                                {formatReportDateTime(r.createdAt)}
+                              </time>
                             </div>
                             <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                               <Badge tone={reasonInfo.tone} className="text-xs px-1.5 py-0.5 leading-none">
@@ -800,19 +835,15 @@ export function AdminReportsQueue() {
                               Ảnh vi phạm
                             </span>
                           ) : r.aiScore !== undefined && r.aiScore !== null ? (
-<div className="inline-flex flex-col items-center gap-1">
+                            <div className="inline-flex flex-col items-center gap-1">
                               <span
                                 className={cn(
-                                  'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold border shadow-2xs whitespace-nowrap',
-                                  r.riskLevel === 'HIGH' || r.aiScore >= 0.60
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60'
-                                    : r.riskLevel === 'MEDIUM' || r.aiScore >= 0.20
-                                    ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60'
-                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60'
+                                  'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold border whitespace-nowrap',
+                                  riskConfig.tone
                                 )}
                               >
                                 <Sparkles size={10} />
-                                {(r.aiScore * 100).toFixed(0)}% {r.riskLevel === 'HIGH' ? 'Cao' : r.riskLevel === 'MEDIUM' ? 'Nghi vấn' : 'Thấp'}
+                                {(r.aiScore * 100).toFixed(0)}% {riskConfig.label}
                               </span>
                               {r.autoModerated && (
                                 <span className="text-xs font-bold text-rose-600 bg-rose-100/60 dark:bg-rose-950/40 dark:text-rose-300 rounded px-1.5 py-0.5">

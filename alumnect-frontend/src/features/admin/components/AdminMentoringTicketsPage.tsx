@@ -464,7 +464,7 @@ export function AdminMentoringTicketsPage() {
                       <td className="px-4 py-3.5 sm:px-5 text-right whitespace-nowrap">
                         <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-1.5">
                           {/* Nút Tiếp nhận (chỉ khi OPEN) */}
-                          {(!t.handledByName || t.status === 'OPEN') && (
+                          {t.status === 'OPEN' && (
                             <button
                               type="button"
                               onClick={() => handleAcceptTicket(t)}
@@ -906,13 +906,15 @@ export function AdminMentoringTicketsPage() {
           {/* Modal Footer */}
           <div className="px-6 py-4 bg-surface border-t border-border flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-2">
-              {(!selectedTicket.handledByName || selectedTicket.status === 'OPEN') && (
+              {selectedTicket.status === 'OPEN' && (
                 <button
                   type="button"
                   onClick={() => handleAcceptTicket(selectedTicket)}
-                  className="px-4 py-2 text-xs font-bold text-on-primary bg-primary-solid hover:bg-primary-solid/90 rounded-xl transition cursor-pointer shadow-raised flex items-center gap-1.5"
+                  disabled={acceptTicketMutation.isPending}
+                  className="px-4 py-2 text-xs font-bold text-on-primary bg-primary-solid hover:bg-primary-solid/90 rounded-xl transition cursor-pointer shadow-raised flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <UserCheck size={14} /> Tiếp nhận vé này
+                  {acceptTicketMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <UserCheck size={14} />}
+                  {acceptTicketMutation.isPending ? 'Đang tiếp nhận...' : 'Tiếp nhận vé này'}
                 </button>
               )}
 
