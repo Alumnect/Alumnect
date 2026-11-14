@@ -259,67 +259,57 @@ export function AdminTaskLedgerDetailModal({
                 </div>
               </div>
 
-              {/* Bảng cân đối dòng tiền Task (KPI Cards) */}
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                <div className="bg-surface-2 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
-                  <div className="flex items-center justify-between text-text-muted">
-                    <span className="text-xs font-semibold">Tổng thu ký quỹ</span>
-                    <ArrowDownLeft className="w-4 h-4 text-success" />
+              {/* Bảng cân đối dòng tiền Task */}
+              <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3 lg:grid-cols-5">
+                <div className="min-w-0 bg-surface-2 p-3.5">
+                  <div className="flex items-center justify-between gap-2 text-xs font-medium text-text-muted">
+                    <dt>Tổng thu ký quỹ</dt>
+                    <ArrowDownLeft className="h-4 w-4 shrink-0 text-text-subtle" />
                   </div>
-                  <p className="text-base sm:text-lg font-bold text-success mt-1">
-                    {formatVnd(summary.totalCollected)}
-                  </p>
-                  <p className="text-xs text-text-subtle mt-0.5 truncate">
+                  <dd className="mt-1 text-base font-semibold tabular-nums text-text">{formatVnd(summary.totalCollected)}</dd>
+                  <p className="mt-0.5 truncate text-xs text-text-subtle">
                     {summary.totalTopUpAmount > 0 ? `+${formatVnd(summary.totalTopUpAmount)} bổ sung` : 'Ký quỹ ban đầu'}
                   </p>
                 </div>
 
-                <div className="bg-surface-2 p-3.5 rounded-2xl border border-blue-200/80 dark:border-blue-800/60 shadow-xs">
-                  <div className="flex items-center justify-between text-text-muted">
-                    <span className="text-xs font-semibold">Đang giữ Escrow</span>
-                    <Wallet className="w-4 h-4 text-info" />
+                <div className="min-w-0 bg-surface-2 p-3.5">
+                  <div className="flex items-center justify-between gap-2 text-xs font-medium text-text-muted">
+                    <dt>Đang giữ Escrow</dt>
+                    <Wallet className="h-4 w-4 shrink-0 text-text-subtle" />
                   </div>
-                  <p className="text-base sm:text-lg font-bold text-info mt-1">
-                    {formatVnd(summary.escrowHoldingAmount)}
-                  </p>
-                  <p className="text-xs text-text-subtle mt-0.5 truncate">
+                  <dd className="mt-1 text-base font-semibold tabular-nums text-text">{formatVnd(summary.escrowHoldingAmount)}</dd>
+                  <p className="mt-0.5 truncate text-xs text-text-subtle">
                     {summary.lockedAmount > 0 ? `Khóa: ${formatVnd(summary.lockedAmount)}` : 'Sẵn sàng giải ngân'}
                   </p>
                 </div>
 
-                <div className="bg-surface-2 p-3.5 rounded-2xl border border-purple-200/80 dark:border-purple-800/60 shadow-xs">
-                  <div className="flex items-center justify-between text-text-muted">
-                    <span className="text-xs font-semibold">Đã chi Cố vấn</span>
-                    <ArrowUpRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <div className="min-w-0 bg-surface-2 p-3.5">
+                  <div className="flex items-center justify-between gap-2 text-xs font-medium text-text-muted">
+                    <dt>Đã chi Cố vấn</dt>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-text-subtle" />
                   </div>
-                  <p className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400 mt-1">
-                    {formatVnd(summary.totalPayout)}
-                  </p>
-                  <p className="text-xs text-text-subtle mt-0.5">Thù lao Mentoring</p>
+                  <dd className="mt-1 text-base font-semibold tabular-nums text-text">{formatVnd(summary.totalPayout)}</dd>
+                  <p className="mt-0.5 text-xs text-text-subtle">Thù lao Mentoring</p>
                 </div>
 
-                <div className="bg-surface-2 p-3.5 rounded-2xl border border-amber-200/80 dark:border-amber-800/60 shadow-xs">
-                  <div className="flex items-center justify-between text-text-muted">
-                    <span className="text-xs font-semibold">Đã hoàn Học viên</span>
-                    <RotateCcw className="w-4 h-4 text-warning" />
+                <div className="min-w-0 bg-surface-2 p-3.5">
+                  <div className="flex items-center justify-between gap-2 text-xs font-medium text-text-muted">
+                    <dt>Đã hoàn Học viên</dt>
+                    <RotateCcw className="h-4 w-4 shrink-0 text-text-subtle" />
                   </div>
-                  <p className="text-base sm:text-lg font-bold text-warning mt-1">
-                    {formatVnd(summary.totalRefund)}
-                  </p>
-                  <p className="text-xs text-text-subtle mt-0.5">Hoàn tiền giải quyết</p>
+                  <dd className="mt-1 text-base font-semibold tabular-nums text-text">{formatVnd(summary.totalRefund)}</dd>
+                  <p className="mt-0.5 text-xs text-text-subtle">Hoàn tiền giải quyết</p>
                 </div>
 
-                <div className="bg-surface-2 p-3.5 rounded-2xl border border-border shadow-xs">
-                  <div className="flex items-center justify-between text-text-muted">
-                    <span className="text-xs font-semibold">Phí nền tảng/Hòa giải</span>
-                    <ShieldCheck className="w-4 h-4 text-text-subtle" />
+                <div className="min-w-0 bg-surface-2 p-3.5">
+                  <div className="flex items-center justify-between gap-2 text-xs font-medium text-text-muted">
+                    <dt>Phí nền tảng/Hòa giải</dt>
+                    <ShieldCheck className="h-4 w-4 shrink-0 text-text-subtle" />
                   </div>
-                  <p className="text-base sm:text-lg font-bold text-text mt-1">
-                    {formatVnd(summary.platformFee)}
-                  </p>
-                  <p className="text-xs text-text-subtle mt-0.5">Thu phí xử lý vé</p>
+                  <dd className="mt-1 text-base font-semibold tabular-nums text-text">{formatVnd(summary.platformFee)}</dd>
+                  <p className="mt-0.5 text-xs text-text-subtle">Thu phí xử lý vé</p>
                 </div>
-              </div>
+              </dl>
 
               {/* Tabs Lịch sử giao dịch & Tài liệu liên quan */}
               <div className="space-y-4">
@@ -408,32 +398,33 @@ export function AdminTaskLedgerDetailModal({
                         description="Chưa có bút toán thu/chi nào được ghi nhận cho nhiệm vụ Mentoring này."
                       />
                     ) : (
-                      <div className="rounded-2xl border border-border overflow-hidden bg-surface dark:bg-[#1a1c1e] shadow-xs">
-                        <table className="w-full text-left text-sm">
+                      <div className="rounded-2xl border border-border overflow-hidden bg-surface dark:bg-[#1a1c1e]">
+                        <div className="overflow-x-auto">
+                        <table className="w-full min-w-[960px] table-fixed text-left text-sm">
                           <thead className="bg-surface-2 text-xs font-bold text-text-subtle border-b border-border">
                             <tr>
-                              <th className="px-4 py-3.5">Mã GD</th>
-                              <th className="px-4 py-3.5">Thời gian</th>
-                              <th className="px-4 py-3.5">Loại giao dịch</th>
-                              <th className="px-4 py-3.5">Số tiền</th>
-                              <th className="px-4 py-3.5">Trạng thái</th>
-                              <th className="px-4 py-3.5">Mã đối soát / Snapshot</th>
-                              <th className="px-4 py-3.5">Ghi chú</th>
+                              <th className="w-[60px] px-2 py-3.5">Mã GD</th>
+                              <th className="w-[124px] px-2 py-3.5">Thời gian</th>
+                              <th className="w-[132px] px-2 py-3.5">Loại giao dịch</th>
+                              <th className="w-[112px] px-2 py-3.5">Số tiền</th>
+                              <th className="w-[154px] px-2 py-3.5">Trạng thái</th>
+                              <th className="w-[178px] px-2 py-3.5">Mã đối soát / Snapshot</th>
+                              <th className="w-[200px] px-2 py-3.5">Ghi chú</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
                             {detail.ledgers.map((l) => (
                               <tr key={l.id} className="hover:bg-surface-2 transition-colors">
-                                <td className="px-4 py-3 tabular-nums font-semibold text-xs text-text">
+                                <td className="px-2 py-3 tabular-nums font-semibold text-xs text-text">
                                   #{l.id}
                                 </td>
-                                <td className="px-4 py-3 text-xs text-text-subtle whitespace-nowrap">
+                                <td className="px-2 py-3 text-xs text-text-subtle whitespace-nowrap">
                                   {formatDateTime(l.createdAt)}
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-2 py-3">
                                   {renderLedgerTypeBadge(l.transactionType)}
                                 </td>
-                                <td className="px-4 py-3 font-bold text-sm">
+                                <td className="px-2 py-3 font-bold text-sm">
                                   <span
                                     className={
                                       l.transactionType === 'ESCROW_COLLECTION' || l.transactionType === 'TOP_UP'
@@ -447,7 +438,7 @@ export function AdminTaskLedgerDetailModal({
                                     {formatVnd(l.amount)}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-2 py-3">
                                   {renderLedgerStatusBadge(l.status)}
                                   {(l.transactionType === 'PAYOUT' || l.transactionType === 'REFUND') && l.providerStatus && l.status !== 'SUCCEEDED' && (
                                     <p className="mt-1 text-xs text-text-subtle max-w-[180px]" title={l.failureCode ? `Mã lỗi: ${l.failureCode}` : undefined}>
@@ -467,7 +458,7 @@ export function AdminTaskLedgerDetailModal({
                                     </Button>
                                   )}
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-2 py-3">
                                   <div className="space-y-0.5">
                                     <p className="tabular-nums text-xs text-text-muted truncate max-w-[200px]" title={l.providerReference || '—'}>
                                       Ref: {l.providerReference || '—'}
@@ -479,13 +470,14 @@ export function AdminTaskLedgerDetailModal({
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-xs text-text-muted max-w-xs truncate" title={l.note || ''}>
-                                  {l.note || '—'}
+                                <td className="px-2 py-3 text-xs text-text-muted" title={l.note || ''}>
+                                  <p className="line-clamp-2 max-w-[180px] break-words">{l.note || '—'}</p>
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       </div>
                     )}
                   </div>
