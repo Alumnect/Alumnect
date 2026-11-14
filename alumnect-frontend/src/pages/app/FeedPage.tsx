@@ -7,7 +7,7 @@
  *  - Xử lý đầy đủ các trạng thái: loading (skeleton) / rỗng / lỗi (retry) / phân quyền / thành công.
  *  - Lọc bài viết theo loại và tải thêm trang (phân trang).
  */
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -861,31 +861,26 @@ export function FeedPage() {
     : [...sessionCreatedPosts.filter((p) => p.type === filter), ...sessionFilteredServerPosts]
 
   // Tự động tải thêm bài viết (Infinite Scroll kiểu Facebook) khi người dùng cuộn tới cuối trang
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) return
+    if (!loadMoreNode || !hasNextPage || isFetchingNextPage) return
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0]?.isIntersecting) {
           fetchNextPage()
         }
       },
-      { rootMargin: '300px', threshold: 0.1 }
+      { rootMargin: '800px', threshold: 0 }
     )
 
-    const currentTarget = loadMoreRef.current
-    if (currentTarget) {
-      observer.observe(currentTarget)
-    }
+    observer.observe(loadMoreNode)
 
     return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget)
-      }
+      observer.disconnect()
     }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+  }, [loadMoreNode, hasNextPage, isFetchingNextPage, fetchNextPage])
 
   // === Bước 5: Render — cột trái (feed) + cột phải (gợi ý) ===
   return (
@@ -983,7 +978,7 @@ export function FeedPage() {
               ))}
               </div>
               {/* Vùng tự động tải thêm trang (Infinite scroll sentinel) */}
-              <div ref={loadMoreRef} className="py-5 text-center">
+              <div ref={setLoadMoreNode} className="py-5 text-center">
                 {isFetchingNextPage && (
                   <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
                     <Loader2 size={18} className="animate-spin text-primary-solid" />
