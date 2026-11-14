@@ -4,18 +4,7 @@ import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import {
-  BarChart3,
-  Briefcase,
-  Laptop,
-  Lock,
-  MapPin,
-  Plus,
-  Share2,
-  Sparkles,
-  Users,
-  X,
-} from '@/components/icons'
+import { Briefcase, Lock, MapPin, Plus, X } from '@/components/icons'
 import { Button, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
 import { SelectField } from '@/components/SelectField'
@@ -44,12 +33,11 @@ const SORTS: [string, string][] = [
   ['salaryAsc', 'Lương thấp nhất'],
 ]
 
-/** Ánh xạ thông minh icon và mã màu chủ đạo theo từ khóa vị trí công việc, chuẩn hóa 100% như Web. */
+/** Ánh xạ thông minh mã màu chủ đạo theo từ khóa vị trí công việc, chuẩn hóa 100% như Web. */
 function getJobStyle(role: string, t: ReturnType<typeof useTheme>) {
   const r = (role || '').toLowerCase()
   if (r.includes('data') || r.includes('analyst') || r.includes('dữ liệu') || r.includes('bi')) {
     return {
-      Icon: BarChart3,
       bg: t.infoTint,
       color: t.info,
       border: t.isDark ? '#1E3A8A' : '#BFDBFE',
@@ -57,7 +45,6 @@ function getJobStyle(role: string, t: ReturnType<typeof useTheme>) {
   }
   if (r.includes('design') || r.includes('ui') || r.includes('ux') || r.includes('thiết kế') || r.includes('graphic')) {
     return {
-      Icon: Sparkles,
       bg: t.dangerTint,
       color: t.danger,
       border: t.isDark ? '#7F1D1D' : '#FECDD3',
@@ -74,7 +61,6 @@ function getJobStyle(role: string, t: ReturnType<typeof useTheme>) {
     r.includes('fullstack')
   ) {
     return {
-      Icon: Laptop,
       bg: t.primaryTint,
       color: t.primary,
       border: t.isDark ? '#7C2D12' : '#FED7AA',
@@ -82,7 +68,6 @@ function getJobStyle(role: string, t: ReturnType<typeof useTheme>) {
   }
   if (r.includes('market') || r.includes('seo') || r.includes('content') || r.includes('quảng cáo') || r.includes('media')) {
     return {
-      Icon: Share2,
       bg: t.infoTint,
       color: t.info,
       border: t.isDark ? '#1E3A8A' : '#BFDBFE',
@@ -99,25 +84,22 @@ function getJobStyle(role: string, t: ReturnType<typeof useTheme>) {
     r.includes('pm')
   ) {
     return {
-      Icon: Briefcase,
       bg: t.successTint,
       color: t.success,
       border: t.isDark ? '#14532D' : '#BBF7D0',
     }
   }
   return {
-    Icon: Users,
     bg: t.warningTint,
     color: t.warning,
     border: t.isDark ? '#78350F' : '#FED7AA',
   }
 }
 
-/** Một thẻ thống kê vị trí công việc: Icon squircle, badge cấp bậc, thanh khoảng P25–P75 chuẩn Web. */
+/** Một thẻ thống kê vị trí công việc: Card bo góc riêng biệt, badge cấp bậc màu theo ngành, thanh khoảng P25–P75 chuẩn Web. */
 function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
   const t = useTheme()
   const style = getJobStyle(r.role, t)
-  const IconComponent = style.Icon
 
   const left = Math.min(96, Math.max(0, (r.p25 / max) * 100))
   const width = Math.min(100 - left, Math.max(4, ((r.p75 - r.p25) / max) * 100))
@@ -134,55 +116,38 @@ function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
         marginBottom: 12,
       }}
     >
-      {/* Tiêu đề vị trí & số lượt đóng góp */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <View
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 12,
-            backgroundColor: style.bg,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {IconComponent ? <IconComponent size={18} color={style.color} /> : null}
-        </View>
+      {/* Tiêu đề vị trí, cấp bậc & số lượt chia sẻ */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <View style={{ flex: 1, minWidth: 0 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, flex: 1 }}>
-              <Txt weight="700" size={15} numberOfLines={1}>{r.role}</Txt>
-              {r.level ? (
-                <View
-                  style={{
-                    paddingHorizontal: 8,
-                    paddingVertical: 2,
-                    borderRadius: 6,
-                    backgroundColor: style.bg,
-                    borderWidth: 1,
-                    borderColor: style.border,
-                  }}
-                >
-                  <Txt size={11} weight="600" color={style.color}>{r.level}</Txt>
-                </View>
-              ) : null}
-              {r.region ? (
-                <Txt muted size={12}>· {r.region}</Txt>
-              ) : null}
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-              {Users ? <Users size={12} color={t.textMuted} /> : null}
-              <Txt muted size={12}>{`${r.samples} lượt chia sẻ`}</Txt>
-            </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+            <Txt weight="700" size={15} numberOfLines={1}>{r.role}</Txt>
+            {r.level ? (
+              <View
+                style={{
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  borderRadius: 6,
+                  backgroundColor: style.bg,
+                  borderWidth: 1,
+                  borderColor: style.border,
+                }}
+              >
+                <Txt size={11} weight="600" color={style.color}>{r.level}</Txt>
+              </View>
+            ) : null}
+            {r.region ? (
+              <Txt muted size={12}>· {r.region}</Txt>
+            ) : null}
           </View>
         </View>
+        <Txt muted size={12} weight="500">{`${r.samples} lượt chia sẻ`}</Txt>
       </View>
 
       {/* Mức phổ biến: X Triệu / tháng */}
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5, marginBottom: 8 }}>
-        <Txt size={13} weight="500" color={t.textSubtle}>Mức phổ biến:</Txt>
+        <Txt size={13} weight="500" color={t.textMuted}>Mức phổ biến:</Txt>
         <Txt weight="800" size={18} color={t.primary}>{`${r.median} Triệu`}</Txt>
-        <Txt size={12} color={t.textSubtle}>/ tháng</Txt>
+        <Txt size={12} color={t.textMuted}>/ tháng</Txt>
       </View>
 
       {/* Thanh trực quan dải lương chuẩn Web */}
@@ -215,8 +180,8 @@ function StatRow({ r, max }: { r: SalaryStatRow; max: number }) {
 
         {/* Hai đầu dải lương: Từ X Tr - Đến Y Tr */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
-          <Txt size={12} weight="500" color={t.textSubtle}>{`Từ ${r.p25} Tr`}</Txt>
-          <Txt size={12} weight="500" color={t.textSubtle}>{`Đến ${r.p75} Tr`}</Txt>
+          <Txt size={12} weight="500" color={t.textMuted}>{`Từ ${r.p25} Tr`}</Txt>
+          <Txt size={12} weight="500" color={t.textMuted}>{`Đến ${r.p75} Tr`}</Txt>
         </View>
       </View>
     </View>
