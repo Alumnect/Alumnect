@@ -36,6 +36,21 @@ export async function pickImage(multiple = false): Promise<PickedImage[]> {
   }))
 }
 
+export type PickedVideo = { uri: string; name: string; mimeType: string; size?: number; durationSec: number }
+
+/** Chọn video từ thư viện (bài viết nhóm). `duration` của expo-image-picker tính bằng mili giây. */
+export async function pickVideos(): Promise<PickedVideo[]> {
+  const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], allowsMultipleSelection: true, quality: 1 })
+  if (res.canceled) return []
+  return res.assets.map((a, i) => ({
+    uri: a.uri,
+    name: a.fileName ?? `video-${Date.now()}-${i}.mp4`,
+    mimeType: a.mimeType ?? 'video/mp4',
+    size: a.fileSize,
+    durationSec: (a.duration ?? 0) / 1000,
+  }))
+}
+
 const MAX_WIDTH = 1440
 
 /** Nén ảnh (rộng tối đa 1440px, không phóng to ảnh nhỏ, JPEG 0.8) → xin presigned URL → PUT thẳng lên R2 → trả publicUrl. */

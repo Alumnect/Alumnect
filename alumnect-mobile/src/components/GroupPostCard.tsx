@@ -1,22 +1,57 @@
 import React, { useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { Modal, Pressable, View, useWindowDimensions } from 'react-native'
 import { Image } from 'expo-image'
 import * as Haptics from 'expo-haptics'
 import { useRouter } from 'expo-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Heart, MessageCircle, MoreHorizontal, Pin, Share2 } from '@/components/icons'
+import { Heart, MessageCircle, MoreHorizontal, Pin, Share2, X } from '@/components/icons'
 import { Avatar, Card, Tag, Txt } from './ui'
 import { ActionBtn } from './PostCard'
 import { ActionSheet } from './ActionSheet'
+import { ConfirmSheet } from './ConfirmSheet'
 import { ShareSheet } from './ShareSheet'
+import { VideoPlayer } from './VideoPlayer'
 import { groupPostPath } from '@/lib/share'
 import { groupApi } from '@/api/groups'
 import type { GroupPost } from '@/api/groups'
 import { useTheme } from '@/theme'
 import { toast, errMsg } from '@/lib/toast'
 
-/** Thẻ bài viết nhóm: like lạc quan (UC126), menu sửa/xóa/ghim (UC125). */
-function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean }) {
+/** Xem ảnh bài viết toàn màn hình, vuốt qua lại giữa các ảnh (giống lightbox trên web). */
+function ImageLightbox({ uris, index, onClose }: { uris: string[]; index: number | null; onClose: () => void }) {
+  const { width, height } = useWindowDimensions()
+  const [current, setCurrent] = useState(0)
+  const open = index !== null
+  return (
+    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose} onShow={() => setCurrent(index ?? 0)}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.94)', justifyContent: 'center' }}>
+        {open ? (
+          <Image source={{ uri: uris[Math.min(current, uris.length - 1)] }} style={{ width, height: height * 0.8 }} contentFit="contain" />
+        ) : null}
+        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Đóng ảnh" style={{ position: 'absolute', top: 44, right: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }}>
+          <X size={22} color="#fff" />
+        </Pressable>
+        {uris.length > 1 ? (
+          <View style={{ position: 'absolute', bottom: 40, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 14 }}>
+            <Pressable disabled={current === 0} onPress={() => setCurrent((c) => Math.max(0, c - 1))} accessibilityRole="button" accessibilityLabel="Ảnh trước" style={{ paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.18)', opacity: current === 0 ? 0.4 : 1 }}>
+              <Txt color="#fff" weight="600">Trước</Txt>
+            </Pressable>
+            <Txt color="#fff">{`${current + 1} / ${uris.length}`}</Txt>
+            <Pressable disabled={current >= uris.length - 1} onPress={() => setCurrent((c) => Math.min(uris.length - 1, c + 1))} accessibilityRole="button" accessibilityLabel="Ảnh sau" style={{ paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.18)', opacity: current >= uris.length - 1 ? 0.4 : 1 }}>
+              <Txt color="#fff" weight="600">Sau</Txt>
+            </Pressable>
+          </View>
+        ) : null}
+      </View>
+    </Modal>
+  )
+}
+
+/**
+ * Thẻ bài viết nhóm: like lạc quan (UC126), menu sửa/xóa/ghim (UC125).
+ * `canInteract`: chỉ thành viên ACTIVE của nhóm đang hoạt động mới được thích/bình luận (giống web).
+ */
+function GroupPostCardImpl({ post, detail, canInteract = true }: { post: GroupPost; detail?: boolean; canInteract?: boolean }) {
   const t = useTheme()
   const router = useRouter()
   const qc = useQueryClient()
@@ -24,6 +59,8 @@ function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean
   const [likes, setLikes] = useState(post.likeCount)
   const [menu, setMenu] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [viewer, setViewer] = useState<number | null>(null)
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['group-posts', post.groupId] })
     qc.invalidateQueries({ queryKey: ['group-post', post.groupId, post.id] })
@@ -36,7 +73,7 @@ function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean
   })
   const del = useMutation({
     mutationFn: () => groupApi.deletePost(post.groupId, post.id),
-    onSuccess: () => { toast.success('Đã xóa bài viết.'); refresh(); if (detail) router.back() },
+    onSuccess: () => { toast.success('Đã xóa bài viết.'); setConfirmDelete(false); refresh(); if (detail) router.back() },
     onError: (e) => toast.error(errMsg(e)),
   })
   const pin = useMutation({
@@ -46,6 +83,7 @@ function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean
   })
 
   const toggleLike = () => {
+    if (!canInteract) { toast.error('Vui lòng tham gia hội nhóm để thích bài viết!'); return }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     setLiked(!liked)
     setLikes((n) => n + (liked ? -1 : 1))
@@ -55,17 +93,22 @@ function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean
   const actions = [
     ...(post.canPin ? [{ label: post.isPinned ? 'Bỏ ghim' : 'Ghim bài viết', onPress: () => pin.mutate() }] : []),
     ...(post.canEdit ? [{ label: 'Chỉnh sửa', onPress: () => router.push({ pathname: '/groups/[id]/create-post', params: { id: String(post.groupId), postId: String(post.id) } }) }] : []),
-    ...(post.canDelete ? [{ label: 'Xóa bài viết', danger: true, onPress: () => del.mutate() }] : []),
+    ...(post.canDelete ? [{ label: 'Xóa bài viết', danger: true, onPress: () => setConfirmDelete(true) }] : []),
   ]
 
   const images = post.imageUrls ?? []
+  const videos = post.videoUrls ?? []
+  const roleBadge = post.author.groupRole === 'OWNER' ? 'Chủ sở hữu' : post.author.groupRole === 'ADMIN' ? 'Quản trị viên' : null
 
   return (
     <Card accessibilityRole="link" style={{ marginBottom: 16, paddingHorizontal: 0, paddingBottom: 4 }} onPress={detail ? undefined : open}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 }}>
         <Avatar uri={post.author.avatarUrl} name={post.author.fullName} size={42} />
         <View style={{ flex: 1 }}>
-          <Txt weight="700" numberOfLines={1}>{post.author.fullName}</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <Txt weight="700" numberOfLines={1} style={{ flexShrink: 1 }}>{post.author.fullName}</Txt>
+            {roleBadge ? <Tag label={roleBadge} tone={post.author.groupRole === 'OWNER' ? 'warning' : 'primary'} /> : null}
+          </View>
           <Txt muted size={12} numberOfLines={1}>{[post.author.roleLabel, new Date(post.createdAt).toLocaleDateString('vi-VN')].filter(Boolean).join(' · ')}</Txt>
         </View>
         {post.isPinned ? <Tag label="Đã ghim" icon={<Pin size={11} color={t.primary} />} /> : null}
@@ -80,15 +123,20 @@ function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean
       {images.length ? (
         <View style={{ marginTop: 12, flexDirection: 'row', gap: 2 }}>
           {images.slice(0, 2).map((uri, i) => (
-            <View key={uri + i} style={{ flex: 1 }}>
+            <Pressable key={uri + i} style={{ flex: 1 }} onPress={() => setViewer(i)} accessibilityRole="imagebutton" accessibilityLabel={`Xem ảnh ${i + 1}`}>
               <Image source={{ uri }} style={{ width: '100%', aspectRatio: images.length > 1 ? 0.85 : 1.4, backgroundColor: t.inputBg }} contentFit="cover" cachePolicy="disk" />
               {i === 1 && images.length > 2 ? (
                 <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' }}>
                   <Txt size={24} weight="800" color="#fff">{`+${images.length - 2}`}</Txt>
                 </View>
               ) : null}
-            </View>
+            </Pressable>
           ))}
+        </View>
+      ) : null}
+      {videos.length ? (
+        <View style={{ marginTop: 12, paddingHorizontal: 14, gap: 8 }}>
+          {videos.map((url, i) => <VideoPlayer key={url + i} url={url} />)}
         </View>
       ) : null}
       {likes > 0 || post.commentCount > 0 ? (
@@ -115,6 +163,16 @@ function GroupPostCardImpl({ post, detail }: { post: GroupPost; detail?: boolean
         }}
       />
       <ActionSheet visible={menu} onClose={() => setMenu(false)} actions={actions} />
+      <ConfirmSheet
+        visible={confirmDelete}
+        title="Xóa bài viết thảo luận"
+        message="Bạn có chắc chắn muốn xóa bài viết này không? Toàn bộ hình ảnh và bình luận liên quan cũng sẽ bị xóa vĩnh viễn."
+        confirmLabel="Xóa bài viết"
+        loading={del.isPending}
+        onConfirm={() => del.mutate()}
+        onClose={() => setConfirmDelete(false)}
+      />
+      <ImageLightbox uris={images} index={viewer} onClose={() => setViewer(null)} />
     </Card>
   )
 }
