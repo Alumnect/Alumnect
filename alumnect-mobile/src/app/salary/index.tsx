@@ -4,7 +4,7 @@ import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Briefcase, Lock, MapPin, Plus, X } from '@/components/icons'
+import { Briefcase, ChevronDown, Lock, MapPin, Plus, SlidersHorizontal, X } from '@/components/icons'
 import { Button, Empty, Screen, SearchBar, Tag, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
 import { SelectField } from '@/components/SelectField'
@@ -273,6 +273,7 @@ export default function SalaryScreen() {
   const [industryId, setIndustryId] = useState<number | null>(null)
   const [region, setRegion] = useState<string | null>(null)
   const [level, setLevel] = useState<SalaryLevel | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Bộ lọc feed
   const [feedFilters, setFeedFilters] = useState<FilterValues>({ sort: 'latest' })
@@ -338,21 +339,14 @@ export default function SalaryScreen() {
     ]
   }, [baseRows])
 
-  // 4. Dropdown Chức danh: Lấy các chức danh CÓ TRONG DATABASE từ baseRows
+  // 4. Dropdown Chức danh: Lọc chính xác theo ngành nghề đã chọn (khớp Web)
   const jobTitleOptions = useMemo(() => {
-    const dbRoles = Array.from(
-      new Set(baseRows.map((r) => r.role).filter(Boolean))
-    )
-
-    let roles: readonly string[] = dbRoles
+    let roles: readonly string[] = []
     if (industryId != null && selectedIndustryName) {
-      const industryTitles = JOB_TITLES_BY_INDUSTRY[selectedIndustryName] ?? []
-      const matched = dbRoles.filter((r) =>
-        industryTitles.some((t) => t.toLowerCase().includes(r.toLowerCase()) || r.toLowerCase().includes(t.toLowerCase()))
-      )
-      roles = matched.length > 0 ? matched : industryTitles
-    } else if (roles.length === 0) {
-      roles = STANDARD_JOB_TITLES
+      roles = JOB_TITLES_BY_INDUSTRY[selectedIndustryName] ?? []
+    } else {
+      const dbRoles = Array.from(new Set(baseRows.map((r) => r.role).filter(Boolean)))
+      roles = dbRoles.length > 0 ? dbRoles : STANDARD_JOB_TITLES
     }
 
     const sortedRoles = Array.from(new Set(roles)).sort((a, b) => a.localeCompare(b, 'vi'))
@@ -371,13 +365,18 @@ export default function SalaryScreen() {
   }, [baseRows])
 
   // 6. Ngành nghề: Đổ từ database, loại bỏ 'Khác' nếu có
+  const industryList = useMemo(() => {
+    return (industries.data ?? []).filter((i) => i.name.trim().toLowerCase() !== 'khác')
+  }, [industries.data])
+
   const industryOptions = useMemo(() => {
-    const list = (industries.data ?? []).filter((i) => i.name.trim().toLowerCase() !== 'khác')
     return [
       { value: '', label: 'Tất cả ngành' },
-      ...list.map((i) => ({ value: String(i.id), label: i.name })),
+      ...industryList.map((i) => ({ value: String(i.id), label: i.name })),
     ]
-  }, [industries.data])
+  }, [industryList])
+
+  const industryCount = industryList.length || 10
 
   const feedSortBy = (feedFilters.sort as string) ?? 'latest'
   const feedIndustryId = feedFilters.industry ? Number(feedFilters.industry) : null
@@ -413,86 +412,173 @@ export default function SalaryScreen() {
     [industries.data],
   )
 
+  const activeCount = [jobTitle, industryId != null ? industryId : null, region, level].filter(Boolean).length
+  const activeSummary = [jobTitle, selectedIndustryName, region, level].filter(Boolean).join(' · ')
+
   const controls = tab === 'stats' ? (
-    <View style={{ backgroundColor: t.card, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, gap: 10 }}>
-      {/* 1. Dropdown Chức danh (lấy từ database) */}
-      <SelectField
-        label="Chức danh"
-        placeholder="Tất cả chức danh"
-        value={jobTitle}
-        options={jobTitleOptions}
-        onChange={(v) => setJobTitle(v ? v : null)}
-      />
-
-      {/* 2. Dropdown Ngành nghề & Khu vực (đều lấy từ database) */}
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <View style={{ flex: 1 }}>
-          <SelectField
-            label="Ngành nghề"
-            placeholder="Tất cả ngành"
-            value={industryId == null ? null : String(industryId)}
-            options={industryOptions}
-            onChange={(v) => {
-              setIndustryId(v ? Number(v) : null)
-              setJobTitle(null)
-            }}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <SelectField
-            label="Khu vực"
-            placeholder="Tất cả khu vực"
-            value={region}
-            options={regionOptions}
-            onChange={(v) => setRegion(v ? v : null)}
-          />
-        </View>
-      </View>
-
-      {/* 3. Cấp bậc filter chips (lấy từ database) + Nút Xóa lọc */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, paddingTop: 4 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <Txt size={12} weight="600" muted>Cấp bậc:</Txt>
-          <Pressable
-            onPress={() => setLevel(null)}
+    <View style={{ backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border }}>
+      {/* Nút bấm mở rộng / thu gọn bộ lọc để làm gọn giao diện */}
+      <Pressable
+        onPress={() => setShowFilters((prev) => !prev)}
+        accessibilityRole="button"
+        accessibilityLabel={showFilters ? 'Thu gọn bộ lọc' : 'Mở rộng bộ lọc'}
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+          paddingVertical: 11,
+          backgroundColor: pressed ? t.inputBg : t.card,
+        })}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+          <View
             style={{
-              paddingHorizontal: 12,
-              paddingVertical: 5,
-              borderRadius: 16,
-              backgroundColor: level === null ? t.primary : t.inputBg,
+              width: 32,
+              height: 32,
+              borderRadius: 10,
+              backgroundColor: activeCount > 0 ? (t.isDark ? '#3D2411' : '#FFEADA') : t.inputBg,
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <Txt size={12} weight="600" color={level === null ? '#fff' : t.textMuted}>Tất cả</Txt>
-          </Pressable>
-          {availableLevels.map((lv) => {
-            const active = level === lv
-            return (
-              <Pressable
-                key={lv}
-                onPress={() => setLevel(active ? null : lv)}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 5,
-                  borderRadius: 16,
-                  backgroundColor: active ? t.primary : t.inputBg,
-                }}
-              >
-                <Txt size={12} weight="600" color={active ? '#fff' : t.textMuted}>{lv}</Txt>
-              </Pressable>
-            )
-          })}
+            <SlidersHorizontal size={16} color={activeCount > 0 ? t.primary : t.textMuted} weight={activeCount > 0 ? 'bold' : 'regular'} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Txt size={13.5} weight="600" color={activeCount > 0 ? t.primary : t.text}>
+                Bộ lọc tìm kiếm
+              </Txt>
+              {activeCount > 0 ? (
+                <View
+                  style={{
+                    backgroundColor: t.primary,
+                    borderRadius: 10,
+                    paddingHorizontal: 6,
+                    paddingVertical: 1,
+                  }}
+                >
+                  <Txt size={11} weight="700" color="#fff">
+                    {activeCount}
+                  </Txt>
+                </View>
+              ) : null}
+            </View>
+            <Txt size={11.5} color={t.textMuted} numberOfLines={1}>
+              {activeSummary ? activeSummary : 'Chức danh, ngành nghề, khu vực, cấp bậc'}
+            </Txt>
+          </View>
         </View>
 
-        {isFiltering ? (
-          <Pressable
-            onPress={clearFilters}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}
-          >
-            <X size={14} color={t.danger} />
-            <Txt size={12} weight="600" color={t.danger}>Xóa lọc</Txt>
-          </Pressable>
-        ) : null}
-      </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 8 }}>
+          {isFiltering ? (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation?.()
+                clearFilters()
+              }}
+              hitSlop={8}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 8,
+                backgroundColor: t.dangerTint ?? 'rgba(239, 68, 68, 0.1)',
+              }}
+            >
+              <X size={13} color={t.danger} />
+              <Txt size={11} weight="600" color={t.danger}>
+                Xóa
+              </Txt>
+            </Pressable>
+          ) : null}
+          <ChevronDown
+            size={18}
+            color={t.textMuted}
+            style={{ transform: [{ rotate: showFilters ? '180deg' : '0deg' }] }}
+          />
+        </View>
+      </Pressable>
+
+      {/* Bảng bộ lọc mở rộng khi người dùng bấm nút */}
+      {showFilters ? (
+        <View style={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 14, gap: 10, borderTopWidth: 1, borderTopColor: t.border }}>
+          {/* 1. Dropdown Chức danh (lọc theo ngành) */}
+          <SelectField
+            label="Chức danh"
+            placeholder={industryId ? 'Chọn chức danh...' : 'Tất cả chức danh'}
+            value={jobTitle}
+            options={jobTitleOptions}
+            onChange={(v) => setJobTitle(v ? v : null)}
+          />
+
+          {/* 2. Dropdown Ngành nghề & Khu vực (đều lấy từ database) */}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <SelectField
+                label="Ngành nghề"
+                placeholder="Tất cả ngành"
+                value={industryId == null ? null : String(industryId)}
+                options={industryOptions}
+                onChange={(v) => {
+                  setIndustryId(v ? Number(v) : null)
+                  setJobTitle(null)
+                }}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <SelectField
+                label="Khu vực"
+                placeholder="Tất cả khu vực"
+                value={region}
+                options={regionOptions}
+                onChange={(v) => setRegion(v ? v : null)}
+              />
+            </View>
+          </View>
+
+          {/* 3. Cấp bậc filter chips (lấy từ database) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingTop: 2 }}>
+            <Txt size={12} weight="600" muted>
+              Cấp bậc:
+            </Txt>
+            <Pressable
+              onPress={() => setLevel(null)}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 5,
+                borderRadius: 16,
+                backgroundColor: level === null ? t.primary : t.inputBg,
+              }}
+            >
+              <Txt size={12} weight="600" color={level === null ? '#fff' : t.textMuted}>
+                Tất cả
+              </Txt>
+            </Pressable>
+            {availableLevels.map((lv) => {
+              const active = level === lv
+              return (
+                <Pressable
+                  key={lv}
+                  onPress={() => setLevel(active ? null : lv)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    borderRadius: 16,
+                    backgroundColor: active ? t.primary : t.inputBg,
+                  }}
+                >
+                  <Txt size={12} weight="600" color={active ? '#fff' : t.textMuted}>
+                    {lv}
+                  </Txt>
+                </Pressable>
+              )
+            })}
+          </View>
+        </View>
+      ) : null}
     </View>
   ) : (
     <View style={{ backgroundColor: t.card, paddingTop: 4, paddingBottom: 8 }}>
@@ -513,42 +599,46 @@ export default function SalaryScreen() {
           {/* Card Hero: GÓC NHÌN THU NHẬP - Chuẩn mã màu ấm áp Web */}
           <Enter
             style={{
-              borderRadius: 24,
-              padding: 22,
+              borderRadius: 22,
+              padding: 18,
               backgroundColor: t.isDark ? '#231B14' : '#FFF3EA',
               borderWidth: 1,
               borderColor: t.isDark ? '#4A2C18' : '#FFE2CC',
               marginBottom: 16,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Txt size={11} weight="700" color={t.primary} style={{ letterSpacing: 1.2 }}>GÓC NHÌN THU NHẬP</Txt>
-                <Txt size={14} weight="600" style={{ marginTop: 6 }}>{`Lương phổ biến${region ? ` · ${region}` : ''}`}</Txt>
+                <Txt size={16} weight="700" style={{ marginTop: 3 }}>{`Tổng quan mạng lưới lương${region ? ` · ${region}` : ''}`}</Txt>
               </View>
-              <BrandIcon name="coin" size={56} />
+              <BrandIcon name="coin" size={42} />
             </View>
-            <Txt size={34} weight="800" color={t.primary} style={{ marginTop: 8, fontVariant: ['tabular-nums'] }}>
-              {s?.overallMedian != null ? `${Number(s.overallMedian).toLocaleString('vi-VN')} Triệu` : '—'}
-            </Txt>
-            <Txt size={12} muted>Thu nhập gộp mỗi tháng (Triệu VNĐ / tháng)</Txt>
+
             <View
               style={{
                 flexDirection: 'row',
-                gap: 24,
-                marginTop: 18,
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: 14,
                 paddingTop: 14,
                 borderTopWidth: 1,
                 borderTopColor: t.isDark ? '#3D2817' : '#FFD9BF',
               }}
             >
-              <View style={{ flex: 1 }}>
-                <Txt size={18} weight="700">{s?.totalContributions ?? '—'}</Txt>
-                <Txt size={12} muted>đóng góp ẩn danh</Txt>
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Txt size={20} weight="800" color={t.primary}>{s?.totalContributions ?? '—'}</Txt>
+                <Txt size={11.5} muted style={{ marginTop: 2 }}>Đóng góp</Txt>
               </View>
-              <View style={{ flex: 1 }}>
-                <Txt size={18} weight="700">{s?.trackedPositions ?? '—'}</Txt>
-                <Txt size={12} muted>vị trí công việc</Txt>
+              <View style={{ width: 1, height: 26, backgroundColor: t.isDark ? '#3D2817' : '#FFD9BF' }} />
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Txt size={20} weight="800" color={t.primary}>{s?.trackedPositions ?? '—'}</Txt>
+                <Txt size={11.5} muted style={{ marginTop: 2 }}>Vị trí</Txt>
+              </View>
+              <View style={{ width: 1, height: 26, backgroundColor: t.isDark ? '#3D2817' : '#FFD9BF' }} />
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Txt size={20} weight="800" color={t.primary}>{industryCount}</Txt>
+                <Txt size={11.5} muted style={{ marginTop: 2 }}>Ngành nghề</Txt>
               </View>
             </View>
           </Enter>
