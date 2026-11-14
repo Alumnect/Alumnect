@@ -213,10 +213,10 @@ export function AdminMentoringTicketsPage() {
           />
         ))}
       </div>
-      {/* 3. Khung 1: tiêu đề + bộ lọc (không overflow-hidden để dropdown không bị che) */}
-      <div className="rounded-3xl border border-border bg-surface">
+      {/* 3. BẢNG DUY NHẤT (Single Unified Card Container) */}
+      <div className={panelClass}>
         {/* Card Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border p-5 bg-surface rounded-t-3xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border p-5 bg-surface">
           <h2 className="text-base font-semibold text-text">Danh sách ticket</h2>
 
           <div className="flex items-center gap-2 self-start sm:self-center">
@@ -227,7 +227,7 @@ export function AdminMentoringTicketsPage() {
         </div>
 
         {/* Toolbar: Tìm kiếm & Bộ lọc Dropdowns */}
-        <div className="rounded-b-3xl bg-surface-2/40 p-4">
+        <div className="border-b border-border bg-surface-2/40 p-4">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
             {/* Search Input */}
             <div className="relative flex-1 min-w-[220px]">
@@ -309,10 +309,7 @@ export function AdminMentoringTicketsPage() {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Khung 2: danh sách ticket */}
-      <div className={panelClass}>
         {/* Loading Skeleton */}
         {isLoading && (
           <div className="p-6 space-y-4">
@@ -457,8 +454,11 @@ export function AdminMentoringTicketsPage() {
                           </span>
 
                           {/* Cán bộ phụ trách */}
-                          <p className="text-xs text-text-subtle truncate max-w-[140px] pt-0.5">
-                            {t.handledByName ? `Phụ trách: ${t.handledByName}` : 'Chưa phân công'}
+                          {/* Backend trả người phụ trách trong `handledBy` (object), không có `handledByName` */}
+                          <p className="text-xs text-text-subtle truncate max-w-[140px] pt-0.5" title={t.handledBy?.fullName ?? t.handledByName ?? undefined}>
+                            {t.handledBy?.fullName ?? t.handledByName
+                              ? `Phụ trách: ${t.handledBy?.fullName ?? t.handledByName}`
+                              : 'Chưa phân công'}
                           </p>
                         </div>
                       </td>

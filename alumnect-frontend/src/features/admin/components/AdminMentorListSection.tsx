@@ -167,9 +167,9 @@ export function AdminMentorListSection() {
   return (
     <div className="space-y-4">
       {/* 1 BẢNG DUY NHẤT (Single Unified Card Container) */}
-      <div className="rounded-2xl border border-border bg-surface shadow-xs">
+      <div className="rounded-2xl border border-border bg-surface shadow-xs [&>:first-child]:rounded-t-[inherit] [&>:last-child]:rounded-b-[inherit]">
         {/* Card Header & Counter */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border p-5 bg-surface rounded-t-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border p-5 bg-surface">
           <div>
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-soft text-primary-solid shadow-2xs">
@@ -187,7 +187,7 @@ export function AdminMentorListSection() {
         </div>
 
         {/* Toolbar: Tìm kiếm & Bộ lọc Dropdowns */}
-        <div className="rounded-b-2xl bg-surface-2/40 p-4">
+        <div className="border-b border-border bg-surface-2/40 p-4">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
             {/* Search Input */}
             <div className="relative flex-1 min-w-[220px]">
@@ -271,10 +271,7 @@ export function AdminMentorListSection() {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Khung 2: danh sách (cắt nội dung bảng theo bo góc) */}
-      <div className="rounded-2xl border border-border bg-surface shadow-xs overflow-hidden">
         {/* Loading Skeleton */}
         {isLoading && (
           <div className="p-6 space-y-4">
