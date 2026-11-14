@@ -365,13 +365,18 @@ export default function SalaryScreen() {
   }, [baseRows])
 
   // 6. Ngành nghề: Đổ từ database, loại bỏ 'Khác' nếu có
+  const industryList = useMemo(() => {
+    return (industries.data ?? []).filter((i) => i.name.trim().toLowerCase() !== 'khác')
+  }, [industries.data])
+
   const industryOptions = useMemo(() => {
-    const list = (industries.data ?? []).filter((i) => i.name.trim().toLowerCase() !== 'khác')
     return [
       { value: '', label: 'Tất cả ngành' },
-      ...list.map((i) => ({ value: String(i.id), label: i.name })),
+      ...industryList.map((i) => ({ value: String(i.id), label: i.name })),
     ]
-  }, [industries.data])
+  }, [industryList])
+
+  const industryCount = industryList.length || 10
 
   const feedSortBy = (feedFilters.sort as string) ?? 'latest'
   const feedIndustryId = feedFilters.industry ? Number(feedFilters.industry) : null
@@ -594,42 +599,46 @@ export default function SalaryScreen() {
           {/* Card Hero: GÓC NHÌN THU NHẬP - Chuẩn mã màu ấm áp Web */}
           <Enter
             style={{
-              borderRadius: 24,
-              padding: 22,
+              borderRadius: 22,
+              padding: 18,
               backgroundColor: t.isDark ? '#231B14' : '#FFF3EA',
               borderWidth: 1,
               borderColor: t.isDark ? '#4A2C18' : '#FFE2CC',
               marginBottom: 16,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Txt size={11} weight="700" color={t.primary} style={{ letterSpacing: 1.2 }}>GÓC NHÌN THU NHẬP</Txt>
-                <Txt size={14} weight="600" style={{ marginTop: 6 }}>{`Lương phổ biến${region ? ` · ${region}` : ''}`}</Txt>
+                <Txt size={16} weight="700" style={{ marginTop: 3 }}>{`Tổng quan mạng lưới lương${region ? ` · ${region}` : ''}`}</Txt>
               </View>
-              <BrandIcon name="coin" size={56} />
+              <BrandIcon name="coin" size={42} />
             </View>
-            <Txt size={34} weight="800" color={t.primary} style={{ marginTop: 8, fontVariant: ['tabular-nums'] }}>
-              {s?.overallMedian != null ? `${Number(s.overallMedian).toLocaleString('vi-VN')} Triệu` : '—'}
-            </Txt>
-            <Txt size={12} muted>Thu nhập gộp mỗi tháng (Triệu VNĐ / tháng)</Txt>
+
             <View
               style={{
                 flexDirection: 'row',
-                gap: 24,
-                marginTop: 18,
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: 14,
                 paddingTop: 14,
                 borderTopWidth: 1,
                 borderTopColor: t.isDark ? '#3D2817' : '#FFD9BF',
               }}
             >
-              <View style={{ flex: 1 }}>
-                <Txt size={18} weight="700">{s?.totalContributions ?? '—'}</Txt>
-                <Txt size={12} muted>đóng góp ẩn danh</Txt>
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Txt size={20} weight="800" color={t.primary}>{s?.totalContributions ?? '—'}</Txt>
+                <Txt size={11.5} muted style={{ marginTop: 2 }}>Đóng góp</Txt>
               </View>
-              <View style={{ flex: 1 }}>
-                <Txt size={18} weight="700">{s?.trackedPositions ?? '—'}</Txt>
-                <Txt size={12} muted>vị trí công việc</Txt>
+              <View style={{ width: 1, height: 26, backgroundColor: t.isDark ? '#3D2817' : '#FFD9BF' }} />
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Txt size={20} weight="800" color={t.primary}>{s?.trackedPositions ?? '—'}</Txt>
+                <Txt size={11.5} muted style={{ marginTop: 2 }}>Vị trí</Txt>
+              </View>
+              <View style={{ width: 1, height: 26, backgroundColor: t.isDark ? '#3D2817' : '#FFD9BF' }} />
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Txt size={20} weight="800" color={t.primary}>{industryCount}</Txt>
+                <Txt size={11.5} muted style={{ marginTop: 2 }}>Ngành nghề</Txt>
               </View>
             </View>
           </Enter>
