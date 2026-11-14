@@ -284,7 +284,7 @@ class FE64_AdminMentorRevenueTest {
     }
 
     @Test
-    @DisplayName("UTCID07 - Subscription revenue and resolved dispute fees exist -> getOverview -> Total = subscription revenue + dispute fees")
+    @DisplayName("UTCID07 - Subscription revenue and resolved dispute fees exist -> getOverview -> Total = subscription revenue only")
     void utcid07_getOverview_ok() {
         // Given
         Instant now = Instant.now();
@@ -316,8 +316,7 @@ class FE64_AdminMentorRevenueTest {
         // Then
         assertThat(response).isNotNull();
         assertThat(response.getSubscriptionRevenue()).isEqualByComparingTo(BigDecimal.valueOf(500000));
-        assertThat(response.getDisputeFeeRevenue()).isEqualByComparingTo(BigDecimal.valueOf(50000));
-        assertThat(response.getTotalOwnedRevenue()).isEqualByComparingTo(BigDecimal.valueOf(550000));
+        assertThat(response.getTotalOwnedRevenue()).isEqualByComparingTo(BigDecimal.valueOf(500000));
         assertThat(response.getMonthlyRevenue()).hasSize(12);
     }
 
@@ -340,7 +339,6 @@ class FE64_AdminMentorRevenueTest {
         assertThat(response).isNotNull();
         assertThat(response.getTotalOwnedRevenue()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.getSubscriptionRevenue()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(response.getDisputeFeeRevenue()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.getSuccessfulTransactionCount()).isEqualTo(0);
     }
 

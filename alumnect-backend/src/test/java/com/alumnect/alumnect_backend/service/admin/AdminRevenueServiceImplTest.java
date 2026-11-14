@@ -57,12 +57,12 @@ class AdminRevenueServiceImplTest {
 
         AdminRevenueOverviewResponse response = service.getOverview(null, null);
 
-        assertThat(response.getTotalOwnedRevenue()).isEqualByComparingTo("270000");
+        // Doanh thu chỉ gồm gói Mentor; phí tranh chấp không còn là một khoản doanh thu
+        assertThat(response.getTotalOwnedRevenue()).isEqualByComparingTo("250000");
         assertThat(response.getSubscriptionRevenue()).isEqualByComparingTo("250000");
-        assertThat(response.getDisputeFeeRevenue()).isEqualByComparingTo("20000");
         assertThat(response.getEscrowHolding()).isEqualByComparingTo("130000");
         assertThat(response.getPendingMentorPayout()).isEqualByComparingTo("100000");
-        assertThat(response.getTransactions()).hasSize(2);
+        assertThat(response.getTransactions()).hasSize(1);
     }
 
     @Test

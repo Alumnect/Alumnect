@@ -7,7 +7,6 @@ import {
   FileSpreadsheet,
   FileText,
   HandCoins,
-  Scale,
   Search,
   ShieldCheck,
   WalletCards,
@@ -197,8 +196,8 @@ export function AdminRevenuePage() {
         }
       />
 
-      {/* 2. Số liệu doanh thu: tổng nổi bật trên nền xanh đậm + ba nguồn */}
-      <section className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
+      {/* 2. Số liệu doanh thu: tổng nổi bật trên nền xanh đậm + các nguồn */}
+      <section className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr]">
         <div className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-[#1F2A44] to-[#2B3A5E] px-5 py-4 text-white">
           <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-[#F27024]/25 blur-xl" aria-hidden />
           <p className="relative text-[13px] text-[#B9C3DA]">Tổng doanh thu sở hữu · {PERIOD_LABELS[period].toLocaleLowerCase('vi')}</p>
@@ -210,7 +209,6 @@ export function AdminRevenuePage() {
           <p className="relative mt-0.5 text-xs text-[#B9C3DA]">{effectiveData.successfulTransactionCount ?? 0} khoản đã ghi nhận</p>
         </div>
         <StatTile icon={<WalletCards />} tone="blue" label="Doanh thu gói Mentor" value={isLoading && !data ? '…' : formatVnd(effectiveData.subscriptionRevenue)} />
-        <StatTile icon={<Scale />} tone="violet" label="Phí xử lý tranh chấp" value={isLoading && !data ? '…' : formatVnd(effectiveData.disputeFeeRevenue)} />
         <StatTile
           icon={growth >= 0 ? <ArrowUpRight /> : <ArrowDownRight />}
           tone={growth >= 0 ? 'green' : 'red'}
@@ -243,8 +241,8 @@ export function AdminRevenuePage() {
         </div>
         <div className="rounded-3xl border border-border bg-surface p-6">
           <h2 className="font-display font-bold text-text">Cơ cấu doanh thu</h2>
-          <div className="mt-6 space-y-5"><BreakdownRow label="Gói dịch vụ Mentor" value={effectiveData.subscriptionRevenue ?? 0} total={effectiveData.totalOwnedRevenue ?? 0} color="bg-info" /><BreakdownRow label="Phí xử lý tranh chấp" value={effectiveData.disputeFeeRevenue ?? 0} total={effectiveData.totalOwnedRevenue ?? 0} color="bg-violet-500" /></div>
-          <div className="mt-7 rounded-2xl bg-success-soft p-4"><div className="flex items-center gap-2 text-sm font-bold text-success"><HandCoins className="h-4 w-4" /> Nguyên tắc ghi nhận</div><p className="mt-1.5 text-xs leading-5 text-success">Gói chỉ tính khi đã thanh toán. Phí tranh chấp chỉ tính sau khi Ticket được Admin giải quyết.</p></div>
+          <div className="mt-6 space-y-5"><BreakdownRow label="Gói dịch vụ Mentor" value={effectiveData.subscriptionRevenue ?? 0} total={effectiveData.totalOwnedRevenue ?? 0} color="bg-info" /></div>
+          <div className="mt-7 rounded-2xl bg-success-soft p-4"><div className="flex items-center gap-2 text-sm font-bold text-success"><HandCoins className="h-4 w-4" /> Nguyên tắc ghi nhận</div><p className="mt-1.5 text-xs leading-5 text-success">Gói chỉ tính khi đã thanh toán.</p></div>
         </div>
       </section>
 
@@ -257,7 +255,6 @@ export function AdminRevenuePage() {
               options={[
                 { value: 'ALL', label: 'Tất cả nguồn thu' },
                 { value: 'MENTOR_SUBSCRIPTION', label: 'Gói Mentor' },
-                { value: 'DISPUTE_FEE', label: 'Phí tranh chấp' },
               ]}
               placeholder="Tất cả nguồn thu"
               align="right"

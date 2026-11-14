@@ -397,13 +397,12 @@ export interface AdminMonthlyRevenueDto {
   month: string
   label: string
   subscriptionRevenue: number
-  disputeFeeRevenue: number
   totalRevenue: number
 }
 
 export interface AdminRevenueTransactionDto {
   id: string
-  sourceType: 'MENTOR_SUBSCRIPTION' | 'DISPUTE_FEE'
+  sourceType: 'MENTOR_SUBSCRIPTION'
   referenceCode: string
   payerName: string
   payerEmail: string
@@ -417,7 +416,6 @@ export interface AdminRevenueTransactionDto {
 export interface AdminRevenueOverviewDto {
   totalOwnedRevenue: number
   subscriptionRevenue: number
-  disputeFeeRevenue: number
   currentMonthRevenue: number
   previousMonthRevenue: number
   monthGrowthPercent: number
