@@ -85,6 +85,12 @@ public class AdminReportResponse {
     /** Mức độ rủi ro hiển thị giao diện (HIGH, MEDIUM, LOW) */
     private String riskLevel;
 
+    /** Số lượt người dùng báo cáo bài viết này (không tính báo cáo hệ thống và báo cáo Admin đã bỏ qua) */
+    private Long userReportCount;
+
+    /** Điểm rủi ro tổng hợp: điểm nội dung cộng 10% cho mỗi lượt người dùng báo cáo, tối đa 1.00 */
+    private Double riskScore;
+
     /** Báo cáo do hệ thống tự động tạo, không có người gửi */
     private Boolean systemGenerated;
 }

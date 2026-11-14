@@ -122,6 +122,10 @@ export interface AdminReportDto {
   autoModerated?: boolean
   detectedKeywords?: string
   riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW'
+  /** Số lượt người dùng báo cáo bài viết (không tính báo cáo hệ thống và báo cáo đã bỏ qua) */
+  userReportCount?: number
+  /** Điểm rủi ro tổng hợp: điểm nội dung + 10% mỗi lượt người dùng báo cáo, tối đa 1 */
+  riskScore?: number
   /** Báo cáo do hệ thống tự động tạo, không có người gửi */
   systemGenerated?: boolean
 }

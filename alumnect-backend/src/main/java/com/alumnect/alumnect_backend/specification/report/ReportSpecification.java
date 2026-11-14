@@ -7,9 +7,12 @@ import com.alumnect.alumnect_backend.entity.post.Post;
 import com.alumnect.alumnect_backend.entity.report.Report;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -111,28 +114,30 @@ public class ReportSpecification {
                 ));
             }
 
-            // 7. Lọc theo mức rủi ro ngay trong truy vấn để phân trang và tổng số luôn đúng
+            // 7. Lọc theo mức rủi ro ngay trong truy vấn để phân trang và tổng số luôn đúng.
+            // Điểm rủi ro = điểm nội dung + 10% cho mỗi lượt người dùng báo cáo bài viết (chưa bị bỏ qua),
+            // khớp với riskScore mà AdminReportServiceImpl trả về.
             ModerationRiskLevel level = ModerationRiskLevel.parse(riskLevel);
             if (level != null) {
+                Subquery<Long> userReports = criteriaQuery.subquery(Long.class);
+                Root<Report> other = userReports.from(Report.class);
+                userReports.select(cb.count(other)).where(
+                        cb.equal(other.get("post"), root.get("post")),
+                        cb.isNotNull(other.get("reporter")),
+                        cb.notEqual(other.get("status"), ReportStatus.DISMISSED)
+                );
+                Expression<Number> riskScore = cb.sum(
+                        cb.coalesce(root.<Double>get("aiScore"), 0.0),
+                        cb.prod(userReports, ModerationRiskLevel.USER_REPORT_RISK_BONUS)
+                );
+                Predicate imageViolation = cb.like(cb.coalesce(root.get("detectedKeywords"), ""), "%[Ảnh vi phạm]%");
+
                 if (level == ModerationRiskLevel.HIGH) {
-                    predicates.add(cb.or(
-                            cb.greaterThanOrEqualTo(root.<Double>get("aiScore"), 0.85),
-                            cb.like(cb.coalesce(root.get("detectedKeywords"), ""), "%[Ảnh vi phạm]%")
-                    ));
+                    predicates.add(cb.or(cb.ge(riskScore, 0.85), imageViolation));
                 } else if (level == ModerationRiskLevel.MEDIUM) {
-                    predicates.add(cb.and(
-                            cb.greaterThanOrEqualTo(root.<Double>get("aiScore"), 0.40),
-                            cb.lessThan(root.<Double>get("aiScore"), 0.85),
-                            cb.notLike(cb.coalesce(root.get("detectedKeywords"), ""), "%[Ảnh vi phạm]%")
-                    ));
+                    predicates.add(cb.and(cb.ge(riskScore, 0.40), cb.lt(riskScore, 0.85), cb.not(imageViolation)));
                 } else if (level == ModerationRiskLevel.LOW) {
-                    predicates.add(cb.and(
-                            cb.or(
-                                    cb.isNull(root.get("aiScore")),
-                                    cb.lessThan(root.<Double>get("aiScore"), 0.40)
-                            ),
-                            cb.notLike(cb.coalesce(root.get("detectedKeywords"), ""), "%[Ảnh vi phạm]%")
-                    ));
+                    predicates.add(cb.and(cb.lt(riskScore, 0.40), cb.not(imageViolation)));
                 }
             }
 

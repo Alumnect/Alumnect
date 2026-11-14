@@ -34,5 +34,8 @@ public interface AdminReportMapper {
     @Mapping(target = "detectedKeywords", source = "report.detectedKeywords")
     @Mapping(target = "riskLevel", expression = "java(com.alumnect.alumnect_backend.common.enums.ModerationRiskLevel.fromScore(report.getAiScore()).name())")
     @Mapping(target = "systemGenerated", expression = "java(report.getReporter() == null)")
+    // Hai trường dưới cần đếm báo cáo theo cả trang nên do AdminReportServiceImpl gán sau khi map
+    @Mapping(target = "userReportCount", ignore = true)
+    @Mapping(target = "riskScore", ignore = true)
     AdminReportResponse toDto(Report report);
 }

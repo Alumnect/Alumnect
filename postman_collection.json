@@ -11899,7 +11899,7 @@
                 }
               ]
             },
-            "description": "Phân quyền: Admin. Lọc theo mức rủi ro ngay trong truy vấn nên phân trang và totalElements luôn đúng. riskLevel nhận HIGH (điểm từ 0.85), MEDIUM (0.40 đến dưới 0.85), LOW (dưới 0.40). Mã phản hồi 200."
+            "description": "Phân quyền: Admin. Lọc theo mức rủi ro ngay trong truy vấn nên phân trang và totalElements luôn đúng. riskLevel nhận HIGH (điểm từ 0.85), MEDIUM (0.40 đến dưới 0.85), LOW (dưới 0.40). Điểm dùng để lọc là điểm rủi ro tổng hợp: ai_score + 0.10 cho mỗi lượt người dùng báo cáo cùng bài viết (không tính báo cáo hệ thống và báo cáo DISMISSED), tối đa 1.00. Mỗi phần tử trả thêm userReportCount và riskScore. Mã phản hồi 200."
           },
           "response": []
         },

@@ -77,7 +77,7 @@ stateDiagram-v2
 *   **Actors/Roles**: Quản trị viên (`ADMIN`), Người dùng hệ thống (`STUDENT`, `ALUMNI`).
 *   **Purpose**: Tự động phát hiện và ngăn chặn nội dung tục tĩu, xúc phạm, đe dọa mà không làm chậm phản hồi của hệ thống và không bắt nhầm tiếng Việt thông thường.
 *   **Interface**:
-    *   Cột "Đánh giá rủi ro" trên bảng báo cáo với nhãn phần trăm và cờ "Tự động ẩn".
+    *   Cột "Đánh giá rủi ro" trên bảng báo cáo với nhãn phần trăm (đã cộng 10% mỗi lượt người dùng báo cáo), dòng "N lượt báo cáo" kèm chú thích cách tính khi rê chuột, và cờ "Tự động ẩn".
     *   Bộ lọc "Mức rủi ro" gồm Tất cả, Nguy cơ cao, Nghi vấn, An toàn.
     *   Khối "Phân tích Kiểm duyệt Tự động" trong Modal chi tiết với thanh đo rủi ro và thẻ từ khóa.
     *   Các nút "Đã giải quyết", "Bỏ qua báo cáo", "Ẩn / Hủy ẩn bài viết".
@@ -85,7 +85,8 @@ stateDiagram-v2
 **Data processing**:
 *   Lưu `ai_score`, `ai_flagged_reason`, `auto_moderated`, `detected_keywords` vào bảng `reports`.
 *   Báo cáo hệ thống có `reporter_id = NULL` (migration V43).
-*   Truy vấn qua `ReportSpecification`, sắp xếp `ai_score DESC, created_at DESC`, lọc `riskLevel` ngay trong truy vấn để phân trang đúng.
+*   Truy vấn qua `ReportSpecification`, sắp xếp `created_at DESC, id DESC` (báo cáo mới nhất lên đầu), lọc `riskLevel` ngay trong truy vấn để phân trang đúng.
+*   Điểm rủi ro hiển thị (`riskScore`) = `ai_score` + 0.10 cho mỗi lượt người dùng báo cáo cùng bài viết (`reporter_id IS NOT NULL`, trạng thái khác `DISMISSED`), tối đa 1.00. `AdminReportServiceImpl` đếm một lần cho cả trang qua `ReportRepository.countUserReportsByPostIds` và trả thêm `userReportCount`. Bộ lọc mức rủi ro dùng cùng công thức bằng truy vấn con. `ai_score` giữ nguyên là điểm chấm nội dung, không dùng để tự ẩn bài theo số lượt báo cáo.
 *   Cập nhật `reviewed_by` và `reviewed_at` khi Admin xử lý báo cáo.
 
 ---
@@ -102,7 +103,8 @@ stateDiagram-v2
 | **BR-123.04** | Nếu 0.40 <= điểm < 0.85, bài viết giữ `ACTIVE` và được đưa vào hàng chờ Admin. |
 | **BR-123.05** | Từ cấm nằm trong cụm dài đã khớp không được tính thêm. Ví dụ "vãi lồn" chỉ tính một lần, không đếm thêm "lồn". |
 | **BR-123.06** | Từ có dấu chỉ khớp mục từ điển đúng dấu. Cụm an toàn chỉ bảo vệ đúng đoạn văn của nó và phải khớp đúng dấu nếu người viết gõ có dấu. |
-| **BR-123.07** | Danh sách báo cáo của Admin sắp xếp theo `ai_score DESC`, sau đó `created_at DESC`. |
+| **BR-123.07** | Danh sách báo cáo của Admin sắp xếp theo thời gian báo cáo mới nhất trước (`created_at DESC`, sau đó `id DESC`). |
+| **BR-123.14** | Mỗi lượt người dùng báo cáo bài viết (không tính báo cáo hệ thống và báo cáo đã bị bỏ qua) cộng thêm 10% vào điểm rủi ro hiển thị của mọi báo cáo thuộc bài đó, tối đa 100%. Mức rủi ro (Nguy cơ cao >= 85%, Nghi vấn 40-85%, An toàn < 40%) và bộ lọc mức rủi ro tính trên điểm đã cộng. Ảnh vi phạm luôn là Nguy cơ cao. Điểm cộng chỉ dùng để Admin ưu tiên xử lý, không tự ẩn bài. |
 | **BR-123.08** | Báo cáo do hệ thống tạo có `reporter_id = NULL`, không tính vào giới hạn báo cáo của tác giả. Mỗi bài có tối đa một báo cáo hệ thống đang `PENDING`; lần quét sau cập nhật báo cáo đó. |
 | **BR-123.09** | Bài sửa nội dung phải được quét lại như bài mới đăng. |
 | **BR-123.10** | Bình luận, nội dung nhóm, diễn đàn và chat nhóm được che từ mức `OFFENSIVE` trở lên khi lưu. Tin nhắn 1-1 và Chat for Task không bị quét. |
@@ -203,7 +205,9 @@ sequenceDiagram
     Admin->>Client: Mở /admin/reports, chọn mức rủi ro
     Client->>AdminCtrl: GET /admin/reports?status=PENDING&riskLevel=HIGH&page=0&size=10
     AdminCtrl->>AdminRepService: getReports(bộ lọc, riskLevel, trang)
-    AdminRepService->>DB: SELECT ... ORDER BY ai_score DESC, created_at DESC
+    AdminRepService->>DB: SELECT ... WHERE ai_score + 0.10 * (số lượt người dùng báo cáo) thuộc mức rủi ro ORDER BY created_at DESC, id DESC
+    AdminRepService->>DB: countUserReportsByPostIds(các bài trong trang, loại DISMISSED)
+    Note over AdminRepService: riskScore = min(1, ai_score + 0.10 * userReportCount)
     AdminRepService-->>AdminCtrl: PageResponse<AdminReportResponse>
     AdminCtrl-->>Client: 200 OK
 
@@ -223,7 +227,7 @@ sequenceDiagram
 * **Các bước 1 - 7**: Người dùng đăng, sửa bài hoặc gửi báo cáo. Service lưu dữ liệu trong transaction, phát sự kiện và trả phản hồi ngay.
 * **Các bước 8 - 14**: Sau khi transaction commit, listener chạy trên luồng riêng, đọc lại dữ liệu và gọi `ContentModerationServiceImpl`. `ProfanityFilterServiceImpl` phân tích văn bản theo từng từ và trả về các vị trí vi phạm.
 * **Các bước 15 - 21 (Rẽ nhánh theo ngưỡng)**: Vi phạm nghiêm trọng thì ẩn bài, báo tác giả, tạo hoặc cập nhật báo cáo. Vi phạm vừa thì giữ bài và đưa vào hàng chờ. Điểm thấp thì chỉ lưu điểm nếu có báo cáo của người dùng. Bài do người dùng đăng hoặc sửa mà Admin đã bỏ qua đúng tập từ khóa thì không tạo báo cáo mới. Cảnh báo WebSocket chỉ gửi sau khi dữ liệu đã lưu.
-* **Các bước 22 - 34**: Admin xem danh sách đã sắp xếp theo điểm rủi ro, lọc theo mức rủi ro và xử lý báo cáo. Bỏ qua báo cáo đã làm bài bị tự ẩn thì bài được khôi phục và tác giả nhận thông báo.
+* **Các bước 22 - 34**: Admin xem danh sách báo cáo mới nhất lên đầu, mỗi báo cáo có điểm rủi ro đã cộng 10% cho mỗi lượt người dùng báo cáo bài viết; lọc theo mức rủi ro trên cùng điểm đó và xử lý báo cáo. Bỏ qua báo cáo đã làm bài bị tự ẩn thì bài được khôi phục và tác giả nhận thông báo.
 
 ---
 
@@ -261,7 +265,9 @@ classDiagram
         HIGH
         MEDIUM
         LOW
+        +double USER_REPORT_RISK_BONUS$
         +fromScore(Double score) ModerationRiskLevel
+        +combinedScore(Double contentScore, long userReportCount) double$
         +parse(String value) ModerationRiskLevel
     }
 
@@ -340,6 +346,7 @@ classDiagram
 
     class AdminReportServiceImpl {
         +getReports(... String riskLevel, int page, int size) PageResponse
+        -applyUserReportRisk(List~Report~ reports, List~AdminReportResponse~ dtoList) void
         +updateReportStatus(Long id, String status, String adminEmail) void
     }
 

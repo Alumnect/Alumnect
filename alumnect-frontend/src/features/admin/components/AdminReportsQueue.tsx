@@ -292,14 +292,26 @@ const reporterDetail = (report: AdminReportDto) => report.reporterEmail ?? 'Tự
 /** Kiểm tra báo cáo này do AI phát hiện ảnh nhạy cảm/bạo lực (nhị phân, không chấm thang điểm). */
 const isImageAiViolation = (report: AdminReportDto) => Boolean(report.detectedKeywords?.includes('[Ảnh vi phạm]'))
 
+/** Điểm rủi ro hiển thị: điểm nội dung đã cộng 10% mỗi lượt người dùng báo cáo (backend tính sẵn). */
+const getReportRiskScore = (report: AdminReportDto): number | undefined => report.riskScore ?? report.aiScore ?? undefined
+
 const getReportRiskLevel = (report: AdminReportDto): 'HIGH' | 'MEDIUM' | 'LOW' => {
   if (isImageAiViolation(report)) return 'HIGH'
-  if (report.aiScore != null) {
-    if (report.aiScore >= 0.85) return 'HIGH'
-    if (report.aiScore >= 0.4) return 'MEDIUM'
+  const score = getReportRiskScore(report)
+  if (score != null) {
+    if (score >= 0.85) return 'HIGH'
+    if (score >= 0.4) return 'MEDIUM'
     return 'LOW'
   }
   return report.riskLevel ?? 'LOW'
+}
+
+/** Giải thích cách ra điểm rủi ro khi bài viết bị người dùng báo cáo. */
+const riskScoreHint = (report: AdminReportDto) => {
+  const count = report.userReportCount ?? 0
+  if (count === 0) return undefined
+  const content = Math.round((report.aiScore ?? 0) * 100)
+  return `Nội dung ${content}% + ${count} lượt báo cáo × 10%`
 }
 
 const REPORT_RISK_CONFIG = {
@@ -755,6 +767,7 @@ export function AdminReportsQueue() {
                   const catCfg = getCategoryConfig(r.postType)
                   const CatIcon = catCfg.icon
                   const riskConfig = REPORT_RISK_CONFIG[getReportRiskLevel(r)]
+                  const riskScore = getReportRiskScore(r)
 
                   const localWillHide = willHideMap[r.id]
                   const currentStatus = localWillHide !== undefined 
@@ -834,17 +847,23 @@ export function AdminReportsQueue() {
                               <Sparkles size={10} />
                               Ảnh vi phạm
                             </span>
-                          ) : r.aiScore !== undefined && r.aiScore !== null ? (
+                          ) : riskScore != null ? (
                             <div className="inline-flex flex-col items-center gap-1">
                               <span
+                                title={riskScoreHint(r)}
                                 className={cn(
                                   'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold border whitespace-nowrap',
                                   riskConfig.tone
                                 )}
                               >
                                 <Sparkles size={10} />
-                                {(r.aiScore * 100).toFixed(0)}% {riskConfig.label}
+                                {(riskScore * 100).toFixed(0)}% {riskConfig.label}
                               </span>
+                              {(r.userReportCount ?? 0) > 0 && (
+                                <span className="text-xs text-text-subtle whitespace-nowrap" title={riskScoreHint(r)}>
+                                  {r.userReportCount} lượt báo cáo
+                                </span>
+                              )}
                               {r.autoModerated && (
                                 <span className="text-xs font-bold text-rose-600 bg-rose-100/60 dark:bg-rose-950/40 dark:text-rose-300 rounded px-1.5 py-0.5">
                                   Tự động ẩn

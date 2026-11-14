@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.service.admin;
 
 import com.alumnect.alumnect_backend.common.api.PageResponse;
+import com.alumnect.alumnect_backend.common.enums.ModerationRiskLevel;
 import com.alumnect.alumnect_backend.common.enums.PostStatus;
 import com.alumnect.alumnect_backend.common.enums.ReportStatus;
 import com.alumnect.alumnect_backend.dao.post.PostRepository;
@@ -25,7 +26,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +70,7 @@ public class AdminReportServiceImpl implements AdminReportService {
         List<AdminReportResponse> dtoList = reports.stream()
                 .map(adminReportMapper::toDto)
                 .collect(Collectors.toList());
+        applyUserReportRisk(reports, dtoList);
 
         return PageResponse.<AdminReportResponse>builder()
                 .content(dtoList)
@@ -74,6 +80,36 @@ public class AdminReportServiceImpl implements AdminReportService {
                 .pageNumber(reportPage.getNumber())
                 .last(reportPage.isLast())
                 .build();
+    }
+
+    /**
+     * Gán số lượt người dùng báo cáo và điểm rủi ro tổng hợp cho các báo cáo trong trang.
+     * Mô tả chi tiết: đếm một lần cho cả trang theo ID bài viết (không đếm báo cáo hệ thống và báo cáo
+     * đã bị bỏ qua), sau đó cộng 10% mỗi lượt vào điểm chấm nội dung.
+     *
+     * @param reports Các báo cáo của trang hiện tại
+     * @param dtoList DTO tương ứng cần bổ sung dữ liệu
+     */
+    private void applyUserReportRisk(List<Report> reports, List<AdminReportResponse> dtoList) {
+        Set<Long> postIds = reports.stream()
+                .map(Report::getPost)
+                .filter(Objects::nonNull)
+                .map(Post::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<Long, Long> countByPost = new HashMap<>();
+        if (!postIds.isEmpty()) {
+            for (Object[] row : reportRepository.countUserReportsByPostIds(postIds, ReportStatus.DISMISSED)) {
+                countByPost.put((Long) row[0], ((Number) row[1]).longValue());
+            }
+        }
+
+        for (AdminReportResponse dto : dtoList) {
+            long count = dto.getPostId() == null ? 0L : countByPost.getOrDefault(dto.getPostId(), 0L);
+            dto.setUserReportCount(count);
+            dto.setRiskScore(ModerationRiskLevel.combinedScore(dto.getAiScore(), count));
+        }
     }
 
     @Override
