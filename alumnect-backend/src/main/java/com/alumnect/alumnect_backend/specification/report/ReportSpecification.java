@@ -136,8 +136,8 @@ public class ReportSpecification {
                 }
             }
 
-            // Mặc định sắp xếp ưu tiên theo điểm rủi ro cao nhất (aiScore giảm dần), sau đó đến ngày tạo (createdAt giảm dần)
-            criteriaQuery.orderBy(cb.desc(root.get("aiScore")), cb.desc(root.get("createdAt")));
+            // Báo cáo mới nhất được xử lý trước; ID là khóa phụ để thứ tự ổn định khi cùng thời điểm.
+            criteriaQuery.orderBy(cb.desc(root.get("createdAt")), cb.desc(root.get("id")));
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

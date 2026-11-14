@@ -529,43 +529,29 @@ export function MentoringGroupDetailPage() {
               </Card>
 
               {/* Quick Actions */}
-              <Card hover={false} className="border border-border p-5 space-y-3 dark:bg-surface">
+              {isLeader && <Card hover={false} className="border border-border p-5 space-y-3 dark:bg-surface">
                 <h4 className="text-xs font-bold text-text">
                   {t('mentoring.quickActionsHeading')}
                 </h4>
                 <div className="space-y-2">
-                  {isLeader && (
-                    <>
-                      <Button
-                        variant="primary"
-                        className="w-full justify-start text-xs font-bold rounded-xl gap-2"
-                        onClick={() => navigate(`/app/mentoring/requests/create?groupId=${group.id}`)}
-                      >
-                        <Send className="h-4 w-4" />
-                        {t('mentoring.createRequestForGroupBtn')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-xs font-bold rounded-xl gap-2 border-border"
-                        onClick={() => setIsInviteModalOpen(true)}
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        {t('mentoring.inviteMoreMembersBtn')}
-                      </Button>
-                    </>
-                  )}
-                  {!isLeader && isCurrentUserJoined && (
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-xs font-bold rounded-xl gap-2 border-danger-border text-danger hover:bg-danger-soft"
-                      onClick={() => setIsLeaveConfirmOpen(true)}
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {t('mentoring.leaveGroupActionBtn')}
-                    </Button>
-                  )}
+                  <Button
+                    variant="primary"
+                    className="w-full justify-start text-xs font-bold rounded-xl gap-2"
+                    onClick={() => navigate(`/app/mentoring/requests/create?groupId=${group.id}`)}
+                  >
+                    <Send className="h-4 w-4" />
+                    {t('mentoring.createRequestForGroupBtn')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-xs font-bold rounded-xl gap-2 border-border"
+                    onClick={() => setIsInviteModalOpen(true)}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {t('mentoring.inviteMoreMembersBtn')}
+                  </Button>
                 </div>
-              </Card>
+              </Card>}
             </div>
           </div>
         )}
