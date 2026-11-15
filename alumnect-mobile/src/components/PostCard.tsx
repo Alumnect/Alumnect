@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Animated, FlatList, LayoutAnimation, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { Image } from 'expo-image'
 import * as Haptics from 'expo-haptics'
@@ -88,23 +88,40 @@ export const REPORT_REASONS: [string, string][] = [
   ['OTHER', 'Lý do khác'],
 ]
 
+/** Bộ nhớ đệm tỉ lệ khung hình ảnh bài viết theo URL — tránh nhảy giật layout khi cuộn hoặc render lại. */
+export const imageRatioCache = new Map<string, number>()
+
 /** Ảnh & video bài viết responsive theo chiều rộng thực của thẻ: vuốt ngang nhiều mục, chạm đúp để thích, chạm một lần mở bài. */
-function PostMedia({ postId, images, onOpen, onDoubleLike }: { postId: string; images: string[]; onOpen: () => void; onDoubleLike: () => void }) {
+function PostMediaImpl({ postId, images, onOpen, onDoubleLike }: { postId: string; images: string[]; onOpen: () => void; onDoubleLike: () => void }) {
   const t = useTheme()
   const { width: windowWidth } = useWindowDimensions()
-  const [containerWidth, setContainerWidth] = useState(0)
+  const [containerWidth, setContainerWidth] = useState(windowWidth)
   const width = containerWidth > 0 ? containerWidth : windowWidth
   const [index, setIndex] = useState(0)
   const [burst] = useState(() => new Animated.Value(0))
   const lastTap = useRef(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Tỉ lệ khung linh hoạt theo mục đầu tiên: ảnh 4:5 (0.8) → banner 2.2; video dọc cho phép tới 9:14 (~0.64).
+  
   const firstImage = images[0]
   const firstIsVideo = !!firstImage && isVideoUrl(firstImage)
   const [ratio, setRatio] = useState(() => {
-    const cached = firstIsVideo ? videoMetaCache.get(firstImage)?.ratio : undefined
-    return cached ? clampFeedVideoRatio(cached) : firstIsVideo ? 1 : 1.5
+    if (firstIsVideo) {
+      const cached = videoMetaCache.get(firstImage)?.ratio
+      return cached ? clampFeedVideoRatio(cached) : 1
+    }
+    const cached = firstImage ? imageRatioCache.get(firstImage) : undefined
+    return cached ?? 1.25
   })
+
+  useEffect(() => {
+    if (firstIsVideo) {
+      const cached = videoMetaCache.get(firstImage)?.ratio
+      if (cached) setRatio(clampFeedVideoRatio(cached))
+    } else if (firstImage) {
+      const cached = imageRatioCache.get(firstImage)
+      if (cached) setRatio(cached)
+    }
+  }, [firstImage, firstIsVideo])
 
   useEffect(() => {
     return () => {
@@ -133,6 +150,8 @@ function PostMedia({ postId, images, onOpen, onDoubleLike }: { postId: string; i
   const scale = burst.interpolate({ inputRange: [0, 0.25, 0.45, 0.65, 1], outputRange: [0.3, 1.15, 0.98, 1.02, 1.3] })
   const opacity = burst.interpolate({ inputRange: [0, 0.2, 0.65, 1], outputRange: [0, 1, 1, 0] })
 
+  const isMulti = images.length > 1
+
   return (
     <View
       style={{ marginTop: 10 }}
@@ -142,63 +161,98 @@ function PostMedia({ postId, images, onOpen, onDoubleLike }: { postId: string; i
       }}
     >
       <View style={{ width: '100%', height, backgroundColor: t.inputBg, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: t.divider, overflow: 'hidden' }}>
-        <FlatList
-          data={images}
-          keyExtractor={(u, i) => `${postId}-${i}-${u}`}
-          horizontal
-          pagingEnabled
-          nestedScrollEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) => {
-            if (width > 0) setIndex(Math.round(e.nativeEvent.contentOffset.x / width))
-          }}
-          getItemLayout={(_d, i) => ({ length: width, offset: width * i, index: i })}
-          renderItem={({ item }) => {
-            if (isVideoUrl(item)) {
+        {isMulti ? (
+          <FlatList
+            data={images}
+            keyExtractor={(u, i) => `${postId}-${i}-${u}`}
+            horizontal
+            pagingEnabled
+            nestedScrollEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(e) => {
+              if (width > 0) setIndex(Math.round(e.nativeEvent.contentOffset.x / width))
+            }}
+            getItemLayout={(_d, i) => ({ length: width, offset: width * i, index: i })}
+            renderItem={({ item }) => {
+              if (isVideoUrl(item)) {
+                return (
+                  <FeedVideo
+                    url={item}
+                    width={width}
+                    height={height}
+                    onDoubleLike={onDoubleLike}
+                    onRatio={item === firstImage ? (r) => setRatio(clampFeedVideoRatio(r)) : undefined}
+                  />
+                )
+              }
               return (
-                <FeedVideo
-                  url={item}
-                  width={width}
-                  height={height}
-                  onDoubleLike={onDoubleLike}
-                  onRatio={item === firstImage ? (r) => setRatio(clampFeedVideoRatio(r)) : undefined}
-                />
-              )
-            }
-            return (
-              <Pressable onPress={onTap} accessibilityRole="imagebutton" accessibilityLabel="Ảnh bài viết, chạm hai lần để thích">
-                <Image
-                  recyclingKey={`${postId}-${item}`}
-                  source={{ uri: item }}
-                  style={{ width, height }}
-                  contentFit="cover"
-                  cachePolicy="disk"
-                  transition={180}
-                  onLoad={
-                    item === firstImage
-                      ? (e) => {
-                        if (e.source.width > 0 && e.source.height > 0) {
-                          const natural = e.source.width / e.source.height
-                          setRatio(Math.min(2.2, Math.max(0.8, natural)))
+                <Pressable onPress={onTap} accessibilityRole="imagebutton" accessibilityLabel="Ảnh bài viết, chạm hai lần để thích">
+                  <Image
+                    recyclingKey={item}
+                    source={{ uri: item }}
+                    style={{ width, height }}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    priority="high"
+                    onLoad={
+                      item === firstImage
+                        ? (e) => {
+                          if (e.source.width > 0 && e.source.height > 0) {
+                            const natural = Math.min(2.0, Math.max(0.75, e.source.width / e.source.height))
+                            imageRatioCache.set(firstImage, natural)
+                            if (Math.abs(natural - ratio) > 0.02) {
+                              setRatio(natural)
+                            }
+                          }
                         }
-                      }
-                      : undefined
+                        : undefined
+                    }
+                  />
+                </Pressable>
+              )
+            }}
+          />
+        ) : (
+          firstIsVideo ? (
+            <FeedVideo
+              url={firstImage}
+              width={width}
+              height={height}
+              onDoubleLike={onDoubleLike}
+              onRatio={(r) => setRatio(clampFeedVideoRatio(r))}
+            />
+          ) : (
+            <Pressable onPress={onTap} accessibilityRole="imagebutton" accessibilityLabel="Ảnh bài viết, chạm hai lần để thích">
+              <Image
+                recyclingKey={firstImage}
+                source={{ uri: firstImage }}
+                style={{ width, height }}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                priority="high"
+                onLoad={(e) => {
+                  if (e.source.width > 0 && e.source.height > 0) {
+                    const natural = Math.min(2.0, Math.max(0.75, e.source.width / e.source.height))
+                    imageRatioCache.set(firstImage, natural)
+                    if (Math.abs(natural - ratio) > 0.02) {
+                      setRatio(natural)
+                    }
                   }
-                />
-              </Pressable>
-            )
-          }}
-        />
+                }}
+              />
+            </Pressable>
+          )
+        )}
         <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', opacity, transform: [{ scale }] }}>
           <Heart size={88} color="#fff" weight="fill" />
         </Animated.View>
-        {images.length > 1 ? (
+        {isMulti ? (
           <View pointerEvents="none" style={{ position: 'absolute', top: 12, right: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.62)' }}>
             <Txt size={12} weight="600" color="#fff">{index + 1}/{images.length}</Txt>
           </View>
         ) : null}
       </View>
-      {images.length > 1 ? (
+      {isMulti ? (
         <View style={{ alignItems: 'center', paddingTop: 8 }}>
           <Dots count={images.length} index={index} />
         </View>
@@ -206,6 +260,15 @@ function PostMedia({ postId, images, onOpen, onDoubleLike }: { postId: string; i
     </View>
   )
 }
+
+const PostMedia = React.memo(PostMediaImpl, (prev, next) => {
+  if (prev.postId !== next.postId) return false
+  if (prev.images.length !== next.images.length) return false
+  for (let i = 0; i < prev.images.length; i++) {
+    if (prev.images[i] !== next.images[i]) return false
+  }
+  return true
+})
 
 /** Chấm phân trang dưới ảnh, chỉ hiện khi có nhiều ảnh. */
 function Dots({ count, index }: { count: number; index: number }) {
@@ -239,8 +302,18 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
   const [reportDescription, setReportDescription] = useState('')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  const [likeBounce] = useState(() => new Animated.Value(1))
-  const [saveBounce] = useState(() => new Animated.Value(1))
+
+  useEffect(() => {
+    setLiked(post.liked)
+  }, [post.liked])
+
+  useEffect(() => {
+    setLikes(post.likes)
+  }, [post.likes])
+
+  useEffect(() => {
+    setSaved(post.saved)
+  }, [post.saved])
 
   const isMine = me?.id === post.authorId
   const images = post.images.length ? post.images : post.image ? [post.image] : []
@@ -280,28 +353,33 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
     onError: (e) => toast.error(errMsg(e)),
   })
 
-  const toggleLike = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  const toggleLike = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     const next = !liked
     setLiked(next)
     setLikes((n) => n + (next ? 1 : -1))
-    likeBounce.setValue(0.75)
-    Animated.spring(likeBounce, { toValue: 1, friction: 4, tension: 180, useNativeDriver: true }).start()
     likeM.mutate(next)
-  }
-  const toggleSave = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }, [liked, likeM])
+
+  const toggleSave = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     const next = !saved
     setSaved(next)
-    saveBounce.setValue(0.8)
-    Animated.spring(saveBounce, { toValue: 1, friction: 4, tension: 180, useNativeDriver: true }).start()
     saveM.mutate(next)
-  }
+  }, [saved, saveM])
 
-  const openPost = () => !detail && router.push({ pathname: '/post/[id]', params: { id: post.id } })
+  const openPost = useCallback(() => {
+    if (!detail) router.push({ pathname: '/post/[id]', params: { id: post.id } })
+  }, [detail, post.id, router])
+
   // Ở feed: bình luận hiện dạng bảng trượt lên như Instagram. Ở màn chi tiết bài viết thì danh sách đã nằm ngay bên dưới.
-  const openComments = () => (detail ? undefined : setCommentsOpen(true))
-  const openAuthor = () => post.authorId && router.push({ pathname: '/profile/[id]', params: { id: post.authorId } })
+  const openComments = useCallback(() => {
+    if (!detail) setCommentsOpen(true)
+  }, [detail])
+
+  const openAuthor = useCallback(() => {
+    if (post.authorId) router.push({ pathname: '/profile/[id]', params: { id: post.authorId } })
+  }, [post.authorId, router])
 
   const typeTag = TYPE_TAG[post.type]
   const eventDate = post.event?.startTime ? new Date(post.event.startTime) : null
@@ -309,7 +387,9 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
   const subtitle = [cleanRole, post.time].filter(Boolean).join(' · ')
   const salaryText = post.job ? formatJobSalary(post.job.salaryMin, post.job.salaryMax) : null
 
-  const likeByDoubleTap = () => { if (!liked) toggleLike() }
+  const likeByDoubleTap = useCallback(() => {
+    if (!liked) toggleLike()
+  }, [liked, toggleLike])
   const longText = post.text.length > 140 || post.text.split('\n').length > 3
 
   return (
@@ -517,8 +597,24 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
   )
 }
 
-function PostCardImpl({ post, detail }: { post: Post; detail?: boolean }) {
-  return <PostCardBody key={`${post.id}-${post.liked}-${post.likes}-${post.saved}`} post={post} detail={detail} />
-}
-
-export const PostCard = React.memo(PostCardImpl)
+export const PostCard = React.memo(PostCardBody, (prev, next) => {
+  return (
+    prev.detail === next.detail &&
+    prev.post.id === next.post.id &&
+    prev.post.liked === next.post.liked &&
+    prev.post.likes === next.post.likes &&
+    prev.post.saved === next.post.saved &&
+    prev.post.comments === next.post.comments &&
+    prev.post.reposts === next.post.reposts &&
+    prev.post.text === next.post.text &&
+    prev.post.time === next.post.time &&
+    prev.post.author === next.post.author &&
+    prev.post.avatar === next.post.avatar &&
+    prev.post.type === next.post.type &&
+    prev.post.image === next.post.image &&
+    prev.post.images?.length === next.post.images?.length &&
+    prev.post.images?.[0] === next.post.images?.[0] &&
+    prev.post.job === next.post.job &&
+    prev.post.event === next.post.event
+  )
+})
