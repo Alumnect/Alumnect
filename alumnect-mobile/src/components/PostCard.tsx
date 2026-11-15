@@ -16,6 +16,9 @@ import { toast, errMsg } from '@/lib/toast'
 import { ShareSheet } from './ShareSheet'
 import { CommentsSheet } from './CommentsSheet'
 import { postPath } from '@/lib/share'
+import { isVideoUrl } from '@/lib/upload'
+import { FeedVideo, clampFeedVideoRatio, videoMetaCache } from './FeedVideo'
+
 
 const TYPE_TAG: Record<string, [string, 'warning' | 'info' | 'primary']> = {
   achievement: ['Thành tựu', 'warning'],
@@ -85,7 +88,7 @@ export const REPORT_REASONS: [string, string][] = [
   ['OTHER', 'Lý do khác'],
 ]
 
-/** Ảnh bài viết responsive theo chiều rộng thực của thẻ: vuốt ngang nhiều ảnh, chạm đúp để thích, chạm một lần mở bài. */
+/** Ảnh & video bài viết responsive theo chiều rộng thực của thẻ: vuốt ngang nhiều mục, chạm đúp để thích, chạm một lần mở bài. */
 function PostMedia({ postId, images, onOpen, onDoubleLike }: { postId: string; images: string[]; onOpen: () => void; onDoubleLike: () => void }) {
   const t = useTheme()
   const { width: windowWidth } = useWindowDimensions()
@@ -95,9 +98,13 @@ function PostMedia({ postId, images, onOpen, onDoubleLike }: { postId: string; i
   const [burst] = useState(() => new Animated.Value(0))
   const lastTap = useRef(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Tỉ lệ khung ảnh linh hoạt từ 4:5 (0.8) đến banner ngang (2.2) để không cắt mất chữ trên banner tuyển dụng/sự kiện.
-  const [ratio, setRatio] = useState(1.5)
+  // Tỉ lệ khung linh hoạt theo mục đầu tiên: ảnh 4:5 (0.8) → banner 2.2; video dọc cho phép tới 9:14 (~0.64).
   const firstImage = images[0]
+  const firstIsVideo = !!firstImage && isVideoUrl(firstImage)
+  const [ratio, setRatio] = useState(() => {
+    const cached = firstIsVideo ? videoMetaCache.get(firstImage)?.ratio : undefined
+    return cached ? clampFeedVideoRatio(cached) : firstIsVideo ? 1 : 1.5
+  })
 
   useEffect(() => {
     return () => {
@@ -146,28 +153,41 @@ function PostMedia({ postId, images, onOpen, onDoubleLike }: { postId: string; i
             if (width > 0) setIndex(Math.round(e.nativeEvent.contentOffset.x / width))
           }}
           getItemLayout={(_d, i) => ({ length: width, offset: width * i, index: i })}
-          renderItem={({ item }) => (
-            <Pressable onPress={onTap} accessibilityRole="imagebutton" accessibilityLabel="Ảnh bài viết, chạm hai lần để thích">
-              <Image
-                recyclingKey={`${postId}-${item}`}
-                source={{ uri: item }}
-                style={{ width, height }}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={180}
-                onLoad={
-                  item === firstImage
-                    ? (e) => {
+          renderItem={({ item }) => {
+            if (isVideoUrl(item)) {
+              return (
+                <FeedVideo
+                  url={item}
+                  width={width}
+                  height={height}
+                  onDoubleLike={onDoubleLike}
+                  onRatio={item === firstImage ? (r) => setRatio(clampFeedVideoRatio(r)) : undefined}
+                />
+              )
+            }
+            return (
+              <Pressable onPress={onTap} accessibilityRole="imagebutton" accessibilityLabel="Ảnh bài viết, chạm hai lần để thích">
+                <Image
+                  recyclingKey={`${postId}-${item}`}
+                  source={{ uri: item }}
+                  style={{ width, height }}
+                  contentFit="cover"
+                  cachePolicy="disk"
+                  transition={180}
+                  onLoad={
+                    item === firstImage
+                      ? (e) => {
                         if (e.source.width > 0 && e.source.height > 0) {
                           const natural = e.source.width / e.source.height
                           setRatio(Math.min(2.2, Math.max(0.8, natural)))
                         }
                       }
-                    : undefined
-                }
-              />
-            </Pressable>
-          )}
+                      : undefined
+                  }
+                />
+              </Pressable>
+            )
+          }}
         />
         <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', opacity, transform: [{ scale }] }}>
           <Heart size={88} color="#fff" weight="fill" />
@@ -328,9 +348,9 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
           onPress={
             !detail && longText && !expanded
               ? () => {
-                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
-                  setExpanded(true)
-                }
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+                setExpanded(true)
+              }
               : detail
                 ? undefined
                 : openPost
@@ -470,9 +490,9 @@ function PostCardBody({ post, detail }: { post: Post; detail?: boolean }) {
         actions={
           isMine
             ? [
-                { label: 'Chỉnh sửa bài viết', onPress: () => router.push({ pathname: '/post/edit/[id]', params: { id: post.id } }) },
-                { label: 'Xóa bài viết', danger: true, onPress: () => setDeleteOpen(true) },
-              ]
+              { label: 'Chỉnh sửa bài viết', onPress: () => router.push({ pathname: '/post/edit/[id]', params: { id: post.id } }) },
+              { label: 'Xóa bài viết', danger: true, onPress: () => setDeleteOpen(true) },
+            ]
             : [{ label: 'Báo cáo vi phạm', danger: true, onPress: () => setReportOpen(true) }]
         }
       />

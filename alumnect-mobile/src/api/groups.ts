@@ -17,6 +17,25 @@ export type GroupRole = 'OWNER' | 'ADMIN' | 'MEMBER'
 export type MembershipStatus = 'NONE' | 'ACTIVE' | 'PENDING' | 'REJECTED' | 'LEFT' | 'REMOVED'
 export const isManager = (r?: GroupRole | null) => r === 'OWNER' || r === 'ADMIN'
 
+/** Giới hạn dữ liệu — đồng bộ với validation của Backend và web. */
+export const GROUP_POST_MAX = 5000
+/** Tối đa 10 ảnh + video mỗi bài viết; video tối đa 60 giây (giống web). */
+export const GROUP_MEDIA_MAX = 10
+export const GROUP_VIDEO_MAX_SECONDS = 60
+
+/** Tách chuỗi chủ đề "AI, Machine Learning" thành mảng đã dọn (bỏ rỗng/trùng không phân biệt hoa thường). */
+export function parseTopics(text: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const raw of text.split(',')) {
+    const t = raw.trim()
+    if (!t || seen.has(t.toLowerCase())) continue
+    seen.add(t.toLowerCase())
+    out.push(t)
+  }
+  return out
+}
+
 export interface GroupCard {
   id: number
   name: string
@@ -56,7 +75,8 @@ export interface GroupInput {
   coverImageUrl: string | null
 }
 
-export interface PostAuthor { userId: number; fullName: string; avatarUrl: string; roleLabel: string }
+export interface GroupPostInput { content: string; topic?: string | null; imageUrls?: string[]; videoUrls?: string[] }
+export interface PostAuthor { userId: number; fullName: string; avatarUrl: string; groupRole?: GroupRole | null; roleLabel: string }
 export interface GroupPost {
   id: number
   groupId: number
@@ -64,6 +84,7 @@ export interface GroupPost {
   content: string
   topic: string | null
   imageUrls: string[]
+  videoUrls: string[]
   isPinned: boolean
   likeCount: number
   commentCount: number
@@ -129,13 +150,17 @@ export const groupApi = {
   removeMember: (id: number, userId: number) => http.delete(`/groups/${id}/members/${userId}`),
   changeRole: (id: number, userId: number, role: 'ADMIN' | 'MEMBER') => http.put(`/groups/${id}/members/${userId}/role`, { role }),
 
-  posts: async (gid: number, page = 0) => {
-    const d = pl(await http.get(`/groups/${gid}/posts`, { params: { page, size: 10 } })) ?? {}
-    return { items: (d.content ?? []) as GroupPost[], page, hasMore: d.last === false }
+  posts: async (gid: number, page = 0, topic?: string) => {
+    const d = pl(await http.get(`/groups/${gid}/posts`, { params: { page, size: 10, ...(topic ? { topic } : {}) } })) ?? {}
+    const items = ((d.content ?? []) as GroupPost[]).map((p) => ({ ...p, imageUrls: p.imageUrls ?? [], videoUrls: p.videoUrls ?? [] }))
+    return { items, page, hasMore: d.last === false }
   },
-  post: async (gid: number, pid: number) => pl(await http.get(`/groups/${gid}/posts/${pid}`)) as GroupPost,
-  createPost: async (gid: number, p: { content: string; topic?: string | null; imageUrls?: string[] }) => pl(await http.post(`/groups/${gid}/posts`, p)) as GroupPost,
-  updatePost: async (gid: number, pid: number, p: { content: string; topic?: string | null; imageUrls?: string[] }) => pl(await http.put(`/groups/${gid}/posts/${pid}`, p)) as GroupPost,
+  post: async (gid: number, pid: number) => {
+    const p = pl(await http.get(`/groups/${gid}/posts/${pid}`)) as GroupPost
+    return { ...p, imageUrls: p.imageUrls ?? [], videoUrls: p.videoUrls ?? [] }
+  },
+  createPost: async (gid: number, p: GroupPostInput) => pl(await http.post(`/groups/${gid}/posts`, p)) as GroupPost,
+  updatePost: async (gid: number, pid: number, p: GroupPostInput) => pl(await http.put(`/groups/${gid}/posts/${pid}`, p)) as GroupPost,
   deletePost: (gid: number, pid: number) => http.delete(`/groups/${gid}/posts/${pid}`),
   toggleLike: async (gid: number, pid: number) => pl(await http.post(`/groups/${gid}/posts/${pid}/like`)) as { liked: boolean; likeCount: number },
   togglePin: (gid: number, pid: number) => http.put(`/groups/${gid}/posts/${pid}/pin`),

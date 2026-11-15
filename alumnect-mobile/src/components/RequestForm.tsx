@@ -13,10 +13,11 @@ import { WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
 import type { WorkingMode } from '@/api/mentoring'
 import { REQUEST_TASK_TYPES, requestApi } from '@/api/mentoringFlow'
 import { toast, errMsg } from '@/lib/toast'
+import { uploadFile } from '@/lib/upload'
 import { groupApi } from '@/api/mentoringGroups'
-import http, { type ApiResponse } from '@/lib/http'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { Check, FileText, Paperclip, Plus, Send, X } from '@/components/icons'
+import { formatMoneyInput, parseMoneyInput } from '@/lib/money'
 
 /** Chip lựa chọn theo phong cách MeetupChip (Core.kt) x Kakao (Tone Cam - Đen - Trắng) */
 function FormChip({
@@ -86,7 +87,7 @@ function StepBadge({
         <BrandIcon name={brandIcon} size={24} />
       </View>
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
           <View
             style={[
               styles.stepPill,
@@ -101,7 +102,7 @@ function StepBadge({
               {done ? `✓ BƯỚC ${step}` : `BƯỚC ${step}`}
             </Txt>
           </View>
-          <Txt weight="800" size={15} style={{ color: colors.text, flex: 1 }} numberOfLines={1}>
+          <Txt weight="800" size={15} style={{ color: colors.text, flexShrink: 1 }}>
             {title}
           </Txt>
         </View>
@@ -113,6 +114,19 @@ function StepBadge({
       </View>
     </View>
   )
+}
+
+const EXT_MIME: Record<string, string> = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic',
+  pdf: 'application/pdf', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt: 'application/vnd.ms-powerpoint', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  txt: 'text/plain', csv: 'text/csv', zip: 'application/zip', rar: 'application/x-rar-compressed',
+}
+/** Một số máy Android không trả mimeType → suy ra từ đuôi tệp. */
+function guessMime(name: string, mime?: string | null) {
+  if (mime && mime !== 'application/octet-stream') return mime
+  return EXT_MIME[name.split('.').pop()?.toLowerCase() ?? ''] ?? 'application/octet-stream'
 }
 
 /** UC90 (mentorId rỗng) và UC91 (gửi trực tiếp cho mentor) - Meetup x Instagram x Kakao 2026 Form Design */
@@ -169,7 +183,7 @@ export function RequestForm({
         taskType,
         budgetMin: f.budget ? Number(f.budget) : null,
         budgetMax: f.budget ? Number(f.budget) : null,
-        expectedDeadline: deadline || null,
+        expectedDeadline: deadline ? (isNaN(new Date(deadline).getTime()) ? deadline : new Date(deadline).toISOString()) : null,
         clientRequestKey: key,
         attachments,
       }
@@ -184,28 +198,42 @@ export function RequestForm({
 
   const addAttachment = async () => {
     setActiveStep(5)
-    const picked = await DocumentPicker.getDocumentAsync({ multiple: true, copyToCacheDirectory: true })
+    const picked = await DocumentPicker.getDocumentAsync({
+      multiple: true,
+      copyToCacheDirectory: true,
+      // Ảnh + tài liệu thông dụng (PDF, Word, Excel, PowerPoint, văn bản, nén)
+      type: [
+        'image/*',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/*',
+        'application/zip',
+        'application/x-zip-compressed',
+        'application/x-rar-compressed',
+      ],
+    })
     if (picked.canceled) return
     if (picked.assets.length + attachments.length > 5) {
       toast.error('Chỉ được đính kèm tối đa 5 tệp tin')
       return
     }
-    if (picked.assets.some((file) => !file.size || file.size >= 10 * 1024 * 1024)) {
+    if (picked.assets.some((file) => file.size != null && (file.size <= 0 || file.size >= 10 * 1024 * 1024))) {
       toast.error('Mỗi tệp phải lớn hơn 0 và nhỏ hơn 10 MB')
       return
     }
     setUploading(true)
     try {
       for (const file of picked.assets) {
-        const fileType = file.mimeType ?? 'application/octet-stream'
-        const signed = await http.get<unknown, ApiResponse<{ uploadUrl: string; publicUrl: string }>>(
-          '/files/presigned-url',
-          { params: { fileName: file.name, contentType: fileType, folder: 'mentorship/requests' } },
-        )
-        const blob = await (await fetch(file.uri)).blob()
-        const put = await fetch(signed.data.uploadUrl, { method: 'PUT', body: blob, headers: { 'Content-Type': fileType } })
-        if (!put.ok) throw new Error('Tải tệp lên thất bại. Vui lòng thử lại.')
-        setAttachments((a) => [...a, { fileName: file.name, fileUrl: signed.data.publicUrl, fileSize: file.size!, fileType }])
+        const fileType = guessMime(file.name, file.mimeType)
+        // uploadFile ép Content-Type của blob trùng với loại đã ký URL — tránh R2 trả 403 SignatureDoesNotMatch
+        const uploaded = await uploadFile({ uri: file.uri, name: file.name, mimeType: fileType }, 'mentorship/requests')
+        if (uploaded.fileSize >= 10 * 1024 * 1024) throw new Error(`Tệp "${file.name}" vượt quá 10 MB`)
+        setAttachments((a) => [...a, { fileName: file.name, fileUrl: uploaded.url, fileSize: uploaded.fileSize, fileType }])
       }
     } catch (e) {
       toast.error(errMsg(e))
@@ -280,6 +308,11 @@ export function RequestForm({
             return (
               <React.Fragment key={s.idx}>
                 <View style={styles.stepCol}>
+                  {i < steps.length - 1 && (
+                    <View
+                      style={[styles.stepConnector, { backgroundColor: s.done ? viridian : colors.borderSubtle }]}
+                    />
+                  )}
                   <View
                     style={[
                       styles.stepCircle,
@@ -301,7 +334,7 @@ export function RequestForm({
                   <Txt
                     size={10}
                     weight={lit ? '800' : '500'}
-                    numberOfLines={1}
+                    numberOfLines={2}
                     style={{
                       color: lit ? viridian : colors.textTertiary,
                       marginTop: 4,
@@ -311,16 +344,6 @@ export function RequestForm({
                     {s.label}
                   </Txt>
                 </View>
-                {i < steps.length - 1 && (
-                  <View
-                    style={[
-                      styles.stepConnector,
-                      {
-                        backgroundColor: s.done ? viridian : colors.borderSubtle,
-                      },
-                    ]}
-                  />
-                )}
               </React.Fragment>
             )
           })}
@@ -459,11 +482,11 @@ export function RequestForm({
             active={steps[1].active}
           />
           <View style={styles.fieldLabelRow}>
-            <Txt size={13} weight="700" style={{ color: colors.text }}>
+            <Txt size={13} weight="700" style={{ color: colors.text, flexShrink: 1 }}>
               Tiêu đề yêu cầu
             </Txt>
             <Txt size={11} weight="600" style={{ color: f.title.trim().length >= 5 ? viridian : colors.textTertiary }}>
-              {`${f.title.trim().length}/200 ký tự (tối thiểu 5)`}
+              {`${f.title.trim().length}/200 · tối thiểu 5`}
             </Txt>
           </View>
           <Input
@@ -478,11 +501,11 @@ export function RequestForm({
           />
 
           <View style={styles.fieldLabelRow}>
-            <Txt size={13} weight="700" style={{ color: colors.text }}>
+            <Txt size={13} weight="700" style={{ color: colors.text, flexShrink: 1 }}>
               Mô tả chi tiết bài toán & mong muốn
             </Txt>
             <Txt size={11} weight="600" style={{ color: f.description.trim().length >= 20 ? viridian : colors.textTertiary }}>
-              {`${f.description.trim().length}/3000 ký tự (tối thiểu 20)`}
+              {`${f.description.trim().length}/3000 · tối thiểu 20`}
             </Txt>
           </View>
           <Input
@@ -590,12 +613,12 @@ export function RequestForm({
           />
           <Input
             label="Mức ngân sách (VNĐ)"
-            placeholder="Ví dụ: 300000 (nhập 0 nếu mong muốn miễn phí)"
-            value={f.budget}
+            placeholder="Ví dụ: 300.000 (nhập 0 nếu muốn miễn phí)"
+            value={formatMoneyInput(f.budget)}
             onFocus={() => setActiveStep(4)}
             onChangeText={(v) => {
               setActiveStep(4)
-              set('budget')(v.replace(/\D/g, ''))
+              set('budget')(parseMoneyInput(v))
             }}
             keyboardType="number-pad"
             error={errors.budget}
@@ -701,12 +724,12 @@ const styles = StyleSheet.create({
   },
   stepperRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   stepCol: {
     flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 2,
   },
   stepCircle: {
     width: 24,
@@ -716,9 +739,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepConnector: {
+    position: 'absolute',
+    top: 11,
+    left: '50%',
+    right: '-50%',
+    marginHorizontal: 16,
     height: 2,
-    width: 14,
-    marginBottom: 14,
     borderRadius: 1,
   },
   scrollContainer: {
@@ -769,6 +795,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    columnGap: 8,
+    rowGap: 2,
     marginBottom: 6,
   },
   subBox: {

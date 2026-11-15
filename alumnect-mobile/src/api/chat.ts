@@ -6,6 +6,25 @@ import type { WorkingMode } from './mentoring'
 export type MediaType = 'IMAGE' | 'VIDEO' | 'FILE'
 export type OutgoingAttachment = { mediaType: MediaType; url: string; fileName?: string; fileSize?: number }
 
+/** Một phiên bản Deal Ticket — hiển thị dưới dạng thẻ trong dòng tin nhắn. */
+export interface DealSnapshot {
+  id: number
+  dealId: number
+  version: number
+  taskScope: string
+  agreedPrice: number
+  deadline: string
+  workingMode: WorkingMode
+  participationType: 'INDIVIDUAL' | 'GROUP'
+  taskType: string
+  expectedResult: string
+  modifiedByUserId?: number | null
+  modifiedByName?: string | null
+  modifiedByAvatar?: string | null
+  changeNote?: string | null
+  createdAt: string
+}
+
 export interface MentoringChatContext {
   conversationId: number
   myRole?: 'STUDENT' | 'MENTOR' | 'GROUP_MEMBER' | string
@@ -15,7 +34,7 @@ export interface MentoringChatContext {
   canCreateDealTicket: boolean
   canAcceptDealByRequest: boolean
   acceptByRequestUnavailableReason?: string | null
-  deal?: { deal: Deal } | null
+  deal?: { deal: Deal; snapshots?: DealSnapshot[] } | null
   taskId?: number | null
   groupId?: number | null
   requestId?: number | null

@@ -117,7 +117,7 @@ export default function TicketChatScreen() {
             const roleLabel = isAdmin ? 'Ban Quản Trị' : item.senderRole === 'MENTOR' ? 'Mentor' : 'Sinh viên'
 
             return (
-              <View style={{ flexDirection: mine ? 'row-reverse' : 'row', gap: 8, marginVertical: 5 }}>
+              <View style={{ flexDirection: mine ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8, marginVertical: 5 }}>
                 <Avatar uri={item.senderAvatar} name={item.senderName} size={32} ring={isAdmin} />
                 <View
                   style={[

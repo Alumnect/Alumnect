@@ -1,5 +1,5 @@
 import React from 'react'
-import { Image } from 'expo-image'
+import { Image } from 'react-native'
 
 /**
  * Minh họa màu từ bộ Meetup trong E:/Clone UIUX: dùng cho tiêu đề mục,
@@ -52,5 +52,7 @@ const SOURCES = {
 export type BrandIconName = keyof typeof SOURCES
 
 export function BrandIcon({ name, size = 48 }: { name: BrandIconName; size?: number }) {
-  return <Image source={SOURCES[name]} style={{ width: size, height: size }} contentFit="contain" cachePolicy="none" recyclingKey={name} accessible={false} />
+  const src = SOURCES[name]
+  if (!src) return null
+  return <Image source={src} style={{ width: size, height: size }} resizeMode="contain" accessible={false} />
 }

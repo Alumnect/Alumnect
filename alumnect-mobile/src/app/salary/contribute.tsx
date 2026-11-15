@@ -74,20 +74,48 @@ export default function ContributeScreen() {
     return industries.data?.find((i) => i.id === industryId)?.name ?? ''
   }, [industries.data, industryId])
 
-  // Chức danh: Ưu tiên các chức danh thực tế có trong database + danh mục chuẩn theo ngành
+  // Chức danh: Bắt buộc chọn ngành nghề trước, danh mục chức danh khớp chính xác theo ngành (khớp Web ContributeSalaryModal)
   const jobTitleOptions = useMemo(() => {
-    const dbRoles = Array.from(new Set((baseStats.data?.rows ?? []).map((r) => r.role).filter(Boolean)))
-    const list = selectedIndustryName && JOB_TITLES_BY_INDUSTRY[selectedIndustryName]
-      ? JOB_TITLES_BY_INDUSTRY[selectedIndustryName]
-      : STANDARD_JOB_TITLES
+    if (!industryId || !selectedIndustryName) return []
 
-    const merged = Array.from(new Set([...dbRoles, ...list])).sort((a, b) => a.localeCompare(b, 'vi'))
+    const list = JOB_TITLES_BY_INDUSTRY[selectedIndustryName] ?? STANDARD_JOB_TITLES
 
     return [
-      ...merged.map((title) => ({ value: title, label: title })),
+      ...list.map((title) => ({ value: title, label: title })),
       { value: OTHER_JOB_TITLE_ID, label: 'Chức danh khác (tự nhập)...' },
     ]
-  }, [baseStats.data?.rows, selectedIndustryName])
+  }, [industryId, selectedIndustryName])
+
+  // Xử lý chọn Ngành nghề: Tự động cập nhật và kiểm tra chức danh tương ứng (khớp Web)
+  const handleIndustrySelect = (newId: number | null) => {
+    setIndustryId(newId)
+    setErrors((prev) => ({ ...prev, industryId: '', jobTitle: '' }))
+
+    if (!newId) {
+      setSelectedTitleId(null)
+      setCustomJobTitle('')
+      return
+    }
+
+    const newIndustryName = industries.data?.find((i) => i.id === newId)?.name ?? ''
+    const allowedTitles = newIndustryName && JOB_TITLES_BY_INDUSTRY[newIndustryName]
+      ? JOB_TITLES_BY_INDUSTRY[newIndustryName]
+      : STANDARD_JOB_TITLES
+
+    // Nếu chức danh hiện tại không thuộc ngành mới chọn, reset để người dùng chọn lại
+    if (selectedTitleId && selectedTitleId !== OTHER_JOB_TITLE_ID) {
+      if (!allowedTitles.includes(selectedTitleId as any)) {
+        setSelectedTitleId(null)
+        setCustomJobTitle('')
+      }
+    }
+  }
+
+  const handleJobTitleSelect = (v: string | null) => {
+    setSelectedTitleId(v)
+    if (v !== OTHER_JOB_TITLE_ID) setCustomJobTitle('')
+    if (errors.jobTitle) setErrors((prev) => ({ ...prev, jobTitle: '' }))
+  }
 
   // Khu vực: Ưu tiên các thành phố thực tế có trong database + danh mục toàn quốc + Remote
   const regionOptions = useMemo(() => {
@@ -150,8 +178,14 @@ export default function ContributeScreen() {
 
   const submit = () => {
     const e: Record<string, string> = {}
-    if (!effectiveJobTitle) e.jobTitle = 'Chức danh công việc không được để trống'
-    else if (effectiveJobTitle.length > 150) e.jobTitle = 'Chức danh công việc không được vượt quá 150 ký tự'
+    if (!industryId) {
+      e.industryId = 'Vui lòng chọn ngành nghề'
+    }
+    if (!effectiveJobTitle) {
+      e.jobTitle = industryId ? 'Chức danh công việc không được để trống' : 'Vui lòng chọn ngành nghề trước'
+    } else if (effectiveJobTitle.length > 150) {
+      e.jobTitle = 'Chức danh công việc không được vượt quá 150 ký tự'
+    }
 
     const amt = Number(amount)
     if (!amount) e.amount = 'Mức lương không được để trống'
@@ -189,15 +223,12 @@ export default function ContributeScreen() {
 
         <FormSection icon="suitcase" title="Công việc của bạn" caption="01 · Vị trí và lĩnh vực đang làm việc">
           <SelectField
-            label="Ngành nghề"
-            placeholder={industries.isLoading ? 'Đang tải ngành nghề...' : 'Chọn lĩnh vực của bạn'}
+            label="Ngành nghề *"
+            placeholder={industries.isLoading ? 'Đang tải ngành nghề...' : 'Chọn ngành nghề...'}
             value={industryId == null ? null : String(industryId)}
             options={(industries.data ?? []).filter((i) => i.name.trim().toLowerCase() !== 'khác').map((i) => ({ value: String(i.id), label: i.name }))}
-            onChange={(v) => {
-              setIndustryId(v ? Number(v) : null)
-              setSelectedTitleId(null)
-              setCustomJobTitle('')
-            }}
+            error={errors.industryId}
+            onChange={(v) => handleIndustrySelect(v ? Number(v) : null)}
           />
           {industries.isError ? (
             <Button title="Tải lại ngành nghề" variant="ghost" onPress={() => void industries.refetch()} />
@@ -205,22 +236,24 @@ export default function ContributeScreen() {
 
           <SelectField
             label="Chức danh công việc *"
-            placeholder="Chọn chức danh công việc..."
+            placeholder={industryId ? 'Chọn chức danh công việc...' : 'Vui lòng chọn ngành nghề trước'}
+            disabled={!industryId}
+            onPressDisabled={() => toast.info('Vui lòng chọn ngành nghề trước')}
             value={selectedTitleId}
             options={jobTitleOptions}
             error={errors.jobTitle}
-            onChange={(v) => {
-              setSelectedTitleId(v)
-              if (v !== OTHER_JOB_TITLE_ID) setCustomJobTitle('')
-            }}
+            onChange={handleJobTitleSelect}
           />
 
-          {selectedTitleId === OTHER_JOB_TITLE_ID ? (
+          {industryId && selectedTitleId === OTHER_JOB_TITLE_ID ? (
             <Input
               label="Nhập chức danh của bạn *"
               placeholder="Ví dụ: Data Scientist, AI Researcher..."
               value={customJobTitle}
-              onChangeText={setCustomJobTitle}
+              onChangeText={(v) => {
+                setCustomJobTitle(v)
+                if (errors.jobTitle) setErrors((prev) => ({ ...prev, jobTitle: '' }))
+              }}
               error={errors.jobTitle}
             />
           ) : null}
@@ -267,18 +300,16 @@ export default function ContributeScreen() {
             ) : null}
           </View>
 
-          <Txt muted size={12} style={{ marginBottom: activeCheck ? 14 : 0 }}>
-            Nhập mức thu nhập gộp của 1 tháng bằng đồng Việt Nam, chưa trừ thuế và bảo hiểm. AI sẽ đối chiếu với mặt bằng thị trường trước khi gửi.
-          </Txt>
-
           {activeCheck ? (
-            <SalaryAiCheckPanel
-              result={activeCheck}
-              enteredAmount={Number(amount) || undefined}
-              jobTitle={effectiveJobTitle}
-              onApplySuggestion={applySuggestion}
-              disabled={ai.isPending || m.isPending}
-            />
+            <View style={{ marginTop: 10 }}>
+              <SalaryAiCheckPanel
+                result={activeCheck}
+                enteredAmount={Number(amount) || undefined}
+                jobTitle={effectiveJobTitle}
+                onApplySuggestion={applySuggestion}
+                disabled={ai.isPending || m.isPending}
+              />
+            </View>
           ) : null}
         </FormSection>
       </ScrollView>

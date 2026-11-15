@@ -91,6 +91,7 @@ import { UserCheckIcon as PhUserCheck } from 'phosphor-react-native/src/icons/Us
 import { UserFocusIcon as PhUserFocus } from 'phosphor-react-native/src/icons/UserFocus'
 import { UserPlusIcon as PhUserPlus } from 'phosphor-react-native/src/icons/UserPlus'
 import { UsersThreeIcon as PhUsersThree } from 'phosphor-react-native/src/icons/UsersThree'
+import { CrownIcon as PhCrown } from 'phosphor-react-native/src/icons/Crown'
 import { WalletIcon as PhWallet } from 'phosphor-react-native/src/icons/Wallet'
 import { WarningIcon as PhWarning } from 'phosphor-react-native/src/icons/Warning'
 import { XIcon as PhX } from 'phosphor-react-native/src/icons/X'
@@ -106,6 +107,12 @@ import { SquaresFourIcon as PhSquaresFour } from 'phosphor-react-native/src/icon
 import { PlusSquareIcon as PhPlusSquare } from 'phosphor-react-native/src/icons/PlusSquare'
 import { EyeIcon as PhEye } from 'phosphor-react-native/src/icons/Eye'
 import { EyeSlashIcon as PhEyeSlash } from 'phosphor-react-native/src/icons/EyeSlash'
+import { PlayIcon as PhPlay } from 'phosphor-react-native/src/icons/Play'
+import { PauseIcon as PhPause } from 'phosphor-react-native/src/icons/Pause'
+import { SpeakerHighIcon as PhSpeakerHigh } from 'phosphor-react-native/src/icons/SpeakerHigh'
+import { SpeakerSlashIcon as PhSpeakerSlash } from 'phosphor-react-native/src/icons/SpeakerSlash'
+import { CornersOutIcon as PhCornersOut } from 'phosphor-react-native/src/icons/CornersOut'
+import { VideoCameraIcon as PhVideoCamera } from 'phosphor-react-native/src/icons/VideoCamera'
 
 /**
  * Bộ icon của app: Phosphor (nét bo tròn, có nhiều độ đậm).
@@ -212,6 +219,11 @@ export const PenSquare = make(PhPencilSimpleLine, 'PenSquare')
 export const Pencil = make(PhPencilSimple, 'Pencil')
 export const Phone = make(PhPhone, 'Phone')
 export const Pin = make(PhPushPin, 'Pin')
+export const Play = make(PhPlay, 'Play')
+export const Pause = make(PhPause, 'Pause')
+export const SpeakerHigh = make(PhSpeakerHigh, 'SpeakerHigh')
+export const SpeakerSlash = make(PhSpeakerSlash, 'SpeakerSlash')
+export const CornersOut = make(PhCornersOut, 'CornersOut')
 export const Plus = make(PhPlus, 'Plus')
 export const Receipt = make(PhReceipt, 'Receipt')
 export const RotateCcw = make(PhArrowCounterClockwise, 'RotateCcw')
@@ -236,6 +248,9 @@ export const UserPlus = make(PhUserPlus, 'UserPlus')
 export const UserRound = make(PhUser, 'UserRound')
 export const UserSearch = make(PhUserFocus, 'UserSearch')
 export const Users = make(PhUsersThree, 'Users')
+export const Crown = make(PhCrown, 'Crown')
+export const VideoCamera = make(PhVideoCamera, 'VideoCamera')
+export const Video = VideoCamera
 export const Wallet = make(PhWallet, 'Wallet')
 export const X = make(PhX, 'X')
 export const Fingerprint = make(PhFingerprint, 'Fingerprint')

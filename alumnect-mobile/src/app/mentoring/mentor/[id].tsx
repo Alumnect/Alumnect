@@ -22,7 +22,7 @@ import { Enter, MotionPressable } from '@/components/Motion'
 import * as Haptics from 'expo-haptics'
 import { Header } from '@/components/Header'
 import { BottomBar, InfoRow, SectionCard } from '@/components/DetailBits'
-import { MENTORING_TYPE_LABEL, WORKING_MODE_LABEL, mentoringApi } from '@/api/mentoring'
+import { MENTORING_TYPE_DETAIL_LABEL, WORKING_MODE_DETAIL_LABEL, mentoringApi } from '@/api/mentoring'
 import { useAuthStore } from '@/store/authStore'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 
@@ -197,14 +197,14 @@ export default function MentorDetailScreen() {
             <InfoRow
               icon={<Laptop size={16} color={viridian} />}
               label="Hình thức làm việc"
-              value={WORKING_MODE_LABEL[m.workingMode] ?? m.workingMode}
+              value={WORKING_MODE_DETAIL_LABEL[m.workingMode] ?? m.workingMode}
             />
           ) : null}
           {m.mentoringType ? (
             <InfoRow
               icon={<Target size={16} color={viridian} />}
               label="Phương thức hỗ trợ"
-              value={MENTORING_TYPE_LABEL[m.mentoringType] ?? m.mentoringType}
+              value={MENTORING_TYPE_DETAIL_LABEL[m.mentoringType] ?? m.mentoringType}
               last
             />
           ) : null}
