@@ -8,7 +8,7 @@ import { TextInput } from './AppText'
 import { ActionSheet } from './ActionSheet'
 import { BrandIcon } from './BrandIcon'
 import { CornerDownRight, X } from './icons'
-import { feedApi } from '@/api/feed'
+import { feedApi, syncPostCommentDeltaInCache } from '@/api/feed'
 import type { Comment } from '@/api/feed'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
@@ -127,7 +127,6 @@ export function CommentsSheet({ postId, visible, onClose }: { postId: string; vi
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['post', postId, 'comments'] })
     qc.invalidateQueries({ queryKey: ['post', postId] })
-    qc.invalidateQueries({ queryKey: ['feed'] })
   }
   const reset = () => { setText(''); setEditing(null); setReplyTo(null) }
 
@@ -139,6 +138,7 @@ export function CommentsSheet({ postId, visible, onClose }: { postId: string; vi
     },
     onSuccess: () => {
       if (replyTo) setOpen((o) => ({ ...o, [replyTo.parentId ?? replyTo.id]: true }))
+      if (!editing) syncPostCommentDeltaInCache(postId, 1)
       reset()
       refresh()
     },
@@ -146,7 +146,11 @@ export function CommentsSheet({ postId, visible, onClose }: { postId: string; vi
   })
   const del = useMutation({
     mutationFn: (c: Comment) => feedApi.deleteComment(postId, c.id),
-    onSuccess: () => { toast.success('Đã xóa bình luận.'); refresh() },
+    onSuccess: () => {
+      toast.success('Đã xóa bình luận.')
+      syncPostCommentDeltaInCache(postId, -1)
+      refresh()
+    },
     onError: (e) => toast.error(errMsg(e)),
   })
 

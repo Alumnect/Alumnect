@@ -10,9 +10,11 @@ export function routeForTarget(targetType?: string | null, targetId?: string | n
   if (type === 'MENTOR_SUBSCRIPTION') return '/mentoring/plans'
   if (type === 'MENTORING_GROUP_DISBANDED') return '/mentoring/groups'
   if (targetId == null || targetId === '') return null
-  const id = String(targetId).split(':')[0]
+  const rawTarget = String(targetId)
+  const cleanTarget = rawTarget.split('#')[0]
+  const id = cleanTarget.split(':')[0]
   if (type === 'MENTORING_GROUP_REQUEST_CHAT') {
-    const conversationId = String(targetId).split(':')[1]
+    const conversationId = cleanTarget.split(':')[1]
     return conversationId ? { pathname: '/chat/[id]', params: { id: conversationId, mentoring: '1' } } : '/mentoring/messages'
   }
   if (type.startsWith('MENTORING_GROUP')) return { pathname: '/mentoring/groups/[id]', params: { id } }
@@ -21,8 +23,10 @@ export function routeForTarget(targetType?: string | null, targetId?: string | n
   if (type.startsWith('MENTORING_REQUEST')) return { pathname: '/mentoring/request/[id]', params: { id } }
   if (type === 'MENTORING_TICKET') return { pathname: '/mentoring/dispute/[ticketId]/chat', params: { ticketId: id } }
   switch (type) {
-    case 'POST':
-      return { pathname: '/post/[id]', params: { id } }
+    case 'POST': {
+      const commentId = rawTarget.includes('#comment-') ? rawTarget.split('#comment-')[1] : undefined
+      return { pathname: '/post/[id]', params: commentId ? { id, highlightCommentId: commentId } : { id } }
+    }
     case 'USER':
       return { pathname: '/profile/[id]', params: { id } }
     case 'QUESTION':
