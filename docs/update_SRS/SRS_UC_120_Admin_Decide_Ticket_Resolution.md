@@ -54,12 +54,11 @@ stateDiagram-v2
     1. **Chi trả toàn bộ cho Cố vấn (`FULL_MENTOR_PAYMENT`)**: 100% quỹ ròng chuyển cho Cố vấn, Học viên hoàn 0 VNĐ. Áp dụng khi Mentor đã hoàn thành đầy đủ nghĩa vụ cam kết.
     2. **Hòa giải phân chia tài chính (`PARTIAL_SPLIT`)**: Phân chia một phần thù lao cho Cố vấn và hoàn lại một phần học phí cho Học viên. Áp dụng khi hai bên đồng thuận dừng Task hoặc nghiệm thu một phần sản phẩm.
     3. **Hoàn trả toàn bộ cho Học viên (`FULL_STUDENT_REFUND`)**: 100% quỹ ròng hoàn lại cho Học viên, Cố vấn nhận 0 VNĐ. Áp dụng khi Cố vấn vi phạm tiến độ nghiêm trọng hoặc không bàn giao kết quả hợp lệ.
-* **Bước 4 - Xác định phân bổ tài chính & Phí xử lý (Bước 58 & 59 - Financial Allocation & Dispute Fee)**:
-  * Admin có thể chọn chia theo **Số tiền cụ thể (VNĐ)** hoặc kéo thanh trượt **Phần trăm (%)**. Hệ thống tự động quy đổi tỷ lệ trên phần tiền sau phí và tính toán số tiền thực nhận của mỗi bên tức thì.
-  * Thiết lập phí xử lý tranh chấp (`disputeFee`) theo chính sách công bố nếu có (mặc định 0 VNĐ).
+* **Bước 4 - Xác định phân bổ tài chính (Bước 58 & 59 - Financial Allocation)**:
+  * Admin có thể chọn chia theo **Số tiền cụ thể (VNĐ)** hoặc kéo thanh trượt **Phần trăm (%)**. Hệ thống tự động quy đổi tỷ lệ trên toàn bộ quỹ Escrow và tính toán số tiền thực nhận của mỗi bên tức thì (nền tảng không thu phí xử lý tranh chấp).
 * **Bước 5 - Thẩm tra tính toàn vẹn số liệu (Bước 60 - Financial Validation Check)**:
   * Hệ thống kiểm tra số tiền các khoản không được âm (`>= 0`).
-  * Tổng kiểm tra bắt buộc: `mentorAmount + studentRefund + disputeFee == availableFund`. Nếu phát sinh chênh lệch dù chỉ 1 đồng, hệ thống chặn gửi và cảnh báo đỏ ngay trên giao diện.
+  * Tổng kiểm tra bắt buộc: `mentorAmount + studentRefund == availableFund`. Nếu phát sinh chênh lệch dù chỉ 1 đồng, hệ thống chặn gửi và cảnh báo đỏ ngay trên giao diện.
 * **Bước 6 - Nhập lý do phán quyết có căn cứ (Bước 58 - Decision Reason)**:
   * Admin nhập văn bản giải trình lý do đưa ra phán quyết (tối thiểu 10 ký tự). Có thể sử dụng các nút chọn mẫu lý do nhanh (Preset reasons).
 * **Bước 7 - Ban hành phán quyết & Khóa vé (Bước 61 & 62 - Confirm & Persist Resolution)**:

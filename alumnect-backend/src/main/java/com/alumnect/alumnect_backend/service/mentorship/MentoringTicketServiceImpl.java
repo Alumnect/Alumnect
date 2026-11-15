@@ -1019,16 +1019,13 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     : task.getAgreedPrice();
         }
 
-        BigDecimal disputeFee = request.getDisputeFee() != null ? request.getDisputeFee() : BigDecimal.ZERO;
-        if (disputeFee.compareTo(BigDecimal.ZERO) < 0) {
+        if (request.getDisputeFee() != null && request.getDisputeFee().compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Phí xử lý tranh chấp không được âm.");
         }
-        if (disputeFee.compareTo(totalEscrow) > 0) {
-            throw new BadRequestException("Phí xử lý tranh chấp không thể vượt quá tổng quỹ Escrow của nhiệm vụ ("
-                    + formatVnd(totalEscrow) + " VNĐ).");
-        }
 
-        BigDecimal netFund = totalEscrow.subtract(disputeFee);
+        // Toàn bộ quỹ Escrow được phân bổ cho Mentor và Student (không thu phí tranh chấp)
+        BigDecimal disputeFee = BigDecimal.ZERO;
+        BigDecimal netFund = totalEscrow;
         BigDecimal mentorAmount;
         BigDecimal studentRefund;
 
@@ -1056,12 +1053,11 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     mentorAmount = request.getMentorAmount();
                     studentRefund = request.getStudentRefund();
 
-                    // Kiểm tra tổng: mentorAmount + studentRefund + disputeFee == totalEscrow
-                    BigDecimal totalAllocated = mentorAmount.add(studentRefund).add(disputeFee);
+                    // Kiểm tra tổng: mentorAmount + studentRefund == totalEscrow
+                    BigDecimal totalAllocated = mentorAmount.add(studentRefund);
                     if (totalAllocated.compareTo(totalEscrow) != 0) {
                         throw new BadRequestException("Tổng số tiền phân bổ (Mentor: " + formatVnd(mentorAmount)
                                 + " + Student: " + formatVnd(studentRefund)
-                                + " + Phí: " + formatVnd(disputeFee)
                                 + " = " + formatVnd(totalAllocated) + " VNĐ) phải bằng đúng tổng quỹ Escrow ("
                                 + formatVnd(totalEscrow) + " VNĐ).");
                     }
@@ -1161,7 +1157,6 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     + "• Phương án: " + decisionLabel + "\n"
                     + "• Thù lao Cố vấn (Mentor): " + formatVnd(mentorAmount) + " VNĐ\n"
                     + "• Hoàn trả Học viên (Student): " + formatVnd(studentRefund) + " VNĐ\n"
-                    + (disputeFee.compareTo(BigDecimal.ZERO) > 0 ? "• Phí xử lý tranh chấp: " + formatVnd(disputeFee) + " VNĐ\n" : "")
                     + "• Căn cứ & Lý do phán quyết: " + request.getDecisionReason();
 
             MentoringTicketMessage resolutionMsg = MentoringTicketMessage.builder()
