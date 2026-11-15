@@ -14,6 +14,8 @@ import { Empty, Screen, SearchBar, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
 import type { BrandIconName } from '@/components/BrandIcon'
 import { PostCard } from '@/components/PostCard'
+import { Image } from 'expo-image'
+import { isVideoUrl } from '@/lib/upload'
 import { feedApi } from '@/api/feed'
 import type { FeedFilter, Post } from '@/api/feed'
 import { useTheme } from '@/theme'
@@ -263,6 +265,19 @@ export default function FeedScreen() {
   })
   const posts: Post[] = q.data?.pages.flatMap((p) => p.items) ?? []
   const searching = !!keyword
+
+  // Tải trước ảnh feed vào bộ nhớ đệm để cuộn mượt và không bị nhấp nháy ảnh.
+  useEffect(() => {
+    if (posts.length > 0) {
+      const urls = posts
+        .slice(0, 10)
+        .map((p) => p.images?.[0] || p.image)
+        .filter((u): u is string => !!u && !isVideoUrl(u))
+      urls.forEach((url) => {
+        void Image.prefetch(url)
+      })
+    }
+  }, [posts])
 
   const [manualRefreshing, setManualRefreshing] = useState(false)
   const refetchRef = useRef(q.refetch)

@@ -116,7 +116,7 @@ export function normalizeComment(r: Raw): Comment {
 
 function pageOf<T>(body: any, map: (r: Raw) => T, page: number) {
   const d = unwrap(body)
-  const raw: Raw[] = Array.isArray(d) ? d : (d?.content ?? d?.items ?? [])
+  const raw: Raw[] = Array.isArray(d) ? d : Array.isArray(d?.content) ? d.content : (Array.isArray(d?.items) ? d.items : [])
   const items = raw.map(map)
   const hasMore = typeof d?.last === 'boolean' ? !d.last : items.length >= PAGE_SIZE
   return { items, page, hasMore }
@@ -154,8 +154,10 @@ export interface AiStudioResponse {
   source?: string
 }
 
+const cleanPostId = (id: string | number) => String(id).split('#')[0].split(':')[0]
+
 export function syncPostLikeInCache(postId: string, patch: { likes?: number; liked?: boolean; saved?: boolean }) {
-  const pid = String(postId)
+  const pid = cleanPostId(postId)
   const updateList = (old: InfiniteData<{ items: Post[]; page: number; hasMore: boolean }> | undefined) => {
     if (!old?.pages) return old
     return {
@@ -163,7 +165,7 @@ export function syncPostLikeInCache(postId: string, patch: { likes?: number; lik
       pages: old.pages.map((p) => ({
         ...p,
         items: p.items.map((post) =>
-          String(post.id) === pid
+          cleanPostId(post.id) === pid
             ? {
                 ...post,
                 ...(patch.likes !== undefined ? { likes: patch.likes } : {}),
@@ -189,6 +191,37 @@ export function syncPostLikeInCache(postId: string, patch: { likes?: number; lik
   })
 }
 
+export function syncPostCommentDeltaInCache(postId: string, delta: number) {
+  const pid = cleanPostId(postId)
+  const updateList = (old: InfiniteData<{ items: Post[]; page: number; hasMore: boolean }> | undefined) => {
+    if (!old?.pages) return old
+    return {
+      ...old,
+      pages: old.pages.map((p) => ({
+        ...p,
+        items: p.items.map((post) =>
+          cleanPostId(post.id) === pid
+            ? {
+                ...post,
+                comments: Math.max(0, (post.comments ?? 0) + delta),
+              }
+            : post,
+        ),
+      })),
+    }
+  }
+  queryClient.setQueriesData({ queryKey: ['feed'] }, updateList)
+  queryClient.setQueriesData({ queryKey: ['user-posts'] }, updateList)
+  queryClient.setQueriesData({ queryKey: ['saved-posts'] }, updateList)
+  queryClient.setQueryData<Post>(['post', pid], (old) => {
+    if (!old) return old
+    return {
+      ...old,
+      comments: Math.max(0, (old.comments ?? 0) + delta),
+    }
+  })
+}
+
 export const feedApi = {
   aiStudio: async (prompt: string, preferredType?: string): Promise<AiStudioResponse> => {
     const res: any = await http.post('/posts/ai-studio', { prompt, preferredType }, { timeout: 25000 })
@@ -204,42 +237,46 @@ export const feedApi = {
   getSaved: async (page = 0) => pageOf(await http.get('/posts/saved', { params: { page, size: PAGE_SIZE } }), normalizePost, page),
   getUserPosts: async (userId: string | number, page = 0, category = 'all') =>
     pageOf(await http.get(`/posts/user/${userId}`, { params: { page, size: PAGE_SIZE, category } }), normalizePost, page),
-  getPost: async (id: string) => normalizePost(unwrap(await http.get(`/posts/${id}`))),
+  getPost: async (id: string) => normalizePost(unwrap(await http.get(`/posts/${cleanPostId(id)}`))),
   getComments: async (id: string, page = 0) =>
-    pageOf(await http.get(`/posts/${id}/comments`, { params: { page, size: PAGE_SIZE } }), normalizeComment, page),
+    pageOf(await http.get(`/posts/${cleanPostId(id)}/comments`, { params: { page, size: PAGE_SIZE } }), normalizeComment, page),
   createPost: async (input: CreatePostInput) => normalizePost(unwrap(await http.post('/posts', input))),
-  editPost: async (id: string, input: CreatePostInput) => normalizePost(unwrap(await http.put(`/posts/${id}`, input))),
-  deletePost: (id: string) => http.delete(`/posts/${id}`),
+  editPost: async (id: string, input: CreatePostInput) => normalizePost(unwrap(await http.put(`/posts/${cleanPostId(id)}`, input))),
+  deletePost: (id: string) => http.delete(`/posts/${cleanPostId(id)}`),
   like: async (id: string) => {
-    const res = await http.post(`/posts/${id}/like`)
+    const clean = cleanPostId(id)
+    const res = await http.post(`/posts/${clean}/like`)
     const d = unwrap(res)
     if (d && typeof d.likeCount === 'number') {
-      syncPostLikeInCache(id, { likes: d.likeCount, liked: !!d.liked })
+      syncPostLikeInCache(clean, { likes: d.likeCount, liked: !!d.liked })
     }
     return res
   },
   unlike: async (id: string) => {
-    const res = await http.delete(`/posts/${id}/like`)
+    const clean = cleanPostId(id)
+    const res = await http.delete(`/posts/${clean}/like`)
     const d = unwrap(res)
     if (d && typeof d.likeCount === 'number') {
-      syncPostLikeInCache(id, { likes: d.likeCount, liked: !!d.liked })
+      syncPostLikeInCache(clean, { likes: d.likeCount, liked: !!d.liked })
     }
     return res
   },
   save: async (id: string) => {
-    const res = await http.post(`/posts/${id}/save`)
-    syncPostLikeInCache(id, { saved: true })
+    const clean = cleanPostId(id)
+    const res = await http.post(`/posts/${clean}/save`)
+    syncPostLikeInCache(clean, { saved: true })
     return res
   },
   unsave: async (id: string) => {
-    const res = await http.delete(`/posts/${id}/save`)
-    syncPostLikeInCache(id, { saved: false })
+    const clean = cleanPostId(id)
+    const res = await http.delete(`/posts/${clean}/save`)
+    syncPostLikeInCache(clean, { saved: false })
     return res
   },
   createComment: async (postId: string, content: string, parentId?: string) =>
-    normalizeComment(unwrap(await http.post(`/posts/${postId}/comments`, { content, ...(parentId ? { parentId: Number(parentId) } : {}) }))),
+    normalizeComment(unwrap(await http.post(`/posts/${cleanPostId(postId)}/comments`, { content, ...(parentId ? { parentId: Number(parentId) } : {}) }))),
   updateComment: async (postId: string, commentId: string, content: string) =>
-    normalizeComment(unwrap(await http.put(`/posts/${postId}/comments/${commentId}`, { content }))),
-  deleteComment: (postId: string, commentId: string) => http.delete(`/posts/${postId}/comments/${commentId}`),
-  report: (postId: string, payload: { reason: string; description?: string }) => http.post(`/posts/${postId}/reports`, payload),
+    normalizeComment(unwrap(await http.put(`/posts/${cleanPostId(postId)}/comments/${commentId}`, { content }))),
+  deleteComment: (postId: string, commentId: string) => http.delete(`/posts/${cleanPostId(postId)}/comments/${commentId}`),
+  report: (postId: string, payload: { reason: string; description?: string }) => http.post(`/posts/${cleanPostId(postId)}/reports`, payload),
 }

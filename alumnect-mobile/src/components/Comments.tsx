@@ -21,6 +21,7 @@ export const CommentBubble = React.memo(function CommentBubble({
   headline,
   replyLabel = 'Phản hồi',
   extra,
+  highlighted,
   onReply,
   onMore,
 }: {
@@ -39,6 +40,7 @@ export const CommentBubble = React.memo(function CommentBubble({
   replyLabel?: string
   /** Phần tử thêm vào hàng hành động (VD: nút bình chọn của Hỏi đáp). */
   extra?: React.ReactNode
+  highlighted?: boolean
   onReply?: () => void
   onMore?: () => void
 }) {
@@ -51,7 +53,19 @@ export const CommentBubble = React.memo(function CommentBubble({
         <Avatar uri={avatar} name={author} size={reply ? 28 : 36} />
       </Pressable>
       <View style={{ flex: 1, alignItems: 'flex-start' }}>
-        <Pressable onLongPress={onMore} delayLongPress={300} style={{ backgroundColor: t.inputBg, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 8, maxWidth: '100%' }}>
+        <Pressable
+          onLongPress={onMore}
+          delayLongPress={300}
+          style={{
+            backgroundColor: highlighted ? `${t.primary}18` : t.inputBg,
+            borderWidth: highlighted ? 1 : 0,
+            borderColor: highlighted ? `${t.primary}60` : 'transparent',
+            borderRadius: 18,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            maxWidth: '100%',
+          }}
+        >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Txt weight="700" size={13} onPress={openAuthor} numberOfLines={1} style={{ flexShrink: 1 }}>{author}</Txt>
             {verified ? <BadgeCheck size={13} color={t.info} weight="fill" /> : null}
