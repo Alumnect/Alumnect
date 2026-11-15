@@ -344,15 +344,15 @@ class FE63_AdminResolveTicketTest {
     }
 
     @Test
-    @DisplayName("UTCID03 - Ticket IN_REVIEW -> split mentor=500000, refund=400000, fee=100000 -> Task RESOLVED; PAYOUT and REFUND ledgers queued")
+    @DisplayName("UTCID03 - Ticket IN_REVIEW -> split mentor=600000, refund=400000 -> Task RESOLVED; PAYOUT and REFUND ledgers queued")
     void utcid03_resolveTicket_ok() {
         // Given
         AdminResolveTicketRequest request = AdminResolveTicketRequest.builder()
                 .decision(MentoringTicketDecision.PARTIAL_SPLIT)
                 .decisionReason("Hai bên cùng thỏa thuận phân chia theo khối lượng hoàn thành")
-                .mentorAmount(BigDecimal.valueOf(500000))
+                .mentorAmount(BigDecimal.valueOf(600000))
                 .studentRefund(BigDecimal.valueOf(400000))
-                .disputeFee(BigDecimal.valueOf(100000))
+                .disputeFee(BigDecimal.ZERO)
                 .splitMode("AMOUNT")
                 .build();
 
@@ -392,7 +392,7 @@ class FE63_AdminResolveTicketTest {
                 .decisionReason("Tổng tiền phân chia không khớp")
                 .mentorAmount(BigDecimal.valueOf(500000))
                 .studentRefund(BigDecimal.valueOf(300000))
-                .disputeFee(BigDecimal.valueOf(100000)) // Total 900,000 != 1,000,000
+                .disputeFee(BigDecimal.ZERO) // Total 800,000 != 1,000,000
                 .splitMode("AMOUNT")
                 .build();
 
