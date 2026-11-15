@@ -5,6 +5,20 @@ import type { ApiResponse } from './http'
 
 export type PickedImage = { uri: string; name: string; type: string; width?: number }
 
+export type PickedVideo = {
+  uri: string
+  name: string
+  mimeType: string
+  size?: number
+  duration?: number | null
+}
+
+/** Kiểm tra xem một đường dẫn URL có phải là video hay không dựa trên đuôi tệp. */
+export function isVideoUrl(url?: string | null): boolean {
+  if (!url) return false
+  return /\.(mp4|mov|avi|webm|mkv|m4v|3gp)(\?.*)?$/i.test(url)
+}
+
 /** Upload an original document/video without converting its bytes to an image. */
 export async function uploadFile(file: { uri: string; name: string; mimeType?: string | null; size?: number }, folder = 'messages') {
   const contentType = file.mimeType?.trim().toLowerCase() || 'application/octet-stream'
@@ -16,7 +30,10 @@ export async function uploadFile(file: { uri: string; name: string; mimeType?: s
   // Keep the binary payload MIME type identical to the type used to sign the URL.
   const body = blob.slice(0, blob.size, contentType)
   const result = await fetch(signed.data.uploadUrl, { method: 'PUT', body, headers: { 'Content-Type': contentType } })
-  if (!result.ok) throw new Error('Tải tệp lên thất bại. Vui lòng thử lại.')
+  if (!result.ok) {
+    if (__DEV__) console.warn('[uploadFile] PUT failed', result.status, await result.text().catch(() => ''))
+    throw new Error(`Tải tệp lên thất bại (${result.status}). Vui lòng thử lại.`)
+  }
   return { url: signed.data.publicUrl, fileName: file.name, fileSize: blob.size }
 }
 
@@ -33,21 +50,6 @@ export async function pickImage(multiple = false): Promise<PickedImage[]> {
     name: a.fileName ?? `image-${Date.now()}-${i}.jpg`,
     type: 'image/jpeg',
     width: a.width,
-  }))
-}
-
-export type PickedVideo = { uri: string; name: string; mimeType: string; size?: number; durationSec: number }
-
-/** Chọn video từ thư viện (bài viết nhóm). `duration` của expo-image-picker tính bằng mili giây. */
-export async function pickVideos(): Promise<PickedVideo[]> {
-  const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], allowsMultipleSelection: true, quality: 1 })
-  if (res.canceled) return []
-  return res.assets.map((a, i) => ({
-    uri: a.uri,
-    name: a.fileName ?? `video-${Date.now()}-${i}.mp4`,
-    mimeType: a.mimeType ?? 'video/mp4',
-    size: a.fileSize,
-    durationSec: (a.duration ?? 0) / 1000,
   }))
 }
 
@@ -79,4 +81,34 @@ export async function uploadImage(
     throw new Error(`Tải ảnh lên thất bại (${put.status}). Vui lòng thử lại.`)
   }
   return publicUrl
+}
+
+/** Chọn video từ thư viện (đăng bài, bằng chứng...). */
+export async function pickVideo(multiple = false): Promise<PickedVideo[]> {
+  const res = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['videos'],
+    allowsMultipleSelection: multiple,
+    quality: 1,
+  })
+  if (res.canceled) return []
+  return res.assets.map((a, i) => {
+    const ext = a.fileName?.split('.').pop()?.toLowerCase() || (a.uri.endsWith('.mov') ? 'mov' : 'mp4')
+    const mimeType = a.mimeType || (ext === 'mov' ? 'video/quicktime' : 'video/mp4')
+    return {
+      uri: a.uri,
+      name: a.fileName ?? `video-${Date.now()}-${i}.${ext}`,
+      mimeType,
+      size: a.fileSize,
+      duration: a.duration,
+    }
+  })
+}
+
+/** Tải video lên Cloudflare R2 bucket. */
+export async function uploadVideo(
+  video: PickedVideo,
+  folder: 'posts' | 'evidence' | 'proofs' | 'common' = 'posts',
+): Promise<string> {
+  const result = await uploadFile(video, folder)
+  return result.url
 }

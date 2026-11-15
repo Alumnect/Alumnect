@@ -148,6 +148,9 @@ public class MentoringPayoutProcessor {
         Long taskId = ledger.getTask() != null ? ledger.getTask().getId() : null;
         boolean refund = ledger.getTransactionType() == MentoringLedgerTransactionType.REFUND;
         String reference = taskId != null ? "TASK " + taskId : "LEDGER " + ledger.getId();
+        String description = refund
+                ? "Hoan Tien " + (taskId != null ? taskId : ledger.getId())
+                : "ALUMNECT " + reference;
         DisbursementCommand command = DisbursementCommand.builder()
                 .taskId(taskId)
                 .requestId(ledger.getRequest() != null ? ledger.getRequest().getId() : null)
@@ -158,7 +161,7 @@ public class MentoringPayoutProcessor {
                 .bankBin(beneficiary.bankBin())
                 .bankAccountNumber(beneficiary.accountNumber())
                 .bankAccountHolder(beneficiary.accountHolder())
-                .description(refund ? "ALUMNECT HOAN TIEN " + reference : "ALUMNECT " + reference)
+                .description(description)
                 .category(refund ? "refund" : "commission")
                 .idempotencyKey(ledger.getIdempotencyKey())
                 .build();

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Keyboard, Linking, Platform, Pressable, View } from 'react-native'
+import { Keyboard, Linking, Modal, Platform, Pressable, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { WebView as RNWebView } from 'react-native-webview'
 import * as DocumentPicker from 'expo-document-picker'
 import * as Haptics from 'expo-haptics'
@@ -9,18 +10,25 @@ import type { FlashListRef } from '@shopify/flash-list'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, ChevronLeft, ChevronRight, FileText, Handshake, History, ImageIcon, Info, ListChecks, MoreHorizontal, Paperclip, Send, Users, X } from '@/components/icons'
+import { AlertTriangle, BarChart3, CalendarPlus, ChevronDown, ChevronLeft, ChevronRight, FilePen, FileCheck2, FileText, PackageCheck, Scale, Handshake, History, ImageIcon, Info, ListChecks, MoreHorizontal, Paperclip, Send, Users, X } from '@/components/icons'
 import { Avatar, Button, Empty, Loading, Screen, Txt } from './ui'
 import { MotionPressable } from './Motion'
 import { SheetModal } from './SheetModal'
+import { ScrollView } from '@/components/ScrollView'
 import { chatApi } from '@/api/chat'
-import type { Message, OutgoingAttachment } from '@/api/chat'
+import type { DealSnapshot, Message, OutgoingAttachment } from '@/api/chat'
 import { SharedCard } from '@/components/SharedCards'
 import { parseSharedLink } from '@/lib/share'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
-import { DEAL_STATUS_LABEL } from '@/api/mentoringFlow'
+import { DEAL_STATUS_LABEL, dealApi } from '@/api/mentoringFlow'
+import { taskApi } from '@/api/mentoringTask'
+import type { TaskCheckout } from '@/api/mentoringTask'
+import { DealHistorySheet, DealTicketCard, ReasonSheet, TaskActionPanel } from './MentoringChatCards'
+import { PaymentSheet } from './PaymentSheet'
+import { AttachmentTray, MAX_ATTACHMENTS } from './AttachmentTray'
+import type { PendingAttachment, UploadingAttachment } from './AttachmentTray'
 import { pickImage, uploadFile, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 
@@ -32,21 +40,168 @@ function isVideoAttachment(a: { mediaType?: string; url?: string; fileName?: str
   return /\.(mp4|mov|webm|mkv|avi|m4v)$/i.test(raw)
 }
 
+/** Cache tỉ lệ (rộng/cao) đã đo của ảnh/video để khung không nhảy khi cuộn lại. */
+const mediaRatioCache = new Map<string, number>()
+const MEDIA_MAX_W = 230
+const MEDIA_MAX_H = 300
+const MEDIA_MIN_SIDE = 110
+
+/** Tính kích thước khung theo tỉ lệ thật, giới hạn trong vùng tối đa (giống Messenger/Zalo). */
+function fitMediaBox(ratio: number | undefined, fallbackRatio: number) {
+  const r = ratio && Number.isFinite(ratio) && ratio > 0 ? ratio : fallbackRatio
+  let w = MEDIA_MAX_W
+  let h = w / r
+  if (h > MEDIA_MAX_H) {
+    h = MEDIA_MAX_H
+    w = h * r
+  }
+  return { width: Math.max(MEDIA_MIN_SIDE, Math.round(w)), height: Math.max(MEDIA_MIN_SIDE * 0.6, Math.round(h)) }
+}
+
+function fileExt(name?: string, url?: string) {
+  const raw = (name || url || '').split('?')[0]
+  const m = raw.match(/\.([a-z0-9]{1,5})$/i)
+  return m ? m[1].toUpperCase() : 'FILE'
+}
+
+const EXT_COLOR: Record<string, string> = {
+  PDF: '#E5484D',
+  DOC: '#2B6CEF', DOCX: '#2B6CEF',
+  XLS: '#1F9D55', XLSX: '#1F9D55', CSV: '#1F9D55',
+  PPT: '#E8590C', PPTX: '#E8590C',
+  ZIP: '#8E6CEF', RAR: '#8E6CEF',
+}
+
+function ChatImage({ url, mine, onOpen, style }: { url: string; mine: boolean; onOpen: () => void; style?: object }) {
+  const [ratio, setRatio] = useState(() => mediaRatioCache.get(url))
+  const box = fitMediaBox(ratio, 1)
+  return (
+    <Pressable
+      accessibilityRole="imagebutton"
+      accessibilityLabel="Xem ảnh"
+      onPress={onOpen}
+      style={[{ alignSelf: mine ? 'flex-end' : 'flex-start' }, style]}
+    >
+      <Image
+        source={{ uri: url }}
+        style={{ width: box.width, height: box.height, borderRadius: 16, backgroundColor: 'rgba(127,127,127,0.12)' }}
+        contentFit="cover"
+        transition={150}
+        onLoad={(e) => {
+          const { width, height } = e.source
+          if (!width || !height) return
+          const r = width / height
+          mediaRatioCache.set(url, r)
+          if (r !== ratio) setRatio(r)
+        }}
+      />
+    </Pressable>
+  )
+}
+
+function ChatFileCard({ name, url, mine }: { name?: string; url: string; mine: boolean }) {
+  const t = useTheme()
+  const ext = fileExt(name, url)
+  const color = EXT_COLOR[ext] ?? t.primary
+  return (
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={`Mở tệp ${name ?? ''}`}
+      onPress={() => void openAttachment(url)}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        minWidth: 200,
+        maxWidth: 260,
+        padding: 10,
+        borderRadius: 14,
+        backgroundColor: mine ? 'rgba(255,255,255,0.16)' : t.isDark ? '#1C1C1C' : '#FFFFFF',
+        borderWidth: mine ? 0 : 1,
+        borderColor: t.border,
+        opacity: pressed ? 0.75 : 1,
+      })}
+    >
+      <View style={{ width: 40, height: 44, borderRadius: 8, backgroundColor: mine ? '#FFFFFF' : `${color}1A`, alignItems: 'center', justifyContent: 'center' }}>
+        <FileText size={18} color={color} />
+        <Txt size={8.5} weight="800" color={color} style={{ marginTop: 1 }}>{ext}</Txt>
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Txt size={13.5} weight="600" numberOfLines={2} color={mine ? '#FFFFFF' : t.text}>
+          {name || 'Tệp đính kèm'}
+        </Txt>
+        <Txt size={11.5} color={mine ? 'rgba(255,255,255,0.8)' : t.textMuted} style={{ marginTop: 2 }}>
+          Chạm để mở
+        </Txt>
+      </View>
+    </Pressable>
+  )
+}
+
+function ImageViewerModal({ url, onClose }: { url: string | null; onClose: () => void }) {
+  const insets = useSafeAreaInsets()
+  return (
+    <Modal visible={!!url} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' }}>
+        <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel="Đóng ảnh">
+          {url ? <Image source={{ uri: url }} style={{ flex: 1 }} contentFit="contain" /> : null}
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Đóng"
+          onPress={onClose}
+          hitSlop={12}
+          style={{ position: 'absolute', top: insets.top + 10, right: 14, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <X size={22} color="#FFFFFF" />
+        </Pressable>
+        <Pressable
+          accessibilityRole="link"
+          onPress={() => url && void openAttachment(url)}
+          style={{ position: 'absolute', bottom: insets.bottom + 20, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)' }}
+        >
+          <Txt size={13} weight="600" color="#FFFFFF">Mở ảnh gốc</Txt>
+        </Pressable>
+      </View>
+    </Modal>
+  )
+}
+
 function ChatVideoPlayer({ url, style }: { url: string; style?: object }) {
+  const [ratio, setRatio] = useState(() => mediaRatioCache.get(url))
+  const box = fitMediaBox(ratio, 3 / 4)
   if (Platform.OS === 'web') {
     return React.createElement('video', {
       src: url,
       controls: true,
       playsInline: true,
       preload: 'metadata',
-      style: { width: 220, height: 280, borderRadius: 14, backgroundColor: '#000', objectFit: 'contain', ...(style as object) },
+      onLoadedMetadata: (e: { currentTarget: { videoWidth: number; videoHeight: number } }) => {
+        const { videoWidth: w, videoHeight: h } = e.currentTarget
+        if (w && h) {
+          mediaRatioCache.set(url, w / h)
+          setRatio(w / h)
+        }
+      },
+      style: { ...box, borderRadius: 16, backgroundColor: '#000', objectFit: 'contain', ...(style as object) },
     })
   }
   const safeUrl = url.replace(/"/g, '&quot;')
-  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}video{width:100%;height:100%;object-fit:contain;background:#000}</style></head><body><video src="${safeUrl}#t=0.1" controls playsinline webkit-playsinline preload="metadata"></video></body></html>`
+  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}video{width:100%;height:100%;object-fit:contain;background:#000}</style></head><body><video id="v" src="${safeUrl}#t=0.1" controls playsinline webkit-playsinline preload="metadata"></video><script>var v=document.getElementById('v');v.addEventListener('loadedmetadata',function(){if(window.ReactNativeWebView&&v.videoWidth&&v.videoHeight){window.ReactNativeWebView.postMessage(JSON.stringify({w:v.videoWidth,h:v.videoHeight}))}});</script></body></html>`
   return (
-    <View style={[{ width: 220, height: 280, borderRadius: 14, overflow: 'hidden', backgroundColor: '#000' }, style]}>
+    <View style={[{ ...box, borderRadius: 16, overflow: 'hidden', backgroundColor: '#000' }, style]}>
       <WebView
+        onMessage={(e: { nativeEvent: { data: string } }) => {
+          try {
+            const { w, h } = JSON.parse(e.nativeEvent.data) as { w: number; h: number }
+            if (w > 0 && h > 0) {
+              mediaRatioCache.set(url, w / h)
+              setRatio(w / h)
+            }
+          } catch {
+            /* bỏ qua */
+          }
+        }}
         source={{ html, baseUrl: 'https://alumnect.local' }}
         originWhitelist={['*']}
         allowsFullscreenVideo
@@ -63,6 +218,12 @@ function ChatVideoPlayer({ url, style }: { url: string; style?: object }) {
   )
 }
 
+function isImageAttachment(a: { mediaType?: string; url?: string; fileName?: string }) {
+  if (a.mediaType === 'IMAGE') return true
+  const raw = `${a.fileName || a.url || ''}`.split('?')[0]
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/i.test(raw)
+}
+
 async function openAttachment(url: string) {
   try {
     if (!/^https?:\/\//i.test(url)) throw new Error('Liên kết tệp không hợp lệ.')
@@ -71,7 +232,7 @@ async function openAttachment(url: string) {
 }
 
 /** Khung chat (UC30): FlashList inverted + KeyboardAvoidingView; hỗ trợ hội thoại nháp (chưa có id). */
-const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupChat, showTime, onToggleTime, grouped }: { item: Message; mine: boolean; isGroupChat: boolean; showTime: boolean; onToggleTime: () => void; grouped: boolean }) {
+const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupChat, showTime, onToggleTime, grouped, onOpenImage }: { item: Message; mine: boolean; isGroupChat: boolean; showTime: boolean; onToggleTime: () => void; grouped: boolean; onOpenImage: (url: string) => void }) {
   const t = useTheme()
   if (item.type === 'SYSTEM') {
     return (
@@ -92,7 +253,7 @@ const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupCha
     !textBody &&
     !shared &&
     !!item.attachments?.length &&
-    item.attachments.every((a) => a.mediaType === 'IMAGE' || isVideoAttachment(a))
+    item.attachments.every((a) => isImageAttachment(a) || isVideoAttachment(a))
   const unboxed = cardOnly || hasOnlyMedia
   const hasVideo = !item.isDeleted && !!item.attachments?.some((a) => isVideoAttachment(a))
   const BubbleContainer: React.ElementType = hasVideo ? View : Pressable
@@ -128,17 +289,18 @@ const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupCha
           <Txt color={mine ? '#FFFFFF' : t.textMuted} size={13}>Tin nhắn đã bị thu hồi</Txt>
         ) : (
           <>
-            {item.attachments?.map((a) =>
-              isVideoAttachment(a) ? (
-                <ChatVideoPlayer key={a.id} url={a.url} style={{ marginBottom: textBody ? 6 : 0 }} />
-              ) : a.mediaType === 'IMAGE' ? (
-                <Image key={a.id} source={{ uri: a.url }} style={{ width: 200, maxWidth: '100%', aspectRatio: 1, borderRadius: 14, marginBottom: textBody ? 6 : 0 }} contentFit="cover" />
+            {item.attachments?.map((a, i) => {
+              const gap = { marginBottom: textBody || i < (item.attachments?.length ?? 0) - 1 ? 6 : 0 }
+              return isVideoAttachment(a) ? (
+                <ChatVideoPlayer key={a.id} url={a.url} style={gap} />
+              ) : isImageAttachment(a) ? (
+                <ChatImage key={a.id} url={a.url} mine={mine} onOpen={() => onOpenImage(a.url)} style={gap} />
               ) : (
-                <Pressable key={a.id} accessibilityRole="link" accessibilityLabel={`Mở tệp ${a.fileName ?? ''}`} onPress={() => void openAttachment(a.url)} style={{ minHeight: 44, justifyContent: 'center' }}>
-                  <Txt size={13} color={mine ? '#FFFFFF' : t.primary}>{a.fileName ?? 'Tệp đính kèm'}</Txt>
-                </Pressable>
-              ),
-            )}
+                <View key={a.id} style={gap}>
+                  <ChatFileCard name={a.fileName} url={a.url} mine={mine} />
+                </View>
+              )
+            })}
             {textBody ? (
               <Txt onPress={hasVideo ? onToggleTime : undefined} size={14.5} color={mine ? '#FFFFFF' : t.text} style={{ lineHeight: 20 }}>
                 {textBody}
@@ -214,6 +376,9 @@ function ActionRow({
   )
 }
 
+/** Một dòng trong đoạn chat: tin nhắn thường hoặc thẻ Deal Ticket (giống web). */
+type ChatItem = { kind: 'msg'; at: number; m: Message } | { kind: 'deal'; at: number; s: DealSnapshot }
+
 export function ChatWindow({
   conversationId,
   recipientId,
@@ -239,13 +404,16 @@ export function ChatWindow({
   const me = useAuthStore((s) => s.user)
   const [convId, setConvId] = useState(conversationId)
   const [text, setText] = useState('')
-  const [pending, setPending] = useState<OutgoingAttachment[]>([])
-  const [uploading, setUploading] = useState(false)
+  const [pending, setPending] = useState<PendingAttachment[]>([])
+  const [uploadingItems, setUploadingItems] = useState<UploadingAttachment[]>([])
+  const uploading = uploadingItems.length > 0
   const [timeId, setTimeId] = useState<number | null>(null)
   const [keyboardOpen, setKeyboardOpen] = useState(false)
   const [showScrollBottom, setShowScrollBottom] = useState(false)
   const [actionMenuVisible, setActionMenuVisible] = useState(false)
-  const listRef = useRef<FlashListRef<Message>>(null)
+  const [historyVisible, setHistoryVisible] = useState(false)
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null)
+  const listRef = useRef<FlashListRef<ChatItem>>(null)
   const isAtBottomRef = useRef(true)
   const prevLatestMsgIdRef = useRef<number | null>(null)
 
@@ -258,6 +426,60 @@ export function ChatWindow({
   const canSend = !isMentoring || (!!context.data?.canSendMessage && !context.data.readOnly && !context.isError)
   const { viridian, viridianSoft } = useMentoringTheme()
   const canPropose = canSend && isMentor && (!!context.data?.canCreateDealTicket || !!context.data?.canAcceptDealByRequest)
+  const snapshots = context.data?.deal?.snapshots ?? []
+
+  // ---- Hành động trên thẻ Deal trong chat ----
+  const [dealBusy, setDealBusy] = useState<'confirm' | 'reject' | 'adjust' | 'pay' | null>(null)
+  const [dealDialog, setDealDialog] = useState<'REJECT' | 'ADJUST' | null>(null)
+  const [checkout, setCheckout] = useState<TaskCheckout | null>(null)
+  const refreshDeal = () => {
+    void context.refetch()
+    qc.invalidateQueries({ queryKey: ['mentoring-deals'] })
+    qc.invalidateQueries({ queryKey: ['mentoring-tasks'] })
+    if (convId != null) qc.invalidateQueries({ queryKey: ['messages', convId] })
+  }
+  const startPayment = async () => {
+    if (!deal) return
+    setDealBusy('pay')
+    try {
+      setCheckout(await taskApi.checkout(deal.id))
+    } catch (e) {
+      toast.error(errMsg(e))
+    } finally {
+      setDealBusy(null)
+    }
+  }
+  const confirmAndPay = async () => {
+    if (!deal) return
+    setDealBusy('confirm')
+    try {
+      const confirmed = await dealApi.confirm(deal.id, deal.version)
+      toast.success('Đã xác nhận thỏa thuận.')
+      refreshDeal()
+      if (confirmed?.canPay !== false) setCheckout(await taskApi.checkout(deal.id))
+    } catch (e) {
+      toast.error(errMsg(e))
+      refreshDeal()
+    } finally {
+      setDealBusy(null)
+    }
+  }
+  const submitDealDialog = async (note?: string) => {
+    if (!deal || !dealDialog) return
+    const kind = dealDialog
+    setDealBusy(kind === 'REJECT' ? 'reject' : 'adjust')
+    try {
+      if (kind === 'REJECT') await dealApi.reject(deal.id, note, deal.version)
+      else await dealApi.requestAdjustment(deal.id, note, deal.version)
+      toast.success(kind === 'REJECT' ? 'Đã từ chối thỏa thuận.' : 'Đã gửi yêu cầu điều chỉnh.')
+      setDealDialog(null)
+      refreshDeal()
+    } catch (e) {
+      toast.error(errMsg(e))
+    } finally {
+      setDealBusy(null)
+    }
+  }
 
   const scrollToBottom = useCallback((animated = true) => {
     try {
@@ -273,8 +495,23 @@ export function ChatWindow({
     getNextPageParam: (l) => (l.data.last ? undefined : l.data.pageNumber + 1),
     refetchInterval: 3000,
   })
+  const taskIdForMenu = context.data?.taskId ?? null
+  const taskDetail = useQuery({
+    queryKey: ['mentoring-task', taskIdForMenu],
+    queryFn: () => taskApi.detail(taskIdForMenu as number),
+    enabled: taskIdForMenu != null,
+    staleTime: 10_000,
+  })
   // API trả mới nhất trước → khớp với FlashList inverted.
   const messages: Message[] = q.data?.pages.flatMap((p) => p.data.content) ?? []
+  // Gộp thẻ Deal Ticket vào dòng tin nhắn theo thời gian (mới nhất trước, khớp inverted list)
+  const oldestLoaded = messages.length ? new Date(messages[messages.length - 1].createdAt).getTime() : 0
+  const items: ChatItem[] = [
+    ...messages.map((m) => ({ kind: 'msg' as const, at: new Date(m.createdAt).getTime(), m })),
+    ...snapshots
+      .map((sn) => ({ kind: 'deal' as const, at: new Date(sn.createdAt).getTime(), s: sn }))
+      .filter((it) => !q.hasNextPage || it.at >= oldestLoaded),
+  ].sort((a, b) => b.at - a.at || (a.kind === 'msg' ? -1 : 1))
 
   // Tự động cuộn xuống đáy khi có tin nhắn mới nhất
   const latestMessageId = messages[0]?.id
@@ -335,31 +572,68 @@ export function ChatWindow({
     if (!canSend || send.isPending || uploading || (!content && !pending.length)) return
     if (content.length > 5000) return toast.error('Nội dung tin nhắn không vượt quá 5000 ký tự.')
     scrollToBottom(true)
-    send.mutate({ content: content || undefined, attachments: pending })
+    send.mutate({ content: content || undefined, attachments: pending.map(({ localUri: _l, ...a }) => a) })
+  }
+  const slotsLeft = () => MAX_ATTACHMENTS - pending.length - uploadingItems.length
+  /** Tải nhiều tệp song song; mỗi tệp có ô "đang tải" riêng, lỗi tệp nào báo tệp đó. */
+  const uploadMany = async <T,>(items: T[], describe: (it: T) => UploadingAttachment, run: (it: T) => Promise<PendingAttachment>) => {
+    const left = slotsLeft()
+    if (items.length > left) toast.error(`Chỉ gửi tối đa ${MAX_ATTACHMENTS} tệp mỗi tin nhắn.`)
+    const batch = items.slice(0, Math.max(0, left)).map((it, i) => ({ it, meta: { ...describe(it), key: `${Date.now()}-${i}` } }))
+    if (!batch.length) return
+    setUploadingItems((cur) => [...cur, ...batch.map((b) => b.meta)])
+    await Promise.all(
+      batch.map(async ({ it, meta }) => {
+        try {
+          const done = await run(it)
+          setPending((files) => [...files, done])
+        } catch (e) {
+          toast.error(`${meta.name}: ${errMsg(e)}`)
+        } finally {
+          setUploadingItems((cur) => cur.filter((u) => u.key !== meta.key))
+        }
+      }),
+    )
   }
   const sendImage = async () => {
-    if (!canSend || uploading || send.isPending) return
-    setUploading(true)
+    if (!canSend || send.isPending || slotsLeft() <= 0) return
     try {
-      const [img] = await pickImage()
-      if (!img) return
-      const url = await uploadImage(img, 'common')
-      setPending((files) => [...files, { mediaType: 'IMAGE', url, fileName: img.name }])
+      const imgs = await pickImage(true)
+      await uploadMany(
+        imgs,
+        (img) => ({ key: '', name: img.name, kind: 'IMAGE', localUri: img.uri }),
+        async (img) => ({ mediaType: 'IMAGE', url: await uploadImage(img, 'common'), fileName: img.name, localUri: img.uri }),
+      )
     } catch (e) {
       toast.error(errMsg(e))
-    } finally { setUploading(false) }
+    }
   }
   const sendFile = async () => {
-    if (!canSend || uploading || send.isPending) return
-    setUploading(true)
+    if (!canSend || send.isPending || slotsLeft() <= 0) return
     try {
-      const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true, type: ['video/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/*'] })
+      const result = await DocumentPicker.getDocumentAsync({
+        copyToCacheDirectory: true,
+        multiple: true,
+        type: ['image/*', 'video/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/zip', 'text/*'],
+      })
       if (result.canceled) return
-      const file = result.assets[0]
-      const uploaded = await uploadFile(file)
-      const mediaType = file.mimeType?.startsWith('video/') || /\.(mp4|mov|avi|webm|mkv)$/i.test(file.name) ? 'VIDEO' : 'FILE'
-      setPending((files) => [...files, { ...uploaded, mediaType }])
-    } catch (e) { toast.error(errMsg(e)) } finally { setUploading(false) }
+      const kindOf = (f: DocumentPicker.DocumentPickerAsset): UploadingAttachment['kind'] =>
+        f.mimeType?.startsWith('image/') || /\.(jpe?g|png|gif|webp|heic)$/i.test(f.name) ? 'IMAGE'
+        : f.mimeType?.startsWith('video/') || /\.(mp4|mov|avi|webm|mkv)$/i.test(f.name) ? 'VIDEO' : 'FILE'
+      await uploadMany(
+        result.assets,
+        (f) => ({ key: '', name: f.name, kind: kindOf(f), localUri: f.uri }),
+        async (f) => ({ ...(await uploadFile(f)), mediaType: kindOf(f), localUri: f.uri }),
+      )
+    } catch (e) { toast.error(errMsg(e)) }
+  }
+
+  const taskPerm = taskDetail.data?.permissions
+  const goTask = (type?: string) => {
+    setActionMenuVisible(false)
+    const id = String(context.data?.taskId)
+    if (type) router.push({ pathname: '/mentoring/tasks/[id]/action', params: { id, type } })
+    else router.push({ pathname: '/mentoring/tasks/[id]', params: { id } })
   }
 
   return (
@@ -386,7 +660,7 @@ export function ChatWindow({
 
         {isMentoring && convId != null ? (
           <MotionPressable
-            onPress={() => setActionMenuVisible(true)}
+            onPress={() => { void context.refetch(); if (taskIdForMenu != null) void taskDetail.refetch(); setActionMenuVisible(true) }}
             accessibilityRole="button"
             accessibilityLabel="Thao tác"
             style={{
@@ -579,6 +853,8 @@ export function ChatWindow({
             </View>
           )}
 
+          {context.data?.taskId ? <TaskActionPanel taskId={context.data.taskId} compact={keyboardOpen} onChanged={() => void context.refetch()} /> : null}
+
           {/* Read-only banner if cannot send */}
           {context.data?.readOnly || !canSend ? (
             <Txt muted size={11} style={{ marginTop: 3, marginHorizontal: 4 }}>
@@ -590,11 +866,11 @@ export function ChatWindow({
       <View style={{ flex: 1 }}>
         <FlashList
           ref={listRef}
-          data={messages}
+          data={items}
           inverted
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-          keyExtractor={(m) => String(m.id)}
+          keyExtractor={(it) => (it.kind === 'msg' ? `m-${it.m.id}` : `d-${it.s.id}`)}
           contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 }}
           onScroll={(e) => {
             const offsetY = e.nativeEvent.contentOffset.y
@@ -605,9 +881,33 @@ export function ChatWindow({
           scrollEventThrottle={16}
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           ListEmptyComponent={q.isLoading ? <Loading /> : q.isError ? <Empty text="Không thể tải tin nhắn." error={q.error} onRetry={() => void q.refetch()} /> : <Txt muted style={{ textAlign: 'center', padding: 24 }}>Hãy gửi tin nhắn đầu tiên.</Txt>}
-          renderItem={({ item, index }) => {
-            const older = messages[index + 1]
-            const newer = messages[index - 1]
+          renderItem={({ item: row, index }) => {
+            if (row.kind === 'deal') {
+              const sn = row.s
+              const isLatest = !!deal && sn.version === deal.version
+              return (
+                <DealTicketCard
+                  snapshot={sn}
+                  deal={deal}
+                  mine={sn.modifiedByUserId != null && String(sn.modifiedByUserId) === me?.id}
+                  isStudent={isStudent}
+                  isMentor={isMentor}
+                  canReissue={isLatest && !!context.data?.canCreateDealTicket && canSend}
+                  busy={isLatest ? dealBusy : null}
+                  onConfirm={() => void confirmAndPay()}
+                  onReject={() => setDealDialog('REJECT')}
+                  onAdjust={() => setDealDialog('ADJUST')}
+                  onPay={() => void startPayment()}
+                  onReissue={() => router.push({ pathname: '/mentoring/deal/form', params: { dealId: String(sn.dealId), conversationId: String(convId) } })}
+                  onViewDetail={() => router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(sn.dealId) } })}
+                />
+              )
+            }
+            const item = row.m
+            const olderRow = items[index + 1]
+            const newerRow = items[index - 1]
+            const older = olderRow?.kind === 'msg' ? olderRow.m : undefined
+            const newer = newerRow?.kind === 'msg' ? newerRow.m : undefined
             const gap = !older || new Date(item.createdAt).getTime() - new Date(older.createdAt).getTime() > 15 * 60_000
             const grouped = !!newer && newer.type !== 'SYSTEM' && newer.senderId === item.senderId && new Date(newer.createdAt).getTime() - new Date(item.createdAt).getTime() < 5 * 60_000
             return (
@@ -628,6 +928,7 @@ export function ChatWindow({
                   grouped={grouped}
                   showTime={timeId === item.id}
                   onToggleTime={() => setTimeId(timeId === item.id ? null : item.id)}
+                  onOpenImage={setViewerUrl}
                 />
               </View>
             )
@@ -664,10 +965,15 @@ export function ChatWindow({
             <ChevronDown size={20} color={viridian} weight="bold" />
           </MotionPressable>
         ) : null}
-        {pending.length ? <View style={{ paddingHorizontal: 12, paddingTop: 8, backgroundColor: t.card }}>
-          {pending.map((file) => <View key={file.url} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Txt numberOfLines={1} style={{ flex: 1 }}>{file.fileName ?? 'Ảnh đính kèm'}</Txt><Pressable accessibilityRole="button" accessibilityLabel={`Bỏ tệp ${file.fileName ?? ''}`} disabled={send.isPending} onPress={() => setPending((files) => files.filter((f) => f.url !== file.url))} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}><X size={18} color={t.textMuted} /></Pressable></View>)}
-        </View> : null}
-        {uploading ? <Txt muted size={12} style={{ padding: 8 }}>Đang tải tệp lên...</Txt> : null}
+        <AttachmentTray
+          pending={pending}
+          uploading={uploadingItems}
+          disabled={send.isPending}
+          onRemove={(url) => setPending((files) => files.filter((f) => f.url !== url))}
+          onClear={() => setPending([])}
+          onAdd={() => void sendFile()}
+          onPreview={setViewerUrl}
+        />
         <View
           style={{
             flexDirection: 'row',
@@ -784,7 +1090,7 @@ export function ChatWindow({
           </Pressable>
         </View>
 
-        <View style={{ padding: 16 }}>
+        <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ padding: 16, paddingBottom: 28 }} showsVerticalScrollIndicator={false}>
           <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8, marginLeft: 2 }}>
             Xem & Tra cứu
           </Txt>
@@ -793,10 +1099,11 @@ export function ChatWindow({
             <ActionRow
               icon={<History size={20} color={viridian} />}
               title="Lịch sử phiên bản Deal"
-              desc={`Thỏa thuận #${deal.id} · Phiên bản v${deal.version} (${DEAL_STATUS_LABEL[deal.status] ?? deal.status})`}
+              desc={`Thỏa thuận #${deal.id} · ${snapshots.length || deal.version} phiên bản · Hiện tại v${deal.version} (${DEAL_STATUS_LABEL[deal.status] ?? deal.status})`}
               onPress={() => {
                 setActionMenuVisible(false)
-                router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(deal.id) } })
+                void context.refetch()
+                setHistoryVisible(true)
               }}
             />
           ) : null}
@@ -817,15 +1124,23 @@ export function ChatWindow({
           ) : null}
 
           {context.data?.taskId ? (
-            <ActionRow
-              icon={<ListChecks size={20} color={viridian} />}
-              title="Không gian nhiệm vụ (Task)"
-              desc="Xem tiến độ thực hiện và trao đổi công việc"
-              onPress={() => {
-                setActionMenuVisible(false)
-                router.push({ pathname: '/mentoring/tasks/[id]', params: { id: String(context.data?.taskId) } })
-              }}
-            />
+            <>
+              <ActionRow
+                icon={<ListChecks size={20} color={viridian} />}
+                title="Xem Task"
+                desc="Tiến độ, Work Log, thông tin thỏa thuận"
+                onPress={() => goTask()}
+              />
+              <ActionRow
+                icon={<BarChart3 size={20} color={viridian} />}
+                title="Báo cáo Task & tài chính"
+                desc="Dòng tiền, thanh toán và hoàn tiền của Task"
+                onPress={() => {
+                  setActionMenuVisible(false)
+                  router.push({ pathname: '/mentoring/tasks/[id]/report', params: { id: String(context.data?.taskId) } })
+                }}
+              />
+            </>
           ) : null}
 
           {context.data?.groupId ? (
@@ -899,8 +1214,78 @@ export function ChatWindow({
               />
             </>
           ) : null}
-        </View>
+
+          {taskPerm && (taskPerm.canSubmitCompletion || taskPerm.canRequestExtension || taskPerm.canRequestAmendment || taskPerm.canProposeSettlement || taskPerm.canSubmitSettlementTicket) ? (
+            <>
+              <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 10, marginBottom: 8, marginLeft: 2 }}>
+                Đề xuất
+              </Txt>
+              {taskPerm.canSubmitCompletion ? (
+                <ActionRow icon={<PackageCheck size={20} color={viridian} />} title="Nộp kết quả hoàn thành" desc="Gửi kết quả để học viên nghiệm thu" onPress={() => goTask('completion')} />
+              ) : null}
+              {taskPerm.canRequestExtension ? (
+                <ActionRow icon={<CalendarPlus size={20} color={viridian} />} title="Gia hạn deadline" desc="Gửi đề xuất hạn chót mới" onPress={() => goTask('extension')} />
+              ) : null}
+              {taskPerm.canRequestAmendment ? (
+                <ActionRow icon={<FilePen size={20} color={viridian} />} title="Điều chỉnh & tăng tiền" desc="Thay đổi phạm vi, deadline hoặc thêm tiền" onPress={() => goTask('amendment')} />
+              ) : null}
+              {taskPerm.canProposeSettlement ? (
+                <ActionRow icon={<Scale size={20} color={viridian} />} title="Dừng Task & chia quỹ" desc="Thỏa thuận kết thúc sớm" onPress={() => goTask('settlement')} />
+              ) : null}
+              {taskPerm.canSubmitSettlementTicket ? (
+                <ActionRow icon={<FileCheck2 size={20} color={viridian} />} title="Biên bản hòa giải" desc="Gửi biên bản dừng Task cho Ban Quản Trị" onPress={() => goTask('settlement-ticket')} />
+              ) : null}
+            </>
+          ) : null}
+
+          {taskPerm?.canCreateDisputeTicket ? (
+            <>
+              <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 10, marginBottom: 8, marginLeft: 2 }}>
+                Hỗ trợ
+              </Txt>
+              <ActionRow icon={<AlertTriangle size={20} color="#DC2626" />} title="Mở khiếu nại" desc="Nhờ Ban Quản Trị phân xử" danger onPress={() => goTask('dispute')} />
+            </>
+          ) : null}
+        </ScrollView>
       </SheetModal>
+      {deal ? (
+        <DealHistorySheet
+          visible={historyVisible}
+          onClose={() => setHistoryVisible(false)}
+          dealId={deal.id}
+          snapshots={snapshots}
+          currentVersion={deal.version}
+          statusLabel={DEAL_STATUS_LABEL[deal.status] ?? deal.status}
+          onOpenDeal={() => {
+            setHistoryVisible(false)
+            router.push({ pathname: '/mentoring/deal/[id]', params: { id: String(deal.id) } })
+          }}
+        />
+      ) : null}
+      <ReasonSheet
+        visible={dealDialog != null}
+        title={dealDialog === 'REJECT' ? 'Từ chối thỏa thuận?' : 'Yêu cầu Mentor điều chỉnh?'}
+        message={dealDialog === 'REJECT' ? 'Mentor sẽ nhận được thông báo kèm lý do của bạn.' : 'Mentor sẽ gửi phiên bản Deal mới theo góp ý của bạn.'}
+        confirmLabel={dealDialog === 'REJECT' ? 'Từ chối' : 'Gửi yêu cầu'}
+        loading={dealBusy === 'reject' || dealBusy === 'adjust'}
+        onConfirm={(note) => void submitDealDialog(note)}
+        onClose={() => setDealDialog(null)}
+      />
+      <ImageViewerModal url={viewerUrl} onClose={() => setViewerUrl(null)} />
+      <PaymentSheet
+        checkout={checkout}
+        poll={taskApi.paymentStatus}
+        onPaid={() => {
+          setCheckout(null)
+          refreshDeal()
+          toast.success('Thanh toán thành công! Task của bạn đã được kích hoạt.')
+        }}
+        onClose={() => setCheckout(null)}
+        onCancel={async () => {
+          if (checkout) await taskApi.cancelPayment(checkout.orderCode).catch(() => {})
+          setCheckout(null)
+        }}
+      />
     </Screen>
   )
 }

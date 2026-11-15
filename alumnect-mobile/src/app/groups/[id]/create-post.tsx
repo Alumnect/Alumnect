@@ -19,7 +19,7 @@ import { Avatar, Chip, Empty, Loading, Screen } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { withGroupsAlumniOnly } from '@/components/GroupsAlumniOnly'
 import { GROUP_MEDIA_MAX, GROUP_POST_MAX, GROUP_VIDEO_MAX_SECONDS, groupApi } from '@/api/groups'
-import { pickImage, pickVideos, uploadFile, uploadImage } from '@/lib/upload'
+import { pickImage, pickVideo, uploadFile, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 import { useAuthStore } from '@/store/authStore'
 import { radius, useTheme } from '@/theme'
@@ -98,9 +98,10 @@ function GroupPostFormScreen() {
   const addVideos = async () => {
     const remaining = GROUP_MEDIA_MAX - mediaCount
     if (remaining <= 0) { toast.error('Mỗi bài viết chỉ được đính kèm tối đa 10 ảnh hoặc video.'); return }
-    const picked = await pickVideos()
+    const picked = await pickVideo(true)
     if (!picked.length) return
-    const tooLong = picked.find((v) => !Number.isFinite(v.durationSec) || v.durationSec > GROUP_VIDEO_MAX_SECONDS)
+    // expo-image-picker trả thời lượng theo mili giây
+    const tooLong = picked.find((v) => (v.duration ?? 0) / 1000 > GROUP_VIDEO_MAX_SECONDS)
     if (tooLong) { toast.error('Video không được vượt quá 1 phút.'); return }
     if (picked.length > remaining) toast.error(`Chỉ thêm được ${remaining} tệp nữa, các tệp còn lại đã bị bỏ qua.`)
     setUploading(true)

@@ -267,8 +267,8 @@ export function AdminMentoringTicketsPage() {
               }}
               options={[
                 { value: 'ALL', label: 'Tất cả loại Ticket' },
-                { value: 'DISPUTE', label: 'Khiếu nại / Tranh chấp (DISPUTE)' },
-                { value: 'SETTLEMENT', label: 'Thỏa thuận Hòa giải (SETTLEMENT)' },
+                { value: 'DISPUTE', label: 'Khiếu nại / Tranh chấp' },
+                { value: 'SETTLEMENT', label: 'Thỏa thuận Hòa giải' },
               ]}
               placeholder="Tất cả loại Ticket"
               className="w-full sm:w-56"
@@ -284,11 +284,11 @@ export function AdminMentoringTicketsPage() {
               }}
               options={[
                 { value: 'ALL', label: 'Tất cả trạng thái xử lý' },
-                { value: 'OPEN', label: 'Chờ tiếp nhận (OPEN)' },
-                { value: 'IN_REVIEW', label: 'Đang xử lý (IN_REVIEW)' },
-                { value: 'RESOLVED', label: 'Đã giải quyết (RESOLVED)' },
-                { value: 'REJECTED', label: 'Bị từ chối (REJECTED)' },
-                { value: 'CANCELLED', label: 'Đã hủy (CANCELLED)' },
+                { value: 'OPEN', label: 'Chờ tiếp nhận' },
+                { value: 'IN_REVIEW', label: 'Đang xử lý' },
+                { value: 'RESOLVED', label: 'Đã giải quyết' },
+                { value: 'REJECTED', label: 'Bị từ chối' },
+                { value: 'CANCELLED', label: 'Đã hủy' },
               ]}
               placeholder="Tất cả trạng thái xử lý"
               className="w-full sm:w-56"

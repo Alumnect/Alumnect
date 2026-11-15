@@ -69,6 +69,12 @@ export const toMillionText = (vnd: number) => (vnd / 1_000_000).toFixed(1).repla
 
 export const formatVnd = (n: number) => `${new Intl.NumberFormat('vi-VN').format(Math.round(n))} ₫`
 
+/** Định dạng giá trị đơn vị Triệu VNĐ từ thống kê lương (VD: 20 -> "20 Triệu", 15.5 -> "15,5 Triệu"). */
+export const formatMillionVnd = (n: number | null | undefined): string => {
+  if (n == null || !Number.isFinite(n)) return '—'
+  return `${Number(n).toLocaleString('vi-VN')} Triệu`
+}
+
 export const salaryApi = {
   industries: async (): Promise<Industry[]> => list(await http.get('/industries')).map((r) => ({ id: Number(r.id), name: r.name ?? '' })),
   aiCheck: async (i: SalaryInput): Promise<SalaryAiCheck> =>
@@ -80,10 +86,12 @@ export const salaryApi = {
   mine: async () => list(await http.get('/salary-contributions/mine')).map(mapC),
   update: async (id: string, i: SalaryInput) => mapC(unwrap(await http.put(`/salary-contributions/${id}`, i))),
   remove: (id: string) => http.delete(`/salary-contributions/${id}`),
-  statistics: async (f: { industryId?: number | null; region?: string }): Promise<SalaryStatistics> => {
+  statistics: async (f: { industryId?: number | null; region?: string; jobTitle?: string; level?: string | null }): Promise<SalaryStatistics> => {
     const params: Record<string, string | number> = {}
     if (f.industryId != null) params.industryId = f.industryId
     if (f.region) params.region = f.region
+    if (f.jobTitle?.trim()) params.jobTitle = f.jobTitle.trim()
+    if (f.level) params.level = f.level
     const d = unwrap(await http.get('/salary-contributions/statistics', { params }))
     return {
       totalContributions: Number(d?.totalContributions ?? 0),

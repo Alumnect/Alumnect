@@ -110,7 +110,7 @@ public class PayOSMentoringDisbursementGatewayImpl implements MentoringDisbursem
 
     private String normalizeDescription(String description) {
         String value = description == null ? "ALUMNECT PAYOUT" : description.trim();
-        return value.length() <= 100 ? value : value.substring(0, 100);
+        return value.length() <= 25 ? value : value.substring(0, 25);
     }
 
     private DisbursementException classify(RuntimeException ex) {

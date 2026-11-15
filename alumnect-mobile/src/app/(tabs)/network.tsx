@@ -2,10 +2,9 @@ import React, { useMemo, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { FlashList } from '@shopify/flash-list'
-import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Map, Sparkles, Users } from '@/components/icons'
+import { Sparkles, Users } from '@/components/icons'
 import { Chip, Empty, Screen, SearchBar, Txt } from '@/components/ui'
 import { FilterButton, FilterSheet, countActive, type FilterField, type FilterValues } from '@/components/FilterSheet'
 import { UserRow } from '@/components/UserRow'
@@ -29,7 +28,6 @@ const SORTS: Record<string, [string, 'ASC' | 'DESC', string]> = {
 /** Mạng lưới cựu sinh viên & sinh viên: Danh bạ & Gợi ý kết nối thông minh. */
 export default function NetworkScreen() {
   const t = useTheme()
-  const router = useRouter()
   const [tab, setTab] = useState<Tab>('directory')
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState<FilterValues>({ sort: 'newest' })
@@ -122,28 +120,6 @@ export default function NetworkScreen() {
           </View>
         </View>
 
-        <Pressable
-          onPress={() => router.push('/map')}
-          accessibilityRole="button"
-          accessibilityLabel="Bản đồ cựu sinh viên"
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 5,
-            paddingHorizontal: 12,
-            paddingVertical: 7,
-            borderRadius: 20,
-            backgroundColor: t.isDark ? '#262626' : '#FFF3EB',
-            borderWidth: 1,
-            borderColor: t.isDark ? '#3D3D3D' : '#FFDFCC',
-            opacity: pressed ? 0.75 : 1,
-          })}
-        >
-          <Map size={15} color={t.primary} weight="bold" />
-          <Txt size={12} weight="700" style={{ color: t.primary }}>
-            Bản đồ
-          </Txt>
-        </Pressable>
       </View>
 
       {/* Kakao & Instagram style Segmented Pill Tabs */}

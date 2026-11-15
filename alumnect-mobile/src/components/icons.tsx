@@ -85,12 +85,12 @@ import { TargetIcon as PhTarget } from 'phosphor-react-native/src/icons/Target'
 import { TrayIcon as PhTray } from 'phosphor-react-native/src/icons/Tray'
 import { TrendUpIcon as PhTrendUp } from 'phosphor-react-native/src/icons/TrendUp'
 import { TrophyIcon as PhTrophy } from 'phosphor-react-native/src/icons/Trophy'
+import { TrashIcon as PhTrash } from 'phosphor-react-native/src/icons/Trash'
 import { UserIcon as PhUser } from 'phosphor-react-native/src/icons/User'
 import { UserCheckIcon as PhUserCheck } from 'phosphor-react-native/src/icons/UserCheck'
 import { UserFocusIcon as PhUserFocus } from 'phosphor-react-native/src/icons/UserFocus'
 import { UserPlusIcon as PhUserPlus } from 'phosphor-react-native/src/icons/UserPlus'
 import { UsersThreeIcon as PhUsersThree } from 'phosphor-react-native/src/icons/UsersThree'
-import { VideoCameraIcon as PhVideoCamera } from 'phosphor-react-native/src/icons/VideoCamera'
 import { CrownIcon as PhCrown } from 'phosphor-react-native/src/icons/Crown'
 import { WalletIcon as PhWallet } from 'phosphor-react-native/src/icons/Wallet'
 import { WarningIcon as PhWarning } from 'phosphor-react-native/src/icons/Warning'
@@ -107,6 +107,12 @@ import { SquaresFourIcon as PhSquaresFour } from 'phosphor-react-native/src/icon
 import { PlusSquareIcon as PhPlusSquare } from 'phosphor-react-native/src/icons/PlusSquare'
 import { EyeIcon as PhEye } from 'phosphor-react-native/src/icons/Eye'
 import { EyeSlashIcon as PhEyeSlash } from 'phosphor-react-native/src/icons/EyeSlash'
+import { PlayIcon as PhPlay } from 'phosphor-react-native/src/icons/Play'
+import { PauseIcon as PhPause } from 'phosphor-react-native/src/icons/Pause'
+import { SpeakerHighIcon as PhSpeakerHigh } from 'phosphor-react-native/src/icons/SpeakerHigh'
+import { SpeakerSlashIcon as PhSpeakerSlash } from 'phosphor-react-native/src/icons/SpeakerSlash'
+import { CornersOutIcon as PhCornersOut } from 'phosphor-react-native/src/icons/CornersOut'
+import { VideoCameraIcon as PhVideoCamera } from 'phosphor-react-native/src/icons/VideoCamera'
 
 /**
  * Bộ icon của app: Phosphor (nét bo tròn, có nhiều độ đậm).
@@ -130,6 +136,7 @@ export type { IconWeight }
 
 function make(Glyph: PhosphorIcon, name: string) {
   const C = ({ size = 24, color, strokeWidth, fill, weight, ...rest }: IconProps) => {
+    if (!Glyph || typeof Glyph !== 'function') return null
     const filled = !!fill && fill !== 'transparent' && fill !== 'none'
     const w: IconWeight = weight ?? (filled ? 'fill' : strokeWidth && strokeWidth >= 2.5 ? 'bold' : 'regular')
     return <Glyph size={size} color={color} weight={w} {...rest} />
@@ -212,6 +219,11 @@ export const PenSquare = make(PhPencilSimpleLine, 'PenSquare')
 export const Pencil = make(PhPencilSimple, 'Pencil')
 export const Phone = make(PhPhone, 'Phone')
 export const Pin = make(PhPushPin, 'Pin')
+export const Play = make(PhPlay, 'Play')
+export const Pause = make(PhPause, 'Pause')
+export const SpeakerHigh = make(PhSpeakerHigh, 'SpeakerHigh')
+export const SpeakerSlash = make(PhSpeakerSlash, 'SpeakerSlash')
+export const CornersOut = make(PhCornersOut, 'CornersOut')
 export const Plus = make(PhPlus, 'Plus')
 export const Receipt = make(PhReceipt, 'Receipt')
 export const RotateCcw = make(PhArrowCounterClockwise, 'RotateCcw')
@@ -228,14 +240,17 @@ export const SquarePen = make(PhPencilSimpleLine, 'SquarePen')
 export const Star = make(PhStar, 'Star')
 export const Target = make(PhTarget, 'Target')
 export const TrendingUp = make(PhTrendUp, 'TrendingUp')
+export const Trash = make(PhTrash, 'Trash')
+export const Trash2 = make(PhTrash, 'Trash2')
 export const Trophy = make(PhTrophy, 'Trophy')
 export const UserCheck = make(PhUserCheck, 'UserCheck')
 export const UserPlus = make(PhUserPlus, 'UserPlus')
 export const UserRound = make(PhUser, 'UserRound')
 export const UserSearch = make(PhUserFocus, 'UserSearch')
 export const Users = make(PhUsersThree, 'Users')
-export const Video = make(PhVideoCamera, 'Video')
 export const Crown = make(PhCrown, 'Crown')
+export const VideoCamera = make(PhVideoCamera, 'VideoCamera')
+export const Video = VideoCamera
 export const Wallet = make(PhWallet, 'Wallet')
 export const X = make(PhX, 'X')
 export const Fingerprint = make(PhFingerprint, 'Fingerprint')

@@ -5,7 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import { Calendar } from '@/components/icons'
 import { useTheme } from '@/theme'
 
-/** Chọn ngày + giờ (Android: hiện lần lượt hộp ngày rồi giờ). Giá trị là chuỗi ISO local 'YYYY-MM-DDTHH:mm:ss'. */
+/** Chọn ngày + giờ (Android: hiện lần lượt hộp ngày rồi giờ). Giá trị là chuỗi ISO UTC 'YYYY-MM-DDTHH:mm:ss.sssZ' hoặc 'YYYY-MM-DD' khi dateOnly. */
 export function DateField({ label, value, onChange, error, minimumDate = new Date(), dateOnly = false }: { label?: string; value: string; onChange: (iso: string) => void; error?: string; minimumDate?: Date | null; dateOnly?: boolean }) {
   const t = useTheme()
   const [step, setStep] = useState<'date' | 'time' | null>(null)
@@ -13,7 +13,7 @@ export function DateField({ label, value, onChange, error, minimumDate = new Dat
   const date = Number.isNaN(parsed.getTime()) ? new Date() : parsed
   const [draft, setDraft] = useState(date)
   const pad = (n: number) => String(n).padStart(2, '0')
-  const toIso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`
+  const toIso = (d: Date) => d.toISOString()
 
   return (
     <View style={{ marginBottom: 14 }}>
@@ -39,13 +39,13 @@ export function DateField({ label, value, onChange, error, minimumDate = new Dat
             if (dateOnly) { setStep(null); onChange(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`); return }
             if (step === 'date') {
               const next = new Date(d)
-              next.setHours(draft.getHours(), draft.getMinutes())
+              next.setHours(draft.getHours(), draft.getMinutes(), 0, 0)
               setDraft(next)
               setStep(Platform.OS === 'android' ? 'time' : null)
               if (Platform.OS !== 'android') onChange(toIso(next))
             } else {
               const next = new Date(draft)
-              next.setHours(d.getHours(), d.getMinutes())
+              next.setHours(d.getHours(), d.getMinutes(), 0, 0)
               setStep(null)
               onChange(toIso(next))
             }
