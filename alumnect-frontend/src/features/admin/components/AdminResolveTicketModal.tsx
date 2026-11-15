@@ -50,7 +50,6 @@ export function AdminResolveTicketModal({
   const resolveMutation = useResolveAdminTicket()
   const mentorAmountId = useId()
   const studentRefundId = useId()
-  const disputeFeeId = useId()
 
   const availableFund =
     totalEscrowAmount && totalEscrowAmount > 0
@@ -64,7 +63,6 @@ export function AdminResolveTicketModal({
   const [mentorPercentage, setMentorPercentage] = useState<number>(50)
   const [mentorAmount, setMentorAmount] = useState<number>(Math.round(availableFund / 2))
   const [studentRefund, setStudentRefund] = useState<number>(availableFund - Math.round(availableFund / 2))
-  const [disputeFee, setDisputeFee] = useState<number>(0)
   const [decisionReason, setDecisionReason] = useState<string>('')
   const [isConfirmStep, setIsConfirmStep] = useState<boolean>(false)
 
@@ -72,8 +70,8 @@ export function AdminResolveTicketModal({
 
   const formatVnd = (val: number) => new Intl.NumberFormat('vi-VN').format(val) + ' đ'
 
-  // Tính toán số tiền thực tế theo phương án
-  const netFund = Math.max(0, availableFund - disputeFee)
+  // Toàn bộ quỹ Escrow khả dụng được phân bổ trọn vẹn cho Mentor và Student (không thu phí tranh chấp)
+  const netFund = availableFund
   let calculatedMentorAmount = 0
   let calculatedStudentRefund = 0
 
@@ -94,7 +92,7 @@ export function AdminResolveTicketModal({
     }
   }
 
-  const totalAllocated = calculatedMentorAmount + calculatedStudentRefund + disputeFee
+  const totalAllocated = calculatedMentorAmount + calculatedStudentRefund
   const isFundBalanced = Math.abs(totalAllocated - availableFund) === 0
 
   const handlePercentageChange = (pct: number) => {
@@ -127,7 +125,7 @@ export function AdminResolveTicketModal({
       decisionReason: decisionReason.trim(),
       mentorAmount: calculatedMentorAmount,
       studentRefund: calculatedStudentRefund,
-      disputeFee,
+      disputeFee: 0,
       splitMode,
       mentorPercentage: splitMode === 'PERCENTAGE' ? mentorPercentage : undefined,
       studentPercentage: splitMode === 'PERCENTAGE' ? 100 - mentorPercentage : undefined,
@@ -370,29 +368,6 @@ export function AdminResolveTicketModal({
             </div>
           )}
 
-          {/* Phí xử lý tranh chấp (nếu có) */}
-          <div className="flex items-center justify-between p-3 bg-surface-2 rounded-xl border border-border">
-            <div>
-              <label htmlFor={disputeFeeId} className="text-xs font-semibold text-text-muted block">
-                Phí xử lý tranh chấp (Dispute Fee)
-              </label>
-              <span className="text-3xs text-text-subtle">
-                Khấu trừ vào quỹ trước khi phân bổ theo chính sách nếu áp dụng (mặc định 0đ)
-              </span>
-            </div>
-            <div className="w-32">
-              <input
-                id={disputeFeeId}
-                type="number"
-                min="0"
-                max={availableFund}
-                value={disputeFee}
-                onChange={(e) => setDisputeFee(Math.max(0, Number(e.target.value)))}
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border-strong bg-surface text-right font-semibold focus:outline-hidden focus:ring-2 focus:ring-focus"
-              />
-            </div>
-          </div>
-
           {/* Bảng đối soát tài chính phân bổ */}
           <div className="space-y-2 rounded-xl border border-border bg-surface-2 p-4">
             <div className="mb-1 text-xs font-semibold text-text">
@@ -406,12 +381,6 @@ export function AdminResolveTicketModal({
               <span className="text-text-muted">Học viên (Student) hoàn trả:</span>
               <span className="font-bold text-info">{formatVnd(calculatedStudentRefund)}</span>
             </div>
-            {disputeFee > 0 && (
-              <div className="flex justify-between gap-4 border-b border-border py-1 text-xs">
-                <span className="text-text-muted">Phí xử lý tranh chấp:</span>
-                <span className="font-bold text-warning">{formatVnd(disputeFee)}</span>
-              </div>
-            )}
             <div className="flex justify-between text-xs pt-1 font-bold">
               <span className="text-text">Tổng phân bổ / Quỹ khả dụng:</span>
               <span className={isFundBalanced ? 'text-success' : 'text-danger'}>
