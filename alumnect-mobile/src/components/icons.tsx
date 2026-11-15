@@ -91,6 +91,7 @@ import { UserCheckIcon as PhUserCheck } from 'phosphor-react-native/src/icons/Us
 import { UserFocusIcon as PhUserFocus } from 'phosphor-react-native/src/icons/UserFocus'
 import { UserPlusIcon as PhUserPlus } from 'phosphor-react-native/src/icons/UserPlus'
 import { UsersThreeIcon as PhUsersThree } from 'phosphor-react-native/src/icons/UsersThree'
+import { CrownIcon as PhCrown } from 'phosphor-react-native/src/icons/Crown'
 import { WalletIcon as PhWallet } from 'phosphor-react-native/src/icons/Wallet'
 import { WarningIcon as PhWarning } from 'phosphor-react-native/src/icons/Warning'
 import { XIcon as PhX } from 'phosphor-react-native/src/icons/X'
@@ -247,6 +248,7 @@ export const UserPlus = make(PhUserPlus, 'UserPlus')
 export const UserRound = make(PhUser, 'UserRound')
 export const UserSearch = make(PhUserFocus, 'UserSearch')
 export const Users = make(PhUsersThree, 'Users')
+export const Crown = make(PhCrown, 'Crown')
 export const VideoCamera = make(PhVideoCamera, 'VideoCamera')
 export const Video = VideoCamera
 export const Wallet = make(PhWallet, 'Wallet')
