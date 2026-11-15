@@ -613,7 +613,7 @@ export function AdminTaskLedgerDetailModal({
                                 <p className="text-xs font-bold text-primary-solid">
                                   Kết quả quyết toán phân bổ tiền Escrow
                                 </p>
-                                <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div className="grid grid-cols-2 gap-2 text-xs">
                                   <div className="p-2.5 bg-surface dark:bg-bg rounded-xl border border-border">
                                     <span className="text-text-subtle block text-xs">Chi Cố vấn:</span>
                                     <span className="font-bold text-purple-600 dark:text-purple-400 block text-sm mt-0.5">
@@ -624,12 +624,6 @@ export function AdminTaskLedgerDetailModal({
                                     <span className="text-text-subtle block text-xs">Hoàn Học viên:</span>
                                     <span className="font-bold text-warning block text-sm mt-0.5">
                                       {formatVnd(t.studentRefund)}
-                                    </span>
-                                  </div>
-                                  <div className="p-2.5 bg-surface dark:bg-bg rounded-xl border border-border">
-                                    <span className="text-text-subtle block text-xs">Phí xử lý:</span>
-                                    <span className="font-bold text-text block text-sm mt-0.5">
-                                      {formatVnd(t.disputeFee)}
                                     </span>
                                   </div>
                                 </div>
