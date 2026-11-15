@@ -10,7 +10,7 @@ import { Header } from '@/components/Header'
 import { PostCard } from '@/components/PostCard'
 import { ActionSheet } from '@/components/ActionSheet'
 import { CommentBubble, CommentComposer } from '@/components/Comments'
-import { feedApi } from '@/api/feed'
+import { feedApi, syncPostCommentDeltaInCache } from '@/api/feed'
 import type { Comment } from '@/api/feed'
 import { useAuthStore } from '@/store/authStore'
 import { useTheme } from '@/theme'
@@ -25,7 +25,8 @@ function thread(items: Comment[]) {
 export default function PostDetailScreen() {
   const t = useTheme()
   const qc = useQueryClient()
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id: rawId, highlightCommentId } = useLocalSearchParams<{ id: string; highlightCommentId?: string }>()
+  const id = rawId ? rawId.split('#')[0].split(':')[0] : ''
   const me = useAuthStore((s) => s.user)
   const [text, setText] = useState('')
   const [editing, setEditing] = useState<Comment | null>(null)
@@ -58,6 +59,7 @@ export default function PostDetailScreen() {
     },
     onSuccess: () => {
       toast.success(editing ? 'Đã cập nhật bình luận.' : 'Đã gửi bình luận!')
+      if (!editing && id) syncPostCommentDeltaInCache(id, 1)
       reset()
       refresh()
     },
@@ -67,6 +69,7 @@ export default function PostDetailScreen() {
     mutationFn: (c: Comment) => feedApi.deleteComment(id!, c.id),
     onSuccess: () => {
       toast.success('Đã xóa bình luận.')
+      if (id) syncPostCommentDeltaInCache(id, -1)
       refresh()
     },
     onError: (e) => toast.error(errMsg(e)),
@@ -113,6 +116,7 @@ export default function PostDetailScreen() {
               time={item.time}
               reply={!!item.parentId}
               mine={item.authorId === me?.id}
+              highlighted={highlightCommentId ? String(item.id) === String(highlightCommentId) : false}
               onReply={() => {
                 setEditing(null)
                 setReplyTo(item)
