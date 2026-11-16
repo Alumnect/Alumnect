@@ -104,6 +104,7 @@ export function QuestionForm({ existing }: { existing?: QuestionDetail }) {
   const [topicId, setTopicId] = useState<number | null>(existing?.topicId ?? null)
   const [majorId, setMajorId] = useState<number | null>(existing?.majorId ?? null)
   const [images, setImages] = useState<string[]>(existing?.images ?? [])
+  const [previewMap, setPreviewMap] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
   const [draftSaved, setDraftSaved] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -181,9 +182,19 @@ export function QuestionForm({ existing }: { existing?: QuestionDetail }) {
     if (!picked.length) return
     setUploading(true)
     try {
-      const urls = await Promise.all(picked.slice(0, IMAGE_MAX - images.length).map((p) => uploadImage(p, 'common')))
+      const toUpload = picked.slice(0, IMAGE_MAX - images.length)
+      const uploaded: { url: string; localUri: string }[] = []
+      for (const p of toUpload) {
+        const url = await uploadImage(p, 'common')
+        uploaded.push({ url, localUri: p.uri })
+      }
+      setPreviewMap((prev) => {
+        const next = { ...prev }
+        uploaded.forEach((u) => { next[u.url] = u.localUri })
+        return next
+      })
       animateLayout()
-      setImages((x) => [...x, ...urls])
+      setImages((x) => [...x, ...uploaded.map((u) => u.url)])
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     } catch (e) {
       toast.error(errMsg(e))
@@ -291,7 +302,7 @@ export function QuestionForm({ existing }: { existing?: QuestionDetail }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 14, gap: 10 }}>
               {images.map((uri, i) => (
                 <View key={uri} style={{ width: 96, height: 96, borderRadius: radius.md, overflow: 'hidden', backgroundColor: t.inputBg, borderWidth: StyleSheet.hairlineWidth, borderColor: t.border }}>
-                  <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={150} />
+                  <Image source={{ uri: previewMap[uri] || uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" cachePolicy="memory-disk" transition={150} />
                   <Pressable
                     onPress={() => removeImage(uri)}
                     hitSlop={8}

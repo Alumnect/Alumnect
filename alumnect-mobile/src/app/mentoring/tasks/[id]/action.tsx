@@ -183,7 +183,7 @@ function MoneyField({ label, value, onChange, required, hint, error }: { label: 
 }
 
 /** Ảnh đính kèm dạng lưới thumbnail + ô thêm ảnh. */
-function Attachments({ files, onAdd, onRemove, uploading, label }: { files: { fileUrl: string; fileName: string }[]; onAdd: () => void; onRemove: (i: number) => void; uploading: boolean; label: string }) {
+function Attachments({ files, onAdd, onRemove, uploading, label }: { files: { fileUrl: string; fileName: string; localUri?: string }[]; onAdd: () => void; onRemove: (i: number) => void; uploading: boolean; label: string }) {
   const { colors, viridian, isDark } = useMentoringTheme()
   return (
     <View>
@@ -193,7 +193,7 @@ function Attachments({ files, onAdd, onRemove, uploading, label }: { files: { fi
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {files.map((x, i) => (
           <View key={`${x.fileUrl}-${i}`} style={styles.thumb}>
-            <Image source={{ uri: x.fileUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image source={{ uri: x.localUri || x.fileUrl }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" />
             <Pressable onPress={() => onRemove(i)} hitSlop={6} accessibilityLabel="Xóa ảnh" style={styles.thumbRemove}>
               <X size={12} color="#FFFFFF" weight="bold" />
             </Pressable>
@@ -236,7 +236,7 @@ export default function TaskActionScreen() {
   const [f, setF] = useState<Record<string, string>>({})
   const [date, setDate] = useState('')
   const [rating, setRating] = useState(0)
-  const [files, setFiles] = useState<{ fileUrl: string; fileName: string; mediaType?: 'IMAGE' | 'VIDEO' | 'FILE'; fileSize?: number | null }[]>([])
+  const [files, setFiles] = useState<{ fileUrl: string; fileName: string; localUri?: string; mediaType?: 'IMAGE' | 'VIDEO' | 'FILE'; fileSize?: number | null }[]>([])
   const [uploading, setUploading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loaded, setLoaded] = useState(false)
@@ -275,7 +275,7 @@ export default function TaskActionScreen() {
     setUploading(true)
     try {
       const url = await uploadImage(img, type === 'dispute' ? 'evidence' : 'common')
-      setFiles((x) => [...x, { fileUrl: url, fileName: img.name, mediaType: 'IMAGE' }])
+      setFiles((x) => [...x, { fileUrl: url, fileName: img.name, localUri: img.uri, mediaType: 'IMAGE' }])
     } catch (e) {
       toast.error(errMsg(e))
     } finally {
