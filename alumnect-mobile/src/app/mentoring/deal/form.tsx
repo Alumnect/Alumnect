@@ -50,8 +50,13 @@ export default function DealFormScreen() {
     enabled: !!conversationId && !dealId,
   })
 
-  const [f, setF] = useState({ taskScope: '', expectedResult: '', price: '', changeNote: '' })
-  const [deadline, setDeadline] = useState('')
+  const [f, setF] = useState({
+    taskScope: 'Cố vấn chuyên sâu kiến trúc Backend Microservices, thiết kế cơ sở dữ liệu và tích hợp message broker.',
+    expectedResult: 'Hệ thống vận hành ổn định, tài liệu API đầy đủ và hướng dẫn thực hành 1:1 qua video call.',
+    price: '2500000',
+    changeNote: '',
+  })
+  const [deadline, setDeadline] = useState(new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 19))
   const [mode, setMode] = useState<WorkingMode>('ONLINE')
   const [participation, setParticipation] = useState<'INDIVIDUAL' | 'GROUP'>('INDIVIDUAL')
   const [taskType, setTaskType] = useState('CONSULTATION')

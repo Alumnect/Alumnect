@@ -490,6 +490,11 @@ export function MentoringTaskReportModal({
                         <span className="text-text-subtle">{t('mentoring.refundStatus', 'Trạng thái hoàn tiền:')}</span>
                         {getMoneyStatusBadge(effectiveStudentStatus)}
                       </div>
+                      {report.studentRefundNote && effectiveStudentStatus === 'FAILED' && (
+                        <p className="text-[11px] text-danger font-medium mt-1 leading-relaxed">
+                          ⚠️ {report.studentRefundNote}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -519,6 +524,11 @@ export function MentoringTaskReportModal({
                         <span className="text-text-subtle">{t('mentoring.payoutStatus', 'Trạng thái chi trả:')}</span>
                         {getMoneyStatusBadge(effectiveMentorStatus)}
                       </div>
+                      {report.mentorPayoutNote && effectiveMentorStatus === 'FAILED' && (
+                        <p className="text-[11px] text-danger font-medium mt-1 leading-relaxed">
+                          ⚠️ {report.mentorPayoutNote}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

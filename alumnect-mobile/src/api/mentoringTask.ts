@@ -222,10 +222,12 @@ export interface TaskReport {
   studentTotalPaid: number
   studentRefundAmount: number
   studentRefundStatus: string
+  studentRefundNote?: string | null
   mentorEarnedAmount: number
   platformFee: number
   mentorNetPayout: number
   mentorPayoutStatus: string
+  mentorPayoutNote?: string | null
   isDisputed?: boolean
   activeTicket?: Ticket | null
   latestTicket?: Ticket | null

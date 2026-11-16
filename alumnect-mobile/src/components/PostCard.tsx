@@ -261,7 +261,7 @@ function PostMediaImpl({ postId, images, onOpen, onDoubleLike }: { postId: strin
   )
 }
 
-const PostMedia = React.memo(PostMediaImpl, (prev, next) => {
+export const PostMedia = React.memo(PostMediaImpl, (prev, next) => {
   if (prev.postId !== next.postId) return false
   if (prev.images.length !== next.images.length) return false
   for (let i = 0; i < prev.images.length; i++) {

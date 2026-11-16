@@ -63,12 +63,14 @@ public class MentoringTaskReportResponse {
     private BigDecimal totalAgreedPrice;
     private BigDecimal studentTotalPaid;
     private BigDecimal studentRefundAmount;
-    private String studentRefundStatus; // NO_REFUND, PROCESSING, REFUNDED, ON_HOLD
+    private String studentRefundStatus; // NO_REFUND, PROCESSING, REFUNDED, ON_HOLD, FAILED
+    private String studentRefundNote;
 
     private BigDecimal mentorEarnedAmount;
     private BigDecimal platformFee;
     private BigDecimal mentorNetPayout;
-    private String mentorPayoutStatus; // PENDING_ESCROW, PROCESSING, PAID, ON_HOLD
+    private String mentorPayoutStatus; // PENDING_ESCROW, PROCESSING, PAID, ON_HOLD, FAILED
+    private String mentorPayoutNote;
 
     private String platformFeeNote;
 

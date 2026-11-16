@@ -82,7 +82,6 @@ function FeedBar({ filter, onFilter, onDiscover }: { filter: FeedFilter; onFilte
         alignItems: 'center',
         backgroundColor: t.card,
         paddingLeft: 12,
-        marginBottom: 8,
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: t.border,
       }}
@@ -311,15 +310,14 @@ export default function FeedScreen() {
 
   return (
     <Screen>
+      {/* Thanh header và thanh lọc bài viết (FeedBar) được khoá cố định trên đỉnh màn hình */}
       <View
         style={{
           backgroundColor: t.card,
           paddingHorizontal: 10,
           paddingTop: 6,
-          paddingBottom: 8,
+          paddingBottom: searchOpen ? 8 : 4,
           gap: 8,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: t.border,
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 38 }}>
@@ -379,25 +377,22 @@ export default function FeedScreen() {
         {searchOpen ? <SearchBar value={search} onChangeText={setSearch} placeholder="Tìm bài viết, người đăng..." autoFocus style={{ paddingHorizontal: 4 }} /> : null}
       </View>
 
+      <FeedBar filter={filter} onFilter={setFilter} onDiscover={() => setDiscoverOpen(true)} />
+
       <View style={{ flex: 1, backgroundColor: t.bg }}>
         <FlashList
           ref={listRef}
           data={q.isLoading ? [] : posts}
           keyExtractor={(p) => p.id}
           renderItem={({ item }) => <PostCard post={item} />}
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{ paddingTop: 6, paddingBottom: 24 }}
           onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
           onEndReachedThreshold={0.5}
           refreshing={manualRefreshing || q.isRefetching}
           onRefresh={() => {
             void reloadLatestPosts()
           }}
-          ListHeaderComponent={
-            <View>
-              <FeedBar filter={filter} onFilter={setFilter} onDiscover={() => setDiscoverOpen(true)} />
-              {q.isLoading ? <ListSkeleton variant="post" /> : null}
-            </View>
-          }
+          ListHeaderComponent={q.isLoading ? <ListSkeleton variant="post" /> : null}
           ListEmptyComponent={
             q.isLoading ? null : (
               <Empty

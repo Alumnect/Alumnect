@@ -24,7 +24,7 @@ function MentorCardViewImpl({ m }: { m: MentorCard }) {
   const isAvailable = m.active !== false
 
   const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(m.mentorId) } })
   }
 
