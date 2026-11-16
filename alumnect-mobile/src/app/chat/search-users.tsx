@@ -28,6 +28,8 @@ export default function SearchUsersScreen() {
         <FlashList
           data={q.data?.data ?? []}
           keyExtractor={(u) => String(u.userId)}
+          refreshing={q.isRefetching}
+          onRefresh={() => { void q.refetch() }}
           ListEmptyComponent={<Empty error={q.error} onRetry={() => { void q.refetch() }} text="Không tìm thấy người dùng." />}
           renderItem={({ item }) => (
             <MotionPressable accessibilityRole="button" accessibilityLabel={`Nhắn tin với ${item.fullName}`} onPress={() => router.replace({ pathname: '/chat/direct/[userId]', params: { userId: String(item.userId) } })} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 13, backgroundColor: pressed ? t.inputBg : t.card })}>

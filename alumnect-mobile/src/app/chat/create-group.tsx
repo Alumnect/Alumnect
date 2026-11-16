@@ -121,6 +121,8 @@ export default function CreateGroupScreen() {
         data={q.data?.data ?? []}
         extraData={picked}
         keyExtractor={(u) => String(u.userId)}
+        refreshing={q.isRefetching}
+        onRefresh={() => { void q.refetch() }}
         renderItem={({ item }) => (
           <Pressable onPress={() => toggle(item.userId)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
             <Avatar uri={item.avatarUrl} name={item.fullName} size={42} />
