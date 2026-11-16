@@ -24,3 +24,4 @@ public class PingAdminFinanceRequest {
     @Schema(description = "Loại sự cố (REFUND_NOT_RECEIVED, WRONG_AMOUNT, ACCOUNT_ERROR, OTHER)", example = "REFUND_NOT_RECEIVED")
     private String issueType;
 }
+

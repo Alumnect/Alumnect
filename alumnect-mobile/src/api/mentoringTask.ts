@@ -136,7 +136,12 @@ export interface Ticket {
   status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED' | 'CANCELLED'
   resolutionNote?: string | null
   decision?: string | null
+  settlementStatus?: string | null
+  mentorPayoutLedgerId?: number | null
+  studentRefundLedgerId?: number | null
   createdAt: string
+  updatedAt?: string
+  resolvedAt?: string
 }
 export interface Evidence { id: number; title?: string | null; description?: string | null; fileUrl: string; fileName?: string | null; uploadedBy?: Participant | null; createdAt: string }
 export interface TicketMessage {
@@ -234,11 +239,18 @@ export interface SettlementSnapshot {
   taskId: number
   taskTitle: string
   totalBudget: number
+  totalAmount?: number
   settlementProposalId: number
+  proposalId?: number
   mentorAmount: number
   studentRefund: number
   reason: string
-  hasOpenTicket: boolean
+  hasOpenTicket?: boolean
+  isAgreed?: boolean
+  canSubmitTicket?: boolean
+  proposerName?: string
+  responderName?: string
+  agreedAt?: string
 }
 
 export interface TaskCheckout {

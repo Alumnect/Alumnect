@@ -200,7 +200,33 @@ export function MentoringTaskReportModal({
           <div className="p-4 bg-danger-soft border border-danger-border text-danger rounded-xl text-sm">
             {t('mentoring.loadTaskReportError', 'Không thể tải thông tin báo cáo Task. Vui lòng thử lại sau.')}
           </div>
-        ) : (
+        ) : (() => {
+          const mentorSplit = (report.mentorEarnedAmount && report.mentorEarnedAmount > 0)
+            ? report.mentorEarnedAmount
+            : (report.latestTicket?.mentorAmount ?? 0)
+          const studentSplit = (report.studentRefundAmount && report.studentRefundAmount > 0)
+            ? report.studentRefundAmount
+            : (report.latestTicket?.studentRefund ?? 0)
+
+          let effectiveStudentStatus = report.studentRefundStatus
+          if (studentSplit > 0) {
+            if (report.latestTicket?.status === 'RESOLVED' || report.studentRefundStatus === 'REFUNDED') {
+              effectiveStudentStatus = 'REFUNDED'
+            } else if (!effectiveStudentStatus || effectiveStudentStatus === 'NO_REFUND') {
+              effectiveStudentStatus = 'PENDING_REFUND'
+            }
+          }
+
+          let effectiveMentorStatus = report.mentorPayoutStatus
+          if (mentorSplit > 0) {
+            if (report.latestTicket?.status === 'RESOLVED' || report.mentorPayoutStatus === 'PAID') {
+              effectiveMentorStatus = 'PAID'
+            } else if (!effectiveMentorStatus || effectiveMentorStatus === 'CANCELLED') {
+              effectiveMentorStatus = 'PENDING_ESCROW'
+            }
+          }
+
+          return (
           <>
             {/* Task Title & Status Banner */}
             <div className="p-4 bg-surface-2 rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -282,11 +308,11 @@ export function MentoringTaskReportModal({
                 <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
                   <div className="p-2.5 bg-surface rounded-lg border border-border">
                     <span className="text-text-subtle block">Mentor nhận:</span>
-                    <span className="font-bold text-sm text-success">{formatVnd(report.mentorEarnedAmount)}</span>
+                    <span className="font-bold text-sm text-success">{formatVnd(mentorSplit)}</span>
                   </div>
                   <div className="p-2.5 bg-surface rounded-lg border border-border">
                     <span className="text-text-subtle block">Học viên nhận hoàn:</span>
-                    <span className="font-bold text-sm text-info">{formatVnd(report.studentRefundAmount)}</span>
+                    <span className="font-bold text-sm text-info">{formatVnd(studentSplit)}</span>
                   </div>
                 </div>
               </div>
@@ -457,13 +483,13 @@ export function MentoringTaskReportModal({
                     </div>
                     <div className="flex justify-between pt-1 text-text-muted">
                       <span>{t('mentoring.refundAmount', 'Khoản hoàn tiền (Refund):')}</span>
-                      <span className={`font-bold ${report.studentRefundAmount > 0 ? 'text-info' : 'text-text'}`}>
-                        {formatVnd(report.studentRefundAmount)}
+                      <span className={`font-bold ${studentSplit > 0 ? 'text-info' : 'text-text'}`}>
+                        {formatVnd(studentSplit)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs pt-1">
                       <span className="text-text-subtle">{t('mentoring.refundStatus', 'Trạng thái hoàn tiền:')}</span>
-                      {getMoneyStatusBadge(report.studentRefundStatus)}
+                      {getMoneyStatusBadge(effectiveStudentStatus)}
                     </div>
                   </div>
                 </div>
@@ -485,27 +511,15 @@ export function MentoringTaskReportModal({
                     )}
                   </div>
                   <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-text-subtle">{t('mentoring.agreedRemuneration', 'Thù lao được hưởng:')}</span>
-                      <span className="font-medium text-text">
-                        {formatVnd(report.mentorEarnedAmount)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-text-subtle">
-                      <span>{t('mentoring.platformFee', 'Phí nền tảng AlumNect (0%):')}</span>
-                      <span className="font-medium text-success">
-                        {formatVnd(report.platformFee || 0)} (Miễn phí)
-                      </span>
-                    </div>
                     <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
-                      <span>{t('mentoring.netRemuneration', 'Thù lao thực nhận (Net):')}</span>
+                      <span>{t('mentoring.netRemuneration', 'Thù lao thực nhận:')}</span>
                       <span className="text-success">
-                        {formatVnd(report.mentorNetPayout)}
+                        {formatVnd(mentorSplit)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs pt-1">
-                      <span className="text-text-subtle">{t('mentoring.payoutStatus', 'Trạng thái giải ngân:')}</span>
-                      {getMoneyStatusBadge(report.mentorPayoutStatus)}
+                      <span className="text-text-subtle">{t('mentoring.payoutStatus', 'Trạng thái chi trả:')}</span>
+                      {getMoneyStatusBadge(effectiveMentorStatus)}
                     </div>
                   </div>
                 </div>
@@ -545,7 +559,8 @@ export function MentoringTaskReportModal({
               </div>
             </div>
           </>
-        )}
+          )
+        })()}
       </div>
 
       {/* Subdialog Ping Admin */}
