@@ -578,25 +578,39 @@ export function ChatWindow({
     send.mutate({ content: content || undefined, attachments: pending.map(({ localUri: _l, ...a }) => a) })
   }
   const slotsLeft = () => MAX_ATTACHMENTS - pending.length - uploadingItems.length
-  /** Tải nhiều tệp song song; mỗi tệp có ô "đang tải" riêng, lỗi tệp nào báo tệp đó. */
-  const uploadMany = async <T,>(items: T[], describe: (it: T) => UploadingAttachment, run: (it: T) => Promise<PendingAttachment>) => {
+  /** Tải nhiều tệp tuần tự từng tệp (Queue sequential); mỗi tệp có ô "đang tải" riêng, lỗi tệp nào báo tệp đó và không làm gián đoạn các tệp khác. */
+  const uploadMany = async <T,>(
+    items: T[],
+    describe: (it: T) => UploadingAttachment,
+    run: (it: T) => Promise<PendingAttachment>,
+  ) => {
     const left = slotsLeft()
     if (items.length > left) toast.error(`Chỉ gửi tối đa ${MAX_ATTACHMENTS} tệp mỗi tin nhắn.`)
-    const batch = items.slice(0, Math.max(0, left)).map((it, i) => ({ it, meta: { ...describe(it), key: `${Date.now()}-${i}` } }))
+    const batch = items.slice(0, Math.max(0, left)).map((it, i) => ({
+      it,
+      meta: {
+        ...describe(it),
+        key: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`,
+        status: (i === 0 ? 'uploading' : 'queued') as 'uploading' | 'queued',
+      },
+    }))
     if (!batch.length) return
     setUploadingItems((cur) => [...cur, ...batch.map((b) => b.meta)])
-    await Promise.all(
-      batch.map(async ({ it, meta }) => {
-        try {
-          const done = await run(it)
-          setPending((files) => [...files, done])
-        } catch (e) {
-          toast.error(`${meta.name}: ${errMsg(e)}`)
-        } finally {
-          setUploadingItems((cur) => cur.filter((u) => u.key !== meta.key))
-        }
-      }),
-    )
+
+    for (let i = 0; i < batch.length; i++) {
+      const { it, meta } = batch[i]
+      setUploadingItems((cur) =>
+        cur.map((u) => (u.key === meta.key ? { ...u, status: 'uploading' } : u)),
+      )
+      try {
+        const done = await run(it)
+        setPending((files) => [...files, done])
+      } catch (e) {
+        toast.error(`${meta.name}: ${errMsg(e)}`)
+      } finally {
+        setUploadingItems((cur) => cur.filter((u) => u.key !== meta.key))
+      }
+    }
   }
   const sendMedia = async () => {
     if (!canSend || send.isPending || slotsLeft() <= 0) return

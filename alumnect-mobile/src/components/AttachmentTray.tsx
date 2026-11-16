@@ -9,7 +9,13 @@ import type { OutgoingAttachment } from '@/api/chat'
 /** Tệp đã tải lên, chờ gửi (giữ uri cục bộ để xem trước nhanh). */
 export type PendingAttachment = OutgoingAttachment & { localUri?: string }
 /** Tệp đang tải lên. */
-export type UploadingAttachment = { key: string; name: string; kind: 'IMAGE' | 'VIDEO' | 'FILE'; localUri?: string }
+export type UploadingAttachment = {
+  key: string
+  name: string
+  kind: 'IMAGE' | 'VIDEO' | 'FILE'
+  localUri?: string
+  status?: 'uploading' | 'queued'
+}
 
 export const MAX_ATTACHMENTS = 10
 const TILE = 78
@@ -94,7 +100,11 @@ export function AttachmentTray({
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 8 }}>
         <Txt size={12.5} weight="700" style={{ flex: 1 }} numberOfLines={1}>
           Đính kèm ({total}/{MAX_ATTACHMENTS}){summary ? <Txt size={12} muted weight="500">{`  ${summary}`}</Txt> : null}
-          {uploading.length ? <Txt size={12} muted weight="500">{`  · đang tải ${uploading.length}…`}</Txt> : null}
+          {uploading.length ? (
+            <Txt size={12} muted weight="500">
+              {`  · đang tải ${uploading.filter((u) => u.status !== 'queued').length || 1}/${uploading.length}…`}
+            </Txt>
+          ) : null}
         </Txt>
         <Pressable accessibilityRole="button" disabled={disabled} onPress={onClear} hitSlop={8} style={{ paddingVertical: 4, paddingHorizontal: 6 }}>
           <Txt size={12.5} weight="600" color={t.danger}>Xoá tất cả</Txt>
@@ -119,15 +129,24 @@ export function AttachmentTray({
             )}
           </TileFrame>
         ))}
-        {uploading.map((u) => (
-          <TileFrame key={u.key}>
-            {u.kind === 'IMAGE' && u.localUri ? <Image source={{ uri: u.localUri }} style={{ position: 'absolute', inset: 0, opacity: 0.45 } as object} contentFit="cover" /> : null}
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 4 }}>
-              <ActivityIndicator size="small" color={t.primary} />
-              <Txt size={9} muted numberOfLines={1} style={{ marginTop: 4, maxWidth: TILE - 16 }}>{u.name}</Txt>
-            </View>
-          </TileFrame>
-        ))}
+        {uploading.map((u) => {
+          const isQueued = u.status === 'queued'
+          return (
+            <TileFrame key={u.key}>
+              {u.kind === 'IMAGE' && u.localUri ? <Image source={{ uri: u.localUri }} style={{ position: 'absolute', inset: 0, opacity: 0.35 } as object} contentFit="cover" /> : null}
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 4 }}>
+                {isQueued ? (
+                  <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.isDark ? '#333333' : '#E0E3E8', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
+                    <Txt size={9} weight="700" color={t.textMuted}>Chờ</Txt>
+                  </View>
+                ) : (
+                  <ActivityIndicator size="small" color={t.primary} />
+                )}
+                <Txt size={9} muted numberOfLines={1} style={{ marginTop: 3, maxWidth: TILE - 16 }}>{u.name}</Txt>
+              </View>
+            </TileFrame>
+          )
+        })}
         {total < MAX_ATTACHMENTS ? (
           <View style={{ width: TILE, height: TILE, paddingTop: 6, paddingRight: 6 }}>
             <Pressable
