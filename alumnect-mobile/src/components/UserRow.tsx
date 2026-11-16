@@ -37,7 +37,7 @@ export function FollowButton({
   })
 
   const toggle = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     const next = !following
     setFollowing(next)
     onChange?.(next)

@@ -25,6 +25,26 @@ import { OfflineBanner } from '@/components/OfflineBanner'
 import { startRealtime } from '@/lib/socket'
 import { MotionProvider, useReducedMotion } from '@/components/Motion'
 import { DURATION, EASING } from '@/theme/motion'
+import * as Haptics from 'expo-haptics'
+
+// Global safe guard: Prevent unhandled rejections if native Haptics is unavailable
+const safeHaptic = <T extends (...args: any[]) => Promise<any>>(fn?: T): T => {
+  if (typeof fn !== 'function') return ((async () => {}) as unknown) as T
+  return ((async (...args: any[]) => {
+    try {
+      return await fn(...args)
+    } catch {
+      // Safe fallback on Android/emulators without native haptics
+    }
+  }) as unknown) as T
+}
+try {
+  if (Haptics) {
+    ;(Haptics as any).impactAsync = safeHaptic(Haptics.impactAsync)
+    ;(Haptics as any).notificationAsync = safeHaptic(Haptics.notificationAsync)
+    ;(Haptics as any).selectionAsync = safeHaptic(Haptics.selectionAsync)
+  }
+} catch {}
 
 export { ErrorFallback as ErrorBoundary } from '@/components/ErrorFallback'
 

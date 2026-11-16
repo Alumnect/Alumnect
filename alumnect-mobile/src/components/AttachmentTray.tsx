@@ -84,7 +84,7 @@ export function AttachmentTray({
   onRemove: (url: string) => void
   onClear: () => void
   onAdd: () => void
-  onPreview: (url: string) => void
+  onPreview: (item: { url: string; mediaType?: string; title?: string }) => void
 }) {
   const t = useTheme()
   const total = pending.length + uploading.length
@@ -114,16 +114,20 @@ export function AttachmentTray({
         {pending.map((p) => (
           <TileFrame key={p.url} onRemove={() => onRemove(p.url)} removeLabel={`Bỏ ${p.fileName ?? 'tệp'}`} disabled={disabled}>
             {p.mediaType === 'IMAGE' ? (
-              <Pressable style={{ flex: 1 }} accessibilityLabel="Xem ảnh" onPress={() => onPreview(p.url)}>
+              <Pressable style={{ flex: 1 }} accessibilityLabel="Xem ảnh" onPress={() => onPreview({ url: p.localUri || p.url, mediaType: 'IMAGE', title: p.fileName })}>
                 <Image source={{ uri: p.localUri || p.url }} style={{ flex: 1 }} contentFit="cover" />
               </Pressable>
             ) : p.mediaType === 'VIDEO' ? (
-              <View style={{ flex: 1, backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', padding: 4 }}>
+              <Pressable
+                style={{ flex: 1, backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', padding: 4 }}
+                accessibilityLabel="Xem video"
+                onPress={() => onPreview({ url: p.localUri || p.url, mediaType: 'VIDEO', title: p.fileName })}
+              >
                 <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
                   <Play size={14} color="#FFFFFF" weight="fill" />
                 </View>
                 <Txt size={9} color="#FFFFFF" numberOfLines={1} style={{ marginTop: 4, maxWidth: TILE - 16 }}>{p.fileName || 'Video'}</Txt>
-              </View>
+              </Pressable>
             ) : (
               <DocFace name={p.fileName} url={p.url} size={p.fileSize} />
             )}

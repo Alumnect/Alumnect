@@ -90,7 +90,7 @@ export default function NetworkScreen() {
   const total = tab === 'directory' ? results.data?.pages[0]?.data.totalElements : undefined
 
   const handleTabChange = (nextTab: Tab) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     setTab(nextTab)
   }
 

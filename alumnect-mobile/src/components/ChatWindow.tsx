@@ -29,7 +29,8 @@ import { DealHistorySheet, DealTicketCard, ReasonSheet, TaskActionPanel } from '
 import { PaymentSheet } from './PaymentSheet'
 import { AttachmentTray, MAX_ATTACHMENTS } from './AttachmentTray'
 import type { PendingAttachment, UploadingAttachment } from './AttachmentTray'
-import { pickChatMedia, pickImage, uploadFile, uploadImage } from '@/lib/upload'
+import { MediaPreviewModal, type MediaPreviewItem } from './MediaPreviewModal'
+import { pickChatMedia, pickImage, runConcurrentPool, uploadFile, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 
 const WebView = RNWebView as unknown as React.ComponentType<any>
@@ -415,7 +416,7 @@ export function ChatWindow({
   const [showScrollBottom, setShowScrollBottom] = useState(false)
   const [actionMenuVisible, setActionMenuVisible] = useState(false)
   const [historyVisible, setHistoryVisible] = useState(false)
-  const [viewerUrl, setViewerUrl] = useState<string | null>(null)
+  const [viewerMedia, setViewerMedia] = useState<MediaPreviewItem | null>(null)
   const listRef = useRef<FlashListRef<ChatItem>>(null)
   const isAtBottomRef = useRef(true)
   const prevLatestMsgIdRef = useRef<number | null>(null)
@@ -578,7 +579,7 @@ export function ChatWindow({
     send.mutate({ content: content || undefined, attachments: pending.map(({ localUri: _l, ...a }) => a) })
   }
   const slotsLeft = () => MAX_ATTACHMENTS - pending.length - uploadingItems.length
-  /** Tải nhiều tệp tuần tự từng tệp (Queue sequential); mỗi tệp có ô "đang tải" riêng, lỗi tệp nào báo tệp đó và không làm gián đoạn các tệp khác. */
+  /** Tải nhiều tệp theo hàng đợi song song có kiểm soát (Concurrency = 2); mỗi tệp có ô "đang tải" riêng, lỗi tệp nào báo tệp đó và không làm gián đoạn các tệp khác. */
   const uploadMany = async <T,>(
     items: T[],
     describe: (it: T) => UploadingAttachment,
@@ -591,26 +592,33 @@ export function ChatWindow({
       meta: {
         ...describe(it),
         key: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`,
-        status: (i === 0 ? 'uploading' : 'queued') as 'uploading' | 'queued',
+        status: (i < 2 ? 'uploading' : 'queued') as 'uploading' | 'queued',
       },
     }))
     if (!batch.length) return
     setUploadingItems((cur) => [...cur, ...batch.map((b) => b.meta)])
 
-    for (let i = 0; i < batch.length; i++) {
-      const { it, meta } = batch[i]
-      setUploadingItems((cur) =>
-        cur.map((u) => (u.key === meta.key ? { ...u, status: 'uploading' } : u)),
-      )
-      try {
+    await runConcurrentPool(
+      batch,
+      async ({ it, meta }) => {
+        setUploadingItems((cur) =>
+          cur.map((u) => (u.key === meta.key ? { ...u, status: 'uploading' } : u)),
+        )
         const done = await run(it)
-        setPending((files) => [...files, done])
-      } catch (e) {
-        toast.error(`${meta.name}: ${errMsg(e)}`)
-      } finally {
-        setUploadingItems((cur) => cur.filter((u) => u.key !== meta.key))
+        return { done, meta }
+      },
+      {
+        concurrency: 2,
+        onSuccess: ({ done, meta }) => {
+          setPending((files) => [...files, done])
+          setUploadingItems((cur) => cur.filter((u) => u.key !== meta.key))
+        },
+        onError: (e, { meta }) => {
+          toast.error(`${meta.name}: ${errMsg(e)}`)
+          setUploadingItems((cur) => cur.filter((u) => u.key !== meta.key))
+        },
       }
-    }
+    )
   }
   const sendMedia = async () => {
     if (!canSend || send.isPending || slotsLeft() <= 0) return
@@ -972,7 +980,7 @@ export function ChatWindow({
                   grouped={grouped}
                   showTime={timeId === item.id}
                   onToggleTime={() => setTimeId(timeId === item.id ? null : item.id)}
-                  onOpenImage={setViewerUrl}
+                  onOpenImage={(url) => setViewerMedia({ url, mediaType: 'IMAGE' })}
                 />
               </View>
             )
@@ -1016,7 +1024,7 @@ export function ChatWindow({
           onRemove={(url) => setPending((files) => files.filter((f) => f.url !== url))}
           onClear={() => setPending([])}
           onAdd={() => void sendFile()}
-          onPreview={setViewerUrl}
+          onPreview={(item) => setViewerMedia(item)}
         />
         <View
           style={{
@@ -1315,7 +1323,7 @@ export function ChatWindow({
         onConfirm={(note) => void submitDealDialog(note)}
         onClose={() => setDealDialog(null)}
       />
-      <ImageViewerModal url={viewerUrl} onClose={() => setViewerUrl(null)} />
+      <MediaPreviewModal media={viewerMedia} onClose={() => setViewerMedia(null)} />
       <PaymentSheet
         checkout={checkout}
         poll={taskApi.paymentStatus}

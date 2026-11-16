@@ -214,25 +214,47 @@ export async function pickImage(multiple = false): Promise<PickedImage[]> {
 
 const MAX_WIDTH = 1440
 
-/** Nén ảnh (rộng tối đa 1440px, JPEG 0.8) → xin presigned URL → PUT thẳng lên R2 → trả publicUrl. */
+/** Nén ảnh (rộng tối đa 1440px, JPEG 0.8) → xin presigned URL → PUT thẳng lên R2 → trả publicUrl. Có fallback tự động nếu manipulateAsync thất bại. */
 export async function uploadImage(
   img: PickedImage,
   folder: 'posts' | 'avatars' | 'evidence' | 'proofs' | 'common' | 'messages' = 'common',
 ): Promise<string> {
-  const manip = await ImageManipulator.manipulateAsync(
-    img.uri,
-    img.width && img.width <= MAX_WIDTH ? [] : [{ resize: { width: MAX_WIDTH } }],
-    {
-      compress: 0.8,
-      format: ImageManipulator.SaveFormat.JPEG,
-    },
-  )
-  const name = img.name.replace(/\.[^.]+$/, '') + '.jpg'
+  const isVideo =
+    img.mimeType?.startsWith('video/') ||
+    img.type?.startsWith('video/') ||
+    /\.(mp4|mov|avi|m4v|webm)$/i.test(img.name || img.uri)
+
+  if (isVideo) {
+    const res = await uploadFile(img, folder)
+    return res.url
+  }
+
+  let uploadUri = img.uri
+  let mimeType = 'image/jpeg'
+  let name = (img.name || `image-${Date.now()}`).replace(/\.[^.]+$/, '') + '.jpg'
+
+  try {
+    const manip = await ImageManipulator.manipulateAsync(
+      img.uri,
+      img.width && img.width <= MAX_WIDTH ? [] : [{ resize: { width: MAX_WIDTH } }],
+      {
+        compress: 0.8,
+        format: ImageManipulator.SaveFormat.JPEG,
+      },
+    )
+    uploadUri = manip.uri
+  } catch (manipErr) {
+    console.warn('[uploadImage] ImageManipulator failed (renderAsync), falling back to raw uri:', manipErr)
+    uploadUri = img.uri
+    mimeType = inferMimeType(img.name, img.mimeType || 'image/jpeg')
+    name = img.name || `image-${Date.now()}.jpg`
+  }
+
   const res = await http.get<unknown, ApiResponse<{ uploadUrl: string; publicUrl: string }>>('/files/presigned-url', {
-    params: { fileName: name, contentType: 'image/jpeg', folder },
+    params: { fileName: name, contentType: mimeType, folder },
   })
   const { uploadUrl, publicUrl } = res.data
-  await uploadBinaryToSignedUrl(uploadUrl, manip.uri, 'image/jpeg', name)
+  await uploadBinaryToSignedUrl(uploadUrl, uploadUri, mimeType, name)
   return publicUrl
 }
 
@@ -306,4 +328,41 @@ export async function pickChatMedia(multiple = true): Promise<PickedChatMedia[]>
       height: a.height,
     }
   })
+}
+
+/**
+ * Chạy danh sách tác vụ upload theo hàng đợi song song có giới hạn (Controlled Concurrency Pool, mặc định 2 luồng).
+ * Kiểu worker queue giống Instagram: Tối đa `concurrency` tệp chạy cùng lúc, tệp nào xong trước thì tệp tiếp theo lập tức thế chỗ.
+ * Từng tệp có callback onSuccess / onError độc lập để không làm gián đoạn toàn bộ hàng đợi.
+ */
+export async function runConcurrentPool<T, R>(
+  items: T[],
+  worker: (item: T, index: number) => Promise<R>,
+  options?: {
+    concurrency?: number
+    onSuccess?: (result: R, item: T, index: number) => void
+    onError?: (error: unknown, item: T, index: number) => void
+  },
+): Promise<R[]> {
+  const concurrency = Math.max(1, Math.min(options?.concurrency ?? 2, items.length || 1))
+  const results: R[] = []
+  let nextIdx = 0
+
+  async function runner(): Promise<void> {
+    while (nextIdx < items.length) {
+      const idx = nextIdx++
+      const item = items[idx]
+      try {
+        const res = await worker(item, idx)
+        results[idx] = res
+        options?.onSuccess?.(res, item, idx)
+      } catch (err) {
+        options?.onError?.(err, item, idx)
+      }
+    }
+  }
+
+  const workers = Array.from({ length: concurrency }, () => runner())
+  await Promise.all(workers)
+  return results.filter(Boolean)
 }
