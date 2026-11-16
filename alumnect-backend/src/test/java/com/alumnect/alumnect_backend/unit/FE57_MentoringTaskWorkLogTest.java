@@ -3,14 +3,17 @@ package com.alumnect.alumnect_backend.unit;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
 import com.alumnect.alumnect_backend.common.enums.WorkLogStatus;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringDisputeTicketRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringPaymentLedgerRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskAmendmentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskDeadlineExtensionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementProposalRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringWorkLogFeedbackRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringWorkLogRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringWorkLogRevisionRepository;
+import com.alumnect.alumnect_backend.dao.user.UserRepository;
 import com.alumnect.alumnect_backend.dto.request.mentorship.ConfirmMentoringWorkLogRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.CreateMentoringWorkLogRequest;
 import com.alumnect.alumnect_backend.dto.request.mentorship.RejectMentoringWorkLogRequest;
@@ -27,6 +30,7 @@ import com.alumnect.alumnect_backend.exception.ConflictException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.mapper.mentorship.MentoringTaskMapper;
 import com.alumnect.alumnect_backend.mapper.mentorship.MentoringWorkLogMapper;
+import com.alumnect.alumnect_backend.service.mentorship.MentoringConversationService;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringGroupService;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringRules;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringTaskCompletionService;
@@ -119,6 +123,18 @@ class FE57_MentoringTaskWorkLogTest {
     private MentoringRules mentoringRules;
 
     @Mock
+    private MentoringDisputeTicketRepository ticketRepository;
+
+    @Mock
+    private MentoringTaskSettlementProposalRepository settlementProposalRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private MentoringConversationService mentoringConversationService;
+
+    @Mock
     private MentoringWorkLogFeedbackRepository feedbackRepository;
 
     @Mock
@@ -163,7 +179,12 @@ class FE57_MentoringTaskWorkLogTest {
                 ticketService,
                 mentoringGroupService,
                 refundAccountResolver,
-                mentoringRules
+                mentoringRules,
+                ticketRepository,
+                settlementProposalRepository,
+                userRepository,
+                mentoringConversationService,
+                notificationService
         );
 
         workLogService = new MentoringWorkLogServiceImpl(

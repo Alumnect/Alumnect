@@ -3,11 +3,13 @@ package com.alumnect.alumnect_backend.unit;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorProfileRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentorReviewRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringDisputeTicketRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringPaymentLedgerRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskAmendmentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskDeadlineExtensionRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskPaymentRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskRepository;
+import com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementProposalRepository;
 import com.alumnect.alumnect_backend.dao.mentorship.MentoringWorkLogRepository;
 import com.alumnect.alumnect_backend.dao.user.UserProfileRepository;
 import com.alumnect.alumnect_backend.dao.user.UserRepository;
@@ -26,6 +28,7 @@ import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.mentorship.MentoringTaskMapper;
 import com.alumnect.alumnect_backend.service.mentorship.MentorReputationServiceImpl;
+import com.alumnect.alumnect_backend.service.mentorship.MentoringConversationService;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringGroupService;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringRules;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringTaskCompletionService;
@@ -34,6 +37,7 @@ import com.alumnect.alumnect_backend.service.mentorship.MentoringTaskServiceImpl
 import com.alumnect.alumnect_backend.service.mentorship.MentoringTicketService;
 import com.alumnect.alumnect_backend.service.mentorship.MentoringWorkLogService;
 import com.alumnect.alumnect_backend.service.mentorship.RefundAccountResolver;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -109,6 +113,18 @@ class FE60_TaskReportReviewTest {
     private MentoringRules mentoringRules;
 
     @Mock
+    private MentoringDisputeTicketRepository ticketRepository;
+
+    @Mock
+    private MentoringTaskSettlementProposalRepository settlementProposalRepository;
+
+    @Mock
+    private MentoringConversationService mentoringConversationService;
+
+    @Mock
+    private NotificationService notificationService;
+
+    @Mock
     private MentorProfileRepository mentorProfileRepository;
 
     @Mock
@@ -153,7 +169,12 @@ class FE60_TaskReportReviewTest {
                 ticketService,
                 mentoringGroupService,
                 refundAccountResolver,
-                mentoringRules
+                mentoringRules,
+                ticketRepository,
+                settlementProposalRepository,
+                userRepository,
+                mentoringConversationService,
+                notificationService
         );
 
         reputationService = new MentorReputationServiceImpl(
