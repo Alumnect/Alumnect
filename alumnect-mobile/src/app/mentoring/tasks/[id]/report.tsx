@@ -10,6 +10,7 @@ import { Header } from '@/components/Header'
 import { Enter } from '@/components/Motion'
 import { SheetModal } from '@/components/SheetModal'
 import { TASK_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
+import { walletApi } from '@/api/mentoringWallet'
 import { formatVnd } from '@/api/mentoring'
 import { statusTone } from '@/constants/status'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
@@ -104,10 +105,14 @@ export default function TaskReportScreen() {
   const q = useQuery({ queryKey: ['mentoring-task-report', id], queryFn: () => taskApi.report(Number(id)) })
   const qSnap = useQuery({ queryKey: ['mentoring-task-snapshot', id], queryFn: () => taskApi.settlementSnapshot(Number(id)), enabled: !!id })
   const qTickets = useQuery({ queryKey: ['mentoring-task-tickets', id], queryFn: () => taskApi.tickets(Number(id)), enabled: !!id })
+  const qEarnings = useQuery({ queryKey: ['mentoring-wallet-earnings'], queryFn: () => walletApi.earnings() })
+  const qRefunds = useQuery({ queryKey: ['mentoring-wallet-refunds'], queryFn: () => walletApi.refunds() })
 
   const r = q.data
   const snap = qSnap.data
   const ticketsList = qTickets.data
+  const earnings = qEarnings.data
+  const refunds = qRefunds.data
 
   const [pingOpen, setPingOpen] = useState(false)
   const [reason, setReason] = useState('')
@@ -190,26 +195,61 @@ export default function TaskReportScreen() {
   const resolutionReason = r.resolutionNote || resolvedTicket?.resolutionNote || snap?.reason
 
   // Trạng thái tài chính 2 phía
-  let effectiveStudentStatus = r.studentRefundStatus
-  if (studentSplit > 0) {
-    if (resolvedTicket?.settlementStatus === 'SETTLED' || resolvedTicket?.studentRefundLedgerId || r.studentRefundStatus === 'REFUNDED') {
-      effectiveStudentStatus = 'REFUNDED'
-    } else if (!effectiveStudentStatus || effectiveStudentStatus === 'NO_REFUND') {
-      effectiveStudentStatus = 'PENDING_REFUND'
+  const earningItem = earnings?.items?.find((it) => it.taskId === Number(id))
+  const refundItem = refunds?.items?.find((it) => it.taskId === Number(id))
+
+  // 1. Phía Mentor
+  let effectiveMentorStatus = r.mentorPayoutStatus
+  let mentorStatusHint: string | undefined
+
+  if (earningItem) {
+    if (earningItem.status === 'FAILED') {
+      effectiveMentorStatus = 'FAILED'
+      mentorStatusHint = earningItem.note || 'Lệnh chi PayOS bị từ chối/thất bại'
+    } else if (earningItem.status === 'SUCCEEDED') {
+      effectiveMentorStatus = 'PAID'
+    } else if (earningItem.status === 'PENDING') {
+      effectiveMentorStatus = 'PROCESSING'
     }
-  } else if (r.taskStatus === 'RESOLVED' || r.taskStatus === 'COMPLETED') {
-    effectiveStudentStatus = 'NO_REFUND'
+  } else if (effectiveMentorStatus === 'FAILED' || r.hasFailedLedger) {
+    effectiveMentorStatus = 'FAILED'
+    mentorStatusHint = 'Lệnh chi PayOS thất bại'
+  } else if (refundItem?.status === 'FAILED') {
+    effectiveMentorStatus = 'FAILED'
+    mentorStatusHint = refundItem.note || 'Lệnh chi PayOS bị từ chối/thất bại'
+  } else if (effectiveMentorStatus === 'PAID') {
+    effectiveMentorStatus = 'PAID'
+  } else if (mentorSplit > 0) {
+    effectiveMentorStatus = 'PENDING_ESCROW'
+  } else {
+    effectiveMentorStatus = 'NO_PAYOUT'
   }
 
-  let effectiveMentorStatus = r.mentorPayoutStatus
-  if (mentorSplit > 0) {
-    if (resolvedTicket?.settlementStatus === 'SETTLED' || resolvedTicket?.mentorPayoutLedgerId || r.mentorPayoutStatus === 'PAID') {
-      effectiveMentorStatus = 'PAID'
-    } else if (!effectiveMentorStatus || effectiveMentorStatus === 'CANCELLED') {
-      effectiveMentorStatus = 'PENDING_ESCROW'
+  // 2. Phía Học viên
+  let effectiveStudentStatus = r.studentRefundStatus
+  let studentStatusHint: string | undefined
+
+  if (refundItem) {
+    if (refundItem.status === 'FAILED') {
+      effectiveStudentStatus = 'FAILED'
+      studentStatusHint = refundItem.note || 'Lệnh hoàn PayOS bị từ chối/thất bại'
+    } else if (refundItem.status === 'SUCCEEDED') {
+      effectiveStudentStatus = 'REFUNDED'
+    } else if (refundItem.status === 'PENDING') {
+      effectiveStudentStatus = 'PROCESSING'
     }
-  } else if (r.taskStatus === 'RESOLVED' || r.taskStatus === 'CANCELLED') {
-    effectiveMentorStatus = 'NO_PAYOUT'
+  } else if (effectiveStudentStatus === 'FAILED' || r.hasFailedLedger) {
+    effectiveStudentStatus = 'FAILED'
+    studentStatusHint = 'Lệnh hoàn PayOS thất bại'
+  } else if (earningItem?.status === 'FAILED') {
+    effectiveStudentStatus = 'FAILED'
+    studentStatusHint = earningItem.note || 'Lệnh hoàn PayOS bị từ chối/thất bại'
+  } else if (effectiveStudentStatus === 'REFUNDED') {
+    effectiveStudentStatus = 'REFUNDED'
+  } else if (studentSplit > 0) {
+    effectiveStudentStatus = 'PENDING_REFUND'
+  } else {
+    effectiveStudentStatus = 'NO_REFUND'
   }
 
   return (
@@ -242,21 +282,23 @@ export default function TaskReportScreen() {
         {hasDispute ? (
           <Enter delay={30}>
             <Card title="Trạng thái tranh chấp" brand="alarm_clock">
-              <View style={{ backgroundColor: isDark ? '#2E1515' : '#FEF2F2', padding: 12, borderRadius: 12, borderColor: '#FCA5A5', borderWidth: 1, marginTop: 4 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Txt weight="800" size={14} style={{ color: '#DC2626' }}>
+              <View style={{ backgroundColor: isDark ? '#2E1515' : '#FEF2F2', padding: 14, borderRadius: 14, borderColor: '#FCA5A5', borderWidth: 1, marginTop: 4 }}>
+                <View style={{ gap: 6, marginBottom: 8 }}>
+                  <Txt weight="800" size={15} style={{ color: '#DC2626' }}>
                     Nhiệm vụ đang tranh chấp
                   </Txt>
                   {ticketCode ? (
-                    <Tag label={ticketCode} tone="danger" />
+                    <View style={{ alignSelf: 'flex-start' }}>
+                      <Tag label={ticketCode} tone="danger" />
+                    </View>
                   ) : null}
                 </View>
                 {r.activeTicket?.disputeReason || r.latestTicket?.disputeReason ? (
-                  <Txt size={12.5} style={{ color: colors.textSecondary, marginTop: 6 }}>
+                  <Txt size={12.5} style={{ color: colors.textSecondary, marginTop: 4, lineHeight: 18 }}>
                     Lý do: {r.activeTicket?.disputeReason || r.latestTicket?.disputeReason}
                   </Txt>
                 ) : null}
-                <Txt size={12} style={{ color: '#DC2626', marginTop: 6, fontWeight: '600' }}>
+                <Txt size={12} style={{ color: '#DC2626', marginTop: 8, fontWeight: '600', lineHeight: 17 }}>
                   Toàn bộ tiền đang được đóng băng an toàn trong quỹ ký quỹ Escrow chờ Ban Quản Trị phân xử.
                 </Txt>
               </View>
@@ -268,28 +310,30 @@ export default function TaskReportScreen() {
         {isResolved ? (
           <Enter delay={40}>
             <Card title="Phán quyết & Kết quả giải quyết" brand="badge_pro">
-              <View style={{ backgroundColor: isDark ? '#14261C' : '#F0FDF4', padding: 12, borderRadius: 12, borderColor: viridian, borderWidth: 1, marginTop: 4 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Txt weight="800" size={14} style={{ color: viridian }}>
+              <View style={{ backgroundColor: isDark ? '#14261C' : '#F0FDF4', padding: 14, borderRadius: 14, borderColor: viridian, borderWidth: 1, marginTop: 4 }}>
+                <View style={{ gap: 6, marginBottom: 8 }}>
+                  <Txt weight="800" size={15} style={{ color: viridian }}>
                     {resolutionTitle}
                   </Txt>
                   {ticketCode ? (
-                    <Tag label={ticketCode} tone="success" />
+                    <View style={{ alignSelf: 'flex-start' }}>
+                      <Tag label={ticketCode} tone="success" />
+                    </View>
                   ) : null}
                 </View>
                 {resolutionReason ? (
-                  <Txt size={12.5} style={{ color: colors.textSecondary, marginTop: 6 }}>
+                  <Txt size={12.5} style={{ color: colors.textSecondary, marginTop: 2, lineHeight: 18 }}>
                     Căn cứ giải quyết: {resolutionReason}
                   </Txt>
                 ) : null}
-                <View style={{ flexDirection: 'row', gap: 12, marginTop: 10, paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.borderSubtle }}>
-                  <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 12, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: isDark ? '#2D4A38' : '#D1FAE5' }}>
+                  <View style={{ flex: 1, backgroundColor: isDark ? '#1C3325' : '#FFFFFF', padding: 10, borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: isDark ? '#2D4A38' : '#D1FAE5' }}>
                     <Txt size={11.5} style={{ color: colors.textTertiary }}>Mentor nhận</Txt>
-                    <Txt size={15} weight="800" style={{ color: viridian }}>{formatVnd(mentorSplit)}</Txt>
+                    <Txt size={16} weight="800" style={{ color: viridian, marginTop: 2 }}>{formatVnd(mentorSplit)}</Txt>
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, backgroundColor: isDark ? '#1C3325' : '#FFFFFF', padding: 10, borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: isDark ? '#2D4A38' : '#D1FAE5' }}>
                     <Txt size={11.5} style={{ color: colors.textTertiary }}>Học viên nhận hoàn</Txt>
-                    <Txt size={15} weight="800" style={{ color: '#0284C7' }}>{formatVnd(studentSplit)}</Txt>
+                    <Txt size={16} weight="800" style={{ color: '#0284C7', marginTop: 2 }}>{formatVnd(studentSplit)}</Txt>
                   </View>
                 </View>
               </View>
@@ -328,6 +372,7 @@ export default function TaskReportScreen() {
             />
             <Row
               label="Trạng thái hoàn tiền"
+              hint={studentStatusHint}
               tag={moneyStatus(effectiveStudentStatus)}
               last
             />
@@ -345,6 +390,7 @@ export default function TaskReportScreen() {
             />
             <Row
               label="Trạng thái chi trả"
+              hint={mentorStatusHint}
               tag={moneyStatus(effectiveMentorStatus)}
               last
             />
@@ -356,7 +402,7 @@ export default function TaskReportScreen() {
           <Enter delay={300}>
             <View style={{ marginTop: 8, marginBottom: 16 }}>
               <Button
-                title="Báo cáo sự cố dòng tiền / Ping Admin"
+                title="Báo cáo sự cố dòng tiền"
                 variant="outline"
                 textColor="#DC2626"
                 style={{ borderColor: '#FCA5A5', backgroundColor: isDark ? '#2A1215' : '#FEF2F2' }}
