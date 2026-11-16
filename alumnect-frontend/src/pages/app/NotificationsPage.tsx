@@ -249,7 +249,12 @@ export function NotificationsPage() {
       const gId = item.targetType === 'MENTORING_GROUP_DISBANDED' ? 0 : parseGroupId(item.targetId)
       navigate(gId ? `/app/mentoring/groups/${gId}` : '/app/mentoring/groups')
     } else if (item.targetType?.startsWith('MENTORING_TASK') && item.targetId) {
-      navigate(`/app/mentoring/tasks/${item.targetId.split(':')[0]}`)
+      const taskId = item.targetId.split(':')[0]
+      if (item.targetType === 'MENTORING_TASK_FINANCE_DISPUTE_PING' || (currentUser?.role === 'ADMIN' && item.title?.includes('Sự cố dòng tiền'))) {
+        navigate(`/admin/mentoring-finances?taskId=${taskId}`)
+      } else {
+        navigate(`/app/mentoring/tasks/${taskId}`)
+      }
     } else if (item.type === 'MENTORING_WORK_LOG' && item.targetId) {
       navigate(`/app/mentoring/tasks/${item.targetId}`)
     } else if (item.targetType === 'MENTORING_INCOMING_REQUEST' && item.targetId) {

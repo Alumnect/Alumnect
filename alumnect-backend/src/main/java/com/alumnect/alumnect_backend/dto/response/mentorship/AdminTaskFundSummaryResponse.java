@@ -69,6 +69,13 @@ public class AdminTaskFundSummaryResponse {
     private String activeTicketCode;
     private String activeTicketStatus;
 
+    /** Cảnh báo dòng tiền / sự cố hoàn tiền / thù lao cần Admin xử lý */
+    private Boolean hasFinanceAlert;
+    private String financeIssueReason;
+    private String financeIssueReportedBy;
+    private Instant financeIssueReportedAt;
+    private Integer failedLedgersCount;
+
     /** Thời điểm khởi tạo Task */
     private Instant createdAt;
 

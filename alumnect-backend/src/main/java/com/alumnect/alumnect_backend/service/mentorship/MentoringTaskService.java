@@ -57,4 +57,13 @@ public interface MentoringTaskService {
      * @return Báo cáo kết quả Task và phân bổ tài chính
      */
     com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTaskReportResponse getTaskReport(Long currentUserId, Long taskId);
+
+    /**
+     * Phản ánh sự cố dòng tiền và ping lại Admin khi chưa hoàn tiền hoặc giải ngân sai.
+     *
+     * @param currentUserId ID người gửi (Student hoặc Mentor)
+     * @param taskId ID nhiệm vụ
+     * @param request Nội dung sự cố
+     */
+    void pingAdminFinance(Long currentUserId, Long taskId, com.alumnect.alumnect_backend.dto.request.mentorship.PingAdminFinanceRequest request);
 }
