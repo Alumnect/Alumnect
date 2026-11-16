@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Heart, MessageCircle, MoreHorizontal, Pin, Share2, X } from '@/components/icons'
 import { Avatar, Card, Tag, Txt } from './ui'
-import { ActionBtn } from './PostCard'
+import { ActionBtn, PostMedia } from './PostCard'
 import { ActionSheet } from './ActionSheet'
 import { ConfirmSheet } from './ConfirmSheet'
 import { ShareSheet } from './ShareSheet'
@@ -84,7 +84,7 @@ function GroupPostCardImpl({ post, detail, canInteract = true }: { post: GroupPo
 
   const toggleLike = () => {
     if (!canInteract) { toast.error('Vui lòng tham gia hội nhóm để thích bài viết!'); return }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     setLiked(!liked)
     setLikes((n) => n + (liked ? -1 : 1))
     like.mutate()
@@ -98,6 +98,13 @@ function GroupPostCardImpl({ post, detail, canInteract = true }: { post: GroupPo
 
   const images = post.imageUrls ?? []
   const videos = post.videoUrls ?? []
+  const allMedia = React.useMemo(() => {
+    const list = [...(post.imageUrls ?? [])]
+    ;(post.videoUrls ?? []).forEach((v) => {
+      if (!list.includes(v)) list.push(v)
+    })
+    return list
+  }, [post.imageUrls, post.videoUrls])
   const roleBadge = post.author.groupRole === 'OWNER' ? 'Chủ sở hữu' : post.author.groupRole === 'ADMIN' ? 'Quản trị viên' : null
 
   return (
@@ -120,24 +127,13 @@ function GroupPostCardImpl({ post, detail, canInteract = true }: { post: GroupPo
       </View>
       {post.topic ? <Tag label={`#${post.topic}`} tone="neutral" style={{ marginTop: 10, marginLeft: 14 }} /> : null}
       {post.content ? <Txt style={{ marginTop: 10, lineHeight: 22, paddingHorizontal: 14 }} numberOfLines={detail ? undefined : 6}>{post.content}</Txt> : null}
-      {images.length ? (
-        <View style={{ marginTop: 12, flexDirection: 'row', gap: 2 }}>
-          {images.slice(0, 2).map((uri, i) => (
-            <Pressable key={uri + i} style={{ flex: 1 }} onPress={() => setViewer(i)} accessibilityRole="imagebutton" accessibilityLabel={`Xem ảnh ${i + 1}`}>
-              <Image source={{ uri }} style={{ width: '100%', aspectRatio: images.length > 1 ? 0.85 : 1.4, backgroundColor: t.inputBg }} contentFit="cover" cachePolicy="disk" />
-              {i === 1 && images.length > 2 ? (
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' }}>
-                  <Txt size={24} weight="800" color="#fff">{`+${images.length - 2}`}</Txt>
-                </View>
-              ) : null}
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-      {videos.length ? (
-        <View style={{ marginTop: 12, paddingHorizontal: 14, gap: 8 }}>
-          {videos.map((url, i) => <VideoPlayer key={url + i} url={url} />)}
-        </View>
+      {allMedia.length ? (
+        <PostMedia
+          postId={`group-${post.groupId}-${post.id}`}
+          images={allMedia}
+          onOpen={detail ? () => setViewer(0) : open}
+          onDoubleLike={toggleLike}
+        />
       ) : null}
       {likes > 0 || post.commentCount > 0 ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, marginTop: 10 }}>

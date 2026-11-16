@@ -11,12 +11,69 @@ import { Avatar, Screen, Txt } from '@/components/ui'
 import { Header } from '@/components/Header'
 import { formatVnd } from '@/api/mentoring'
 import { taskApi } from '@/api/mentoringTask'
-import type { TicketMessage } from '@/api/mentoringTask'
+import type { Evidence, TicketMessage } from '@/api/mentoringTask'
 import { subscribeTopic } from '@/lib/socket'
 import { pickImage, uploadImage } from '@/lib/upload'
 import { useAuthStore } from '@/store/authStore'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
+
+const DEMO_DISPUTE_MESSAGES: TicketMessage[] = [
+  {
+    id: 1,
+    ticketId: 901,
+    senderId: 1,
+    senderName: 'Phan Hieu',
+    senderAvatar: null,
+    senderRole: 'STUDENT',
+    messageType: 'TEXT',
+    content: 'Em chào Ban Quản Trị và anh Nam. Em gửi ticket này vì tiến độ dự án đã trễ 10 ngày so với hạn cam kết. Em mong muốn BQT phân xử khối lượng đã làm để nghiệm thu và giải ngân công bằng.',
+    proposedMentorAmount: 1500000,
+    proposedStudentRefund: 1000000,
+    createdAt: new Date(Date.now() - 48 * 3600000).toISOString(),
+  },
+  {
+    id: 2,
+    ticketId: 901,
+    senderId: 2,
+    senderName: 'Nguyễn Hoàng Nam',
+    senderAvatar: null,
+    senderRole: 'MENTOR',
+    messageType: 'TEXT',
+    content: 'Chào BQT và Hieu. Vừa rồi mình có làm thêm module Kafka và Docker Compose theo thỏa thuận amendment #601. Mình đã push toàn bộ code lên repo, hiện khối lượng đạt khoảng 70-80%. Mình đề xuất hòa giải mentor nhận 70%.',
+    proposedMentorAmount: 1750000,
+    proposedStudentRefund: 750000,
+    createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
+  },
+  {
+    id: 3,
+    ticketId: 901,
+    senderId: 99,
+    senderName: 'Ban Quản Trị Alumnect',
+    senderAvatar: null,
+    senderRole: 'ADMIN',
+    messageType: 'TEXT',
+    content: 'BQT Alumnect đã rà soát lịch sử nhật ký (3/5 buổi đã xác nhận) và commit GitHub. Phương án hòa giải tối ưu: Mentor nhận 1.750.000 đ (70%) thù lao thực tế, hoàn trả 750.000 đ (30%) về tài khoản VietQR của học viên. Nếu hai bên đồng ý, BQT sẽ tiến hành giải ngân ngay lập tức.',
+    proposedMentorAmount: 1750000,
+    proposedStudentRefund: 750000,
+    createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
+  },
+]
+
+const DEMO_EVIDENCES: Evidence[] = [
+  {
+    id: 1,
+    title: 'Ảnh chụp màn hình commit GitHub trễ hạn',
+    fileUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80',
+    createdAt: new Date(Date.now() - 36 * 3600000).toISOString(),
+  },
+  {
+    id: 2,
+    title: 'Biên bản thỏa thuận điều chỉnh phạm vi',
+    fileUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80',
+    createdAt: new Date(Date.now() - 20 * 3600000).toISOString(),
+  },
+]
 
 /** UC103, UC109: thảo luận ticket tranh chấp theo thời gian thực + nộp minh chứng (KakaoTalk Dispute Room 2026). */
 export default function TicketChatScreen() {
@@ -60,7 +117,9 @@ export default function TicketChatScreen() {
     }
   }
 
-  const list: TicketMessage[] = [...(msgs.data ?? [])].reverse()
+  const rawList = msgs.data && msgs.data.length > 0 ? msgs.data : DEMO_DISPUTE_MESSAGES
+  const list: TicketMessage[] = [...rawList].reverse()
+  const evidenceList = evidences.data && evidences.data.length > 0 ? evidences.data : DEMO_EVIDENCES
   void taskId
 
   return (
@@ -73,7 +132,7 @@ export default function TicketChatScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <ShieldAlert size={15} color={viridian} weight="fill" />
             <Txt weight="800" size={12} style={{ color: colors.text }}>
-              Hồ sơ Minh chứng ({evidences.data?.length ?? 0})
+              Hồ sơ Minh chứng ({evidenceList.length})
             </Txt>
           </View>
           <Pressable
@@ -87,9 +146,9 @@ export default function TicketChatScreen() {
           </Pressable>
         </View>
 
-        {(evidences.data?.length ?? 0) > 0 ? (
+        {evidenceList.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 8 }}>
-            {evidences.data!.map((e) => (
+            {evidenceList.map((e) => (
               <Image
                 key={e.id}
                 source={{ uri: e.fileUrl }}

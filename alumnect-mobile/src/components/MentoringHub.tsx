@@ -54,7 +54,7 @@ function ActionRow({ item, last, showRole, onQuick, busy }: { item: ActionItem; 
   return (
     <MotionPressable
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
         router.push(item.href)
       }}
       accessibilityRole="button"
@@ -137,7 +137,7 @@ function TaskCard({ task, hub }: { task: Task; hub: Hub }) {
         {detail?.conversationId ? (
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
               router.push({ pathname: '/chat/[id]', params: { id: String(detail.conversationId), mentoring: '1' } })
             }}
             accessibilityLabel={`Nhắn tin với ${other.name ?? ''}`}
@@ -149,7 +149,7 @@ function TaskCard({ task, hub }: { task: Task; hub: Hub }) {
         ) : null}
         <Pressable
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
             // Mentor được thêm nhật ký → mở thẳng form nhật ký; còn lại mở trang nhiệm vụ.
             if (canLog) router.push({ pathname: '/mentoring/tasks/[id]/action', params: { id: String(task.id), type: 'worklog' } })
             else open()
@@ -257,7 +257,7 @@ function SuggestCard({ m }: { m: MentorCard }) {
   const { colors, viridian, viridianSoft } = useMentoringTheme()
   const router = useRouter()
   const open = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     router.push({ pathname: '/mentoring/mentor/[id]', params: { id: String(m.mentorId) } })
   }
   return (
@@ -311,7 +311,7 @@ function GroupRow({ g, meId, last }: { g: MentoringGroup; meId?: string; last: b
   return (
     <MotionPressable
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
         router.push({ pathname: '/mentoring/groups/[id]', params: { id: String(g.id) } })
       }}
       accessibilityRole="button"
@@ -402,7 +402,7 @@ export function MentoringHub({ hub, onDiscover }: { hub: Hub; onDiscover: () => 
         qc.invalidateQueries({ queryKey: ['mentoring-incoming'] })
         toast.success(accept ? 'Đã nhận yêu cầu. Kênh trao đổi đã được mở.' : 'Đã bỏ qua yêu cầu.')
       }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
       qc.invalidateQueries({ queryKey: ['mentoring-tasks'] })
       qc.invalidateQueries({ queryKey: ['notifications'] })
     } catch (e) {

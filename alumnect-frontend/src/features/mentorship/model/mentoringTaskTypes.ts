@@ -772,11 +772,13 @@ export interface MentoringTaskReport {
   studentTotalPaid: number
   studentRefundAmount: number
   studentRefundStatus: 'NO_REFUND' | 'PENDING_REFUND' | 'PROCESSING' | 'REFUNDED' | 'FAILED' | 'ON_HOLD' | string
+  studentRefundNote?: string | null
 
   mentorEarnedAmount: number
   platformFee: number
   mentorNetPayout: number
   mentorPayoutStatus: 'PENDING_ESCROW' | 'PROCESSING' | 'PAID' | 'FAILED' | 'ON_HOLD' | 'CANCELLED' | string
+  mentorPayoutNote?: string | null
 
   platformFeeNote?: string | null
 

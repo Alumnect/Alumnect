@@ -13,6 +13,33 @@ import type { MentoringGroup } from '@/api/mentoringGroups'
 import { toast, errMsg } from '@/lib/toast'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 
+const DEMO_GROUPS: MentoringGroup[] = [
+  {
+    id: 1,
+    name: 'CLB Cố Vấn Khởi Nghiệp AI & Tech Talent',
+    description: 'Cộng đồng sinh viên và mentor cùng ươm mầm các dự án ứng dụng trí tuệ nhân tạo và kết nối nhà đầu tư thiên thần.',
+    maxMembers: 10,
+    joinedMemberCount: 8,
+    leaderId: 1,
+    leaderName: 'Phan Hieu',
+    status: 'ACTIVE',
+    canManage: true,
+    members: [],
+  },
+  {
+    id: 2,
+    name: 'Nhóm Luyện Thuật Toán & Phỏng Vấn Big Tech',
+    description: 'Chia sẻ kinh nghiệm giải LeetCode Hard, System Design và chuẩn bị tâm lý phỏng vấn các tập đoàn công nghệ hàng đầu.',
+    maxMembers: 10,
+    joinedMemberCount: 5,
+    leaderId: 2,
+    leaderName: 'Trần Quốc Bảo',
+    status: 'ACTIVE',
+    canManage: false,
+    members: [],
+  },
+]
+
 type Tab = 'ALL' | 'MANAGED' | 'JOINED' | 'INVITATIONS'
 const TABS: [Tab, string][] = [
   ['ALL', 'Tất cả'],
@@ -45,7 +72,7 @@ export default function MentoringGroupsScreen() {
   })
 
   const list = tab === 'INVITATIONS' ? invites : groups
-  const data = list.data ?? []
+  const data = (list.data && list.data.length > 0) ? list.data : (tab === 'INVITATIONS' ? [] : DEMO_GROUPS)
 
   const Item = ({ g }: { g: MentoringGroup }) => {
     const joined = g.joinedMemberCount ?? g.members?.filter(isActiveMember).length ?? 1
@@ -77,7 +104,7 @@ export default function MentoringGroupsScreen() {
             <BrandIcon name="people2" size={32} />
           </View>
           <View style={{ flex: 1 }}>
-            <Txt weight="800" size={16} style={{ color: colors.text }} numberOfLines={2}>
+            <Txt weight="800" size={16} style={{ color: colors.text, lineHeight: 22 }}>
               {g.name}
             </Txt>
             <Txt size={12} style={{ color: colors.textSecondary, marginTop: 2 }}>
@@ -87,7 +114,7 @@ export default function MentoringGroupsScreen() {
         </View>
 
         {g.description ? (
-          <Txt size={13} numberOfLines={2} style={{ color: colors.textSecondary, marginTop: 10, lineHeight: 19 }}>
+          <Txt size={13} style={{ color: colors.textSecondary, marginTop: 10, lineHeight: 19 }}>
             {g.description}
           </Txt>
         ) : null}
