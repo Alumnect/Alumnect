@@ -760,7 +760,12 @@ export interface MentoringTaskReport {
   totalAdditionalAmount: number
 
   activeTicket?: MentoringDisputeTicket | null
+  latestTicket?: MentoringDisputeTicket | null
   isDisputed: boolean
+  resolutionDecision?: string | null
+  resolutionNote?: string | null
+  canPingAdminFinance?: boolean
+  hasFailedLedger?: boolean
 
   originalPrice: number
   totalAgreedPrice: number

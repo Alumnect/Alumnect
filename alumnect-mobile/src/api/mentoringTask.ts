@@ -221,6 +221,13 @@ export interface TaskReport {
   platformFee: number
   mentorNetPayout: number
   mentorPayoutStatus: string
+  isDisputed?: boolean
+  activeTicket?: Ticket | null
+  latestTicket?: Ticket | null
+  resolutionDecision?: string | null
+  resolutionNote?: string | null
+  canPingAdminFinance?: boolean
+  hasFailedLedger?: boolean
 }
 
 export interface SettlementSnapshot {
@@ -265,6 +272,7 @@ export const taskApi = {
   detail: (id: number) => d(http.get<unknown, ApiResponse<TaskDetail>>(`${T}/${id}`)),
   byDeal: (dealId: number) => d(http.get<unknown, ApiResponse<TaskDetail>>(`${T}/by-deal/${dealId}`)),
   report: (id: number) => d(http.get<unknown, ApiResponse<TaskReport>>(`${T}/${id}/report`)),
+  pingAdminFinance: (id: number, p: { reason: string; issueType?: string }) => d(http.post<unknown, ApiResponse<void>>(`${T}/${id}/ping-admin-finance`, p)),
 
   workLogs: (id: number) => d(http.get<unknown, ApiResponse<WorkLog[]>>(`${T}/${id}/work-logs`)),
   createWorkLog: (id: number, p: WorkLogPayload) => d(http.post<unknown, ApiResponse<WorkLog>>(`${T}/${id}/work-logs`, p)),

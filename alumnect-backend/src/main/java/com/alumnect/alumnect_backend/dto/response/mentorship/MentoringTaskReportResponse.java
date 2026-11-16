@@ -51,7 +51,12 @@ public class MentoringTaskReportResponse {
 
     // 6. Dispute & Settlement Ticket (nếu có)
     private MentoringDisputeTicketResponse activeTicket;
+    private MentoringDisputeTicketResponse latestTicket;
     private Boolean isDisputed;
+    private String resolutionDecision;
+    private String resolutionNote;
+    private Boolean canPingAdminFinance;
+    private Boolean hasFailedLedger;
 
     // 7. Financial Breakdown
     private BigDecimal originalPrice;

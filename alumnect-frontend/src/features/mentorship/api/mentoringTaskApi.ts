@@ -528,6 +528,16 @@ export const mentoringTaskApi = {
   },
 
   /**
+   * Phản ánh sự cố dòng tiền / ping lại Admin khi chưa hoàn tiền hoặc giải ngân sai.
+   */
+  pingAdminFinance: async (taskId: number, payload: { reason: string; issueType?: string }): Promise<void> => {
+    await http.post<any, ApiResponse<void>>(
+      `/mentoring/tasks/${taskId}/ping-admin-finance`,
+      payload
+    )
+  },
+
+  /**
    * Lấy danh sách tin nhắn trao đổi trong Ticket tranh chấp (UC119).
    */
   getTicketMessages: async (ticketId: number): Promise<MentoringTicketMessage[]> => {
