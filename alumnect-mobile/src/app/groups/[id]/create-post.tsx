@@ -85,8 +85,14 @@ function GroupPostFormScreen() {
     if (picked.length > remaining) toast.error(`Chỉ thêm được ${remaining} tệp nữa, các tệp còn lại đã bị bỏ qua.`)
     setUploading(true)
     try {
-      const urls = await Promise.all(picked.slice(0, remaining).map((p) => uploadImage(p, 'posts')))
-      setImages((x) => [...x, ...urls])
+      for (const p of picked.slice(0, remaining)) {
+        try {
+          const url = await uploadImage(p, 'posts')
+          setImages((x) => [...x, url])
+        } catch (err) {
+          toast.error(`${p.name}: ${errMsg(err)}`)
+        }
+      }
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     } catch (e) {
       toast.error(errMsg(e))
@@ -106,10 +112,14 @@ function GroupPostFormScreen() {
     if (picked.length > remaining) toast.error(`Chỉ thêm được ${remaining} tệp nữa, các tệp còn lại đã bị bỏ qua.`)
     setUploading(true)
     try {
-      const urls = await Promise.all(
-        picked.slice(0, remaining).map(async (v) => (await uploadFile({ uri: v.uri, name: v.name, mimeType: v.mimeType, size: v.size }, 'group-posts')).url),
-      )
-      setVideos((x) => [...x, ...urls])
+      for (const v of picked.slice(0, remaining)) {
+        try {
+          const uploaded = await uploadFile({ uri: v.uri, name: v.name, mimeType: v.mimeType, size: v.size }, 'group-posts')
+          setVideos((x) => [...x, uploaded.url])
+        } catch (err) {
+          toast.error(`${v.name}: ${errMsg(err)}`)
+        }
+      }
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     } catch (e) {
       toast.error(errMsg(e))
