@@ -72,6 +72,8 @@ function PlansScreen() {
         <FlashList
           data={packages}
           keyExtractor={(p) => String(p.id)}
+          refreshing={q.isRefetching}
+          onRefresh={() => { void q.refetch() }}
           contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
           ListHeaderComponent={
             <Txt size={13} style={{ color: colors.textSecondary, marginBottom: 14, lineHeight: 20 }}>

@@ -206,6 +206,8 @@ export default function MyContributionsScreen() {
         <FlashList
           data={q.data ?? []}
           keyExtractor={(c) => c.id}
+          refreshing={q.isRefetching}
+          onRefresh={() => { void q.refetch() }}
           contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           ListEmptyComponent={
             <Empty

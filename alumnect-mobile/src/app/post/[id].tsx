@@ -91,6 +91,8 @@ export default function PostDetailScreen() {
           data={items}
           keyExtractor={(c) => c.id}
           style={{ backgroundColor: t.card }}
+          refreshing={post.isRefetching || comments.isRefetching}
+          onRefresh={refresh}
           ListHeaderComponent={
             <View>
               <View style={{ backgroundColor: t.bg, paddingBottom: 8 }}>

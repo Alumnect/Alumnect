@@ -94,6 +94,11 @@ function GroupPostDetailScreen() {
           data={items}
           keyExtractor={(c) => String(c.id)}
           contentContainerStyle={{ paddingBottom: 12 }}
+          refreshing={post.isRefetching || comments.isRefetching}
+          onRefresh={() => {
+            void post.refetch()
+            void comments.refetch()
+          }}
           onEndReached={() => comments.hasNextPage && !comments.isFetchingNextPage && comments.fetchNextPage()}
           ListHeaderComponent={
             <View>
