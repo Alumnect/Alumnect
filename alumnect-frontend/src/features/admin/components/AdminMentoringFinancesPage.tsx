@@ -138,7 +138,7 @@ export function AdminMentoringFinancesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 text-text">
+    <div className="mx-auto max-w-7xl space-y-6 text-text">
       {/* 1. Dải đầu trang + số dư kênh chi PayOS */}
       <AdminPageBanner
         title="Sổ quỹ Mentoring"
@@ -339,25 +339,22 @@ export function AdminMentoringFinancesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead className="bg-surface-2 text-xs font-bold text-text-subtle border-b border-border">
                 <tr>
-                  <th className="px-4 py-3.5">Mã Task & Tiêu đề</th>
-                  <th className="px-4 py-3.5">Các bên tham gia</th>
-                  <th className="px-4 py-3.5">Tổng thu ký quỹ</th>
-                  <th className="px-4 py-3.5">Giữ Escrow</th>
-                  <th className="px-4 py-3.5">Chi Cố vấn</th>
-                  <th className="px-4 py-3.5">Hoàn Học viên</th>
-                  <th className="px-4 py-3.5">Trạng thái Task</th>
-                  <th className="px-4 py-3.5">Quyết toán</th>
-                  <th className="px-4 py-3.5 text-right">Thao tác</th>
+                  <th className="px-3.5 py-3 w-[28%]">Mã Task & Tiêu đề</th>
+                  <th className="px-3 py-3 w-[16%]">Các bên tham gia</th>
+                  <th className="px-3 py-3 w-[15%]">Quỹ Escrow</th>
+                  <th className="px-3 py-3 w-[15%]">Chi trả & Hoàn tiền</th>
+                  <th className="px-3 py-3 w-[14%]">Trạng thái & Quyết toán</th>
+                  <th className="px-3.5 py-3 text-right w-[12%]">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {tasks.map((task) => (
                   <tr key={task.taskId} className="hover:bg-surface-2 transition-colors group">
                     {/* Mã & Tiêu đề */}
-                    <td className="px-4 py-3.5 max-w-xs">
+                    <td className="px-3.5 py-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="tabular-nums text-xs font-bold text-primary-solid">#{task.taskId}</span>
                         {task.hasFinanceAlert && (
@@ -391,69 +388,79 @@ export function AdminMentoringFinancesPage() {
                     </td>
 
                     {/* Các bên tham gia */}
-                    <td className="px-4 py-3.5">
-                      <div className="space-y-1.5 min-w-[170px]">
+                    <td className="px-3 py-3">
+                      <div className="space-y-1">
                         <div className="flex items-center gap-1.5 text-xs">
-                          <span className="w-4 h-4 rounded-full bg-info-soft text-info flex items-center justify-center text-xs font-bold">
+                          <span className="w-4 h-4 rounded-full bg-info-soft text-info flex items-center justify-center text-[10px] font-bold shrink-0">
                             H
                           </span>
-                          <span className="font-medium text-text truncate max-w-[140px]" title={task.student?.fullName}>
+                          <span className="font-medium text-text truncate max-w-[130px]" title={task.student?.fullName}>
                             {task.student?.fullName || 'Học viên'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs">
-                          <span className="w-4 h-4 rounded-full bg-primary-soft text-primary-solid flex items-center justify-center text-xs font-bold">
+                          <span className="w-4 h-4 rounded-full bg-primary-soft text-primary-solid flex items-center justify-center text-[10px] font-bold shrink-0">
                             C
                           </span>
-                          <span className="font-medium text-text truncate max-w-[140px]" title={task.mentor?.fullName}>
+                          <span className="font-medium text-text truncate max-w-[130px]" title={task.mentor?.fullName}>
                             {task.mentor?.fullName || 'Cố vấn'}
                           </span>
                         </div>
                       </div>
                     </td>
 
-                    {/* Tổng thu */}
-                    <td className="px-4 py-3.5 font-bold text-sm text-success whitespace-nowrap">
-                      +{formatVnd(task.totalCollected)}
-                      {task.totalTopUpAmount > 0 && (
-                        <span className="block text-xs font-normal text-text-subtle">
-                          Gồm +{formatVnd(task.totalTopUpAmount)}
-                        </span>
-                      )}
+                    {/* Quỹ Escrow: Thu & Đang giữ */}
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-text-subtle">Thu:</span>
+                          <span className="font-bold text-success tabular-nums">+{formatVnd(task.totalCollected)}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-text-subtle">Giữ:</span>
+                          <span className="font-semibold text-info tabular-nums">{formatVnd(task.escrowHoldingAmount)}</span>
+                        </div>
+                        {task.totalTopUpAmount > 0 && (
+                          <span className="block text-[11px] text-text-subtle">
+                            Gồm +{formatVnd(task.totalTopUpAmount)}
+                          </span>
+                        )}
+                        {task.lockedAmount > 0 && (
+                          <span className="block text-[11px] font-medium text-danger">
+                            Khóa: {formatVnd(task.lockedAmount)}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
-                    {/* Giữ Escrow */}
-                    <td className="px-4 py-3.5 font-bold text-sm text-info whitespace-nowrap">
-                      {formatVnd(task.escrowHoldingAmount)}
-                      {task.lockedAmount > 0 && (
-                        <span className="block text-xs font-normal text-danger">
-                          Khóa: {formatVnd(task.lockedAmount)}
-                        </span>
-                      )}
+                    {/* Chi trả & Hoàn tiền */}
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-text-subtle">Chi CV:</span>
+                          <span className={`font-semibold tabular-nums ${task.totalPayout > 0 ? 'text-primary-solid' : 'text-text-muted'}`}>
+                            {task.totalPayout > 0 ? `-${formatVnd(task.totalPayout)}` : '0 ₫'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-text-subtle">Hoàn HV:</span>
+                          <span className={`font-semibold tabular-nums ${task.totalRefund > 0 ? 'text-warning' : 'text-text-muted'}`}>
+                            {task.totalRefund > 0 ? `-${formatVnd(task.totalRefund)}` : '0 ₫'}
+                          </span>
+                        </div>
+                      </div>
                     </td>
 
-                    {/* Chi Cố vấn */}
-                    <td className="px-4 py-3.5 font-bold text-sm text-primary-solid whitespace-nowrap">
-                      {task.totalPayout > 0 ? `-${formatVnd(task.totalPayout)}` : '0 ₫'}
-                    </td>
-
-                    {/* Hoàn Học viên */}
-                    <td className="px-4 py-3.5 font-bold text-sm text-warning whitespace-nowrap">
-                      {task.totalRefund > 0 ? `-${formatVnd(task.totalRefund)}` : '0 ₫'}
-                    </td>
-
-                    {/* Trạng thái Task */}
-                    <td className="px-4 py-3.5 whitespace-nowrap">
-                      {renderTaskStatusBadge(task.taskStatus)}
-                    </td>
-
-                    {/* Trạng thái Quyết toán */}
-                    <td className="px-4 py-3.5 whitespace-nowrap">
-                      {renderSettlementBadge(task.settlementStatus)}
+                    {/* Trạng thái Task & Quyết toán */}
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <div className="flex flex-col gap-1 items-start">
+                        {renderTaskStatusBadge(task.taskStatus)}
+                        {renderSettlementBadge(task.settlementStatus)}
+                      </div>
                     </td>
 
                     {/* Thao tác */}
-                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                    <td className="px-3.5 py-3 text-right whitespace-nowrap">
                       <Button
                         size="sm"
                         variant={task.hasFinanceAlert ? 'primary' : 'secondary'}
