@@ -1,6 +1,5 @@
 import React from 'react'
-import { View, useWindowDimensions } from 'react-native'
-import { Image } from 'expo-image'
+import { View } from 'react-native'
 import { Text } from './AppText'
 import { useTheme } from '@/theme'
 
@@ -21,27 +20,33 @@ function Wordmark({ size, alum, nect }: { size: number; alum: string; nect: stri
   )
 }
 
-/** The existing FPT University identity, paired with the Alumnect name. `stacked` là bản lớn (logo FPT + tên Alumnect to) dùng ở đầu màn đăng nhập. */
+/** Biểu tượng thương hiệu AlumNect: Chữ viết tay "AlumNect" (Caveat). */
 export function Brand({ compact = false, centered = false, stacked = false }: { compact?: boolean; centered?: boolean; stacked?: boolean }) {
   const t = useTheme()
-  const { width } = useWindowDimensions()
   const alum = t.isDark ? '#7CB7FF' : '#004F9E'
   const nect = t.isDark ? '#FF8C38' : '#C2410C'
+
   if (stacked) {
-    // Bản lớn ở đầu màn đăng nhập: logo FPT và tên Alumnect trên một hàng.
+    // Bản lớn ở đầu màn đăng nhập
     return (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }} accessibilityLabel="Alumnect · FPT University">
-        <Image source={require('../../assets/fpt-university-logo.png')} style={{ width: 62, height: 39 }} contentFit="contain" />
-        <Wordmark size={46} alum={alum} nect={nect} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} accessibilityLabel="Alumnect">
+        <Wordmark size={44} alum={alum} nect={nect} />
       </View>
     )
   }
+
+  if (centered) {
+    // Bản giữa trên thanh topbar: Chữ AlumNect thanh thoát, không kèm logo vuông
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} accessibilityLabel="Alumnect">
+        <Wordmark size={32} alum={alum} nect={nect} />
+      </View>
+    )
+  }
+
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: centered ? 'center' : 'flex-start', gap: 10 }} accessibilityLabel="Alumnect · FPT University">
-      {!centered && (width >= 360 || compact) ? <Image source={require('../../assets/fpt-university-logo.png')} style={{ width: 48, height: 30 }} contentFit="contain" /> : null}
-      {!compact ? (
-        <Wordmark size={centered ? 31 : 30} alum={alum} nect={nect} />
-      ) : null}
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }} accessibilityLabel="Alumnect">
+      <Wordmark size={compact ? 24 : 28} alum={alum} nect={nect} />
     </View>
   )
 }
