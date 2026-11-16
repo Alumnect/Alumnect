@@ -387,7 +387,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
     public MentoringTaskSettlementProposalResponse createSettlementProposal(
             Long currentUserId, Long taskId, CreateSettlementProposalRequest request) {
 
-        MentoringTask task = requireActiveTask(taskId, currentUserId);
+        MentoringTask task = requireTaskOpenForSettlement(taskId, currentUserId);
         User currentUser = requireUser(currentUserId);
         User recipient = getOtherParticipant(task, currentUserId);
 
@@ -460,7 +460,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         }
 
         MentoringTask task = proposal.getTask();
-        requireTaskOpenForProposals(task);
+        requireTaskOpenForSettlement(task);
         if (Boolean.TRUE.equals(request.getAccept()) && isStudent(task, currentUserId)
                 && proposal.getStudentRefund() != null && proposal.getStudentRefund().signum() > 0) {
             requireRefundAccount(currentUserId);
@@ -475,7 +475,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         if (Boolean.TRUE.equals(request.getAccept())) {
             proposal.setStatus(MentoringSettlementProposalStatus.ACCEPTED);
 
-            String msg = String.format("🤝 Cả hai bên đã ĐỒNG THUẬN dừng Task và phân chia số tiền:\n- Mentor nhận: %s\n- Học viên hoàn trả: %s.\nHệ thống sẵn sàng gửi Settlement Ticket (UC111) để Admin tiến hành thanh toán & hoàn tiền.",
+            String msg = String.format("🤝 Cả hai bên đã ĐỒNG THUẬN dừng Task và phân chia số tiền:\n- Mentor nhận: %s\n- Học viên hoàn trả: %s.\n⚡ Hệ thống đang tự động thực hiện chi trả và hoàn tiền theo thỏa thuận!",
                     formatVnd(proposal.getMentorAmount()), formatVnd(proposal.getStudentRefund()));
             mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
         } else {
@@ -483,7 +483,7 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
 
             String note = (request.getResponseNote() != null && !request.getResponseNote().isBlank())
                     ? request.getResponseNote().trim() : "Không đồng ý phân chia theo tỷ lệ này";
-            String msg = String.format("❌ [%s] đã TỪ CHỐI đề xuất dừng Task và phân chia tiền.\nLý do: %s.\nHai bên có thể thương lượng lại hoặc gửi Dispute Ticket (UC112) cho Admin phân xử.",
+            String msg = String.format("❌ [%s] đã TỪ CHỐI đề xuất dừng Task và phân chia tiền.\nLý do: %s.\nHai bên có thể thương lượng lại hoặc một trong hai bên có thể khiếu nại (ping) Ban Quản Trị để Admin can thiệp giải quyết.",
                     responderRole, note);
             mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
         }
@@ -637,6 +637,28 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
             throw new BadRequestException("Task đã được Ban Quản Trị giải quyết, không thể thao tác.");
         }
         return task;
+    }
+
+    private MentoringTask requireTaskOpenForSettlement(Long taskId, Long currentUserId) {
+        MentoringTask task = requireParticipantTask(taskId, currentUserId);
+        if (task.getStatus() == MentoringTaskStatus.COMPLETED) {
+            throw new BadRequestException("Task đã hoàn thành, không thể thao tác.");
+        }
+        if (task.getStatus() == MentoringTaskStatus.CANCELLED) {
+            throw new BadRequestException("Task đã bị hủy, không thể thao tác.");
+        }
+        if (task.getStatus() == MentoringTaskStatus.RESOLVED) {
+            throw new BadRequestException("Task đã kết thúc, không thể thao tác.");
+        }
+        return task;
+    }
+
+    private void requireTaskOpenForSettlement(MentoringTask task) {
+        if (task.getStatus() == MentoringTaskStatus.COMPLETED
+                || task.getStatus() == MentoringTaskStatus.CANCELLED
+                || task.getStatus() == MentoringTaskStatus.RESOLVED) {
+            throw new ConflictException("Task đã kết thúc nên không thể thực hiện thỏa thuận hòa giải này.");
+        }
     }
 
     private boolean isTaskOpenForProposals(MentoringTask task) {
@@ -804,7 +826,8 @@ public class MentoringTaskResolutionServiceImpl implements MentoringTaskResoluti
         boolean isPending = p.getStatus() == MentoringSettlementProposalStatus.PENDING;
         boolean isTaskActive = p.getTask().getStatus() == MentoringTaskStatus.PREPARATION
                 || p.getTask().getStatus() == MentoringTaskStatus.IN_PROGRESS
-                || p.getTask().getStatus() == MentoringTaskStatus.SUBMITTED;
+                || p.getTask().getStatus() == MentoringTaskStatus.SUBMITTED
+                || p.getTask().getStatus() == MentoringTaskStatus.DISPUTED;
 
         return MentoringTaskSettlementProposalResponse.builder()
                 .id(p.getId())

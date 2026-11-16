@@ -187,9 +187,9 @@ function ChatVideoPlayer({ url, style }: { url: string; style?: object }) {
     })
   }
   const safeUrl = url.replace(/"/g, '&quot;')
-  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}video{width:100%;height:100%;object-fit:contain;background:#000}</style></head><body><video id="v" src="${safeUrl}#t=0.1" controls playsinline webkit-playsinline preload="metadata"></video><script>var v=document.getElementById('v');v.addEventListener('loadedmetadata',function(){if(window.ReactNativeWebView&&v.videoWidth&&v.videoHeight){window.ReactNativeWebView.postMessage(JSON.stringify({w:v.videoWidth,h:v.videoHeight}))}});</script></body></html>`
+  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>html,body{margin:0;padding:0;width:100%;height:100%;background:#090d16;overflow:hidden;display:flex;align-items:center;justify-content:center}video{width:100%;height:100%;object-fit:contain;background:#000}</style></head><body><video id="v" src="${safeUrl}#t=0.01" controls playsinline webkit-playsinline preload="auto"></video><script>var v=document.getElementById('v');v.addEventListener('loadedmetadata',function(){if(window.ReactNativeWebView&&v.videoWidth&&v.videoHeight){window.ReactNativeWebView.postMessage(JSON.stringify({w:v.videoWidth,h:v.videoHeight}))}});v.addEventListener('loadeddata',function(){try{if(v.paused&&v.currentTime<0.05){v.currentTime=0.05;}}catch(e){}});</script></body></html>`
   return (
-    <View style={[{ ...box, borderRadius: 16, overflow: 'hidden', backgroundColor: '#000' }, style]}>
+    <View style={[{ ...box, borderRadius: 16, overflow: 'hidden', backgroundColor: '#090d16' }, style]}>
       <WebView
         onMessage={(e: { nativeEvent: { data: string } }) => {
           try {
@@ -202,7 +202,7 @@ function ChatVideoPlayer({ url, style }: { url: string; style?: object }) {
             /* bỏ qua */
           }
         }}
-        source={{ html, baseUrl: 'https://alumnect.local' }}
+        source={{ html }}
         originWhitelist={['*']}
         allowsFullscreenVideo
         allowsInlineMediaPlayback
@@ -211,8 +211,10 @@ function ChatVideoPlayer({ url, style }: { url: string; style?: object }) {
         bounces={false}
         javaScriptEnabled
         domStorageEnabled
+        allowFileAccess
+        allowUniversalAccessFromFileURLs
         mixedContentMode="always"
-        style={{ flex: 1, backgroundColor: '#000' }}
+        style={{ flex: 1, backgroundColor: '#090d16' }}
       />
     </View>
   )
@@ -1230,7 +1232,7 @@ export function ChatWindow({
                 <ActionRow icon={<FilePen size={20} color={viridian} />} title="Điều chỉnh & tăng tiền" desc="Thay đổi phạm vi, deadline hoặc thêm tiền" onPress={() => goTask('amendment')} />
               ) : null}
               {taskPerm.canProposeSettlement ? (
-                <ActionRow icon={<Scale size={20} color={viridian} />} title="Dừng Task & chia quỹ" desc="Thỏa thuận kết thúc sớm" onPress={() => goTask('settlement')} />
+                <ActionRow icon={<Scale size={20} color={viridian} />} title="Dừng Task & chia quỹ" desc="Thỏa thuận hòa giải (Tự động chi tiền khi đồng ý)" onPress={() => goTask('settlement')} />
               ) : null}
               {taskPerm.canSubmitSettlementTicket ? (
                 <ActionRow icon={<FileCheck2 size={20} color={viridian} />} title="Biên bản hòa giải" desc="Gửi biên bản dừng Task cho Ban Quản Trị" onPress={() => goTask('settlement-ticket')} />
@@ -1243,7 +1245,7 @@ export function ChatWindow({
               <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 10, marginBottom: 8, marginLeft: 2 }}>
                 Hỗ trợ
               </Txt>
-              <ActionRow icon={<AlertTriangle size={20} color="#DC2626" />} title="Mở khiếu nại" desc="Nhờ Ban Quản Trị phân xử" danger onPress={() => goTask('dispute')} />
+              <ActionRow icon={<AlertTriangle size={20} color="#DC2626" />} title="Mở khiếu nại / Ping Admin" desc="Nhờ Ban Quản Trị can thiệp & phân xử" danger onPress={() => goTask('dispute')} />
             </>
           ) : null}
         </ScrollView>

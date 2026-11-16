@@ -457,6 +457,11 @@ export interface AdminTaskFundSummaryDto {
   activeTicketId?: number
   activeTicketCode?: string
   activeTicketStatus?: string
+  hasFinanceAlert?: boolean
+  financeIssueReason?: string
+  financeIssueReportedBy?: string
+  financeIssueReportedAt?: string
+  failedLedgersCount?: number
   createdAt: string
   updatedAt: string
 }

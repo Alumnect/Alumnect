@@ -106,6 +106,11 @@ export default function QuestionDetailScreen() {
           keyExtractor={(r) => r.a.id}
           getItemType={(r) => (r.reply ? 'reply' : 'answer')}
           style={{ backgroundColor: t.card }}
+          refreshing={question.isRefetching || answers.isRefetching}
+          onRefresh={() => {
+            void question.refetch()
+            void answers.refetch()
+          }}
           contentContainerStyle={{ paddingBottom: 12 }}
           onEndReached={() => answers.hasNextPage && !answers.isFetchingNextPage && answers.fetchNextPage()}
           ListHeaderComponent={

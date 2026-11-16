@@ -10,7 +10,10 @@ import {
 import { ScrollView } from '@/components/ScrollView'
 import { Text, TextInput } from '@/components/AppText'
 import { Image } from 'expo-image'
+import { WebView as RNWebView } from 'react-native-webview'
 import { useRouter } from 'expo-router'
+
+const WebView = RNWebView as unknown as React.ComponentType<any>
 import * as Haptics from 'expo-haptics'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -88,6 +91,68 @@ const TYPE_CONFIGS: TypeConfig[] = [
 const MAX = 5000
 const DRAFT_KEY = 'alumnect.draft.post'
 
+function VideoPreviewTile({ uri }: { uri: string }) {
+  const safe = uri.replace(/"/g, '&quot;')
+  const html = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:#090d16;overflow:hidden;display:flex;align-items:center;justify-content:center}video{width:100%;height:100%;object-fit:cover;background:#000}</style></head><body><video src="${safe}#t=0.01" muted playsinline webkit-playsinline autoplay loop></video></body></html>`
+  return (
+    <View style={{ width: '100%', height: '100%', position: 'relative', backgroundColor: '#090d16' }}>
+      <WebView
+        source={{ html }}
+        originWhitelist={['*']}
+        pointerEvents="none"
+        style={{ width: '100%', height: '100%', backgroundColor: '#090d16' }}
+        allowsInlineMediaPlayback
+        mediaPlaybackRequiresUserAction={false}
+        scrollEnabled={false}
+        javaScriptEnabled
+        allowFileAccess
+        allowUniversalAccessFromFileURLs
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Play size={16} color="#fff" weight="fill" style={{ marginLeft: 2 }} />
+        </View>
+      </View>
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          bottom: 4,
+          right: 4,
+          backgroundColor: 'rgba(0,0,0,0.75)',
+          paddingHorizontal: 5,
+          paddingVertical: 1,
+          borderRadius: 4,
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>
+          VIDEO
+        </Text>
+      </View>
+    </View>
+  )
+}
+
 /**
  * Form tạo và chỉnh sửa bài viết (UC14, UC22).
  * Thiết kế giao diện hiện đại tham khảo Kakao & Instagram, tích hợp bộ minh hoạ Meetup BrandIcon.
@@ -103,6 +168,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
   const [media, setMedia] = useState<string[]>(
     existing?.images.length ? existing.images : existing?.image ? [existing.image] : []
   )
+  const [previewMap, setPreviewMap] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
   const [draftSaved, setDraftSaved] = useState(false)
 
@@ -183,10 +249,18 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
     setUploading(true)
     try {
       const remaining = 10 - media.length
-      const urls = await Promise.all(
-        picked.slice(0, remaining).map((p) => uploadImage(p, 'posts'))
-      )
-      setMedia((m) => [...m, ...urls])
+      const toUpload = picked.slice(0, remaining)
+      const uploaded: { url: string; localUri: string }[] = []
+      for (const p of toUpload) {
+        const url = await uploadImage(p, 'posts')
+        uploaded.push({ url, localUri: p.uri })
+      }
+      setPreviewMap((prev) => {
+        const next = { ...prev }
+        uploaded.forEach((u) => { next[u.url] = u.localUri })
+        return next
+      })
+      setMedia((m) => [...m, ...uploaded.map((u) => u.url)])
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { })
     } catch (e) {
       toast.error(errMsg(e))
@@ -206,19 +280,24 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       setUploading(true)
       const remaining = 10 - media.length
       const toUpload = picked.slice(0, remaining)
-      const urls: string[] = []
+      const uploaded: { url: string; localUri: string }[] = []
       for (const item of toUpload) {
         if (item.size && item.size > 100 * 1024 * 1024) {
           toast.error(`Video "${item.name}" vượt quá giới hạn 100MB.`)
           continue
         }
         const url = await uploadVideo(item, 'posts')
-        urls.push(url)
+        uploaded.push({ url, localUri: item.uri })
       }
-      if (urls.length > 0) {
-        setMedia((m) => [...m, ...urls])
+      if (uploaded.length > 0) {
+        setPreviewMap((prev) => {
+          const next = { ...prev }
+          uploaded.forEach((u) => { next[u.url] = u.localUri })
+          return next
+        })
+        setMedia((m) => [...m, ...uploaded.map((u) => u.url)])
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { })
-        toast.success(`Đã đính kèm ${urls.length} video.`)
+        toast.success(`Đã đính kèm ${uploaded.length} video.`)
       }
     } catch (e) {
       toast.error(errMsg(e))
@@ -487,6 +566,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
                 contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
               >
                 {media.map((uri, idx) => {
+                  const displayUri = previewMap[uri] || uri
                   const isVid = isVideoUrl(uri)
                   return (
                     <View
@@ -499,41 +579,19 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
                         position: 'relative',
                         borderWidth: StyleSheet.hairlineWidth,
                         borderColor: theme.border,
-                        backgroundColor: isVid ? '#0f172a' : theme.surface,
+                        backgroundColor: isVid ? '#090d16' : theme.surface,
                       }}
                     >
                       {isVid ? (
-                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                          <View
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 18,
-                              backgroundColor: 'rgba(255,255,255,0.25)',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Play size={18} color="#fff" weight="fill" style={{ marginLeft: 2 }} />
-                          </View>
-                          <View
-                            style={{
-                              position: 'absolute',
-                              bottom: 4,
-                              right: 4,
-                              backgroundColor: 'rgba(0,0,0,0.75)',
-                              paddingHorizontal: 5,
-                              paddingVertical: 1,
-                              borderRadius: 4,
-                            }}
-                          >
-                            <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>
-                              VIDEO
-                            </Text>
-                          </View>
-                        </View>
+                        <VideoPreviewTile uri={displayUri} />
                       ) : (
-                        <Image source={{ uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                        <Image
+                          source={{ uri: displayUri }}
+                          style={{ width: '100%', height: '100%' }}
+                          contentFit="cover"
+                          cachePolicy="memory-disk"
+                          transition={150}
+                        />
                       )}
                       <Pressable
                         onPress={() => removeImage(uri)}
@@ -718,6 +776,15 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
                     </Text>
                   </Pressable>
                 </View>
+              </View>
+            )}
+
+            {uploading && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 10 }}>
+                <ActivityIndicator size="small" color={theme.primary} />
+                <Text style={{ fontSize: 12, color: theme.primary, fontWeight: '500' }}>
+                  Đang xử lý và tải phương tiện lên máy chủ...
+                </Text>
               </View>
             )}
           </View>

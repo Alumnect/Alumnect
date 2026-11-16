@@ -72,10 +72,16 @@ function fmt(sec: number) {
 
 function feedHtml(url: string) {
   const safe = url.replace(/"/g, '&quot;')
-  return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/><style>*{margin:0;padding:0}html,body{width:100%;height:100%;background:#000;overflow:hidden}video{width:100%;height:100%;object-fit:cover;background:#000}</style></head><body><video id="v" src="${safe}#t=0.1" muted loop playsinline webkit-playsinline preload="metadata"></video><script>
+  return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:#090d16;overflow:hidden;display:flex;align-items:center;justify-content:center}video{width:100%;height:100%;object-fit:cover;background:#000}</style></head><body><video id="v" src="${safe}#t=0.01" muted loop playsinline webkit-playsinline preload="auto"></video><script>
 var v=document.getElementById('v'),last=0;
 function post(o){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(o))}
 v.addEventListener('loadedmetadata',function(){post({type:'meta',w:v.videoWidth,h:v.videoHeight,d:v.duration||0})});
+v.addEventListener('loadeddata',function(){
+  try{
+    if(v.paused && v.currentTime < 0.05){ v.currentTime = 0.05; }
+  }catch(e){}
+  post({type:'loaded'});
+});
 v.addEventListener('timeupdate',function(){var n=Date.now();if(n-last>400){last=n;post({type:'time',t:v.currentTime,d:v.duration||0})}});
 v.addEventListener('playing',function(){post({type:'state',playing:true})});
 v.addEventListener('pause',function(){post({type:'state',playing:false})});
@@ -103,7 +109,7 @@ function FullscreenVideo({ url, start, onClose }: { url: string | null; start: n
       <View style={{ flex: 1, backgroundColor: '#000' }}>
         {url ? (
           <WebView
-            source={{ html: fullHtml(url, start), baseUrl: 'https://alumnect.local' }}
+            source={{ html: fullHtml(url, start) }}
             originWhitelist={['*']}
             onMessage={(e: { nativeEvent: { data: string } }) => {
               try {
@@ -118,6 +124,8 @@ function FullscreenVideo({ url, start, onClose }: { url: string | null; start: n
             scrollEnabled={false}
             javaScriptEnabled
             mixedContentMode="always"
+            allowFileAccess
+            allowUniversalAccessFromFileURLs
             style={{ flex: 1, backgroundColor: '#000' }}
           />
         ) : null}
@@ -260,17 +268,19 @@ export function FeedVideo({
     <View ref={ref} collapsable={false} style={{ width, height, backgroundColor: '#000' }}>
       <WebView
         ref={web}
-        source={{ html: feedHtml(url), baseUrl: 'https://alumnect.local' }}
+        source={{ html: feedHtml(url) }}
         originWhitelist={['*']}
         onMessage={onMessage}
         onLoadEnd={() => setReady(true)}
         pointerEvents="none"
-        style={{ width, height, backgroundColor: '#000' }}
+        style={{ width, height, backgroundColor: '#090d16' }}
         allowsInlineMediaPlayback
         mediaPlaybackRequiresUserAction={false}
         scrollEnabled={false}
         javaScriptEnabled
         mixedContentMode="always"
+        allowFileAccess
+        allowUniversalAccessFromFileURLs
       />
       <Pressable
         onPress={onTap}

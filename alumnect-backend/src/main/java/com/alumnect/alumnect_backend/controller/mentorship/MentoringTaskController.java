@@ -76,6 +76,17 @@ public class MentoringTaskController {
         return ResponseEntity.ok(ApiResponse.success("Lấy báo cáo kết quả Task và tài chính thành công", response));
     }
 
+    @PostMapping("/{id}/ping-admin-finance")
+    @Operation(summary = "Phản ánh sự cố dòng tiền và ping lại Ban Quản Trị",
+               description = "Cho phép Học viên hoặc Mentor ping Admin khi chưa hoàn tiền được, chưa nhận được thù lao hoặc dòng tiền sai lệch")
+    public ResponseEntity<ApiResponse<Void>> pingAdminFinance(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.alumnect.alumnect_backend.dto.request.mentorship.PingAdminFinanceRequest request) {
+        Long currentUserId = getCurrentUserId();
+        taskService.pingAdminFinance(currentUserId, id, request);
+        return ResponseEntity.ok(ApiResponse.success("Đã gửi phản ánh sự cố dòng tiền tới Ban Quản Trị thành công", null));
+    }
+
     @GetMapping("/by-deal/{dealId}")
     @Operation(summary = "Lấy thông tin chi tiết Mentoring Task theo Deal ID (UC106)",
                description = "Tra cứu Task đã được kích hoạt từ thỏa thuận Deal tương ứng")

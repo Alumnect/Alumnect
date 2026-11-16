@@ -26,10 +26,10 @@ const META: Record<ActionType, { title: string; brand: BrandIconName; intro: str
   worklog: { title: 'Nhật ký công việc', brand: 'list', intro: 'Ghi lại nội dung buổi làm việc. Học viên sẽ xác nhận nhật ký để cập nhật tiến độ nhiệm vụ.', submit: 'Lưu nhật ký', success: 'Đã thêm nhật ký công việc.' },
   extension: { title: 'Xin gia hạn', brand: 'alarm_clock', intro: 'Đề xuất hạn chót mới. Bên còn lại cần đồng ý thì hạn mới mới có hiệu lực.', submit: 'Gửi đề xuất gia hạn', success: 'Đã gửi đề xuất gia hạn.' },
   amendment: { title: 'Điều chỉnh nhiệm vụ', brand: 'pencil', intro: 'Thay đổi phạm vi, kết quả, chi phí hoặc thời hạn. Nếu có chi phí phát sinh, học viên thanh toán thêm sau khi đồng ý.', submit: 'Gửi đề xuất điều chỉnh', success: 'Đã gửi đề xuất điều chỉnh.' },
-  settlement: { title: 'Đề xuất hòa giải', brand: 'fist', intro: 'Dừng nhiệm vụ và chia số tiền đang giữ giữa Mentor và Học viên. Bên còn lại cần đồng ý phương án này.', submit: 'Gửi đề xuất hòa giải', success: 'Đã gửi đề xuất hòa giải.' },
+  settlement: { title: 'Đề xuất hòa giải', brand: 'fist', intro: 'Dừng nhiệm vụ và phân chia quỹ giữa Mentor và Học viên. Khi cả 2 đồng ý mức thỏa thuận, hệ thống sẽ TỰ ĐỘNG CHI TRẢ cho Mentor và HOÀN TIỀN cho Học viên ngay lập tức.', submit: 'Gửi đề xuất hòa giải', success: 'Đã gửi đề xuất hòa giải.' },
   'settlement-ticket': { title: 'Gửi biên bản hòa giải', brand: 'writing', intro: 'Hai bên đã đồng ý phương án hòa giải. Gửi biên bản để Ban Quản Trị xét duyệt và giải ngân.', submit: 'Gửi biên bản', success: 'Đã gửi biên bản hòa giải.' },
   completion: { title: 'Nộp kết quả bàn giao', brand: 'badge_pro', intro: 'Tổng kết kết quả để học viên nghiệm thu. Khi được chấp nhận, nhiệm vụ hoàn thành và thù lao được giải ngân.', submit: 'Nộp kết quả', success: 'Đã nộp kết quả, đang chờ học viên nghiệm thu.' },
-  dispute: { title: 'Khiếu nại / Tranh chấp', brand: 'mentalhealth', intro: 'Gửi khiếu nại đến Ban Quản Trị khi hai bên không tự thống nhất được. Hãy mô tả rõ và đính kèm bằng chứng.', submit: 'Gửi khiếu nại', success: 'Đã tạo ticket khiếu nại.' },
+  dispute: { title: 'Khiếu nại / Ping Admin', brand: 'mentalhealth', intro: 'Gửi khiếu nại đến Ban Quản Trị khi hai bên không tự thống nhất được. Ban Quản Trị sẽ can thiệp phân xử và quyết định mức chia quỹ.', submit: 'Gửi khiếu nại', success: 'Đã tạo ticket khiếu nại.' },
   review: { title: 'Đánh giá Mentor', brand: 'star', intro: 'Đánh giá của bạn giúp cộng đồng chọn được mentor phù hợp và ghi nhận công sức của mentor.', submit: 'Gửi đánh giá', success: 'Cảm ơn bạn đã đánh giá mentor!' },
 }
 
@@ -183,7 +183,7 @@ function MoneyField({ label, value, onChange, required, hint, error }: { label: 
 }
 
 /** Ảnh đính kèm dạng lưới thumbnail + ô thêm ảnh. */
-function Attachments({ files, onAdd, onRemove, uploading, label }: { files: { fileUrl: string; fileName: string }[]; onAdd: () => void; onRemove: (i: number) => void; uploading: boolean; label: string }) {
+function Attachments({ files, onAdd, onRemove, uploading, label }: { files: { fileUrl: string; fileName: string; localUri?: string }[]; onAdd: () => void; onRemove: (i: number) => void; uploading: boolean; label: string }) {
   const { colors, viridian, isDark } = useMentoringTheme()
   return (
     <View>
@@ -193,7 +193,7 @@ function Attachments({ files, onAdd, onRemove, uploading, label }: { files: { fi
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {files.map((x, i) => (
           <View key={`${x.fileUrl}-${i}`} style={styles.thumb}>
-            <Image source={{ uri: x.fileUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <Image source={{ uri: x.localUri || x.fileUrl }} style={StyleSheet.absoluteFill} contentFit="cover" cachePolicy="memory-disk" />
             <Pressable onPress={() => onRemove(i)} hitSlop={6} accessibilityLabel="Xóa ảnh" style={styles.thumbRemove}>
               <X size={12} color="#FFFFFF" weight="bold" />
             </Pressable>
@@ -236,7 +236,7 @@ export default function TaskActionScreen() {
   const [f, setF] = useState<Record<string, string>>({})
   const [date, setDate] = useState('')
   const [rating, setRating] = useState(0)
-  const [files, setFiles] = useState<{ fileUrl: string; fileName: string; mediaType?: 'IMAGE' | 'VIDEO' | 'FILE'; fileSize?: number | null }[]>([])
+  const [files, setFiles] = useState<{ fileUrl: string; fileName: string; localUri?: string; mediaType?: 'IMAGE' | 'VIDEO' | 'FILE'; fileSize?: number | null }[]>([])
   const [uploading, setUploading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loaded, setLoaded] = useState(false)
@@ -275,7 +275,7 @@ export default function TaskActionScreen() {
     setUploading(true)
     try {
       const url = await uploadImage(img, type === 'dispute' ? 'evidence' : 'common')
-      setFiles((x) => [...x, { fileUrl: url, fileName: img.name, mediaType: 'IMAGE' }])
+      setFiles((x) => [...x, { fileUrl: url, fileName: img.name, localUri: img.uri, mediaType: 'IMAGE' }])
     } catch (e) {
       toast.error(errMsg(e))
     } finally {

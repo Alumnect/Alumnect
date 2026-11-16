@@ -44,6 +44,11 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     private final MentoringGroupService mentoringGroupService;
     private final RefundAccountResolver refundAccountResolver;
     private final MentoringRules mentoringRules;
+    private final MentoringDisputeTicketRepository ticketRepository;
+    private final com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementProposalRepository settlementProposalRepository;
+    private final com.alumnect.alumnect_backend.dao.user.UserRepository userRepository;
+    private final MentoringConversationService mentoringConversationService;
+    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -312,13 +317,13 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         MentoringTaskCompletionResponse latestCompletion = completionService.getLatestCompletion(currentUserId, task.getId());
         MentoringDisputeTicketResponse activeTicket = isCoreParticipant ? ticketService.getActiveTicket(currentUserId, task.getId()) : null;
 
-        boolean canSubmitSettlementTicket = (isStudent || isMentor)
-                && activeSettlementProposal != null
-                && activeSettlementProposal.getStatus() == MentoringSettlementProposalStatus.ACCEPTED
-                && activeTicket == null;
+        // Khi cả hai đồng thuận phương án hòa giải, hệ thống tự động chi trả & hoàn tiền ngay lập tức, không cần bước gửi ticket thủ công
+        boolean canSubmitSettlementTicket = false;
 
         boolean canCreateDisputeTicket = (isStudent || isMentor)
                 && task.getStatus() != MentoringTaskStatus.COMPLETED
+                && task.getStatus() != MentoringTaskStatus.CANCELLED
+                && task.getStatus() != MentoringTaskStatus.RESOLVED
                 && activeTicket == null;
 
         boolean canSubmitDisputeEvidence = (isStudent || isMentor)
@@ -568,8 +573,11 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         // 6. Latest Completion (UC110)
         MentoringTaskCompletionResponse completionSummary = completionService.getLatestCompletion(currentUserId, task.getId());
 
-        // 7. Active Ticket (UC111 / UC112)
+        // 7. Active & Latest Tickets (UC111 / UC112)
         MentoringDisputeTicketResponse activeTicket = ticketService.getActiveTicket(currentUserId, task.getId());
+        List<MentoringDisputeTicketResponse> allTickets = ticketService.getTicketsByTaskId(currentUserId, task.getId());
+        MentoringDisputeTicketResponse latestTicket = !allTickets.isEmpty() ? allTickets.get(0) : null;
+
         boolean isDisputed = task.getStatus() == MentoringTaskStatus.DISPUTED
                 || (activeTicket != null && activeTicket.getTicketType() == MentoringTicketType.DISPUTE);
 
@@ -590,29 +598,119 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
 
         BigDecimal studentRefundAmount = BigDecimal.ZERO;
         String studentRefundStatus = "NO_REFUND";
-        MentoringPaymentLedger latestPayout = ledgerRepository
-                .findFirstByTaskIdAndTransactionTypeOrderByCreatedAtDesc(
-                        task.getId(), MentoringLedgerTransactionType.PAYOUT)
+
+        List<MentoringPaymentLedger> taskLedgers = ledgerRepository.findByTaskId(task.getId());
+        MentoringPaymentLedger latestPayout = taskLedgers.stream()
+                .filter(l -> l.getTransactionType() == MentoringLedgerTransactionType.PAYOUT)
+                .max(Comparator.comparing(MentoringPaymentLedger::getCreatedAt))
                 .orElse(null);
-        MentoringPaymentLedger latestRefund = ledgerRepository
-                .findFirstByTaskIdAndTransactionTypeOrderByCreatedAtDesc(
-                        task.getId(), MentoringLedgerTransactionType.REFUND)
+        MentoringPaymentLedger latestRefund = taskLedgers.stream()
+                .filter(l -> l.getTransactionType() == MentoringLedgerTransactionType.REFUND)
+                .max(Comparator.comparing(MentoringPaymentLedger::getCreatedAt))
                 .orElse(null);
+        boolean hasFailedLedger = taskLedgers.stream().anyMatch(l -> l.getStatus() == MentoringLedgerStatus.FAILED);
+
+        // Lấy đề xuất thỏa thuận dừng Task nếu có (UC109)
+        com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskSettlementProposal acceptedProposal =
+                settlementProposalRepository.findFirstByTaskIdAndStatus(task.getId(), com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus.ACCEPTED).orElse(null);
+        if (acceptedProposal == null) {
+            acceptedProposal = settlementProposalRepository.findFirstByTaskIdOrderByCreatedAtDesc(task.getId()).orElse(null);
+        }
+
+        com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket anyResolvedTicket =
+                ticketRepository.findByTaskIdOrderByCreatedAtDesc(task.getId()).stream()
+                        .filter(t -> t.getStatus() == MentoringTicketStatus.RESOLVED || t.getMentorAmount() != null || t.getStudentRefund() != null)
+                        .findFirst()
+                        .orElse(null);
+
+        if (latestTicket == null && anyResolvedTicket != null) {
+            latestTicket = MentoringDisputeTicketResponse.builder()
+                    .id(anyResolvedTicket.getId())
+                    .ticketCode(anyResolvedTicket.getTicketCode())
+                    .ticketType(anyResolvedTicket.getTicketType())
+                    .status(anyResolvedTicket.getStatus())
+                    .decision(anyResolvedTicket.getDecision())
+                    .resolutionNote(anyResolvedTicket.getResolutionNote())
+                    .mentorAmount(anyResolvedTicket.getMentorAmount())
+                    .studentRefund(anyResolvedTicket.getStudentRefund())
+                    .totalAmount(anyResolvedTicket.getTotalAmount())
+                    .disputeReason(anyResolvedTicket.getDisputeReason())
+                    .build();
+        }
+
+        String resolutionDecision = null;
+        String resolutionNote = null;
+        if (latestTicket != null && latestTicket.getStatus() == MentoringTicketStatus.RESOLVED) {
+            resolutionDecision = latestTicket.getDecision() != null ? latestTicket.getDecision().name() : null;
+            resolutionNote = latestTicket.getResolutionNote();
+        }
+        if (resolutionDecision == null && anyResolvedTicket != null && anyResolvedTicket.getDecision() != null) {
+            resolutionDecision = anyResolvedTicket.getDecision().name();
+        }
+        if (resolutionDecision == null && acceptedProposal != null) {
+            resolutionDecision = "PARTIAL_SPLIT";
+        }
+        if (resolutionNote == null && anyResolvedTicket != null) {
+            resolutionNote = anyResolvedTicket.getResolutionNote();
+        }
+        if (resolutionNote == null && acceptedProposal != null) {
+            resolutionNote = acceptedProposal.getReason();
+        }
 
         if (isDisputed) {
-            mentorEarnedAmount = BigDecimal.ZERO;
-            mentorNetPayout = BigDecimal.ZERO;
+            mentorEarnedAmount = latestTicket != null && latestTicket.getMentorAmount() != null ? latestTicket.getMentorAmount() : BigDecimal.ZERO;
+            mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
             mentorPayoutStatus = "ON_HOLD";
+            studentRefundAmount = latestTicket != null && latestTicket.getStudentRefund() != null ? latestTicket.getStudentRefund() : BigDecimal.ZERO;
             studentRefundStatus = "ON_HOLD";
+        } else if (task.getStatus() == MentoringTaskStatus.RESOLVED || (latestTicket != null && latestTicket.getStatus() == MentoringTicketStatus.RESOLVED) || anyResolvedTicket != null) {
+            BigDecimal pAmt = latestPayout != null ? latestPayout.getAmount() : null;
+            if (pAmt == null || pAmt.compareTo(BigDecimal.ZERO) == 0) {
+                if (latestTicket != null && latestTicket.getMentorAmount() != null && latestTicket.getMentorAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    pAmt = latestTicket.getMentorAmount();
+                } else if (anyResolvedTicket != null && anyResolvedTicket.getMentorAmount() != null && anyResolvedTicket.getMentorAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    pAmt = anyResolvedTicket.getMentorAmount();
+                } else if (acceptedProposal != null && acceptedProposal.getMentorAmount() != null) {
+                    pAmt = acceptedProposal.getMentorAmount();
+                } else {
+                    pAmt = BigDecimal.ZERO;
+                }
+            }
+            mentorEarnedAmount = pAmt;
+            mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
+            if (mentorEarnedAmount.compareTo(BigDecimal.ZERO) > 0) {
+                mentorPayoutStatus = ledgerProgressStatus(latestPayout, "PAID", "PROCESSING");
+            } else {
+                mentorPayoutStatus = "CANCELLED";
+            }
+
+            BigDecimal rAmt = latestRefund != null ? latestRefund.getAmount() : null;
+            if (rAmt == null || rAmt.compareTo(BigDecimal.ZERO) == 0) {
+                if (latestTicket != null && latestTicket.getStudentRefund() != null && latestTicket.getStudentRefund().compareTo(BigDecimal.ZERO) > 0) {
+                    rAmt = latestTicket.getStudentRefund();
+                } else if (anyResolvedTicket != null && anyResolvedTicket.getStudentRefund() != null && anyResolvedTicket.getStudentRefund().compareTo(BigDecimal.ZERO) > 0) {
+                    rAmt = anyResolvedTicket.getStudentRefund();
+                } else if (acceptedProposal != null && acceptedProposal.getStudentRefund() != null) {
+                    rAmt = acceptedProposal.getStudentRefund();
+                } else {
+                    rAmt = BigDecimal.ZERO;
+                }
+            }
+            studentRefundAmount = rAmt;
+            if (studentRefundAmount.compareTo(BigDecimal.ZERO) > 0) {
+                studentRefundStatus = ledgerProgressStatus(latestRefund, "REFUNDED", "PROCESSING");
+            } else {
+                studentRefundStatus = "NO_REFUND";
+            }
         } else if (activeTicket != null && activeTicket.getTicketType() == MentoringTicketType.SETTLEMENT) {
             mentorEarnedAmount = activeTicket.getMentorAmount() != null ? activeTicket.getMentorAmount() : BigDecimal.ZERO;
             mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
             mentorPayoutStatus = mentorEarnedAmount.compareTo(BigDecimal.ZERO) > 0
-                    ? ledgerProgressStatus(latestPayout, "PAID", "PENDING_ESCROW")
+                    ? ledgerProgressStatus(latestPayout, "PAID", "PROCESSING")
                     : "CANCELLED";
             studentRefundAmount = activeTicket.getStudentRefund() != null ? activeTicket.getStudentRefund() : BigDecimal.ZERO;
             studentRefundStatus = studentRefundAmount.compareTo(BigDecimal.ZERO) > 0
-                    ? ledgerProgressStatus(latestRefund, "REFUNDED", "PENDING_REFUND")
+                    ? ledgerProgressStatus(latestRefund, "REFUNDED", "PROCESSING")
                     : "NO_REFUND";
         } else if (task.getStatus() == MentoringTaskStatus.COMPLETED) {
             mentorEarnedAmount = totalAgreedPrice;
@@ -626,7 +724,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
             mentorPayoutStatus = "CANCELLED";
             studentRefundAmount = studentTotalPaid;
             studentRefundStatus = studentRefundAmount.compareTo(BigDecimal.ZERO) > 0
-                    ? ledgerProgressStatus(latestRefund, "REFUNDED", "PENDING_REFUND")
+                    ? ledgerProgressStatus(latestRefund, "REFUNDED", "PROCESSING")
                     : "NO_REFUND";
         } else {
             mentorEarnedAmount = BigDecimal.ZERO;
@@ -635,6 +733,14 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
             studentRefundAmount = BigDecimal.ZERO;
             studentRefundStatus = "NO_REFUND";
         }
+
+        boolean canPingAdminFinance = task.getStatus() == MentoringTaskStatus.RESOLVED
+                || task.getStatus() == MentoringTaskStatus.DISPUTED
+                || task.getStatus() == MentoringTaskStatus.COMPLETED
+                || task.getStatus() == MentoringTaskStatus.CANCELLED
+                || studentRefundAmount.compareTo(BigDecimal.ZERO) > 0
+                || mentorEarnedAmount.compareTo(BigDecimal.ZERO) > 0
+                || hasFailedLedger;
 
         String platformFeeNote = "Hệ thống AlumNect áp dụng cơ chế ký quỹ Escrow bảo đảm 100% dòng tiền giao dịch. Toàn bộ tiền được bảo vệ an toàn cho tới khi hoàn thành hoặc có phán quyết trọng tài từ Ban Quản Trị.";
 
@@ -666,7 +772,12 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .amendmentCount(amendmentCount)
                 .totalAdditionalAmount(totalAdditionalAmount)
                 .activeTicket(activeTicket)
+                .latestTicket(latestTicket)
                 .isDisputed(isDisputed)
+                .resolutionDecision(resolutionDecision)
+                .resolutionNote(resolutionNote)
+                .canPingAdminFinance(canPingAdminFinance)
+                .hasFailedLedger(hasFailedLedger)
                 .originalPrice(originalPrice)
                 .totalAgreedPrice(totalAgreedPrice)
                 .studentTotalPaid(studentTotalPaid)
@@ -680,5 +791,69 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .student(student)
                 .mentor(mentor)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void pingAdminFinance(Long currentUserId, Long taskId, com.alumnect.alumnect_backend.dto.request.mentorship.PingAdminFinanceRequest request) {
+        log.info("Người dùng id={} yêu cầu ping Admin về sự cố dòng tiền cho Task id={}: {}", currentUserId, taskId, request.getReason());
+
+        MentoringTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Mentoring Task với ID: " + taskId));
+
+        verifyParticipant(task, currentUserId);
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + currentUserId));
+
+        boolean isStudent = Objects.equals(task.getStudent().getId(), currentUserId);
+        String senderRole = isStudent ? "Học viên" : "Mentor";
+        String displayName = currentUser.getProfile() != null && currentUser.getProfile().getFullName() != null
+                ? currentUser.getProfile().getFullName() : currentUser.getEmail();
+
+        // 1. Tạo Ticket tranh chấp dòng tiền
+        String datePart = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now());
+        String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        String ticketCode = "FN-" + datePart + "-" + randomSuffix;
+
+        MentoringDisputeTicket ticket = MentoringDisputeTicket.builder()
+                .ticketCode(ticketCode)
+                .ticketType(MentoringTicketType.DISPUTE)
+                .task(task)
+                .conversation(task.getConversation())
+                .createdBy(currentUser)
+                .student(task.getStudent())
+                .mentor(task.getMentor())
+                .title("Khiếu nại dòng tiền Task #" + task.getId() + " - " + displayName)
+                .description("Phản ánh sự cố dòng tiền từ " + senderRole + ": " + request.getReason().trim())
+                .disputeReason("Khiếu nại dòng tiền: " + request.getReason().trim())
+                .desiredSolution("Kiểm tra và giải quyết lại giao dịch hoàn tiền/thù lao cho Task #" + task.getId())
+                .mentorAmount(BigDecimal.ZERO)
+                .studentRefund(BigDecimal.ZERO)
+                .totalAmount(task.getAgreedPrice() != null ? task.getAgreedPrice() : BigDecimal.ZERO)
+                .status(MentoringTicketStatus.OPEN)
+                .build();
+        MentoringDisputeTicket savedTicket = ticketRepository.save(ticket);
+
+        // 2. Gửi tin nhắn hệ thống realtime vào Chat for Task
+        if (task.getConversation() != null) {
+            String msg = String.format("⚠️ [Hệ thống] %s đã gửi phản ánh sự cố dòng tiền (#%s) tới Ban Quản Trị:\n• Nội dung: %s\nBan Quản Trị đã nhận được thông báo đối soát trong Sổ quỹ Mentoring.",
+                    senderRole, savedTicket.getTicketCode(), request.getReason().trim());
+            mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
+        }
+
+        // 3. Gửi thông báo đến toàn bộ các Admin đang hoạt động
+        try {
+            List<User> admins = userRepository.findByRoleNameAndAccountStatus("ADMIN", AccountStatus.ACTIVE);
+            for (User admin : admins) {
+                notificationService.sendMentoringTaskEventNotification(
+                        currentUser, admin, task,
+                        "FINANCE_DISPUTE_PING", String.valueOf(task.getId()),
+                        "⚠️ Sự cố dòng tiền Task #" + task.getId(),
+                        senderRole + " (" + displayName + ") báo cáo: " + request.getReason().trim() + ". Bấm để đối soát Sổ quỹ."
+                );
+            }
+        } catch (Exception ex) {
+            log.error("Lỗi gửi thông báo cho Admin: {}", ex.getMessage());
+        }
     }
 }
