@@ -396,9 +396,9 @@ export function Tag({ label, tone = 'neutral', icon, style }: { label: string; t
   }
   const [bg, fg] = map[tone]
   return (
-    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, alignSelf: 'flex-start', backgroundColor: bg, borderRadius: radius.sm, paddingHorizontal: 8, paddingVertical: 4 }, style]}>
+    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0, alignSelf: 'flex-start', backgroundColor: bg, borderRadius: radius.sm, paddingHorizontal: 8, paddingVertical: 4 }, style]}>
       {icon}
-      <Text style={{ color: fg, fontSize: 12, lineHeight: 17, fontWeight: '500', flexShrink: 1 }}>{label}</Text>
+      <Text numberOfLines={1} style={{ color: fg, fontSize: 12, lineHeight: 17, fontWeight: '500' }}>{label}</Text>
     </View>
   )
 }

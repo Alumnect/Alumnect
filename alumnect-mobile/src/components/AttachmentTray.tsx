@@ -9,7 +9,13 @@ import type { OutgoingAttachment } from '@/api/chat'
 /** Tệp đã tải lên, chờ gửi (giữ uri cục bộ để xem trước nhanh). */
 export type PendingAttachment = OutgoingAttachment & { localUri?: string }
 /** Tệp đang tải lên. */
-export type UploadingAttachment = { key: string; name: string; kind: 'IMAGE' | 'VIDEO' | 'FILE'; localUri?: string }
+export type UploadingAttachment = {
+  key: string
+  name: string
+  kind: 'IMAGE' | 'VIDEO' | 'FILE'
+  localUri?: string
+  status?: 'uploading' | 'queued'
+}
 
 export const MAX_ATTACHMENTS = 10
 const TILE = 78
@@ -78,7 +84,7 @@ export function AttachmentTray({
   onRemove: (url: string) => void
   onClear: () => void
   onAdd: () => void
-  onPreview: (url: string) => void
+  onPreview: (item: { url: string; mediaType?: string; title?: string }) => void
 }) {
   const t = useTheme()
   const total = pending.length + uploading.length
@@ -94,7 +100,11 @@ export function AttachmentTray({
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 8 }}>
         <Txt size={12.5} weight="700" style={{ flex: 1 }} numberOfLines={1}>
           Đính kèm ({total}/{MAX_ATTACHMENTS}){summary ? <Txt size={12} muted weight="500">{`  ${summary}`}</Txt> : null}
-          {uploading.length ? <Txt size={12} muted weight="500">{`  · đang tải ${uploading.length}…`}</Txt> : null}
+          {uploading.length ? (
+            <Txt size={12} muted weight="500">
+              {`  · đang tải ${uploading.filter((u) => u.status !== 'queued').length || 1}/${uploading.length}…`}
+            </Txt>
+          ) : null}
         </Txt>
         <Pressable accessibilityRole="button" disabled={disabled} onPress={onClear} hitSlop={8} style={{ paddingVertical: 4, paddingHorizontal: 6 }}>
           <Txt size={12.5} weight="600" color={t.danger}>Xoá tất cả</Txt>
@@ -104,30 +114,43 @@ export function AttachmentTray({
         {pending.map((p) => (
           <TileFrame key={p.url} onRemove={() => onRemove(p.url)} removeLabel={`Bỏ ${p.fileName ?? 'tệp'}`} disabled={disabled}>
             {p.mediaType === 'IMAGE' ? (
-              <Pressable style={{ flex: 1 }} accessibilityLabel="Xem ảnh" onPress={() => onPreview(p.url)}>
+              <Pressable style={{ flex: 1 }} accessibilityLabel="Xem ảnh" onPress={() => onPreview({ url: p.localUri || p.url, mediaType: 'IMAGE', title: p.fileName })}>
                 <Image source={{ uri: p.localUri || p.url }} style={{ flex: 1 }} contentFit="cover" />
               </Pressable>
             ) : p.mediaType === 'VIDEO' ? (
-              <View style={{ flex: 1, backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', padding: 4 }}>
+              <Pressable
+                style={{ flex: 1, backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', padding: 4 }}
+                accessibilityLabel="Xem video"
+                onPress={() => onPreview({ url: p.localUri || p.url, mediaType: 'VIDEO', title: p.fileName })}
+              >
                 <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
                   <Play size={14} color="#FFFFFF" weight="fill" />
                 </View>
                 <Txt size={9} color="#FFFFFF" numberOfLines={1} style={{ marginTop: 4, maxWidth: TILE - 16 }}>{p.fileName || 'Video'}</Txt>
-              </View>
+              </Pressable>
             ) : (
               <DocFace name={p.fileName} url={p.url} size={p.fileSize} />
             )}
           </TileFrame>
         ))}
-        {uploading.map((u) => (
-          <TileFrame key={u.key}>
-            {u.kind === 'IMAGE' && u.localUri ? <Image source={{ uri: u.localUri }} style={{ position: 'absolute', inset: 0, opacity: 0.45 } as object} contentFit="cover" /> : null}
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 4 }}>
-              <ActivityIndicator size="small" color={t.primary} />
-              <Txt size={9} muted numberOfLines={1} style={{ marginTop: 4, maxWidth: TILE - 16 }}>{u.name}</Txt>
-            </View>
-          </TileFrame>
-        ))}
+        {uploading.map((u) => {
+          const isQueued = u.status === 'queued'
+          return (
+            <TileFrame key={u.key}>
+              {u.kind === 'IMAGE' && u.localUri ? <Image source={{ uri: u.localUri }} style={{ position: 'absolute', inset: 0, opacity: 0.35 } as object} contentFit="cover" /> : null}
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 4 }}>
+                {isQueued ? (
+                  <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.isDark ? '#333333' : '#E0E3E8', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
+                    <Txt size={9} weight="700" color={t.textMuted}>Chờ</Txt>
+                  </View>
+                ) : (
+                  <ActivityIndicator size="small" color={t.primary} />
+                )}
+                <Txt size={9} muted numberOfLines={1} style={{ marginTop: 3, maxWidth: TILE - 16 }}>{u.name}</Txt>
+              </View>
+            </TileFrame>
+          )
+        })}
         {total < MAX_ATTACHMENTS ? (
           <View style={{ width: TILE, height: TILE, paddingTop: 6, paddingRight: 6 }}>
             <Pressable

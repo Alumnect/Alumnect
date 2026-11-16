@@ -38,12 +38,13 @@ import { AnimatedFilterChip, FeedCategoryLogo } from './FeedNavIcons'
 import { DateField } from '@/components/DateField'
 import { PlaceField } from './PlaceField'
 import { PostAiStudioPanel } from './PostAiStudioPanel'
+import { MediaPreviewModal, type MediaPreviewItem } from './MediaPreviewModal'
 import { Avatar, Button, Input, Screen, Txt } from './ui'
 import { Header } from './Header'
 import { feedApi } from '@/api/feed'
 import type { CreatePostInput, Post, PostType } from '@/api/feed'
 import type { GeocodedPlace } from '@/lib/places'
-import { isVideoUrl, pickImage, pickVideo, uploadImage, uploadVideo } from '@/lib/upload'
+import { isVideoUrl, pickImage, pickVideo, runConcurrentPool, uploadImage, uploadVideo } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 import { useAuthStore } from '@/store/authStore'
 import { radius, useTheme } from '@/theme'
@@ -169,6 +170,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
     existing?.images.length ? existing.images : existing?.image ? [existing.image] : []
   )
   const [previewMap, setPreviewMap] = useState<Record<string, string>>({})
+  const [previewMedia, setPreviewMedia] = useState<MediaPreviewItem | null>(null)
   const [uploading, setUploading] = useState(false)
   const [draftSaved, setDraftSaved] = useState(false)
 
@@ -247,25 +249,32 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
     const picked = await pickImage(true)
     if (!picked.length) return
     setUploading(true)
-    try {
-      const remaining = 10 - media.length
-      const toUpload = picked.slice(0, remaining)
-      const uploaded: { url: string; localUri: string }[] = []
-      for (const p of toUpload) {
+    const remaining = 10 - media.length
+    const toUpload = picked.slice(0, remaining)
+    let addedCount = 0
+
+    await runConcurrentPool(
+      toUpload,
+      async (p) => {
         const url = await uploadImage(p, 'posts')
-        uploaded.push({ url, localUri: p.uri })
+        return { url, localUri: p.uri, name: p.name }
+      },
+      {
+        concurrency: 2,
+        onSuccess: ({ url, localUri }) => {
+          setPreviewMap((prev) => ({ ...prev, [url]: localUri }))
+          setMedia((m) => [...m, url])
+          addedCount++
+        },
+        onError: (err, p) => {
+          toast.error(`${p.name}: ${errMsg(err)}`)
+        },
       }
-      setPreviewMap((prev) => {
-        const next = { ...prev }
-        uploaded.forEach((u) => { next[u.url] = u.localUri })
-        return next
-      })
-      setMedia((m) => [...m, ...uploaded.map((u) => u.url)])
+    )
+
+    setUploading(false)
+    if (addedCount > 0) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { })
-    } catch (e) {
-      toast.error(errMsg(e))
-    } finally {
-      setUploading(false)
     }
   }
 
@@ -274,35 +283,42 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
       toast.info('Tối đa 10 hình ảnh hoặc video cho một bài viết.')
       return
     }
-    try {
-      const picked = await pickVideo(true)
-      if (!picked.length) return
-      setUploading(true)
-      const remaining = 10 - media.length
-      const toUpload = picked.slice(0, remaining)
-      const uploaded: { url: string; localUri: string }[] = []
-      for (const item of toUpload) {
-        if (item.size && item.size > 100 * 1024 * 1024) {
-          toast.error(`Video "${item.name}" vượt quá giới hạn 100MB.`)
-          continue
-        }
+    const picked = await pickVideo(true)
+    if (!picked.length) return
+    setUploading(true)
+    const remaining = 10 - media.length
+    const toUpload = picked.slice(0, remaining).filter((item) => {
+      if (item.size && item.size > 100 * 1024 * 1024) {
+        toast.error(`Video "${item.name}" vượt quá giới hạn 100MB.`)
+        return false
+      }
+      return true
+    })
+    let addedCount = 0
+
+    await runConcurrentPool(
+      toUpload,
+      async (item) => {
         const url = await uploadVideo(item, 'posts')
-        uploaded.push({ url, localUri: item.uri })
+        return { url, localUri: item.uri, name: item.name }
+      },
+      {
+        concurrency: 2,
+        onSuccess: ({ url, localUri }) => {
+          setPreviewMap((prev) => ({ ...prev, [url]: localUri }))
+          setMedia((m) => [...m, url])
+          addedCount++
+        },
+        onError: (err, item) => {
+          toast.error(`${item.name}: ${errMsg(err)}`)
+        },
       }
-      if (uploaded.length > 0) {
-        setPreviewMap((prev) => {
-          const next = { ...prev }
-          uploaded.forEach((u) => { next[u.url] = u.localUri })
-          return next
-        })
-        setMedia((m) => [...m, ...uploaded.map((u) => u.url)])
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { })
-        toast.success(`Đã đính kèm ${uploaded.length} video.`)
-      }
-    } catch (e) {
-      toast.error(errMsg(e))
-    } finally {
-      setUploading(false)
+    )
+
+    setUploading(false)
+    if (addedCount > 0) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { })
+      toast.success(`Đã đính kèm ${addedCount} video.`)
     }
   }
 
@@ -582,17 +598,28 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
                         backgroundColor: isVid ? '#090d16' : theme.surface,
                       }}
                     >
-                      {isVid ? (
-                        <VideoPreviewTile uri={displayUri} />
-                      ) : (
-                        <Image
-                          source={{ uri: displayUri }}
-                          style={{ width: '100%', height: '100%' }}
-                          contentFit="cover"
-                          cachePolicy="memory-disk"
-                          transition={150}
-                        />
-                      )}
+                      <Pressable
+                        style={{ width: '100%', height: '100%' }}
+                        onPress={() =>
+                          setPreviewMedia({
+                            url: displayUri,
+                            title: `Phương tiện ${idx + 1}/${media.length}`,
+                            mediaType: isVid ? 'VIDEO' : 'IMAGE',
+                          })
+                        }
+                      >
+                        {isVid ? (
+                          <VideoPreviewTile uri={displayUri} />
+                        ) : (
+                          <Image
+                            source={{ uri: displayUri }}
+                            style={{ width: '100%', height: '100%' }}
+                            contentFit="cover"
+                            cachePolicy="memory-disk"
+                            transition={150}
+                          />
+                        )}
+                      </Pressable>
                       <Pressable
                         onPress={() => removeImage(uri)}
                         style={({ pressed }) => ({
@@ -783,7 +810,7 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 10 }}>
                 <ActivityIndicator size="small" color={theme.primary} />
                 <Text style={{ fontSize: 12, color: theme.primary, fontWeight: '500' }}>
-                  Đang xử lý và tải phương tiện lên máy chủ...
+                  Đang tải lên...
                 </Text>
               </View>
             )}
@@ -1158,6 +1185,8 @@ export function PostForm({ existing, initialType }: { existing?: Post; initialTy
           </Text>
         </View>
       </View>
+
+      <MediaPreviewModal media={previewMedia} onClose={() => setPreviewMedia(null)} />
     </Screen>
   )
 }

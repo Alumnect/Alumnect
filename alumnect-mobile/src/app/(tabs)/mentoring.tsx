@@ -170,7 +170,7 @@ export default function MentoringTab() {
   ]
 
   const handleSelectField = (fieldId: number | undefined) => {
-    Haptics.selectionAsync()
+    Haptics.selectionAsync().catch(() => {})
     setSelectedFieldId(fieldId)
   }
 
@@ -183,7 +183,7 @@ export default function MentoringTab() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <MotionPressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
               setUtilitySheet(true)
             }}
             accessibilityRole="button"
@@ -201,7 +201,7 @@ export default function MentoringTab() {
 
           <MotionPressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
               router.push('/mentoring/messages')
             }}
             accessibilityRole="button"
@@ -257,7 +257,7 @@ export default function MentoringTab() {
                     <MotionPressable
                       key={s.key}
                       onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
                         router.push(s.href as never)
                       }}
                       style={[
@@ -318,7 +318,7 @@ export default function MentoringTab() {
                     </View>
                     <MotionPressable
                       onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
                         router.push('/mentoring/rankings')
                       }}
                       style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
@@ -697,7 +697,7 @@ function UtilityRow({
   return (
     <MotionPressable
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
         onPress()
       }}
       style={[

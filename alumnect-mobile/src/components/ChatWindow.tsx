@@ -29,13 +29,14 @@ import { DealHistorySheet, DealTicketCard, ReasonSheet, TaskActionPanel } from '
 import { PaymentSheet } from './PaymentSheet'
 import { AttachmentTray, MAX_ATTACHMENTS } from './AttachmentTray'
 import type { PendingAttachment, UploadingAttachment } from './AttachmentTray'
-import { pickImage, uploadFile, uploadImage } from '@/lib/upload'
+import { MediaPreviewModal, type MediaPreviewItem } from './MediaPreviewModal'
+import { pickChatMedia, pickImage, runConcurrentPool, uploadFile, uploadImage } from '@/lib/upload'
 import { toast, errMsg } from '@/lib/toast'
 
 const WebView = RNWebView as unknown as React.ComponentType<any>
 
 function isVideoAttachment(a: { mediaType?: string; url?: string; fileName?: string }) {
-  if (a.mediaType === 'VIDEO') return true
+  if (a.mediaType?.toUpperCase() === 'VIDEO') return true
   const raw = `${a.url ?? ''} ${a.fileName ?? ''}`.split('?')[0]
   return /\.(mp4|mov|webm|mkv|avi|m4v)$/i.test(raw)
 }
@@ -221,7 +222,7 @@ function ChatVideoPlayer({ url, style }: { url: string; style?: object }) {
 }
 
 function isImageAttachment(a: { mediaType?: string; url?: string; fileName?: string }) {
-  if (a.mediaType === 'IMAGE') return true
+  if (a.mediaType?.toUpperCase() === 'IMAGE') return true
   const raw = `${a.fileName || a.url || ''}`.split('?')[0]
   return /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/i.test(raw)
 }
@@ -293,12 +294,13 @@ const MessageBubble = React.memo(function MessageBubble({ item, mine, isGroupCha
           <>
             {item.attachments?.map((a, i) => {
               const gap = { marginBottom: textBody || i < (item.attachments?.length ?? 0) - 1 ? 6 : 0 }
+              const attachKey = a.id ? `att-${a.id}` : `att-${i}-${a.url}`
               return isVideoAttachment(a) ? (
-                <ChatVideoPlayer key={a.id} url={a.url} style={gap} />
+                <ChatVideoPlayer key={attachKey} url={a.url} style={gap} />
               ) : isImageAttachment(a) ? (
-                <ChatImage key={a.id} url={a.url} mine={mine} onOpen={() => onOpenImage(a.url)} style={gap} />
+                <ChatImage key={attachKey} url={a.url} mine={mine} onOpen={() => onOpenImage(a.url)} style={gap} />
               ) : (
-                <View key={a.id} style={gap}>
+                <View key={attachKey} style={gap}>
                   <ChatFileCard name={a.fileName} url={a.url} mine={mine} />
                 </View>
               )
@@ -414,7 +416,7 @@ export function ChatWindow({
   const [showScrollBottom, setShowScrollBottom] = useState(false)
   const [actionMenuVisible, setActionMenuVisible] = useState(false)
   const [historyVisible, setHistoryVisible] = useState(false)
-  const [viewerUrl, setViewerUrl] = useState<string | null>(null)
+  const [viewerMedia, setViewerMedia] = useState<MediaPreviewItem | null>(null)
   const listRef = useRef<FlashListRef<ChatItem>>(null)
   const isAtBottomRef = useRef(true)
   const prevLatestMsgIdRef = useRef<number | null>(null)
@@ -577,34 +579,62 @@ export function ChatWindow({
     send.mutate({ content: content || undefined, attachments: pending.map(({ localUri: _l, ...a }) => a) })
   }
   const slotsLeft = () => MAX_ATTACHMENTS - pending.length - uploadingItems.length
-  /** Tải nhiều tệp song song; mỗi tệp có ô "đang tải" riêng, lỗi tệp nào báo tệp đó. */
-  const uploadMany = async <T,>(items: T[], describe: (it: T) => UploadingAttachment, run: (it: T) => Promise<PendingAttachment>) => {
+  /** Tải nhiều tệp theo hàng đợi song song có kiểm soát (Concurrency = 2); mỗi tệp có ô "đang tải" riêng, lỗi tệp nào báo tệp đó và không làm gián đoạn các tệp khác. */
+  const uploadMany = async <T,>(
+    items: T[],
+    describe: (it: T) => UploadingAttachment,
+    run: (it: T) => Promise<PendingAttachment>,
+  ) => {
     const left = slotsLeft()
     if (items.length > left) toast.error(`Chỉ gửi tối đa ${MAX_ATTACHMENTS} tệp mỗi tin nhắn.`)
-    const batch = items.slice(0, Math.max(0, left)).map((it, i) => ({ it, meta: { ...describe(it), key: `${Date.now()}-${i}` } }))
+    const batch = items.slice(0, Math.max(0, left)).map((it, i) => ({
+      it,
+      meta: {
+        ...describe(it),
+        key: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`,
+        status: (i < 2 ? 'uploading' : 'queued') as 'uploading' | 'queued',
+      },
+    }))
     if (!batch.length) return
     setUploadingItems((cur) => [...cur, ...batch.map((b) => b.meta)])
-    await Promise.all(
-      batch.map(async ({ it, meta }) => {
-        try {
-          const done = await run(it)
+
+    await runConcurrentPool(
+      batch,
+      async ({ it, meta }) => {
+        setUploadingItems((cur) =>
+          cur.map((u) => (u.key === meta.key ? { ...u, status: 'uploading' } : u)),
+        )
+        const done = await run(it)
+        return { done, meta }
+      },
+      {
+        concurrency: 2,
+        onSuccess: ({ done, meta }) => {
           setPending((files) => [...files, done])
-        } catch (e) {
-          toast.error(`${meta.name}: ${errMsg(e)}`)
-        } finally {
           setUploadingItems((cur) => cur.filter((u) => u.key !== meta.key))
-        }
-      }),
+        },
+        onError: (e, { meta }) => {
+          toast.error(`${meta.name}: ${errMsg(e)}`)
+          setUploadingItems((cur) => cur.filter((u) => u.key !== meta.key))
+        },
+      }
     )
   }
-  const sendImage = async () => {
+  const sendMedia = async () => {
     if (!canSend || send.isPending || slotsLeft() <= 0) return
     try {
-      const imgs = await pickImage(true)
+      const mediaList = await pickChatMedia(true)
       await uploadMany(
-        imgs,
-        (img) => ({ key: '', name: img.name, kind: 'IMAGE', localUri: img.uri }),
-        async (img) => ({ mediaType: 'IMAGE', url: await uploadImage(img, 'common'), fileName: img.name, localUri: img.uri }),
+        mediaList,
+        (m) => ({ key: '', name: m.name, kind: m.kind, localUri: m.uri }),
+        async (m) => {
+          if (m.kind === 'VIDEO') {
+            const uploaded = await uploadFile(m, 'messages')
+            return { mediaType: 'VIDEO', url: uploaded.url, fileName: m.name, fileSize: m.size, localUri: m.uri }
+          }
+          const url = await uploadImage(m, 'messages')
+          return { mediaType: 'IMAGE', url, fileName: m.name, localUri: m.uri }
+        },
       )
     } catch (e) {
       toast.error(errMsg(e))
@@ -614,9 +644,21 @@ export function ChatWindow({
     if (!canSend || send.isPending || slotsLeft() <= 0) return
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        copyToCacheDirectory: true,
+        copyToCacheDirectory: false,
         multiple: true,
-        type: ['image/*', 'video/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/zip', 'text/*'],
+        type: [
+          'image/*',
+          'video/*',
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-powerpoint',
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          'application/zip',
+          'text/*',
+        ],
       })
       if (result.canceled) return
       const kindOf = (f: DocumentPicker.DocumentPickerAsset): UploadingAttachment['kind'] =>
@@ -625,7 +667,15 @@ export function ChatWindow({
       await uploadMany(
         result.assets,
         (f) => ({ key: '', name: f.name, kind: kindOf(f), localUri: f.uri }),
-        async (f) => ({ ...(await uploadFile(f)), mediaType: kindOf(f), localUri: f.uri }),
+        async (f) => {
+          const kind = kindOf(f)
+          if (kind === 'IMAGE') {
+            const url = await uploadImage({ uri: f.uri, name: f.name, mimeType: f.mimeType }, 'messages')
+            return { mediaType: 'IMAGE', url, fileName: f.name, fileSize: f.size, localUri: f.uri }
+          }
+          const uploaded = await uploadFile(f, 'messages')
+          return { ...uploaded, mediaType: kind, localUri: f.uri }
+        },
       )
     } catch (e) { toast.error(errMsg(e)) }
   }
@@ -930,7 +980,7 @@ export function ChatWindow({
                   grouped={grouped}
                   showTime={timeId === item.id}
                   onToggleTime={() => setTimeId(timeId === item.id ? null : item.id)}
-                  onOpenImage={setViewerUrl}
+                  onOpenImage={(url) => setViewerMedia({ url, mediaType: 'IMAGE' })}
                 />
               </View>
             )
@@ -974,7 +1024,7 @@ export function ChatWindow({
           onRemove={(url) => setPending((files) => files.filter((f) => f.url !== url))}
           onClear={() => setPending([])}
           onAdd={() => void sendFile()}
-          onPreview={setViewerUrl}
+          onPreview={(item) => setViewerMedia(item)}
         />
         <View
           style={{
@@ -991,10 +1041,10 @@ export function ChatWindow({
           }}
         >
           <MotionPressable
-            onPress={() => void sendImage()}
+            onPress={() => void sendMedia()}
             disabled={!canSend || uploading || send.isPending}
             accessibilityRole="button"
-            accessibilityLabel="Chọn ảnh"
+            accessibilityLabel="Chọn ảnh hoặc video"
             style={{
               width: 38,
               height: 38,
@@ -1273,7 +1323,7 @@ export function ChatWindow({
         onConfirm={(note) => void submitDealDialog(note)}
         onClose={() => setDealDialog(null)}
       />
-      <ImageViewerModal url={viewerUrl} onClose={() => setViewerUrl(null)} />
+      <MediaPreviewModal media={viewerMedia} onClose={() => setViewerMedia(null)} />
       <PaymentSheet
         checkout={checkout}
         poll={taskApi.paymentStatus}

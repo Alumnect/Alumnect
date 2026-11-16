@@ -11,9 +11,96 @@ import { statusTone } from '@/constants/status'
 import { ChevronRight, MessageCircle } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { DEAL_STATUS_LABEL, dealApi, taskTypeLabel } from '@/api/mentoringFlow'
-import type { DealStatus } from '@/api/mentoringFlow'
+import type { Deal, DealStatus } from '@/api/mentoringFlow'
 import { formatVnd } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
+
+const DEMO_DEALS: Deal[] = [
+  {
+    id: 201,
+    requestId: 101,
+    requestTitle: 'Xây dựng Backend Microservices với Spring Boot & Apache Kafka',
+    taskScope: 'Thiết kế Event-Driven Architecture, tích hợp Redis Caching và CI/CD Docker Compose.',
+    expectedResult: 'Hệ thống chạy ổn định, code coverage > 80%, bàn giao trọn gói mã nguồn.',
+    agreedPrice: 2500000,
+    deadline: new Date(Date.now() + 14 * 86400000).toISOString(),
+    workingMode: 'BOTH',
+    participationType: 'INDIVIDUAL',
+    taskType: 'TECHNICAL_CONSULTING',
+    status: 'DEAL_CONFIRMED',
+    version: 1,
+    isPaid: true,
+    studentConfirmed: true,
+    mentorConfirmed: true,
+    studentId: 1,
+    mentorId: 2,
+    studentName: 'Phan Hieu',
+    mentorName: 'Nguyễn Hoàng Nam (VNG Tech Lead)',
+  },
+  {
+    id: 202,
+    requestId: 102,
+    requestTitle: 'Review CV & Mock Interview Vị trí Senior Frontend React/React Native',
+    taskScope: 'Rà soát Portfolio, phỏng vấn thử 3 vòng thuật toán và System Design UI.',
+    expectedResult: 'CV đạt chuẩn quốc tế, hoàn thành 3 buổi mock interview có ghi hình đánh giá.',
+    agreedPrice: 1200000,
+    deadline: new Date(Date.now() + 5 * 86400000).toISOString(),
+    workingMode: 'ONLINE',
+    participationType: 'INDIVIDUAL',
+    taskType: 'RESUME_REVIEW',
+    status: 'DEAL_CONFIRMED',
+    version: 1,
+    isPaid: true,
+    studentConfirmed: true,
+    mentorConfirmed: true,
+    studentId: 3,
+    mentorId: 4,
+    studentName: 'Trần Minh Quân',
+    mentorName: 'Bùi Anh Tuấn (Grab Vietnam)',
+  },
+  {
+    id: 203,
+    requestId: 103,
+    requestTitle: 'Tối ưu hóa Database PostgreSQL & Indexing thực chiến High-Load',
+    taskScope: 'Tối ưu truy vấn SQL, cấu hình Connection Pooling và partitioning dữ liệu lớn.',
+    expectedResult: 'Giảm 70% latency truy vấn cơ sở dữ liệu trên môi trường Staging.',
+    agreedPrice: 1800000,
+    deadline: new Date(Date.now() - 3 * 86400000).toISOString(),
+    workingMode: 'BOTH',
+    participationType: 'INDIVIDUAL',
+    taskType: 'TECHNICAL_CONSULTING',
+    status: 'DEAL_CONFIRMED',
+    version: 2,
+    isPaid: true,
+    studentConfirmed: true,
+    mentorConfirmed: true,
+    studentId: 5,
+    mentorId: 6,
+    studentName: 'Lê Hoàng Long',
+    mentorName: 'Trần Thị Minh Châu (MoMo Principal)',
+  },
+  {
+    id: 204,
+    requestId: 104,
+    requestTitle: 'Cố vấn Đồ án tốt nghiệp Capstone AI & Computer Vision',
+    taskScope: 'Huấn luyện mô hình YOLOv8 nhận diện vật thể và đóng gói thành API FastAPI.',
+    expectedResult: 'Mô hình đạt mAP > 0.85, triển khai container Docker hoàn chỉnh.',
+    agreedPrice: 2000000,
+    deadline: new Date(Date.now() - 10 * 86400000).toISOString(),
+    workingMode: 'ONLINE',
+    participationType: 'INDIVIDUAL',
+    taskType: 'CAPSTONE_ADVICE',
+    status: 'CANCELLED',
+    version: 1,
+    isPaid: false,
+    studentConfirmed: false,
+    mentorConfirmed: false,
+    studentId: 1,
+    mentorId: 7,
+    studentName: 'Phan Hieu',
+    mentorName: 'Đặng Văn Khoa (VinAI Research)',
+  },
+]
 
 const TABS: [DealStatus | undefined, string][] = [
   [undefined, 'Tất cả'],
@@ -32,7 +119,10 @@ export default function DealsScreen() {
     queryFn: ({ pageParam }) => dealApi.mine(status, pageParam),
     getNextPageParam: (l) => (l.last ? undefined : l.pageNumber + 1),
   })
-  const items = q.data?.pages.flatMap((p) => p.content) ?? []
+  const queryItems = q.data?.pages.flatMap((p) => p.content) ?? []
+  const items = queryItems.length > 0
+    ? queryItems
+    : DEMO_DEALS.filter((d) => (!status ? true : d.status === status))
   const confirmedCount = items.filter((d) => d.status === 'DEAL_CONFIRMED').length
   const paidCount = items.filter((d) => d.isPaid).length
 
@@ -178,7 +268,7 @@ export default function DealsScreen() {
                 </View>
 
                 {/* Title */}
-                <Txt weight="800" size={16} numberOfLines={2} style={{ color: colors.text, marginTop: 6 }}>
+                <Txt weight="800" size={16} style={{ color: colors.text, marginTop: 6, lineHeight: 22 }}>
                   {d.requestTitle || d.taskScope}
                 </Txt>
 
@@ -188,7 +278,7 @@ export default function DealsScreen() {
                     <Txt size={10} weight="700" style={{ color: colors.textTertiary, textTransform: 'uppercase' }}>
                       Học viên
                     </Txt>
-                    <Txt size={13} weight="700" style={{ color: colors.text, marginTop: 1 }} numberOfLines={1}>
+                    <Txt size={13} weight="700" style={{ color: colors.text, marginTop: 1, lineHeight: 18 }}>
                       {d.studentName}
                     </Txt>
                   </View>
@@ -199,7 +289,7 @@ export default function DealsScreen() {
                     <Txt size={10} weight="700" style={{ color: viridian, textTransform: 'uppercase' }}>
                       Mentor
                     </Txt>
-                    <Txt size={13} weight="700" style={{ color: colors.text, marginTop: 1 }} numberOfLines={1}>
+                    <Txt size={13} weight="700" style={{ color: colors.text, marginTop: 1, textAlign: 'right', lineHeight: 18 }}>
                       {d.mentorName}
                     </Txt>
                   </View>

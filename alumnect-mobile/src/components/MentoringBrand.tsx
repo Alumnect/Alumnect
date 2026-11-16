@@ -64,7 +64,7 @@ export function MentorStoryRing({
   const ringSize = size + 7
 
   const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     onPress?.()
   }
 
