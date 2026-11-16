@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native'
 import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams } from 'expo-router'
@@ -18,6 +18,7 @@ import { errMsg, toast } from '@/lib/toast'
 /** Trạng thái hoàn tiền / giải ngân từ BE (MentoringTaskServiceImpl) → tiếng Việt + tông màu. */
 const MONEY_STATUS: Record<string, [string, Tone]> = {
   NO_REFUND: ['Không hoàn tiền', 'neutral'],
+  NO_PAYOUT: ['Không chi trả', 'neutral'],
   PENDING_REFUND: ['Chờ hoàn tiền', 'warning'],
   PROCESSING: ['Đang xử lý', 'info'],
   REFUNDED: ['Đã hoàn tiền', 'success'],
@@ -29,7 +30,23 @@ const MONEY_STATUS: Record<string, [string, Tone]> = {
 }
 const moneyStatus = (s?: string | null): [string, Tone] => (s ? MONEY_STATUS[s] ?? [s, 'neutral'] : ['—', 'neutral'])
 
-function Row({ label, hint, value, strong, color, tag, last }: { label: string; hint?: string; value: string; strong?: boolean; color?: string; tag?: [string, Tone]; last?: boolean }) {
+function Row({
+  label,
+  hint,
+  value,
+  strong,
+  color,
+  tag,
+  last,
+}: {
+  label: string
+  hint?: string
+  value?: string
+  strong?: boolean
+  color?: string
+  tag?: [string, Tone]
+  last?: boolean
+}) {
   const { colors } = useMentoringTheme()
   return (
     <View style={[styles.row, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSubtle }]}>
@@ -37,8 +54,12 @@ function Row({ label, hint, value, strong, color, tag, last }: { label: string; 
         <Txt size={13.5} weight={strong ? '700' : '400'} style={{ color: strong ? colors.text : colors.textSecondary }}>{label}</Txt>
         {hint ? <Txt size={11.5} style={{ color: colors.textTertiary, marginTop: 2 }}>{hint}</Txt> : null}
       </View>
-      <View style={{ alignItems: 'flex-end', gap: 4 }}>
-        <Txt size={strong ? 16 : 14} weight={strong ? '800' : '700'} style={{ color: color ?? colors.text, fontVariant: ['tabular-nums'] }}>{value}</Txt>
+      <View style={{ alignItems: 'flex-end', justifyContent: 'center', gap: 4 }}>
+        {value ? (
+          <Txt size={strong ? 16 : 14} weight={strong ? '800' : '700'} style={{ color: color ?? colors.text, fontVariant: ['tabular-nums'] }}>
+            {value}
+          </Txt>
+        ) : null}
         {tag ? <Tag label={tag[0]} tone={tag[1]} /> : null}
       </View>
     </View>
@@ -81,7 +102,12 @@ export default function TaskReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const queryClient = useQueryClient()
   const q = useQuery({ queryKey: ['mentoring-task-report', id], queryFn: () => taskApi.report(Number(id)) })
+  const qSnap = useQuery({ queryKey: ['mentoring-task-snapshot', id], queryFn: () => taskApi.settlementSnapshot(Number(id)), enabled: !!id })
+  const qTickets = useQuery({ queryKey: ['mentoring-task-tickets', id], queryFn: () => taskApi.tickets(Number(id)), enabled: !!id })
+
   const r = q.data
+  const snap = qSnap.data
+  const ticketsList = qTickets.data
 
   const [pingOpen, setPingOpen] = useState(false)
   const [reason, setReason] = useState('')
@@ -134,6 +160,58 @@ export default function TaskReportScreen() {
   const hasDispute = r.isDisputed || r.taskStatus === 'DISPUTED'
   const isResolved = r.taskStatus === 'RESOLVED' || r.latestTicket?.status === 'RESOLVED'
 
+  // Tìm ticket đã giải quyết / phân xử (nếu có)
+  const resolvedTicket = ticketsList?.find((t) => t.status === 'RESOLVED') ?? ticketsList?.[0]
+  const isSettledOrAgreed =
+    (snap?.isAgreed && snap.proposalId) ||
+    resolvedTicket?.decision === 'PARTIAL_SPLIT' ||
+    r.resolutionDecision === 'PARTIAL_SPLIT'
+
+  // Số tiền phân chia: ưu tiên từ r (nếu backend trả > 0), fallback sang snapshot và ticket
+  const mentorSplit = (r.mentorEarnedAmount && r.mentorEarnedAmount > 0)
+    ? r.mentorEarnedAmount
+    : (resolvedTicket?.mentorAmount ?? snap?.mentorAmount ?? 0)
+
+  const studentSplit = (r.studentRefundAmount && r.studentRefundAmount > 0)
+    ? r.studentRefundAmount
+    : (resolvedTicket?.studentRefund ?? snap?.studentRefund ?? 0)
+
+  // Tiêu đề & nội dung quyết định giải quyết
+  const resolutionTitle =
+    r.resolutionDecision === 'FULL_MENTOR_PAYMENT'
+      ? 'Chi trả toàn bộ thù lao cho Mentor'
+      : r.resolutionDecision === 'FULL_STUDENT_REFUND'
+        ? 'Hoàn trả toàn bộ học phí cho Học viên'
+        : (isSettledOrAgreed || (mentorSplit > 0 && studentSplit > 0))
+          ? 'Hòa giải phân chia quỹ'
+          : (r.resolutionDecision ?? 'Hòa giải phân chia quỹ')
+
+  const ticketCode = r.latestTicket?.ticketCode || resolvedTicket?.ticketCode
+  const resolutionReason = r.resolutionNote || resolvedTicket?.resolutionNote || snap?.reason
+
+  // Trạng thái tài chính 2 phía
+  let effectiveStudentStatus = r.studentRefundStatus
+  if (studentSplit > 0) {
+    if (resolvedTicket?.settlementStatus === 'SETTLED' || resolvedTicket?.studentRefundLedgerId || r.studentRefundStatus === 'REFUNDED') {
+      effectiveStudentStatus = 'REFUNDED'
+    } else if (!effectiveStudentStatus || effectiveStudentStatus === 'NO_REFUND') {
+      effectiveStudentStatus = 'PENDING_REFUND'
+    }
+  } else if (r.taskStatus === 'RESOLVED' || r.taskStatus === 'COMPLETED') {
+    effectiveStudentStatus = 'NO_REFUND'
+  }
+
+  let effectiveMentorStatus = r.mentorPayoutStatus
+  if (mentorSplit > 0) {
+    if (resolvedTicket?.settlementStatus === 'SETTLED' || resolvedTicket?.mentorPayoutLedgerId || r.mentorPayoutStatus === 'PAID') {
+      effectiveMentorStatus = 'PAID'
+    } else if (!effectiveMentorStatus || effectiveMentorStatus === 'CANCELLED') {
+      effectiveMentorStatus = 'PENDING_ESCROW'
+    }
+  } else if (r.taskStatus === 'RESOLVED' || r.taskStatus === 'CANCELLED') {
+    effectiveMentorStatus = 'NO_PAYOUT'
+  }
+
   return (
     <Screen bg={colors.bg}>
       <Header title="Báo cáo & Dòng tiền" subtitle={`Nhiệm vụ #${id}`} />
@@ -169,8 +247,8 @@ export default function TaskReportScreen() {
                   <Txt weight="800" size={14} style={{ color: '#DC2626' }}>
                     Nhiệm vụ đang tranh chấp
                   </Txt>
-                  {r.activeTicket?.ticketCode || r.latestTicket?.ticketCode ? (
-                    <Tag label={r.activeTicket?.ticketCode || r.latestTicket?.ticketCode || ''} tone="danger" />
+                  {ticketCode ? (
+                    <Tag label={ticketCode} tone="danger" />
                   ) : null}
                 </View>
                 {r.activeTicket?.disputeReason || r.latestTicket?.disputeReason ? (
@@ -193,29 +271,25 @@ export default function TaskReportScreen() {
               <View style={{ backgroundColor: isDark ? '#14261C' : '#F0FDF4', padding: 12, borderRadius: 12, borderColor: viridian, borderWidth: 1, marginTop: 4 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Txt weight="800" size={14} style={{ color: viridian }}>
-                    {r.resolutionDecision === 'FULL_MENTOR_PAYMENT'
-                      ? 'Chi trả toàn bộ thù lao cho Mentor'
-                      : r.resolutionDecision === 'FULL_STUDENT_REFUND'
-                        ? 'Hoàn trả toàn bộ học phí cho Học viên'
-                        : 'Hòa giải phân chia quỹ'}
+                    {resolutionTitle}
                   </Txt>
-                  {r.latestTicket?.ticketCode ? (
-                    <Tag label={r.latestTicket.ticketCode} tone="success" />
+                  {ticketCode ? (
+                    <Tag label={ticketCode} tone="success" />
                   ) : null}
                 </View>
-                {r.resolutionNote || r.latestTicket?.resolutionNote ? (
+                {resolutionReason ? (
                   <Txt size={12.5} style={{ color: colors.textSecondary, marginTop: 6 }}>
-                    Căn cứ giải quyết: {r.resolutionNote || r.latestTicket?.resolutionNote}
+                    Căn cứ giải quyết: {resolutionReason}
                   </Txt>
                 ) : null}
                 <View style={{ flexDirection: 'row', gap: 12, marginTop: 10, paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.borderSubtle }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={11.5} style={{ color: colors.textTertiary }}>Mentor nhận</Txt>
-                    <Txt size={15} weight="800" style={{ color: viridian }}>{formatVnd(r.mentorEarnedAmount)}</Txt>
+                    <Txt size={15} weight="800" style={{ color: viridian }}>{formatVnd(mentorSplit)}</Txt>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Txt size={11.5} style={{ color: colors.textTertiary }}>Học viên nhận hoàn</Txt>
-                    <Txt size={15} weight="800" style={{ color: '#0284C7' }}>{formatVnd(r.studentRefundAmount)}</Txt>
+                    <Txt size={15} weight="800" style={{ color: '#0284C7' }}>{formatVnd(studentSplit)}</Txt>
                   </View>
                 </View>
               </View>
@@ -243,33 +317,35 @@ export default function TaskReportScreen() {
           </Card>
         </Enter>
 
-        {/* Học viên */}
+        {/* Phía Học viên */}
         <Enter delay={180}>
           <Card title="Phía Học viên" brand="people">
             <Row label="Đã thanh toán" hint="Nền tảng tạm giữ cho đến khi nghiệm thu" value={formatVnd(r.studentTotalPaid)} />
             <Row
               label="Được hoàn lại"
-              hint={hasDispute ? 'Đang tạm hoãn do tranh chấp' : isResolved ? 'Theo phán quyết / hòa giải' : undefined}
-              value={formatVnd(r.studentRefundAmount)}
-              tag={moneyStatus(r.studentRefundStatus)}
-              color={r.studentRefundAmount > 0 ? '#0284C7' : undefined}
+              value={formatVnd(studentSplit)}
+              color={studentSplit > 0 ? '#0284C7' : undefined}
+            />
+            <Row
+              label="Trạng thái hoàn tiền"
+              tag={moneyStatus(effectiveStudentStatus)}
               last
             />
           </Card>
         </Enter>
 
-        {/* Mentor */}
+        {/* Phía Mentor */}
         <Enter delay={240}>
           <Card title="Phía Mentor" brand="suitcase">
-            <Row label="Thù lao được hưởng" value={formatVnd(r.mentorEarnedAmount)} />
-            <Row label="Phí vận hành nền tảng" value={r.platformFee ? `−${formatVnd(r.platformFee)}` : formatVnd(0)} />
             <Row
-              label="Mentor thực nhận"
-              hint={hasDispute ? 'Đang tạm hoãn do tranh chấp' : 'Sau khi trừ phí nền tảng'}
-              value={formatVnd(r.mentorNetPayout)}
+              label="Thù lao thực nhận"
+              value={formatVnd(mentorSplit)}
               strong
               color={viridian}
-              tag={moneyStatus(r.mentorPayoutStatus)}
+            />
+            <Row
+              label="Trạng thái chi trả"
+              tag={moneyStatus(effectiveMentorStatus)}
               last
             />
           </Card>
@@ -278,24 +354,17 @@ export default function TaskReportScreen() {
         {/* Nút Ping lại Admin khi có sự cố */}
         {r.canPingAdminFinance !== false ? (
           <Enter delay={300}>
-            <View style={{ marginTop: 8, marginBottom: 12 }}>
+            <View style={{ marginTop: 8, marginBottom: 16 }}>
               <Button
-                title="Báo cáo sự cố dòng tiền"
+                title="Báo cáo sự cố dòng tiền / Ping Admin"
                 variant="outline"
                 textColor="#DC2626"
                 style={{ borderColor: '#FCA5A5', backgroundColor: isDark ? '#2A1215' : '#FEF2F2' }}
                 onPress={() => setPingOpen(true)}
               />
-              <Txt size={11.5} style={{ color: colors.textTertiary, textAlign: 'center', marginTop: 8, lineHeight: 17 }}>
-                Nếu tiền hoàn chưa về tài khoản, chưa nhận được thù lao hoặc số tiền bị sai lệch, hãy bấm nút trên để thông báo Ban Quản Trị kiểm tra Sổ quỹ.
-              </Txt>
             </View>
           </Enter>
         ) : null}
-
-        <Txt size={11.5} style={{ color: colors.textTertiary, textAlign: 'center', marginTop: 4, lineHeight: 17 }}>
-          Tiền của học viên được nền tảng tạm giữ và chỉ chi trả cho mentor khi nhiệm vụ được nghiệm thu hoặc có thỏa thuận hòa giải / phán quyết.
-        </Txt>
       </ScrollView>
 
       {/* Modal Ping lại Admin về sự cố dòng tiền */}
