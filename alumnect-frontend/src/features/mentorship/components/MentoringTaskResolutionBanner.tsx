@@ -6,6 +6,7 @@ import {
   ArrowRight,
   CalendarClock,
   Check,
+  CheckCircle2,
   CreditCard,
   FileCheck,
   FileEdit,
@@ -388,8 +389,24 @@ export function MentoringTaskResolutionBanner({
     )
   }
 
-  // 5. Thỏa thuận đã chốt nhưng chưa có Ticket (dữ liệu cũ, trước khi Ticket được gửi tự động)
-  if ((canSubmitSettlementTicket || activeSettlementProposal?.status === 'ACCEPTED') && !activeTicket) {
+  // 5. Thỏa thuận hòa giải đã chốt (Hệ thống tự động quyết toán & chi tiền)
+  if (activeSettlementProposal?.status === 'ACCEPTED' && !activeTicket) {
+    items.push(
+      <MentoringActionCard
+        key="settlement-ready"
+        tone="mint"
+        icon={<CheckCircle2 />}
+        title="Thỏa thuận dừng Task đã đồng thuận"
+        badge="Tự động quyết toán"
+      >
+        <p className="flex flex-wrap gap-x-4 gap-y-1">
+          <Detail label="Mentor nhận">{formatVnd(activeSettlementProposal.mentorAmount)}</Detail>
+          <Detail label="Hoàn Học viên">{formatVnd(activeSettlementProposal.studentRefund)}</Detail>
+        </p>
+        <p>Cả hai bên đã đồng thuận phương án dừng Task. Hệ thống đã tự động chi trả thù lao cho Mentor và hoàn tiền cho Học viên.</p>
+      </MentoringActionCard>,
+    )
+  } else if (canSubmitSettlementTicket && !activeTicket) {
     items.push(
       <MentoringActionCard
         key="settlement-ready"

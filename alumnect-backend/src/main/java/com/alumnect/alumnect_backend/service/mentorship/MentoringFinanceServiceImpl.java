@@ -218,6 +218,29 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
         // Lấy vé Dispute / Settlement mới nhất của Task (nếu có)
         MentoringDisputeTicket activeTicket = ticketRepository.findFirstByTaskIdOrderByCreatedAtDesc(task.getId()).orElse(null);
 
+        boolean hasFailedLedger = ledgers.stream().anyMatch(l -> l.getStatus() == MentoringLedgerStatus.FAILED);
+        int failedCount = (int) ledgers.stream().filter(l -> l.getStatus() == MentoringLedgerStatus.FAILED).count();
+
+        boolean isFinanceDispute = activeTicket != null && activeTicket.getStatus() != MentoringTicketStatus.CANCELLED
+                && activeTicket.getStatus() != MentoringTicketStatus.REJECTED
+                && (activeTicket.getTicketType() == MentoringTicketType.DISPUTE
+                    || (activeTicket.getDisputeReason() != null && activeTicket.getDisputeReason().toLowerCase().contains("dòng tiền")));
+
+        boolean hasFinanceAlert = hasFailedLedger || isFinanceDispute;
+        String financeIssueReason = null;
+        String financeIssueReportedBy = null;
+        Instant financeIssueReportedAt = null;
+
+        if (activeTicket != null && activeTicket.getDisputeReason() != null && activeTicket.getDisputeReason().toLowerCase().contains("dòng tiền")) {
+            financeIssueReason = activeTicket.getDisputeReason();
+            financeIssueReportedBy = activeTicket.getCreatedBy() != null && activeTicket.getCreatedBy().getProfile() != null
+                    ? activeTicket.getCreatedBy().getProfile().getFullName()
+                    : (activeTicket.getCreatedBy() != null ? activeTicket.getCreatedBy().getEmail() : "Người dùng");
+            financeIssueReportedAt = activeTicket.getCreatedAt();
+        } else if (hasFailedLedger) {
+            financeIssueReason = "Có " + failedCount + " giao dịch chi trả/hoàn tiền bị lỗi (FAILED) trên kênh chi PayOS.";
+        }
+
         return AdminTaskFundSummaryResponse.builder()
                 .taskId(task.getId())
                 .taskTitle(task.getTaskTitle())
@@ -238,6 +261,11 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
                 .activeTicketId(activeTicket != null ? activeTicket.getId() : null)
                 .activeTicketCode(activeTicket != null ? activeTicket.getTicketCode() : null)
                 .activeTicketStatus(activeTicket != null ? activeTicket.getStatus().name() : null)
+                .hasFinanceAlert(hasFinanceAlert)
+                .financeIssueReason(financeIssueReason)
+                .financeIssueReportedBy(financeIssueReportedBy)
+                .financeIssueReportedAt(financeIssueReportedAt)
+                .failedLedgersCount(failedCount)
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .build();

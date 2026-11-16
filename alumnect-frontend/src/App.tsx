@@ -158,6 +158,7 @@ function App() {
             <Route path="mentor-packages" element={<AdminMentorPackagesPage />} />
             <Route path="mentoring-tickets" element={<AdminMentoringTicketsPage />} />
             <Route path="mentoring-finances" element={<AdminMentoringFinancesPage />} />
+            <Route path="mentoring/finances" element={<AdminMentoringFinancesPage />} />
             <Route path="posts" element={<AdminPostsPage />} />
             <Route path="posts/:id" element={<AdminPostDetailPage />} />
             <Route path="verifications" element={<AdminSectionPage sectionKey="verifications" />} />
