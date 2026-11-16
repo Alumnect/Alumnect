@@ -312,13 +312,13 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         MentoringTaskCompletionResponse latestCompletion = completionService.getLatestCompletion(currentUserId, task.getId());
         MentoringDisputeTicketResponse activeTicket = isCoreParticipant ? ticketService.getActiveTicket(currentUserId, task.getId()) : null;
 
-        boolean canSubmitSettlementTicket = (isStudent || isMentor)
-                && activeSettlementProposal != null
-                && activeSettlementProposal.getStatus() == MentoringSettlementProposalStatus.ACCEPTED
-                && activeTicket == null;
+        // Khi cả hai đồng thuận phương án hòa giải, hệ thống tự động chi trả & hoàn tiền ngay lập tức, không cần bước gửi ticket thủ công
+        boolean canSubmitSettlementTicket = false;
 
         boolean canCreateDisputeTicket = (isStudent || isMentor)
                 && task.getStatus() != MentoringTaskStatus.COMPLETED
+                && task.getStatus() != MentoringTaskStatus.CANCELLED
+                && task.getStatus() != MentoringTaskStatus.RESOLVED
                 && activeTicket == null;
 
         boolean canSubmitDisputeEvidence = (isStudent || isMentor)

@@ -34,6 +34,10 @@ public interface MentoringDisputeTicketRepository extends JpaRepository<Mentorin
     Optional<MentoringDisputeTicket> findFirstByTaskIdAndStatusInOrderByCreatedAtDesc(
             Long taskId, Collection<MentoringTicketStatus> statuses);
 
+    /** Lấy danh sách Ticket đang hoạt động của một Task */
+    List<MentoringDisputeTicket> findByTaskIdAndStatusIn(
+            Long taskId, Collection<MentoringTicketStatus> statuses);
+
     /** Kiểm tra xem Task đã có Ticket đang mở xử lý hay chưa */
     boolean existsByTaskIdAndStatusIn(Long taskId, Collection<MentoringTicketStatus> statuses);
 

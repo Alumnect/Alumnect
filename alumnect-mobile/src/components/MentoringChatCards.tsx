@@ -471,7 +471,7 @@ export function TaskActionPanel({ taskId, compact, onChanged }: { taskId: number
           prop.canAccept || prop.canReject ? (
             <>
               {prop.canReject ? <CardBtn label="Từ chối" tone="danger" icon={<X />} disabled={!!busy} onPress={() => setDialog({ action: 'REJECT', kind: 'SETTLEMENT', id: prop.id })} /> : null}
-              {prop.canAccept ? <CardBtn label="Đồng ý" tone="primary" icon={<Check />} loading={busy === 'set-ok'} disabled={!!busy} onPress={() => run('set-ok', () => taskApi.respondSettlement(prop.id, true), 'Đã đồng ý dừng Task.')} /> : null}
+              {prop.canAccept ? <CardBtn label="Đồng ý & Chi tiền" tone="primary" icon={<Check />} loading={busy === 'set-ok'} disabled={!!busy} onPress={() => run('set-ok', () => taskApi.respondSettlement(prop.id, true), 'Đã đồng ý dừng Task. Hệ thống đang tự động chi trả & hoàn tiền.')} /> : null}
             </>
           ) : (
             <>

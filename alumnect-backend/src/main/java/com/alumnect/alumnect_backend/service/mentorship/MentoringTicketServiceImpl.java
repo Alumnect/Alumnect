@@ -158,53 +158,140 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
             throw new BadRequestException("Số tiền phân chia không hợp lệ: Tổng tiền chia (" + total + ") không khớp với ngân sách của Task (" + proposal.getTotalAmount() + ").");
         }
 
-        // 4. Kiểm tra tránh gửi Ticket trùng lặp đang mở
-        if (ticketRepository.existsByTaskIdAndStatusIn(task.getId(), ACTIVE_TICKET_STATUSES)) {
-            throw new ConflictException("Nhiệm vụ này đã có một Ticket đang chờ Ban Quản Trị tiếp nhận xử lý.");
+        // 4. Tự động chi tiền cho Mentor và hoàn tiền cho Student theo mức hai bên đã đồng thuận
+        BigDecimal mentorAmount = proposal.getMentorAmount() != null ? proposal.getMentorAmount() : BigDecimal.ZERO;
+        BigDecimal studentRefund = proposal.getStudentRefund() != null ? proposal.getStudentRefund() : BigDecimal.ZERO;
+        Instant now = Instant.now();
+
+        MentoringPaymentLedger savedPayout = null;
+        if (mentorAmount.compareTo(BigDecimal.ZERO) > 0) {
+            MentoringPaymentLedger payoutLedger = MentoringPaymentLedger.builder()
+                    .request(task.getRequest() != null ? task.getRequest() : (task.getDeal() != null ? task.getDeal().getRequest() : null))
+                    .task(task)
+                    .deal(task.getDeal())
+                    .student(task.getStudent())
+                    .mentor(task.getMentor())
+                    .amount(mentorAmount)
+                    .transactionType(MentoringLedgerTransactionType.PAYOUT)
+                    .status(MentoringLedgerStatus.PENDING)
+                    .providerStatus(MentoringPayoutProcessor.QUEUED)
+                    .idempotencyKey("ALUMNECT-PAYOUT-SETTLEMENT-" + proposal.getId())
+                    .deadlineSnapshot(task.getDeadline())
+                    .note("Thù lao theo thỏa thuận dừng Task #" + task.getId() + " giữa hai bên: " + proposal.getReason())
+                    .build();
+            savedPayout = ledgerRepository.save(payoutLedger);
+            disbursementService.dispatchPayoutAfterCommit(savedPayout.getId());
         }
 
-        // 5. Tạo mã hiển thị ticketCode duy nhất: ST-YYYYMMDD-XXXX
-        String datePart = DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now());
-        String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-        String ticketCode = "ST-" + datePart + "-" + randomSuffix;
-
-        // 6. Tạo Settlement Ticket
-        String description = proposal.getReason();
-        if (request.getNote() != null && !request.getNote().isBlank()) {
-            description += "\n\n[Ghi chú thêm gửi Admin]: " + request.getNote().trim();
+        MentoringPaymentLedger savedRefund = null;
+        if (studentRefund.compareTo(BigDecimal.ZERO) > 0) {
+            MentoringPaymentLedger refundLedger = MentoringPaymentLedger.builder()
+                    .request(task.getRequest() != null ? task.getRequest() : (task.getDeal() != null ? task.getDeal().getRequest() : null))
+                    .task(task)
+                    .deal(task.getDeal())
+                    .student(task.getStudent())
+                    .mentor(task.getMentor())
+                    .amount(studentRefund)
+                    .transactionType(MentoringLedgerTransactionType.REFUND)
+                    .status(MentoringLedgerStatus.PENDING)
+                    .providerStatus(MentoringPayoutProcessor.QUEUED)
+                    .idempotencyKey("ALUMNECT-REFUND-SETTLEMENT-" + proposal.getId())
+                    .deadlineSnapshot(task.getDeadline())
+                    .note("Hoàn phí theo thỏa thuận dừng Task #" + task.getId() + " giữa hai bên: " + proposal.getReason())
+                    .build();
+            savedRefund = ledgerRepository.save(refundLedger);
+            disbursementService.dispatchPayoutAfterCommit(savedRefund.getId());
         }
 
-        MentoringDisputeTicket ticket = MentoringDisputeTicket.builder()
-                .ticketCode(ticketCode)
-                .ticketType(MentoringTicketType.SETTLEMENT)
-                .task(task)
-                .conversation(task.getConversation())
-                .settlementProposal(proposal)
-                .createdBy(currentUser)
-                .student(task.getStudent())
-                .mentor(task.getMentor())
-                .title("Thỏa thuận dừng Task #" + task.getId() + " - Yêu cầu giải ngân & hoàn tiền")
-                .description(description)
-                .mentorAmount(proposal.getMentorAmount())
-                .studentRefund(proposal.getStudentRefund())
-                .totalAmount(proposal.getTotalAmount())
-                .status(MentoringTicketStatus.OPEN)
-                .build();
+        // 5. Nếu có Ticket khiếu nại đang mở (do 1 trong 2 bên ping Admin), tự động chuyển sang RESOLVED
+        List<MentoringDisputeTicket> activeTickets = ticketRepository.findByTaskIdAndStatusIn(task.getId(), ACTIVE_TICKET_STATUSES);
+        MentoringDisputeTicket savedTicket;
+        if (!activeTickets.isEmpty()) {
+            for (MentoringDisputeTicket t : activeTickets) {
+                t.setStatus(MentoringTicketStatus.RESOLVED);
+                t.setSettlementStatus(MentoringSettlementStatus.SETTLED);
+                t.setDecision(MentoringTicketDecision.PARTIAL_SPLIT);
+                t.setResolutionNote("Hai bên đã đạt thỏa thuận dừng Task và hệ thống tự động chi trả theo mức thỏa thuận.");
+                t.setMentorAmount(mentorAmount);
+                t.setStudentRefund(studentRefund);
+                t.setResolvedAt(now);
+                if (savedPayout != null) t.setMentorPayoutLedger(savedPayout);
+                if (savedRefund != null) t.setStudentRefundLedger(savedRefund);
+                ticketRepository.save(t);
+            }
+            savedTicket = activeTickets.get(0);
+        } else {
+            // Tạo Settlement Ticket với trạng thái RESOLVED để lưu vết kiểm toán
+            String datePart = DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now());
+            String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            String ticketCode = "ST-" + datePart + "-" + randomSuffix;
 
-        MentoringDisputeTicket savedTicket = ticketRepository.save(ticket);
+            String description = proposal.getReason();
+            if (request.getNote() != null && !request.getNote().isBlank()) {
+                description += "\n\n[Ghi chú]: " + request.getNote().trim();
+            }
 
-        // 7. Cập nhật trạng thái Task sang CANCELLED (dừng thực hiện chờ Admin xử lý quyết toán/hoàn tiền)
-        task.setStatus(MentoringTaskStatus.CANCELLED);
+            MentoringDisputeTicket ticket = MentoringDisputeTicket.builder()
+                    .ticketCode(ticketCode)
+                    .ticketType(MentoringTicketType.SETTLEMENT)
+                    .task(task)
+                    .conversation(task.getConversation())
+                    .settlementProposal(proposal)
+                    .createdBy(currentUser)
+                    .student(task.getStudent())
+                    .mentor(task.getMentor())
+                    .title("Thỏa thuận dừng Task #" + task.getId() + " (Đã tự động quyết toán)")
+                    .description(description)
+                    .mentorAmount(mentorAmount)
+                    .studentRefund(studentRefund)
+                    .totalAmount(proposal.getTotalAmount())
+                    .status(MentoringTicketStatus.RESOLVED)
+                    .settlementStatus(MentoringSettlementStatus.SETTLED)
+                    .decision(MentoringTicketDecision.PARTIAL_SPLIT)
+                    .resolutionNote("Hệ thống tự động chi trả theo thỏa thuận đồng thuận giữa hai bên.")
+                    .resolvedAt(now)
+                    .mentorPayoutLedger(savedPayout)
+                    .studentRefundLedger(savedRefund)
+                    .build();
+
+            savedTicket = ticketRepository.save(ticket);
+        }
+
+        // 6. Cập nhật trạng thái Task
+        if (mentorAmount.compareTo(BigDecimal.ZERO) > 0 && studentRefund.compareTo(BigDecimal.ZERO) == 0) {
+            task.setStatus(MentoringTaskStatus.COMPLETED);
+            mentorReputationService.recordTaskCompleted(task.getMentor());
+        } else if (studentRefund.compareTo(BigDecimal.ZERO) > 0 && mentorAmount.compareTo(BigDecimal.ZERO) == 0) {
+            task.setStatus(MentoringTaskStatus.CANCELLED);
+        } else {
+            task.setStatus(MentoringTaskStatus.RESOLVED);
+        }
         taskRepository.save(task);
         proposalCleaner.closeOpenProposals(task.getId(), "Task đã dừng theo thỏa thuận");
 
-        // 8. Gửi tin nhắn hệ thống realtime vào Chat for Task
+        // 7. Gửi tin nhắn hệ thống realtime vào Chat for Task
         if (task.getConversation() != null) {
-            String msg = String.format("🏛️ [Hệ thống] Settlement Ticket đã thỏa thuận (#%s) đã được gửi tới Ban Quản Trị để xử lý quyết toán thù lao cho Mentor (%s) và hoàn trả cho Học viên (%s).",
-                    ticketCode,
-                    formatVnd(proposal.getMentorAmount()),
-                    formatVnd(proposal.getStudentRefund()));
+            String msg = String.format("🤝 [Hệ thống] Hai bên đã ĐỒNG THUẬN dừng Task (#%s).\n⚡ Hệ thống đã TỰ ĐỘNG CHI TRẢ cho Mentor (%s) và HOÀN TIỀN cho Học viên (%s) thành công!",
+                    savedTicket.getTicketCode(),
+                    formatVnd(mentorAmount),
+                    formatVnd(studentRefund));
             mentoringConversationService.postSystemMessage(task.getConversation(), currentUser, msg);
+        }
+
+        // 8. Gửi thông báo đến cả hai bên
+        try {
+            notificationService.sendMentoringTaskEventNotification(
+                    currentUser, task.getStudent(), task,
+                    "SETTLEMENT_AUTO_PAID", String.valueOf(savedTicket.getId()),
+                    "Thỏa thuận Task đã tự động chi trả",
+                    "Hệ thống đã tự động thực hiện thanh toán/hoàn tiền theo thỏa thuận dừng Task.");
+            notificationService.sendMentoringTaskEventNotification(
+                    currentUser, task.getMentor(), task,
+                    "SETTLEMENT_AUTO_PAID", String.valueOf(savedTicket.getId()),
+                    "Thỏa thuận Task đã tự động chi trả",
+                    "Hệ thống đã tự động thực hiện thanh toán/hoàn tiền theo thỏa thuận dừng Task.");
+        } catch (Exception ex) {
+            log.error("Lỗi gửi thông báo tự động chi trả: {}", ex.getMessage());
         }
 
         log.info("Tạo Settlement Ticket id={}, code={} cho Task id={} thành công",
