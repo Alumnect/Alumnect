@@ -23,9 +23,14 @@ export function isVideoUrl(url?: string | null): boolean {
 export async function uploadFile(file: { uri: string; name: string; mimeType?: string | null; size?: number }, folder = 'messages') {
   const contentType = file.mimeType?.trim().toLowerCase() || 'application/octet-stream'
   const signed = await http.get<unknown, ApiResponse<{ uploadUrl: string; publicUrl: string }>>('/files/presigned-url', { params: { fileName: file.name, contentType, folder } })
-  const read = await fetch(file.uri)
-  if (!read.ok) throw new Error('Không thể đọc tệp đã chọn.')
-  const blob = await read.blob()
+  let blob: Blob
+  try {
+    const read = await fetch(file.uri)
+    blob = await read.blob()
+  } catch (err) {
+    if (__DEV__) console.warn('[uploadFile] fetch blob error', err)
+    throw new Error('Không thể đọc tệp đã chọn.')
+  }
   if (!blob.size) throw new Error('Tệp đã chọn không có nội dung.')
   // Keep the binary payload MIME type identical to the type used to sign the URL.
   const body = blob.slice(0, blob.size, contentType)
@@ -69,9 +74,14 @@ export async function uploadImage(
     params: { fileName: name, contentType: 'image/jpeg', folder },
   })
   const { uploadUrl, publicUrl } = res.data
-  const read = await fetch(manip.uri)
-  if (!read.ok) throw new Error('Không thể đọc ảnh đã chọn.')
-  const raw = await read.blob()
+  let raw: Blob
+  try {
+    const read = await fetch(manip.uri)
+    raw = await read.blob()
+  } catch (err) {
+    if (__DEV__) console.warn('[uploadImage] fetch blob error', err)
+    throw new Error('Không thể đọc ảnh đã chọn.')
+  }
   if (!raw.size) throw new Error('Ảnh đã chọn không có nội dung.')
   // Content-Type của blob phải trùng đúng với loại đã dùng để ký URL, nếu không R2 trả 403 SignatureDoesNotMatch.
   const blob = raw.slice(0, raw.size, 'image/jpeg')
@@ -94,9 +104,13 @@ export async function pickVideo(multiple = false): Promise<PickedVideo[]> {
   return res.assets.map((a, i) => {
     const ext = a.fileName?.split('.').pop()?.toLowerCase() || (a.uri.endsWith('.mov') ? 'mov' : 'mp4')
     const mimeType = a.mimeType || (ext === 'mov' ? 'video/quicktime' : 'video/mp4')
+    let baseName = a.fileName ?? `video-${Date.now()}-${i}.${ext}`
+    if (!baseName.toLowerCase().endsWith(`.${ext}`)) {
+      baseName = `${baseName}.${ext}`
+    }
     return {
       uri: a.uri,
-      name: a.fileName ?? `video-${Date.now()}-${i}.${ext}`,
+      name: baseName,
       mimeType,
       size: a.fileSize,
       duration: a.duration,
