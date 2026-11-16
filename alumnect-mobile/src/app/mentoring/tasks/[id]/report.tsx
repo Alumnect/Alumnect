@@ -119,7 +119,8 @@ export default function TaskReportScreen() {
   const [selectedQuick, setSelectedQuick] = useState<string | null>(null)
 
   const pingMutation = useMutation({
-    mutationFn: (text: string) => taskApi.pingAdminFinance(Number(id), { reason: text }),
+    mutationFn: ({ reason: text, issueType }: { reason: string; issueType?: string }) =>
+      taskApi.pingAdminFinance(Number(id), { reason: text, issueType }),
     onSuccess: () => {
       toast.success('Đã gửi phản ánh sự cố dòng tiền đến Ban Quản Trị!')
       setPingOpen(false)
@@ -129,7 +130,7 @@ export default function TaskReportScreen() {
       void queryClient.invalidateQueries({ queryKey: ['mentoring-task-detail', id] })
     },
     onError: (e) => {
-      toast.error(errMsg(e))
+      toast.error(errMsg(e, 'Không thể gửi phản ánh, vui lòng thử lại sau.'))
     },
   })
 
@@ -139,7 +140,13 @@ export default function TaskReportScreen() {
       toast.info('Vui lòng nhập lý do cụ thể (tối thiểu 5 ký tự).')
       return
     }
-    pingMutation.mutate(text)
+    let issueType = 'OTHER'
+    if (selectedQuick?.includes('hoàn trả')) issueType = 'REFUND_NOT_RECEIVED'
+    else if (selectedQuick?.includes('thù lao')) issueType = 'PAYOUT_NOT_RECEIVED'
+    else if (selectedQuick?.includes('sai lệch')) issueType = 'WRONG_AMOUNT'
+    else if (selectedQuick?.includes('lỗi giao dịch')) issueType = 'ACCOUNT_ERROR'
+
+    pingMutation.mutate({ reason: text, issueType })
   }
 
   if (q.isLoading)
@@ -200,23 +207,18 @@ export default function TaskReportScreen() {
 
   // 1. Phía Mentor
   let effectiveMentorStatus = r.mentorPayoutStatus
-  let mentorStatusHint: string | undefined
+  let mentorStatusHint: string | undefined = r.mentorPayoutNote || undefined
 
-  if (earningItem) {
-    if (earningItem.status === 'FAILED') {
-      effectiveMentorStatus = 'FAILED'
-      mentorStatusHint = earningItem.note || 'Lệnh chi PayOS bị từ chối/thất bại'
-    } else if (earningItem.status === 'SUCCEEDED') {
-      effectiveMentorStatus = 'PAID'
-    } else if (earningItem.status === 'PENDING') {
-      effectiveMentorStatus = 'PROCESSING'
-    }
-  } else if (effectiveMentorStatus === 'FAILED' || r.hasFailedLedger) {
+  if (effectiveMentorStatus === 'FAILED' || (r.hasFailedLedger && mentorSplit > 0)) {
     effectiveMentorStatus = 'FAILED'
-    mentorStatusHint = 'Lệnh chi PayOS thất bại'
-  } else if (refundItem?.status === 'FAILED') {
+    mentorStatusHint = r.mentorPayoutNote || earningItem?.note || 'Lệnh chi PayOS thất bại'
+  } else if (earningItem?.status === 'FAILED') {
     effectiveMentorStatus = 'FAILED'
-    mentorStatusHint = refundItem.note || 'Lệnh chi PayOS bị từ chối/thất bại'
+    mentorStatusHint = earningItem.note || r.mentorPayoutNote || 'Lệnh chi PayOS bị từ chối/thất bại'
+  } else if (earningItem?.status === 'SUCCEEDED') {
+    effectiveMentorStatus = 'PAID'
+  } else if (earningItem?.status === 'PENDING') {
+    effectiveMentorStatus = 'PROCESSING'
   } else if (effectiveMentorStatus === 'PAID') {
     effectiveMentorStatus = 'PAID'
   } else if (mentorSplit > 0) {
@@ -227,23 +229,18 @@ export default function TaskReportScreen() {
 
   // 2. Phía Học viên
   let effectiveStudentStatus = r.studentRefundStatus
-  let studentStatusHint: string | undefined
+  let studentStatusHint: string | undefined = r.studentRefundNote || undefined
 
-  if (refundItem) {
-    if (refundItem.status === 'FAILED') {
-      effectiveStudentStatus = 'FAILED'
-      studentStatusHint = refundItem.note || 'Lệnh hoàn PayOS bị từ chối/thất bại'
-    } else if (refundItem.status === 'SUCCEEDED') {
-      effectiveStudentStatus = 'REFUNDED'
-    } else if (refundItem.status === 'PENDING') {
-      effectiveStudentStatus = 'PROCESSING'
-    }
-  } else if (effectiveStudentStatus === 'FAILED' || r.hasFailedLedger) {
+  if (effectiveStudentStatus === 'FAILED' || (r.hasFailedLedger && studentSplit > 0)) {
     effectiveStudentStatus = 'FAILED'
-    studentStatusHint = 'Lệnh hoàn PayOS thất bại'
-  } else if (earningItem?.status === 'FAILED') {
+    studentStatusHint = r.studentRefundNote || refundItem?.note || 'Lệnh hoàn PayOS thất bại'
+  } else if (refundItem?.status === 'FAILED') {
     effectiveStudentStatus = 'FAILED'
-    studentStatusHint = earningItem.note || 'Lệnh hoàn PayOS bị từ chối/thất bại'
+    studentStatusHint = refundItem.note || r.studentRefundNote || 'Lệnh hoàn PayOS bị từ chối/thất bại'
+  } else if (refundItem?.status === 'SUCCEEDED') {
+    effectiveStudentStatus = 'REFUNDED'
+  } else if (refundItem?.status === 'PENDING') {
+    effectiveStudentStatus = 'PROCESSING'
   } else if (effectiveStudentStatus === 'REFUNDED') {
     effectiveStudentStatus = 'REFUNDED'
   } else if (studentSplit > 0) {
