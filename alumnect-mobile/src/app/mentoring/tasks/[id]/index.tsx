@@ -447,11 +447,11 @@ export default function TaskDetailScreen() {
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
               {d.activeSettlementProposal.canAccept ? (
                 <Button
-                  title="Đồng ý"
+                  title="Đồng ý & Nhận tiền tự động"
                   size="sm"
                   textColor="#FFFFFF"
                   style={{ flex: 1, backgroundColor: viridian, borderColor: viridian }}
-                  onPress={() => run(() => taskApi.respondSettlement(d.activeSettlementProposal!.id, true), 'Đã chấp nhận hòa giải.')}
+                  onPress={() => run(() => taskApi.respondSettlement(d.activeSettlementProposal!.id, true), 'Đã chấp nhận hòa giải. Hệ thống đang tự động chi trả & hoàn tiền.')}
                 />
               ) : null}
               {d.activeSettlementProposal.canReject ? (

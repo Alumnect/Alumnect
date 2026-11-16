@@ -1232,7 +1232,7 @@ export function ChatWindow({
                 <ActionRow icon={<FilePen size={20} color={viridian} />} title="Điều chỉnh & tăng tiền" desc="Thay đổi phạm vi, deadline hoặc thêm tiền" onPress={() => goTask('amendment')} />
               ) : null}
               {taskPerm.canProposeSettlement ? (
-                <ActionRow icon={<Scale size={20} color={viridian} />} title="Dừng Task & chia quỹ" desc="Thỏa thuận kết thúc sớm" onPress={() => goTask('settlement')} />
+                <ActionRow icon={<Scale size={20} color={viridian} />} title="Dừng Task & chia quỹ" desc="Thỏa thuận hòa giải (Tự động chi tiền khi đồng ý)" onPress={() => goTask('settlement')} />
               ) : null}
               {taskPerm.canSubmitSettlementTicket ? (
                 <ActionRow icon={<FileCheck2 size={20} color={viridian} />} title="Biên bản hòa giải" desc="Gửi biên bản dừng Task cho Ban Quản Trị" onPress={() => goTask('settlement-ticket')} />
@@ -1245,7 +1245,7 @@ export function ChatWindow({
               <Txt size={11} weight="800" style={{ color: viridian, textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 10, marginBottom: 8, marginLeft: 2 }}>
                 Hỗ trợ
               </Txt>
-              <ActionRow icon={<AlertTriangle size={20} color="#DC2626" />} title="Mở khiếu nại" desc="Nhờ Ban Quản Trị phân xử" danger onPress={() => goTask('dispute')} />
+              <ActionRow icon={<AlertTriangle size={20} color="#DC2626" />} title="Mở khiếu nại / Ping Admin" desc="Nhờ Ban Quản Trị can thiệp & phân xử" danger onPress={() => goTask('dispute')} />
             </>
           ) : null}
         </ScrollView>
