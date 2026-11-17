@@ -803,10 +803,10 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 } else if (w.getStatus() == WorkLogStatus.PENDING_CONFIRMATION) {
                     long hours = Duration.between(w.getCreatedAt(), now).toHours();
                     resp.setPendingHours(hours);
-                    boolean isOverdue = hours >= 72;
-                    resp.setIsOverdue72h(isOverdue);
+                    boolean isLogOverdue = hours >= 72;
+                    resp.setIsOverdue72h(isLogOverdue);
                     pendingWorkLogs++;
-                    if (isOverdue) {
+                    if (isLogOverdue) {
                         overdueWorkLogs72h++;
                     }
                 } else {
