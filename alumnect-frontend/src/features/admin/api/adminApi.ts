@@ -462,6 +462,8 @@ export interface AdminTaskFundSummaryDto {
   financeIssueReportedBy?: string
   financeIssueReportedAt?: string
   failedLedgersCount?: number
+  pingCount?: number
+  lastPingAt?: string
   createdAt: string
   updatedAt: string
 }

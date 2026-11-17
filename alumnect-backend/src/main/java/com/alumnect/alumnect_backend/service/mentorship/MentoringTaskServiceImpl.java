@@ -3,15 +3,21 @@ package com.alumnect.alumnect_backend.service.mentorship;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.*;
 import com.alumnect.alumnect_backend.dao.mentorship.*;
+import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.mentorship.PingAdminFinanceRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.*;
 import com.alumnect.alumnect_backend.entity.mentorship.*;
+import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
+import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.mentorship.MentoringTaskMapper;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -45,10 +53,13 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     private final RefundAccountResolver refundAccountResolver;
     private final MentoringRules mentoringRules;
     private final MentoringDisputeTicketRepository ticketRepository;
-    private final com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementProposalRepository settlementProposalRepository;
-    private final com.alumnect.alumnect_backend.dao.user.UserRepository userRepository;
+    private final MentoringTaskSettlementProposalRepository settlementProposalRepository;
+    private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
-    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+    private final NotificationService notificationService;
+
+    @Autowired
+    private MentoringTicketMessageRepository ticketMessageRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -611,13 +622,13 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         boolean hasFailedLedger = taskLedgers.stream().anyMatch(l -> l.getStatus() == MentoringLedgerStatus.FAILED);
 
         // Lấy đề xuất thỏa thuận dừng Task nếu có (UC109)
-        com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskSettlementProposal acceptedProposal =
-                settlementProposalRepository.findFirstByTaskIdAndStatus(task.getId(), com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus.ACCEPTED).orElse(null);
+        MentoringTaskSettlementProposal acceptedProposal =
+                settlementProposalRepository.findFirstByTaskIdAndStatus(task.getId(), MentoringSettlementProposalStatus.ACCEPTED).orElse(null);
         if (acceptedProposal == null) {
             acceptedProposal = settlementProposalRepository.findFirstByTaskIdOrderByCreatedAtDesc(task.getId()).orElse(null);
         }
 
-        com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket anyResolvedTicket =
+        MentoringDisputeTicket anyResolvedTicket =
                 ticketRepository.findByTaskIdOrderByCreatedAtDesc(task.getId()).stream()
                         .filter(t -> t.getStatus() == MentoringTicketStatus.RESOLVED || t.getMentorAmount() != null || t.getStudentRefund() != null)
                         .findFirst()
@@ -800,7 +811,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
 
     @Override
     @Transactional
-    public void pingAdminFinance(Long currentUserId, Long taskId, com.alumnect.alumnect_backend.dto.request.mentorship.PingAdminFinanceRequest request) {
+    public void pingAdminFinance(Long currentUserId, Long taskId, PingAdminFinanceRequest request) {
         log.info("Người dùng id={} yêu cầu ping Admin về sự cố dòng tiền cho Task id={}: {}", currentUserId, taskId, request.getReason());
 
         MentoringTask task = taskRepository.findById(taskId)
@@ -816,7 +827,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 ? currentUser.getProfile().getFullName() : currentUser.getEmail();
 
         // 1. Tạo Ticket tranh chấp dòng tiền
-        String datePart = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now());
+        String datePart = DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now());
         String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         String ticketCode = "FN-" + datePart + "-" + randomSuffix;
 
@@ -836,34 +847,91 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
             desiredSolution = desiredSolution.substring(0, 247) + "...";
         }
 
-        com.alumnect.alumnect_backend.entity.message.Conversation conv = task.getConversation() != null
+        Conversation conv = task.getConversation() != null
                 ? task.getConversation()
                 : (task.getDeal() != null ? task.getDeal().getConversation() : null);
 
-        MentoringDisputeTicket ticket = MentoringDisputeTicket.builder()
-                .ticketCode(ticketCode)
-                .ticketType(MentoringTicketType.DISPUTE)
-                .task(task)
-                .conversation(conv)
-                .createdBy(currentUser)
-                .student(task.getStudent())
-                .mentor(task.getMentor())
-                .title(title)
-                .description("Phản ánh sự cố dòng tiền từ " + senderRole + ": " + rawReason)
-                .disputeReason(disputeReason)
-                .desiredSolution(desiredSolution)
-                .mentorAmount(BigDecimal.ZERO)
-                .studentRefund(BigDecimal.ZERO)
-                .totalAmount(task.getAgreedPrice() != null ? task.getAgreedPrice() : BigDecimal.ZERO)
-                .status(MentoringTicketStatus.OPEN)
-                .build();
-        MentoringDisputeTicket savedTicket = ticketRepository.save(ticket);
+        // 1. Kiểm tra xem đã có Ticket khiếu nại dòng tiền đang mở (OPEN hoặc IN_REVIEW) của Task hay chưa
+        MentoringDisputeTicket existingTicket = ticketRepository.findFirstByTaskIdOrderByCreatedAtDesc(task.getId())
+                .filter(t -> (t.getStatus() == MentoringTicketStatus.OPEN || t.getStatus() == MentoringTicketStatus.IN_REVIEW)
+                        && (t.getDisputeReason() != null && t.getDisputeReason().toLowerCase().contains("dòng tiền")))
+                .orElse(null);
+
+        MentoringDisputeTicket savedTicket;
+        int currentPingCount = 1;
+        Instant now = Instant.now();
+
+        if (existingTicket != null) {
+            // Rate limit chống spam: kiểm tra tin nhắn ping gần nhất trong ticket
+            var latestMessage = ticketMessageRepository != null
+                    ? ticketMessageRepository.findFirstByTicketIdOrderByCreatedAtDesc(existingTicket.getId()).orElse(null)
+                    : null;
+            Instant lastPing = latestMessage != null ? latestMessage.getCreatedAt() : existingTicket.getUpdatedAt();
+            if (lastPing != null) {
+                long secondsPassed = Duration.between(lastPing, now).getSeconds();
+                if (secondsPassed < 60) {
+                    throw new BadRequestException(
+                            "Bạn vừa gửi phản ánh đối soát gần đây. Vui lòng đợi Ban Quản Trị xử lý hoặc thử lại sau " + (60 - secondsPassed) + " giây.");
+                }
+            }
+
+            long prevCount = ticketMessageRepository != null ? ticketMessageRepository.countByTicketId(existingTicket.getId()) : 0;
+            currentPingCount = (int) prevCount + 1;
+            existingTicket.setDisputeReason(disputeReason);
+            savedTicket = ticketRepository.save(existingTicket);
+
+            // Ghi log vào bảng mentoring_ticket_messages có sẵn
+            if (ticketMessageRepository != null) {
+                MentoringTicketMessage pingMsg = MentoringTicketMessage.builder()
+                        .ticket(savedTicket)
+                        .sender(currentUser)
+                        .senderRole(isStudent ? "STUDENT" : "MENTOR")
+                        .messageType("FINANCE_PING")
+                        .content("[Nhắc nhở lần " + currentPingCount + "] " + rawReason)
+                        .createdAt(now)
+                        .build();
+                ticketMessageRepository.save(pingMsg);
+            }
+        } else {
+            MentoringDisputeTicket ticket = MentoringDisputeTicket.builder()
+                    .ticketCode(ticketCode)
+                    .ticketType(MentoringTicketType.DISPUTE)
+                    .task(task)
+                    .conversation(conv)
+                    .createdBy(currentUser)
+                    .student(task.getStudent())
+                    .mentor(task.getMentor())
+                    .title(title)
+                    .description("Phản ánh sự cố dòng tiền từ " + senderRole + ": " + rawReason)
+                    .disputeReason(disputeReason)
+                    .desiredSolution(desiredSolution)
+                    .mentorAmount(BigDecimal.ZERO)
+                    .studentRefund(BigDecimal.ZERO)
+                    .totalAmount(task.getAgreedPrice() != null ? task.getAgreedPrice() : BigDecimal.ZERO)
+                    .status(MentoringTicketStatus.OPEN)
+                    .build();
+            savedTicket = ticketRepository.save(ticket);
+
+            // Ghi tin nhắn đầu tiên vào bảng mentoring_ticket_messages có sẵn
+            if (ticketMessageRepository != null) {
+                MentoringTicketMessage pingMsg = MentoringTicketMessage.builder()
+                        .ticket(savedTicket)
+                        .sender(currentUser)
+                        .senderRole(isStudent ? "STUDENT" : "MENTOR")
+                        .messageType("FINANCE_PING")
+                        .content("[Khởi tạo phản ánh sự cố] " + rawReason)
+                        .createdAt(now)
+                        .build();
+                ticketMessageRepository.save(pingMsg);
+            }
+        }
 
         // 2. Gửi tin nhắn hệ thống realtime vào Chat for Task
         try {
             if (conv != null) {
-                String msg = String.format("⚠️ [Hệ thống] %s đã gửi phản ánh sự cố dòng tiền (#%s) tới Ban Quản Trị:\n• Nội dung: %s\nBan Quản Trị đã nhận được thông báo đối soát trong Sổ quỹ Mentoring.",
-                        senderRole, savedTicket.getTicketCode(), rawReason);
+                String pingInfo = currentPingCount > 1 ? " (Nhắc lần " + currentPingCount + ")" : "";
+                String msg = String.format("⚠️ [Hệ thống] %s đã gửi phản ánh sự cố dòng tiền%s (#%s) tới Ban Quản Trị:\n• Nội dung: %s\nBan Quản Trị đã nhận được thông báo đối soát trong Sổ quỹ Mentoring.",
+                        senderRole, pingInfo, savedTicket.getTicketCode(), rawReason);
                 mentoringConversationService.postSystemMessage(conv, currentUser, msg);
             }
         } catch (Exception ex) {
@@ -873,11 +941,12 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         // 3. Gửi thông báo đến toàn bộ các Admin đang hoạt động
         try {
             List<User> admins = userRepository.findByRoleNameAndAccountStatus("ADMIN", AccountStatus.ACTIVE);
+            String reminderPrefix = currentPingCount > 1 ? "[Nhắc lần " + currentPingCount + "] " : "";
             for (User admin : admins) {
                 notificationService.sendMentoringTaskEventNotification(
                         currentUser, admin, task,
                         "FINANCE_DISPUTE_PING", String.valueOf(task.getId()),
-                        "⚠️ Sự cố dòng tiền Task #" + task.getId(),
+                        "⚠️ " + reminderPrefix + "Sự cố dòng tiền Task #" + task.getId(),
                         senderRole + " (" + displayName + ") báo cáo: " + rawReason + ". Bấm để đối soát Sổ quỹ."
                 );
             }
