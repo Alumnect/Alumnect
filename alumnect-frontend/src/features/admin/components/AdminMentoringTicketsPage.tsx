@@ -840,6 +840,122 @@ export function AdminMentoringTicketsPage() {
                           </p>
                         </div>
                       </div>
+
+                      {/* ĐỐI SOÁT NHẬT KÝ WORK LOG (MENTOR VS HỌC VIÊN - ĐẾM NGẦM 72H) */}
+                      <div className="p-5 rounded-2xl border border-border bg-surface space-y-3.5 shadow-2xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-primary-solid">
+                            <Clock size={14} />
+                            <span>Đối soát Nhật ký Work Log (Thời gian ghi log vs Phản hồi học viên)</span>
+                          </div>
+                          {disputeContext?.overdueWorkLogs72h ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                              <AlertTriangle size={12} />
+                              Có {disputeContext.overdueWorkLogs72h} log quá hạn 72h không phản hồi
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Danh sách Work Logs */}
+                        {(() => {
+                          const logs = disputeContext?.allWorkLogs ?? disputeContext?.confirmedWorkLogs ?? []
+                          if (logs.length === 0) {
+                            return (
+                              <p className="text-xs text-text-muted italic py-2">
+                                Nhiệm vụ này chưa có bản ghi nhật ký công việc (Work Log) nào được ghi nhận.
+                              </p>
+                            )
+                          }
+                          return (
+                            <div className="space-y-3">
+                              {logs.map((log, idx) => {
+                                const isPending = log.status === 'PENDING_CONFIRMATION'
+                                const isConfirmed = log.status === 'CONFIRMED'
+                                const isOverdue = log.isOverdue72h || (isPending && (log.pendingHours ?? 0) >= 72)
+
+                                return (
+                                  <div
+                                    key={log.id ?? idx}
+                                    className={cn(
+                                      'p-3.5 rounded-xl border text-xs space-y-2.5 transition',
+                                      isOverdue
+                                        ? 'border-rose-300 dark:border-rose-900/60 bg-rose-500/5'
+                                        : isConfirmed
+                                        ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-500/5'
+                                        : 'border-border bg-surface-2/40'
+                                    )}
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div className="flex items-center gap-2 font-bold text-text">
+                                        <span className="px-1.5 py-0.5 rounded bg-surface-2 text-text-subtle font-mono text-[11px]">
+                                          #{log.id}
+                                        </span>
+                                        <span>Ngày: {log.logDate}</span>
+                                        {log.revisionNumber && log.revisionNumber > 1 && (
+                                          <span className="text-[10px] text-text-muted">(Lần sửa {log.revisionNumber})</span>
+                                        )}
+                                      </div>
+
+                                      {/* Huy hiệu trạng thái 72h */}
+                                      {isOverdue ? (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[11px] bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                          <AlertTriangle size={11} />
+                                          Quá 72h không phản hồi (Chờ {log.pendingHours ?? 72}h) · Căn cứ công nhận tự động
+                                        </span>
+                                      ) : isPending ? (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                          <Clock size={11} />
+                                          Đang chờ phản hồi ({log.pendingHours ?? 0}h / 72h)
+                                        </span>
+                                      ) : isConfirmed ? (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[11px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                                          <CheckCircle2 size={11} />
+                                          Học viên đã duyệt {log.pendingHours != null ? `(sau ${log.pendingHours}h)` : ''}
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-rose-500/10 text-rose-600 border border-rose-500/20">
+                                          Yêu cầu sửa lại
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Nội dung công việc */}
+                                    <div className="space-y-1 text-text-muted leading-relaxed">
+                                      <div><strong className="text-text">Nội dung:</strong> {log.description}</div>
+                                      {log.workCompleted && <div><strong className="text-text">Hoàn thành:</strong> {log.workCompleted}</div>}
+                                      {log.result && <div><strong className="text-text">Kết quả:</strong> {log.result}</div>}
+                                    </div>
+
+                                    {/* Mốc thời gian đối chất: Mentor ghi log vs Học viên phản hồi */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border/60 text-[11.5px]">
+                                      <div className="flex items-center gap-1.5 text-text-muted">
+                                        <span className="font-semibold text-text">🕒 Mentor ghi log:</span>
+                                        <span>{log.createdAt ? new Date(log.createdAt).toLocaleString('vi-VN') : '—'}</span>
+                                      </div>
+
+                                      <div className="flex items-center gap-1.5 text-text-muted">
+                                        <span className="font-semibold text-text">💬 Học viên phản hồi:</span>
+                                        <span>
+                                          {log.confirmedAt ? (
+                                            <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                                              {new Date(log.confirmedAt).toLocaleString('vi-VN')}
+                                              {log.studentFeedback ? ` - "${log.studentFeedback}"` : ''}
+                                            </span>
+                                          ) : (
+                                            <span className={cn('font-semibold', isOverdue ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400')}>
+                                              {isOverdue ? 'Không phản hồi quá 72h' : 'Chưa có phản hồi'}
+                                            </span>
+                                          )}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )
+                        })()}
+                      </div>
                     </div>
                   )}
 
