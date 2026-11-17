@@ -81,28 +81,28 @@ const STUDENT_STEPS: GuideStep[] = [
         id: 1,
         title: 'Thanh tìm kiếm & Bộ lọc tiêu chí',
         description: 'Lọc nhanh theo Chuyên ngành (Kỹ thuật phần mềm SE, An toàn thông tin IA, Thiết kế đồ họa GD...), Lĩnh vực và Hình thức hướng dẫn 1-1.',
-        top: 36,
-        left: 24,
-        width: 72,
-        height: 19,
+        top: 35.4,
+        left: 27,
+        width: 65.2,
+        height: 5.5,
       },
       {
         id: 2,
         title: 'Thẻ thông tin Mentor',
         description: 'Hiển thị ảnh đại diện, chức danh hiện tại tại các tập đoàn lớn (Samsung, VNG, FPT...), chuyên ngành và các lĩnh vực đào tạo.',
-        top: 58,
-        left: 24,
-        width: 23,
-        height: 38,
+        top: 45,
+        left: 25.6,
+        width: 67.8,
+        height: 12,
       },
       {
         id: 3,
         title: 'Điểm uy tín & Nút Xem hồ sơ',
         description: 'Điểm uy tín, số đánh giá thực tế và nút màu cam "Xem hồ sơ" để xem chi tiết kinh nghiệm và các gói hỗ trợ của Mentor.',
-        top: 80,
-        left: 25,
-        width: 20,
-        height: 16,
+        top: 91.3,
+        left: 27.3,
+        width: 18.3,
+        height: 5.5,
       },
     ],
     mockup: {
@@ -140,28 +140,28 @@ const STUDENT_STEPS: GuideStep[] = [
         id: 1,
         title: 'Tiêu đề yêu cầu hỗ trợ',
         description: 'Tóm tắt ngắn gọn bài toán kỹ thuật (Ví dụ: Cố vấn định hướng đồ án Capstone Spring Boot & Microservices).',
-        top: 38,
-        left: 26,
-        width: 68,
-        height: 10,
+        top: 47.1,
+        left: 27.9,
+        width: 63.3,
+        height: 8.5,
       },
       {
         id: 2,
         title: 'Mô tả chi tiết nhu cầu',
         description: 'Trình bày cụ thể bối cảnh hiện tại, mục tiêu muốn đạt được và những khó khăn đang gặp (tối thiểu 20 ký tự, tối đa 3000 ký tự).',
-        top: 50,
-        left: 26,
-        width: 68,
-        height: 26,
+        top: 58.1,
+        left: 27.9,
+        width: 63.3,
+        height: 22,
       },
       {
         id: 3,
         title: 'Lĩnh vực & Chuyên môn hỗ trợ',
         description: 'Chọn chuyên môn kỹ thuật để hệ thống matching chuẩn xác tới các Mentor có năng lực chuyên sâu trong ngành.',
-        top: 80,
-        left: 26,
-        width: 68,
-        height: 14,
+        top: 86.8,
+        left: 25.6,
+        width: 67.8,
+        height: 11,
       },
     ],
     mockup: {
@@ -199,28 +199,28 @@ const STUDENT_STEPS: GuideStep[] = [
         id: 1,
         title: 'Trạng thái Đã thanh toán (Ký quỹ Escrow)',
         description: 'Huy hiệu xanh lá "Đã thanh toán" xác nhận nguồn tiền của bạn đã vào quỹ bảo đảm Escrow AlumNect an toàn 100%.',
-        top: 43,
-        left: 26,
-        width: 14,
-        height: 5,
+        top: 44.3,
+        left: 27.3,
+        width: 9.2,
+        height: 2.8,
       },
       {
         id: 2,
         title: 'Mức giá thỏa thuận & Hạn chót Deadline',
         description: 'Chi phí cam kết cố định không phát sinh phụ phí và mốc thời gian hoàn thành nhiệm vụ rõ ràng.',
-        top: 68,
-        left: 26,
-        width: 20,
-        height: 11,
+        top: 69.2,
+        left: 27.3,
+        width: 18.5,
+        height: 8.3,
       },
       {
         id: 3,
         title: 'Nút "Mở Task" màu cam để bắt đầu',
         description: 'Bấm nút [Mở Task] để truy cập không gian làm việc, theo dõi tiến trình 3 giai đoạn và nhận Work Log từ Mentor.',
-        top: 81,
-        left: 37,
-        width: 9,
-        height: 6,
+        top: 81.6,
+        left: 38.7,
+        width: 7.1,
+        height: 4,
       },
     ],
     mockup: {
@@ -258,27 +258,27 @@ const STUDENT_STEPS: GuideStep[] = [
         id: 1,
         title: 'Tiến trình Mentoring Task 3 Giai đoạn',
         description: 'Thanh tiến độ % và 3 giai đoạn trực quan: Giai đoạn 1 (Chuẩn bị), Giai đoạn 2 (Đang thực hiện), Giai đoạn 3 (Kết thúc & Nghiệm thu).',
-        top: 22,
-        left: 26,
-        width: 44,
-        height: 11,
+        top: 21.7,
+        left: 27.6,
+        width: 63.9,
+        height: 16,
       },
       {
         id: 2,
         title: 'Thời hạn hoàn thành (Deadline)',
         description: 'Mốc thời gian hạn chót cam kết hoàn thành công việc để hai bên cùng đối chiếu tiến độ.',
-        top: 38,
-        left: 34,
-        width: 9,
-        height: 11,
+        top: 41.8,
+        left: 25.6,
+        width: 44.6,
+        height: 25.3,
       },
       {
         id: 3,
         title: 'Nhật ký công việc (Work Logs) & Căn cứ 72h',
         description: 'Chi tiết từng buổi học (tóm tắt, nội dung, sản phẩm đạt được) và nút xác nhận. QUAN TRỌNG: Quá 72h không phản hồi là căn cứ pháp lý để Admin công nhận kết quả.',
-        top: 64,
-        left: 26,
-        width: 42,
+        top: 77.9,
+        left: 27.6,
+        width: 40.7,
         height: 18,
       },
     ],
@@ -321,28 +321,28 @@ const STUDENT_STEPS: GuideStep[] = [
         id: 1,
         title: 'Trạng thái Đã khai báo tài khoản hoàn tiền',
         description: 'Thông báo xác nhận tài khoản ngân hàng đã sẵn sàng nhận tiền hoàn (Ví dụ: Vietcombank ··· 4622).',
-        top: 34,
-        left: 26,
-        width: 68,
-        height: 7,
+        top: 34.6,
+        left: 25.6,
+        width: 67.8,
+        height: 7.5,
       },
       {
         id: 2,
         title: 'Biểu mẫu Khai báo Tài khoản thụ hưởng',
         description: 'Chọn ngân hàng, nhập số tài khoản và tên chủ tài khoản (IN HOA, không dấu) để hệ thống PayOS chuyển khoản tự động.',
-        top: 48,
-        left: 26,
-        width: 68,
+        top: 47.4,
+        left: 25.7,
+        width: 67.7,
         height: 28,
       },
       {
         id: 3,
         title: 'Bảng đối soát hoàn tiền tự động',
         description: 'Bảng theo dõi 3 trạng thái tiền hoàn: Đã nhận, Đang xử lý, và Chưa thành công để hỗ trợ xử lý thủ công kịp thời.',
-        top: 84,
-        left: 26,
-        width: 68,
-        height: 14,
+        top: 81.3,
+        left: 25.6,
+        width: 67.8,
+        height: 10.8,
       },
     ],
     mockup: {
@@ -383,28 +383,28 @@ const MENTOR_STEPS: GuideStep[] = [
         id: 1,
         title: 'Huy hiệu Trạng thái "Đang hoạt động"',
         description: 'Huy hiệu màu xanh xác nhận hồ sơ của bạn đã đủ điều kiện hiển thị trên danh sách tìm kiếm để sinh viên gửi yêu cầu.',
-        top: 19,
-        left: 35,
-        width: 13,
-        height: 5,
+        top: 22.1,
+        left: 35.9,
+        width: 7.8,
+        height: 3.3,
       },
       {
         id: 2,
-        title: 'Nút "Quản lý gói dịch vụ ->"',
-        description: 'Truy cập nhanh vào bảng quản lý các gói dịch vụ Mentor để duy trì trạng thái kết nối và bảo trợ tài chính.',
-        top: 25,
-        left: 27,
-        width: 15,
-        height: 6,
+        title: 'Thông tin cá nhân & Thiết lập hồ sơ',
+        description: 'Cập nhật thông tin chuyên môn, kinh nghiệm làm việc và liên kết tài khoản để sinh viên tin tưởng lựa chọn.',
+        top: 36.1,
+        left: 25.6,
+        width: 67.8,
+        height: 36.6,
       },
       {
         id: 3,
-        title: 'Thông tin cá nhân & Mã cựu sinh viên',
-        description: 'Đồng bộ tự động thông tin Họ tên, Email, SĐT, Cơ sở đào tạo (Đà Nẵng/Hà Nội/TP.HCM) và Mã sinh viên FPTU.',
-        top: 54,
-        left: 53,
-        width: 18,
-        height: 10,
+        title: 'Nút Hoàn tất / Lưu thay đổi',
+        description: 'Lưu lại các thông tin đã cập nhật để hệ thống đồng bộ và hiển thị ngay trên trang Khám phá Mentor.',
+        top: 83,
+        left: 69.1,
+        width: 9.9,
+        height: 5.3,
       },
     ],
     mockup: {
@@ -501,27 +501,27 @@ const MENTOR_STEPS: GuideStep[] = [
         id: 1,
         title: 'Trạng thái Chờ phản hồi & Thông tin Sinh viên',
         description: 'Hiển thị rõ thông tin sinh viên gửi yêu cầu, khóa học (K16/K18 FPTU) và thời gian gửi đến.',
-        top: 52,
-        left: 26,
-        width: 68,
-        height: 8,
+        top: 53.7,
+        left: 27.3,
+        width: 64.5,
+        height: 5,
       },
       {
         id: 2,
         title: 'Tiêu đề nhu cầu, Mức ngân sách & Hạn chót',
         description: 'Tóm tắt bài toán kỹ thuật (Frontend ReactJS/TS), mức ngân sách đề xuất (2.000đ), hình thức (Offline) và hạn chót mong muốn.',
-        top: 60,
-        left: 26,
-        width: 68,
-        height: 12,
+        top: 59.9,
+        left: 27.3,
+        width: 64.5,
+        height: 8,
       },
       {
         id: 3,
         title: 'Nút "Xem & phản hồi ->" màu cam',
         description: 'Bấm nút [Xem & phản hồi] để mở kênh trao đổi tin nhắn, làm rõ đề bài và khởi tạo Thỏa thuận Deal Ticket chính thức.',
         top: 76,
-        left: 79,
-        width: 15,
+        left: 78,
+        width: 14,
         height: 6,
       },
     ],
@@ -560,28 +560,28 @@ const MENTOR_STEPS: GuideStep[] = [
         id: 1,
         title: 'Nút "+ Thêm Work Log" màu cam',
         description: 'Bấm nút này sau mỗi buổi hướng dẫn để ghi chép nội dung đã dạy, bài tập giao và kết quả học viên đạt được.',
-        top: 58,
-        left: 53,
-        width: 15,
-        height: 5,
+        top: 71.3,
+        left: 55.9,
+        width: 12.4,
+        height: 3,
       },
       {
         id: 2,
         title: 'Bản ghi Work Log từng buổi & Căn cứ 72h',
         description: 'Hiển thị Log #1, ngày thực hiện và trạng thái "Đã xác nhận". QUAN TRỌNG: Nếu học viên im lặng quá 72h, Admin mặc định công nhận Work Log này.',
-        top: 64,
-        left: 26,
-        width: 42,
-        height: 16,
+        top: 77.9,
+        left: 27.6,
+        width: 40.7,
+        height: 18,
       },
       {
         id: 3,
         title: 'Thỏa thuận gốc #DEAL & Nút "Mở tin nhắn"',
         description: 'Đối chiếu nhanh nội dung phạm vi cam kết ban đầu và mở kênh chat trao đổi với học viên khi cần giải đáp.',
-        top: 63,
-        left: 71,
-        width: 22,
-        height: 16,
+        top: 73.6,
+        left: 72.1,
+        width: 21.4,
+        height: 22,
       },
     ],
     mockup: {
@@ -623,28 +623,28 @@ const MENTOR_STEPS: GuideStep[] = [
         id: 1,
         title: '3 Thẻ tổng quan Thu nhập',
         description: 'Tổng tiền "Đã nhận" (đã về tài khoản ngân hàng), "Đang xử lý" (chờ học viên nghiệm thu) và "Chưa thành công".',
-        top: 34,
-        left: 26,
-        width: 68,
-        height: 14,
+        top: 34.6,
+        left: 25.6,
+        width: 67.8,
+        height: 10.8,
       },
       {
         id: 2,
-        title: 'Cột Trạng thái "Đã chuyển" tự động',
-        description: 'Xác nhận tiền thù lao từ quỹ Escrow đã được chuyển khoản tự động tức thì về số tài khoản của bạn qua cổng PayOS.',
-        top: 53,
-        left: 60,
-        width: 10,
-        height: 17,
+        title: 'Bảng kê giao dịch & Lịch sử Payout',
+        description: 'Bảng theo dõi chi tiết từng mã giao dịch, số tiền thù lao giải ngân và mã tham chiếu ngân hàng liên kết.',
+        top: 47.4,
+        left: 25.6,
+        width: 67.8,
+        height: 12.9,
       },
       {
         id: 3,
-        title: 'Nút "Báo cáo" sự cố thanh toán',
-        description: 'Bấm nút [Báo cáo] nếu gặp sự cố giao dịch (ví dụ giao dịch dưới mức tối thiểu) để Ban Quản Trị hỗ trợ chuyển khoản thủ công.',
-        top: 69,
-        left: 84,
-        width: 8,
-        height: 12,
+        title: 'Cột Trạng thái "Đã chuyển" tự động',
+        description: 'Xác nhận tiền thù lao từ quỹ Escrow đã được chuyển khoản tự động tức thì về số tài khoản của bạn qua cổng PayOS.',
+        top: 52.6,
+        left: 64.3,
+        width: 11,
+        height: 7.6,
       },
     ],
     mockup: {
@@ -695,6 +695,8 @@ export function MentoringGuide() {
   const { t } = useTranslation()
   const [activeRole, setActiveRole] = useState<RoleType>('student')
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
+  const [hoveredCallout, setHoveredCallout] = useState<{ step: number; id: number } | null>(null)
+  const [modalHoveredCallout, setModalHoveredCallout] = useState<number | null>(null)
   const [previewImage, setPreviewImage] = useState<{
     src: string
     title: string
@@ -711,7 +713,10 @@ export function MentoringGuide() {
   // Handle ESC key to close lightbox
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPreviewImage(null)
+      if (e.key === 'Escape') {
+        setPreviewImage(null)
+        setModalHoveredCallout(null)
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
@@ -719,13 +724,16 @@ export function MentoringGuide() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">
-      {/* Lightbox Modal phóng to ảnh kèm Khoanh đỏ chú thích */}
+      {/* Lightbox Modal phóng to ảnh kèm Khoanh chú thích tương tác */}
       {previewImage && (
         <div
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-xs transition-opacity duration-200"
-          onClick={() => setPreviewImage(null)}
+          onClick={() => {
+            setPreviewImage(null)
+            setModalHoveredCallout(null)
+          }}
         >
           <div
             className="relative max-h-[94vh] max-w-5xl overflow-hidden rounded-2xl bg-surface shadow-2xl border border-white/20 flex flex-col"
@@ -744,7 +752,10 @@ export function MentoringGuide() {
 
               <button
                 type="button"
-                onClick={() => setPreviewImage(null)}
+                onClick={() => {
+                  setPreviewImage(null)
+                  setModalHoveredCallout(null)
+                }}
                 className="grid h-8 w-8 place-items-center rounded-xl text-text-subtle hover:bg-surface-3 hover:text-text transition cursor-pointer"
                 title="Đóng (ESC)"
               >
@@ -760,6 +771,37 @@ export function MentoringGuide() {
                   alt={previewImage.title}
                   className="w-full h-auto rounded-lg shadow-xs block"
                 />
+
+                {/* Vùng phát sáng tương tác khi rê chuột trong Modal */}
+                {previewImage.callouts?.map((c) => {
+                  const isHovered = modalHoveredCallout === c.id
+                  return (
+                    <div
+                      key={c.id}
+                      style={{
+                        top: `${c.top}%`,
+                        left: `${c.left}%`,
+                        width: `${c.width}%`,
+                        height: `${c.height}%`,
+                      }}
+                      onMouseEnter={() => setModalHoveredCallout(c.id)}
+                      onMouseLeave={() => setModalHoveredCallout(null)}
+                      className={cn(
+                        'absolute rounded-xl pointer-events-auto transition-all duration-200 cursor-pointer z-20',
+                        isHovered
+                          ? 'border-3 border-primary-solid bg-primary-solid/25 shadow-[0_0_30px_rgba(242,112,36,0.95)] ring-4 ring-primary-solid/30 scale-[1.01]'
+                          : 'border border-transparent bg-transparent hover:border-primary-solid/60 hover:bg-primary-solid/15'
+                      )}
+                      title={`Vị trí ${c.id}: ${c.title}`}
+                    >
+                      {isHovered && (
+                        <span className="absolute -top-3.5 -left-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-solid font-black text-white text-xs shadow-lg border-2 border-white ring-2 ring-primary-solid animate-pulse">
+                          {c.id}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
@@ -767,20 +809,39 @@ export function MentoringGuide() {
             {previewImage.callouts && previewImage.callouts.length > 0 && (
               <div className="border-t border-border bg-surface px-5 py-3.5 shrink-0">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {previewImage.callouts.map((c) => (
-                    <div
-                      key={c.id}
-                      className="flex items-start gap-2.5 text-[11.5px] leading-snug rounded-xl bg-primary-soft/30 p-2.5 border border-primary-soft-border/70"
-                    >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-solid font-black text-white text-[11px] shadow-xs">
-                        {c.id}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="font-bold text-text truncate">{c.title}</p>
-                        <p className="text-text-muted text-[11px] line-clamp-2 mt-0.5">{c.description}</p>
+                  {previewImage.callouts.map((c) => {
+                    const isHovered = modalHoveredCallout === c.id
+                    return (
+                      <div
+                        key={c.id}
+                        onMouseEnter={() => setModalHoveredCallout(c.id)}
+                        onMouseLeave={() => setModalHoveredCallout(null)}
+                        className={cn(
+                          'flex items-start gap-2.5 text-[11.5px] leading-snug rounded-xl p-2.5 border transition-all duration-200 cursor-pointer',
+                          isHovered
+                            ? 'border-primary-solid bg-primary-soft shadow-xs ring-2 ring-primary-solid/30 scale-[1.01]'
+                            : 'bg-primary-soft/30 border-primary-soft-border/70 hover:bg-primary-soft/60'
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-black text-white text-[11px] transition-all',
+                            isHovered
+                              ? 'bg-primary-solid scale-110 shadow-md ring-2 ring-primary-solid ring-offset-1'
+                              : 'bg-primary-solid shadow-xs'
+                          )}
+                        >
+                          {c.id}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-bold text-text truncate">{c.title}</p>
+                          <p className="text-text-muted text-[11px] line-clamp-2 mt-0.5">
+                            {c.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -816,7 +877,7 @@ export function MentoringGuide() {
             </div>
             <div className="flex items-center gap-1.5 rounded-lg bg-surface px-2.5 py-1 shadow-2xs border border-border">
               <Scale size={14} className="text-primary-solid" />
-              <span>Chuẩn quy định UC90</span>
+              <span>Chuẩn quy định</span>
             </div>
           </div>
         </div>
@@ -894,22 +955,40 @@ export function MentoringGuide() {
 
                       {/* Danh mục các vị trí thao tác chính */}
                       <div className="space-y-2 pt-1">
-                        {item.callouts.map((c) => (
-                          <div
-                            key={c.id}
-                            className="flex items-start gap-2.5 rounded-xl border border-primary-soft-border/80 bg-primary-soft/30 p-2.5 transition hover:bg-primary-soft/50"
-                          >
-                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-solid font-black text-white text-[11px] shadow-xs">
-                              {c.id}
-                            </span>
-                            <div className="min-w-0">
-                              <p className="font-bold text-text text-xs leading-tight">{c.title}</p>
-                              <p className="mt-0.5 text-[11.5px] text-text-muted leading-relaxed">
-                                {c.description}
-                              </p>
+                        {item.callouts.map((c) => {
+                          const isHovered =
+                            hoveredCallout?.step === item.step && hoveredCallout?.id === c.id
+                          return (
+                            <div
+                              key={c.id}
+                              onMouseEnter={() => setHoveredCallout({ step: item.step, id: c.id })}
+                              onMouseLeave={() => setHoveredCallout(null)}
+                              className={cn(
+                                'flex items-start gap-2.5 rounded-xl border p-2.5 transition-all duration-200 cursor-pointer',
+                                isHovered
+                                  ? 'border-primary-solid bg-primary-soft shadow-xs scale-[1.01] ring-2 ring-primary-solid/30'
+                                  : 'border-primary-soft-border/80 bg-primary-soft/30 hover:bg-primary-soft/60'
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-black text-white text-[11px] transition-all',
+                                  isHovered
+                                    ? 'bg-primary-solid scale-110 shadow-md ring-2 ring-primary-solid ring-offset-1'
+                                    : 'bg-primary-solid shadow-xs'
+                                )}
+                              >
+                                {c.id}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="font-bold text-text text-xs leading-tight">{c.title}</p>
+                                <p className="mt-0.5 text-[11.5px] text-text-muted leading-relaxed">
+                                  {c.description}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
 
                       {/* Hộp lưu ý / Tips */}
@@ -947,7 +1026,7 @@ export function MentoringGuide() {
                     )}
                   </div>
 
-                  {/* Cột phải: Khung ảnh chụp thực tế từ Web với Browser Mockup & Khoanh đỏ */}
+                  {/* Cột phải: Khung ảnh chụp thực tế từ Web với Browser Mockup */}
                   <div className="lg:col-span-6 flex flex-col justify-start">
                     <div className="overflow-hidden rounded-2xl border border-border bg-surface-2/40 shadow-xs transition hover:shadow-md">
                       {/* Browser Frame Top Bar */}
@@ -963,27 +1042,66 @@ export function MentoringGuide() {
                       </div>
 
                       {/* Image container */}
-                      <div
-                        onClick={() =>
-                          setPreviewImage({
-                            src: item.image,
-                            title: item.title,
-                            notes: item.imageNotes,
-                            callouts: item.callouts,
-                          })
-                        }
-                        className="group relative cursor-pointer overflow-hidden bg-surface-2"
-                        title="Bấm để phóng to xem rõ nét"
-                      >
+                      <div className="group relative overflow-hidden bg-surface-2">
                         <img
                           src={`${item.image}${GUIDE_IMAGE_VERSION}`}
                           alt={item.title}
-                          className="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01] block"
+                          className="w-full h-auto block transition-transform duration-300 group-hover:scale-[1.005]"
                           loading="lazy"
                         />
 
+                        {/* Interactive Spotlight Callouts khi rê chuột */}
+                        {item.callouts.map((c) => {
+                          const isHovered =
+                            hoveredCallout?.step === item.step && hoveredCallout?.id === c.id
+                          return (
+                            <div
+                              key={c.id}
+                              style={{
+                                top: `${c.top}%`,
+                                left: `${c.left}%`,
+                                width: `${c.width}%`,
+                                height: `${c.height}%`,
+                              }}
+                              onMouseEnter={() => setHoveredCallout({ step: item.step, id: c.id })}
+                              onMouseLeave={() => setHoveredCallout(null)}
+                              onClick={() =>
+                                setPreviewImage({
+                                  src: item.image,
+                                  title: item.title,
+                                  notes: item.imageNotes,
+                                  callouts: item.callouts,
+                                })
+                              }
+                              className={cn(
+                                'absolute rounded-xl pointer-events-auto transition-all duration-200 cursor-pointer z-10',
+                                isHovered
+                                  ? 'border-3 border-primary-solid bg-primary-solid/25 shadow-[0_0_26px_rgba(242,112,36,0.95)] ring-4 ring-primary-solid/30 scale-[1.01]'
+                                  : 'border border-transparent bg-transparent hover:border-primary-solid/60 hover:bg-primary-solid/15'
+                              )}
+                              title={`Vị trí ${c.id}: ${c.title} (Bấm để phóng to)`}
+                            >
+                              {isHovered && (
+                                <span className="absolute -top-3.5 -left-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-solid font-black text-white text-xs shadow-lg border-2 border-white ring-2 ring-primary-solid animate-pulse">
+                                  {c.id}
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })}
+
                         {/* Hover Overlay Zoom Button */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3.5">
+                        <div
+                          onClick={() =>
+                            setPreviewImage({
+                              src: item.image,
+                              title: item.title,
+                              notes: item.imageNotes,
+                              callouts: item.callouts,
+                            })
+                          }
+                          className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3.5 cursor-pointer z-20 pointer-events-none"
+                        >
                           <span className="text-white text-xs font-bold flex items-center gap-1.5 drop-shadow-sm">
                             <ZoomIn size={14} />
                             Bấm để phóng to xem chi tiết
