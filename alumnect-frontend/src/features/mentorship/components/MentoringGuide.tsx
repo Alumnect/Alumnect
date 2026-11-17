@@ -21,12 +21,24 @@ import {
   UserCheck,
   ZoomIn,
   X,
-  ExternalLink,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { Card } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
 
 type RoleType = 'student' | 'mentor'
+
+interface CalloutPin {
+  id: number
+  title: string
+  description: string
+  // Percentage coordinates on the image
+  top: number
+  left: number
+  width: number
+  height: number
+}
 
 interface GuideStep {
   step: number
@@ -39,6 +51,7 @@ interface GuideStep {
   image: string
   imageCaption: string
   imageNotes: string
+  callouts: CalloutPin[]
   mockup: {
     badge: string
     title: string
@@ -65,6 +78,35 @@ const STUDENT_STEPS: GuideStep[] = [
     imageCaption: 'Giao diện Khám phá & Lọc Mentor (alumnect.vn/app/mentoring/discover)',
     imageNotes:
       'Giao diện hiển thị số điểm uy tín, số đánh giá, số buổi hoàn thành và các thẻ chuyên ngành nổi bật của từng Mentor.',
+    callouts: [
+      {
+        id: 1,
+        title: 'Thanh tìm kiếm & Bộ lọc tiêu chí',
+        description: 'Lọc nhanh theo Chuyên ngành (Kỹ thuật phần mềm SE, An toàn thông tin IA, Thiết kế đồ họa GD...), Lĩnh vực và Hình thức hướng dẫn 1-1.',
+        top: 36,
+        left: 24,
+        width: 72,
+        height: 19,
+      },
+      {
+        id: 2,
+        title: 'Thẻ thông tin Mentor',
+        description: 'Hiển thị ảnh đại diện, chức danh hiện tại tại các tập đoàn lớn (Samsung, VNG, FPT...), chuyên ngành và các lĩnh vực đào tạo.',
+        top: 58,
+        left: 24,
+        width: 23,
+        height: 38,
+      },
+      {
+        id: 3,
+        title: 'Điểm uy tín & Nút Xem hồ sơ',
+        description: 'Điểm uy tín, số đánh giá thực tế và nút màu cam "Xem hồ sơ" để xem chi tiết kinh nghiệm và các gói hỗ trợ của Mentor.',
+        top: 80,
+        left: 25,
+        width: 20,
+        height: 16,
+      },
+    ],
     mockup: {
       badge: 'Bộ lọc tiêu chí',
       title: 'Tìm kiếm thông minh theo nhu cầu',
@@ -95,6 +137,35 @@ const STUDENT_STEPS: GuideStep[] = [
     imageCaption: 'Biểu mẫu Khởi tạo Yêu cầu Cố vấn (alumnect.vn/app/mentoring/requests/create)',
     imageNotes:
       'Mô tả chi tiết và tải lên tài liệu/đề cương giúp hệ thống matching chuẩn xác và Mentor phản hồi nhanh hơn.',
+    callouts: [
+      {
+        id: 1,
+        title: 'Tiêu đề yêu cầu hỗ trợ',
+        description: 'Tóm tắt ngắn gọn bài toán kỹ thuật (Ví dụ: Cố vấn định hướng đồ án Capstone Spring Boot & Microservices).',
+        top: 38,
+        left: 26,
+        width: 68,
+        height: 10,
+      },
+      {
+        id: 2,
+        title: 'Mô tả chi tiết nhu cầu',
+        description: 'Trình bày cụ thể bối cảnh hiện tại, mục tiêu muốn đạt được và những khó khăn đang gặp (tối thiểu 20 ký tự, tối đa 3000 ký tự).',
+        top: 50,
+        left: 26,
+        width: 68,
+        height: 26,
+      },
+      {
+        id: 3,
+        title: 'Lĩnh vực & Chuyên môn hỗ trợ',
+        description: 'Chọn chuyên môn kỹ thuật để hệ thống matching chuẩn xác tới các Mentor có năng lực chuyên sâu trong ngành.',
+        top: 80,
+        left: 26,
+        width: 68,
+        height: 14,
+      },
+    ],
     mockup: {
       badge: 'Yêu cầu Cố vấn',
       title: 'Các thông tin trọng tâm cần điền',
@@ -125,6 +196,35 @@ const STUDENT_STEPS: GuideStep[] = [
     imageCaption: 'Giao diện Thỏa thuận & Nút Mở Task (alumnect.vn/app/mentoring/deals)',
     imageNotes:
       'Khi trạng thái chuyển sang "Đã thanh toán", tiền được giữ an toàn tại Escrow AlumNect. Nút "Mở Task" sẽ xuất hiện để bắt đầu làm việc.',
+    callouts: [
+      {
+        id: 1,
+        title: 'Trạng thái Đã thanh toán (Ký quỹ Escrow)',
+        description: 'Huy hiệu xanh lá "Đã thanh toán" xác nhận nguồn tiền của bạn đã vào quỹ bảo đảm Escrow AlumNect an toàn 100%.',
+        top: 43,
+        left: 26,
+        width: 14,
+        height: 5,
+      },
+      {
+        id: 2,
+        title: 'Mức giá thỏa thuận & Hạn chót Deadline',
+        description: 'Chi phí cam kết cố định không phát sinh phụ phí và mốc thời gian hoàn thành nhiệm vụ rõ ràng.',
+        top: 68,
+        left: 26,
+        width: 20,
+        height: 11,
+      },
+      {
+        id: 3,
+        title: 'Nút "Mở Task" màu cam để bắt đầu',
+        description: 'Bấm nút [Mở Task] để truy cập không gian làm việc, theo dõi tiến trình 3 giai đoạn và nhận Work Log từ Mentor.',
+        top: 81,
+        left: 37,
+        width: 9,
+        height: 6,
+      },
+    ],
     mockup: {
       badge: 'Thỏa thuận Deal Ticket',
       title: 'Cơ chế Ký quỹ An toàn (Escrow Mechanism)',
@@ -155,6 +255,35 @@ const STUDENT_STEPS: GuideStep[] = [
     imageCaption: 'Chi tiết Task công việc & Theo dõi Work Log (alumnect.vn/app/mentoring/tasks/:id)',
     imageNotes:
       'Hiển thị rõ 3 giai đoạn tiến trình (Chuẩn bị -> Đang thực hiện -> Kết thúc & Nghiệm thu), thông tin Deadline và danh sách Work Log từng buổi.',
+    callouts: [
+      {
+        id: 1,
+        title: 'Tiến trình Mentoring Task 3 Giai đoạn',
+        description: 'Thanh tiến độ % và 3 giai đoạn trực quan: Giai đoạn 1 (Chuẩn bị), Giai đoạn 2 (Đang thực hiện), Giai đoạn 3 (Kết thúc & Nghiệm thu).',
+        top: 22,
+        left: 26,
+        width: 44,
+        height: 11,
+      },
+      {
+        id: 2,
+        title: 'Thời hạn hoàn thành (Deadline)',
+        description: 'Mốc thời gian hạn chót cam kết hoàn thành công việc để hai bên cùng đối chiếu tiến độ.',
+        top: 38,
+        left: 34,
+        width: 9,
+        height: 11,
+      },
+      {
+        id: 3,
+        title: 'Nhật ký công việc (Work Logs) & Căn cứ 72h',
+        description: 'Chi tiết từng buổi học (tóm tắt, nội dung, sản phẩm đạt được) và nút xác nhận. QUAN TRỌNG: Quá 72h không phản hồi là căn cứ pháp lý để Admin công nhận kết quả.',
+        top: 64,
+        left: 26,
+        width: 42,
+        height: 18,
+      },
+    ],
     mockup: {
       badge: 'Quản lý Tiến trình 3 Giai đoạn',
       title: 'Quy tắc nghiệm thu Work Log & Deadline',
@@ -189,6 +318,35 @@ const STUDENT_STEPS: GuideStep[] = [
     imageCaption: 'Giao diện Khai báo Tài khoản & Đối soát Hoàn tiền (alumnect.vn/app/mentoring/refunds)',
     imageNotes:
       'Khai báo số tài khoản ngân hàng chính chủ để nhận hoàn tiền tự động 100% khi có tranh chấp hoặc Mentor vi phạm thỏa thuận.',
+    callouts: [
+      {
+        id: 1,
+        title: 'Trạng thái Đã khai báo tài khoản hoàn tiền',
+        description: 'Thông báo xác nhận tài khoản ngân hàng đã sẵn sàng nhận tiền hoàn (Ví dụ: Vietcombank ··· 4622).',
+        top: 34,
+        left: 26,
+        width: 68,
+        height: 7,
+      },
+      {
+        id: 2,
+        title: 'Biểu mẫu Khai báo Tài khoản thụ hưởng',
+        description: 'Chọn ngân hàng, nhập số tài khoản và tên chủ tài khoản (IN HOA, không dấu) để hệ thống PayOS chuyển khoản tự động.',
+        top: 48,
+        left: 26,
+        width: 68,
+        height: 28,
+      },
+      {
+        id: 3,
+        title: 'Bảng đối soát hoàn tiền tự động',
+        description: 'Bảng theo dõi 3 trạng thái tiền hoàn: Đã nhận, Đang xử lý, và Chưa thành công để hỗ trợ xử lý thủ công kịp thời.',
+        top: 84,
+        left: 26,
+        width: 68,
+        height: 14,
+      },
+    ],
     mockup: {
       badge: 'Quyền lợi Học viên',
       title: 'Chính sách Hoàn tiền & Thời hiệu Khiếu nại',
@@ -222,6 +380,35 @@ const MENTOR_STEPS: GuideStep[] = [
     imageCaption: 'Hồ sơ Cố vấn & Trạng thái Hoạt động (alumnect.vn/app/mentoring/become-mentor)',
     imageNotes:
       'Hiển thị thông tin cựu sinh viên FPT, chức danh công việc, trạng thái hồ sơ "Đang hoạt động" và nút quản lý gói dịch vụ.',
+    callouts: [
+      {
+        id: 1,
+        title: 'Huy hiệu Trạng thái "Đang hoạt động"',
+        description: 'Huy hiệu màu xanh xác nhận hồ sơ của bạn đã đủ điều kiện hiển thị trên danh sách tìm kiếm để sinh viên gửi yêu cầu.',
+        top: 19,
+        left: 35,
+        width: 13,
+        height: 5,
+      },
+      {
+        id: 2,
+        title: 'Nút "Quản lý gói dịch vụ ->"',
+        description: 'Truy cập nhanh vào bảng quản lý các gói dịch vụ Mentor để duy trì trạng thái kết nối và bảo trợ tài chính.',
+        top: 25,
+        left: 27,
+        width: 15,
+        height: 6,
+      },
+      {
+        id: 3,
+        title: 'Thông tin cá nhân & Mã cựu sinh viên',
+        description: 'Đồng bộ tự động thông tin Họ tên, Email, SĐT, Cơ sở đào tạo (Đà Nẵng/Hà Nội/TP.HCM) và Mã sinh viên FPTU.',
+        top: 54,
+        left: 53,
+        width: 18,
+        height: 10,
+      },
+    ],
     mockup: {
       badge: 'Hồ sơ Cố vấn (Mentor Profile)',
       title: 'Tiêu chuẩn phê duyệt hồ sơ',
@@ -252,6 +439,35 @@ const MENTOR_STEPS: GuideStep[] = [
     imageCaption: 'Bảng Gói dịch vụ Mentor (alumnect.vn/app/mentoring/packages)',
     imageNotes:
       'Hiển thị thời hạn gói đang dùng, chi phí theo kỳ hạn, huy hiệu Mentor trên hồ sơ và kết nối cổng đối soát thù lao PayOS.',
+    callouts: [
+      {
+        id: 1,
+        title: 'Banner Gói dịch vụ đang kích hoạt',
+        description: 'Hiển thị chi tiết Gói đang dùng (Ví dụ: Gói Cao Cấp 6 Tháng), trạng thái Đang hoạt động và Hạn dùng đến 08/11/2027.',
+        top: 33,
+        left: 26,
+        width: 68,
+        height: 10,
+      },
+      {
+        id: 2,
+        title: 'Bảng 3 gói dịch vụ đa dạng kỳ hạn',
+        description: 'Gói Tiêu Chuẩn 1 Tháng, Gói Phổ Biến 3 Tháng, và Gói Cao Cấp 6 Tháng kèm mức giá ưu đãi theo tháng.',
+        top: 44,
+        left: 26,
+        width: 68,
+        height: 48,
+      },
+      {
+        id: 3,
+        title: 'Quyền lợi Đối soát thù lao qua PayOS',
+        description: 'Huy hiệu xác thực Mentor và hệ thống bảo trợ đối soát thù lao tự động 100% qua cổng thanh toán PayOS.',
+        top: 71,
+        left: 72,
+        width: 18,
+        height: 10,
+      },
+    ],
     mockup: {
       badge: 'Gói Dịch Vụ Cố Vấn',
       title: 'Quyền lợi dành cho Mentor có gói kích hoạt',
@@ -282,6 +498,35 @@ const MENTOR_STEPS: GuideStep[] = [
     imageCaption: 'Hòm thư Tiếp nhận Yêu cầu Cố vấn (alumnect.vn/app/mentoring/incoming-requests)',
     imageNotes:
       'Xem thông tin chi tiết sinh viên, tiêu đề nhu cầu, hình thức (Online/Offline), hạn chót và nút hành động "Xem & phản hồi".',
+    callouts: [
+      {
+        id: 1,
+        title: 'Trạng thái Chờ phản hồi & Thông tin Sinh viên',
+        description: 'Hiển thị rõ thông tin sinh viên gửi yêu cầu, khóa học (K16/K18 FPTU) và thời gian gửi đến.',
+        top: 52,
+        left: 26,
+        width: 68,
+        height: 8,
+      },
+      {
+        id: 2,
+        title: 'Tiêu đề nhu cầu, Mức ngân sách & Hạn chót',
+        description: 'Tóm tắt bài toán kỹ thuật (Frontend ReactJS/TS), mức ngân sách đề xuất (2.000đ), hình thức (Offline) và hạn chót mong muốn.',
+        top: 60,
+        left: 26,
+        width: 68,
+        height: 12,
+      },
+      {
+        id: 3,
+        title: 'Nút "Xem & phản hồi ->" màu cam',
+        description: 'Bấm nút [Xem & phản hồi] để mở kênh trao đổi tin nhắn, làm rõ đề bài và khởi tạo Thỏa thuận Deal Ticket chính thức.',
+        top: 76,
+        left: 79,
+        width: 15,
+        height: 6,
+      },
+    ],
     mockup: {
       badge: 'Quy trình khởi tạo Deal',
       title: 'Các điều khoản cần chốt trong Deal Ticket',
@@ -312,6 +557,35 @@ const MENTOR_STEPS: GuideStep[] = [
     imageCaption: 'Giao diện Chi tiết Task & Thêm Work Log mới (alumnect.vn/app/mentoring/tasks/:id)',
     imageNotes:
       'Giao diện trực quan với nút "+ Thêm Work Log" màu cam, lịch sử Work Log từng buổi, trạng thái xác nhận và nút trao đổi tin nhắn nhanh.',
+    callouts: [
+      {
+        id: 1,
+        title: 'Nút "+ Thêm Work Log" màu cam',
+        description: 'Bấm nút này sau mỗi buổi hướng dẫn để ghi chép nội dung đã dạy, bài tập giao và kết quả học viên đạt được.',
+        top: 58,
+        left: 53,
+        width: 15,
+        height: 5,
+      },
+      {
+        id: 2,
+        title: 'Bản ghi Work Log từng buổi & Căn cứ 72h',
+        description: 'Hiển thị Log #1, ngày thực hiện và trạng thái "Đã xác nhận". QUAN TRỌNG: Nếu học viên im lặng quá 72h, Admin mặc định công nhận Work Log này.',
+        top: 64,
+        left: 26,
+        width: 42,
+        height: 16,
+      },
+      {
+        id: 3,
+        title: 'Thỏa thuận gốc #DEAL & Nút "Mở tin nhắn"',
+        description: 'Đối chiếu nhanh nội dung phạm vi cam kết ban đầu và mở kênh chat trao đổi với học viên khi cần giải đáp.',
+        top: 63,
+        left: 71,
+        width: 22,
+        height: 16,
+      },
+    ],
     mockup: {
       badge: 'Căn cứ bảo hộ thù lao',
       title: 'Quy tắc Work Log & Pháp lý 72 giờ',
@@ -346,6 +620,35 @@ const MENTOR_STEPS: GuideStep[] = [
     imageCaption: 'Bảng kê Thu nhập & Lịch sử Chuyển khoản Payout (alumnect.vn/app/mentoring/earnings)',
     imageNotes:
       'Bảng điều khiển chi tiết số tiền "Đã nhận", "Đang xử lý", danh sách Task kèm tên học viên, số tiền và trạng thái chuyển khoản tự động.',
+    callouts: [
+      {
+        id: 1,
+        title: '3 Thẻ tổng quan Thu nhập',
+        description: 'Tổng tiền "Đã nhận" (đã về tài khoản ngân hàng), "Đang xử lý" (chờ học viên nghiệm thu) và "Chưa thành công".',
+        top: 34,
+        left: 26,
+        width: 68,
+        height: 14,
+      },
+      {
+        id: 2,
+        title: 'Cột Trạng thái "Đã chuyển" tự động',
+        description: 'Xác nhận tiền thù lao từ quỹ Escrow đã được chuyển khoản tự động tức thì về số tài khoản của bạn qua cổng PayOS.',
+        top: 53,
+        left: 60,
+        width: 10,
+        height: 17,
+      },
+      {
+        id: 3,
+        title: 'Nút "Báo cáo" sự cố thanh toán',
+        description: 'Bấm nút [Báo cáo] nếu gặp sự cố giao dịch (ví dụ giao dịch dưới mức tối thiểu) để Ban Quản Trị hỗ trợ chuyển khoản thủ công.',
+        top: 69,
+        left: 84,
+        width: 8,
+        height: 12,
+      },
+    ],
     mockup: {
       badge: 'Thanh toán & Thu nhập',
       title: 'Cơ chế giải ngân tự động (PayOS Payout)',
@@ -392,7 +695,14 @@ export function MentoringGuide() {
   const { t } = useTranslation()
   const [activeRole, setActiveRole] = useState<RoleType>('student')
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
-  const [previewImage, setPreviewImage] = useState<{ src: string; title: string; notes?: string } | null>(null)
+  const [showCallouts, setShowCallouts] = useState<boolean>(true)
+  const [hoveredCallout, setHoveredCallout] = useState<number | null>(null)
+  const [previewImage, setPreviewImage] = useState<{
+    src: string
+    title: string
+    notes?: string
+    callouts?: CalloutPin[]
+  } | null>(null)
 
   const steps = activeRole === 'student' ? STUDENT_STEPS : MENTOR_STEPS
 
@@ -411,52 +721,104 @@ export function MentoringGuide() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">
-      {/* Lightbox Modal phóng to ảnh */}
+      {/* Lightbox Modal phóng to ảnh kèm Khoanh đỏ chú thích */}
       {previewImage && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs transition-opacity duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-xs transition-opacity duration-200"
           onClick={() => setPreviewImage(null)}
         >
           <div
-            className="relative max-h-[92vh] max-w-5xl overflow-hidden rounded-2xl bg-surface shadow-2xl border border-white/20"
+            className="relative max-h-[94vh] max-w-5xl overflow-hidden rounded-2xl bg-surface shadow-2xl border border-white/20 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header modal */}
-            <div className="flex items-center justify-between border-b border-border bg-surface-2 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-border bg-surface-2 px-4 py-3 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-rose-500" />
                 <span className="h-3 w-3 rounded-full bg-amber-500" />
                 <span className="h-3 w-3 rounded-full bg-emerald-500" />
-                <h4 className="ml-2 text-xs font-bold text-text truncate max-w-[500px]">
+                <h4 className="ml-2 text-xs font-bold text-text truncate max-w-[450px]">
                   {previewImage.title}
                 </h4>
               </div>
-              <button
-                type="button"
-                onClick={() => setPreviewImage(null)}
-                className="grid h-8 w-8 place-items-center rounded-xl text-text-subtle hover:bg-surface-3 hover:text-text transition cursor-pointer"
-                title="Đóng (ESC)"
-              >
-                <X size={18} />
-              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCallouts(!showCallouts)}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold transition cursor-pointer',
+                    showCallouts
+                      ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                      : 'bg-surface-3 text-text-subtle hover:text-text'
+                  )}
+                >
+                  {showCallouts ? <Eye size={13} /> : <EyeOff size={13} />}
+                  <span>{showCallouts ? 'Đang bật khoanh đỏ' : 'Đã ẩn khoanh đỏ'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(null)}
+                  className="grid h-8 w-8 place-items-center rounded-xl text-text-subtle hover:bg-surface-3 hover:text-text transition cursor-pointer"
+                  title="Đóng (ESC)"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
-            {/* Ảnh phóng to */}
-            <div className="max-h-[75vh] overflow-y-auto bg-surface-2/40 p-2">
-              <img
-                src={previewImage.src}
-                alt={previewImage.title}
-                className="w-full h-auto rounded-lg shadow-xs"
-              />
+            {/* Vùng hiển thị ảnh phóng to kèm Khoanh đỏ vector */}
+            <div className="max-h-[70vh] overflow-y-auto bg-surface-2/40 p-3">
+              <div className="relative mx-auto inline-block w-full">
+                <img
+                  src={previewImage.src}
+                  alt={previewImage.title}
+                  className="w-full h-auto rounded-lg shadow-xs block"
+                />
+
+                {/* Khoanh đỏ vector phủ trên ảnh lightbox */}
+                {showCallouts &&
+                  previewImage.callouts?.map((c) => (
+                    <div
+                      key={c.id}
+                      style={{
+                        top: `${c.top}%`,
+                        left: `${c.left}%`,
+                        width: `${c.width}%`,
+                        height: `${c.height}%`,
+                      }}
+                      className="absolute rounded-xl border-2 border-red-500 bg-red-500/15 shadow-[0_0_12px_rgba(239,68,68,0.5)] transition-all pointer-events-none"
+                    >
+                      <span className="absolute -top-3.5 -left-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 font-black text-white text-xs shadow-md border-2 border-white ring-2 ring-red-500">
+                        {c.id}
+                      </span>
+                    </div>
+                  ))}
+              </div>
             </div>
 
-            {/* Chú thích chân ảnh */}
-            {previewImage.notes && (
-              <div className="border-t border-border bg-surface px-4 py-3 text-xs text-text-muted leading-relaxed">
-                <span className="font-bold text-primary-solid">Ghi chú đối soát: </span>
-                {previewImage.notes}
+            {/* Bảng chú thích danh sách các điểm khoanh đỏ */}
+            {previewImage.callouts && previewImage.callouts.length > 0 && (
+              <div className="border-t border-border bg-surface px-5 py-3 shrink-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {previewImage.callouts.map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-start gap-2 text-[11.5px] leading-snug rounded-lg bg-surface-2/70 p-2 border border-border/70"
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-600 font-black text-white text-[10px]">
+                        {c.id}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-bold text-text truncate">{c.title}</p>
+                        <p className="text-text-muted text-[11px] line-clamp-2">{c.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -530,18 +892,31 @@ export function MentoringGuide() {
         </div>
       </Card>
 
-      {/* 5-Step Process Timeline with Actual Web Screenshots */}
+      {/* 5-Step Process Timeline with Actual Web Screenshots & Red Callouts */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-text flex items-center gap-2">
             <span className="grid h-6 w-6 place-items-center rounded-full bg-primary-solid text-xs text-white">
               5
             </span>
             <span>Quy trình làm việc dành cho {activeRole === 'student' ? 'Học viên' : 'Cố vấn'}</span>
           </h2>
-          <span className="text-xs font-semibold text-text-subtle">
-            Hình ảnh chụp thực tế từ Web AlumNect
-          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCallouts(!showCallouts)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition cursor-pointer shadow-2xs',
+                showCallouts
+                  ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+                  : 'border-border bg-surface text-text-subtle hover:text-text'
+              )}
+            >
+              {showCallouts ? <Eye size={14} /> : <EyeOff size={14} />}
+              <span>{showCallouts ? 'Đang bật khoanh đỏ chú thích' : 'Đang ẩn khoanh đỏ'}</span>
+            </button>
+          </div>
         </div>
 
         <div className="space-y-8">
@@ -552,7 +927,7 @@ export function MentoringGuide() {
                 className="overflow-hidden border-border bg-surface p-5 sm:p-6 shadow-2xs transition hover:border-primary-soft-border"
               >
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                  {/* Cột trái: Thông tin bước, Mô tả & Lưu ý nghiệp vụ */}
+                  {/* Cột trái: Thông tin bước, Mô tả & Danh mục chú thích khoanh đỏ */}
                   <div className="space-y-4 lg:col-span-6 flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2.5">
@@ -570,19 +945,53 @@ export function MentoringGuide() {
                       <p className="text-xs font-semibold text-text-subtle">{item.subtitle}</p>
                       <p className="text-xs leading-relaxed text-text-muted">{item.description}</p>
 
-                      {/* Checklist trọng tâm của bước */}
-                      <div className="rounded-xl border border-border/80 bg-surface-2/60 p-3 text-xs space-y-2">
-                        <span className="font-bold text-[11px] text-primary-solid uppercase tracking-wider">
-                          {item.mockup.badge}
-                        </span>
-                        <ul className="space-y-1.5 text-text-muted text-[11.5px]">
-                          {item.mockup.items.map((it, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <span className="text-primary-solid font-bold">•</span>
-                              <span>{it}</span>
-                            </li>
-                          ))}
-                        </ul>
+                      {/* Bảng chú thích các điểm khoanh đỏ ① ② ③ */}
+                      <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-3.5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[11px] text-red-600 dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                            Vị trí khoanh đỏ trên ảnh
+                          </span>
+                          <span className="text-[10.5px] font-semibold text-text-subtle">
+                            Di chuột để làm nổi bật
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 text-xs">
+                          {item.callouts.map((c) => {
+                            const isHovered = hoveredCallout === c.id
+                            return (
+                              <div
+                                key={c.id}
+                                onMouseEnter={() => setHoveredCallout(c.id)}
+                                onMouseLeave={() => setHoveredCallout(null)}
+                                className={cn(
+                                  'flex items-start gap-2.5 rounded-lg p-2 transition cursor-pointer border',
+                                  isHovered
+                                    ? 'bg-red-500/15 border-red-500/40 shadow-xs'
+                                    : 'bg-surface/80 border-border/60 hover:bg-surface'
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-black text-[11px] transition-transform',
+                                    isHovered
+                                      ? 'bg-red-600 text-white scale-110'
+                                      : 'bg-red-500/20 text-red-600 dark:text-red-400'
+                                  )}
+                                >
+                                  {c.id}
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-text text-xs leading-tight">{c.title}</p>
+                                  <p className="mt-0.5 text-[11px] text-text-muted leading-relaxed">
+                                    {c.description}
+                                  </p>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
                       </div>
 
                       {/* Hộp lưu ý / Tips */}
@@ -620,8 +1029,8 @@ export function MentoringGuide() {
                     )}
                   </div>
 
-                  {/* Cột phải: Khung ảnh chụp thực tế từ Web với Browser Mockup */}
-                  <div className="lg:col-span-6">
+                  {/* Cột phải: Khung ảnh chụp thực tế từ Web với Browser Mockup & Khoanh đỏ */}
+                  <div className="lg:col-span-6 flex flex-col justify-start">
                     <div className="overflow-hidden rounded-2xl border border-border bg-surface-2/40 shadow-xs transition hover:shadow-md">
                       {/* Browser Frame Top Bar */}
                       <div className="flex items-center justify-between border-b border-border/80 bg-surface-2/90 px-3 py-2">
@@ -630,21 +1039,22 @@ export function MentoringGuide() {
                           <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
                           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
                         </div>
-                        <span className="font-mono text-[10.5px] font-semibold text-text-subtle truncate max-w-[220px]">
+                        <span className="font-mono text-[10px] font-semibold text-text-subtle truncate max-w-[200px]">
                           {item.imageCaption}
                         </span>
-                        <span className="rounded bg-primary-soft px-1.5 py-0.5 text-[9.5px] font-bold text-primary-solid">
-                          Ảnh chụp web
+                        <span className="rounded bg-red-500/15 border border-red-500/30 px-1.5 py-0.5 text-[9.5px] font-bold text-red-600 dark:text-red-400">
+                          Có khoanh đỏ
                         </span>
                       </div>
 
-                      {/* Image with zoom on hover and click */}
+                      {/* Image container with Red Callout Overlays */}
                       <div
                         onClick={() =>
                           setPreviewImage({
                             src: item.image,
                             title: item.title,
                             notes: item.imageNotes,
+                            callouts: item.callouts,
                           })
                         }
                         className="group relative cursor-pointer overflow-hidden bg-surface-2"
@@ -653,10 +1063,46 @@ export function MentoringGuide() {
                         <img
                           src={item.image}
                           alt={item.title}
-                          className="w-full h-auto object-cover max-h-[360px] transition-transform duration-300 group-hover:scale-[1.02]"
+                          className="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01] block"
                           loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3.5">
+
+                        {/* Các vùng khoanh đỏ trực tiếp trên ảnh */}
+                        {showCallouts &&
+                          item.callouts.map((c) => {
+                            const isHovered = hoveredCallout === c.id
+                            return (
+                              <div
+                                key={c.id}
+                                style={{
+                                  top: `${c.top}%`,
+                                  left: `${c.left}%`,
+                                  width: `${c.width}%`,
+                                  height: `${c.height}%`,
+                                }}
+                                className={cn(
+                                  'absolute rounded-lg border-2 transition-all pointer-events-none',
+                                  isHovered
+                                    ? 'border-red-500 bg-red-500/25 shadow-[0_0_16px_rgba(239,68,68,0.8)] scale-[1.02]'
+                                    : 'border-red-500 bg-red-500/15 shadow-[0_0_8px_rgba(239,68,68,0.4)]'
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    'absolute -top-3 -left-3 flex h-6 w-6 items-center justify-center rounded-full font-black text-xs shadow-md border-2 border-white ring-1 ring-red-500 transition-transform',
+                                    isHovered
+                                      ? 'bg-red-700 text-white scale-125'
+                                      : 'bg-red-600 text-white'
+                                  )}
+                                >
+                                  {c.id}
+                                </span>
+                              </div>
+                            )
+                          })}
+
+                        {/* Hover Overlay Zoom Button */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3.5">
                           <span className="text-white text-xs font-bold flex items-center gap-1.5 drop-shadow-sm">
                             <ZoomIn size={14} />
                             Bấm để phóng to xem chi tiết
@@ -667,7 +1113,7 @@ export function MentoringGuide() {
                         </div>
                       </div>
 
-                      {/* Chú thích tính năng trên giao diện ảnh */}
+                      {/* Chú thích chân ảnh */}
                       <div className="border-t border-border/60 bg-surface/90 p-3 text-[11.5px] text-text-muted leading-relaxed">
                         <div className="flex items-start gap-1.5">
                           <span className="font-bold text-primary-solid shrink-0">Vị trí thao tác:</span>
