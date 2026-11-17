@@ -22,11 +22,7 @@ export function isVideoUrl(url?: string): boolean {
   if (!url) return false
   const lower = url.toLowerCase().split('?')[0]
   return (
-    lower.endsWith('.mp4') ||
-    lower.endsWith('.webm') ||
-    lower.endsWith('.mov') ||
-    lower.endsWith('.avi') ||
-    lower.endsWith('.mkv') ||
+    /\.(mp4|m4v|webm|mov|avi|mkv|3gp|ogv|wmv|flv|mpe?g)$/.test(lower) ||
     url.toLowerCase().includes('/video/')
   )
 }
@@ -279,9 +275,9 @@ export function ImageCarousel({
               aria-label={t('common.prevImage')}
               className="absolute left-2.5 top-1/2 z-20 -translate-y-1/2
                          grid h-8 w-8 place-items-center rounded-full
-                         bg-white/90 text-gray-800 shadow-md
+                         bg-white/90 text-gray-800 shadow-md dark:bg-black/60 dark:text-white
                          opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                         hover:bg-white active:scale-95"
+                         hover:bg-white dark:hover:bg-black/80 active:scale-95"
             >
               <ChevronLeft size={18} strokeWidth={2.5} />
             </button>
@@ -296,15 +292,21 @@ export function ImageCarousel({
               aria-label={t('common.nextImage')}
               className="absolute right-2.5 top-1/2 z-20 -translate-y-1/2
                          grid h-8 w-8 place-items-center rounded-full
-                         bg-white/90 text-gray-800 shadow-md
+                         bg-white/90 text-gray-800 shadow-md dark:bg-black/60 dark:text-white
                          opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                         hover:bg-white active:scale-95"
+                         hover:bg-white dark:hover:bg-black/80 active:scale-95"
             >
               <ChevronRight size={18} strokeWidth={2.5} />
             </button>
           )}
 
-          <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1">
+          {/* Slide video có thanh điều khiển ở đáy nên nâng chấm lên để không đè lên thanh tua */}
+          <div
+            className={cn(
+              'absolute left-1/2 z-20 flex -translate-x-1/2 items-center gap-1',
+              isVideoUrl(images[current]) ? 'bottom-14' : 'bottom-3',
+            )}
+          >
             {images.map((_, idx) => (
               <button
                 key={idx}

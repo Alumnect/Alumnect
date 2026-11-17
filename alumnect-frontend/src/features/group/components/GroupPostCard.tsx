@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -90,6 +90,9 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
   const imageCount = post.imageUrls?.length ?? 0
+  // Toàn bộ media của bài (ảnh trước, video sau) để hiển thị trong một băng chuyền duy nhất
+  // useMemo giữ nguyên tham chiếu mảng: ImageCarousel tự về slide đầu mỗi khi mảng đổi tham chiếu
+  const mediaItems = useMemo(() => [...(post.imageUrls ?? []), ...(post.videoUrls ?? [])], [post.imageUrls, post.videoUrls])
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -348,25 +351,16 @@ export function GroupPostCard({ post, groupId, isActiveMember, isGroupActive, to
           {post.content}
         </p>
 
-        {/* Ảnh đính kèm: băng chuyền có nút Trước/Sau, kéo/vuốt để chuyển ảnh, bấm ảnh để xem phóng to (giống bài viết thường) */}
-        {post.imageUrls && post.imageUrls.length > 0 && (
+        {/* Ảnh và video đính kèm gộp chung một băng chuyền (kiểu Instagram): kéo/vuốt hoặc bấm nút Trước/Sau để lướt,
+            ảnh đứng trước video nên chỉ số ảnh khi bấm phóng to vẫn khớp với post.imageUrls. */}
+        {mediaItems.length > 0 && (
           <div data-interactive className="mt-3.5 overflow-hidden rounded-2xl border border-border">
             <ImageCarousel
-              images={post.imageUrls}
+              images={mediaItems}
               height={detailMode ? 520 : 420}
               altPrefix={t('groups.postImageAltPrefix')}
               onImageClick={(_url, index) => setPreviewIndex(index)}
             />
-          </div>
-        )}
-
-        {(post.videoUrls ?? []).length > 0 && (
-          <div data-interactive className="mt-3.5 grid gap-2 sm:grid-cols-2">
-            {post.videoUrls.map((url, index) => (
-              <video key={`${url}-${index}`} src={url} controls preload="metadata"
-                aria-label={t('groups.attachedVideoAria', { index: index + 1 })}
-                className="max-h-[460px] w-full rounded-2xl bg-black" />
-            ))}
           </div>
         )}
 
