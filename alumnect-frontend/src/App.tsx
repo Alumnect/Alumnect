@@ -33,6 +33,7 @@ const MentoringHomePage = lazyPage(() => import('@/pages/app/MentoringHomePage')
 const MentorEarningsPage = lazyPage(() => import('@/pages/app/MentorEarningsPage'), 'MentorEarningsPage')
 const MentoringRefundsPage = lazyPage(() => import('@/pages/app/MentoringRefundsPage'), 'MentoringRefundsPage')
 const MentoringTermsPage = lazyPage(() => import('@/pages/app/MentoringTermsPage'), 'MentoringTermsPage')
+const MentoringGuidePage = lazyPage(() => import('@/pages/app/MentoringGuidePage'), 'MentoringGuidePage')
 const BecomeMentorPage = lazyPage(() => import('@/pages/app/BecomeMentorPage'), 'BecomeMentorPage')
 const MentorSubscriptionPage = lazyPage(() => import('@/pages/app/MentorSubscriptionPage'), 'MentorSubscriptionPage')
 const MentorStatusPage = lazyPage(() => import('@/pages/app/MentorStatusPage'), 'MentorStatusPage')
@@ -109,6 +110,7 @@ function App() {
             <Route path="change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
             <Route path="mentoring" element={<ProtectedRoute><MentoringHomePage /></ProtectedRoute>} />
             <Route path="mentoring/terms" element={<ProtectedRoute><MentoringTermsPage /></ProtectedRoute>} />
+            <Route path="mentoring/guide" element={<ProtectedRoute><MentoringGuidePage /></ProtectedRoute>} />
             <Route path="mentoring/deals" element={<ProtectedRoute><MentoringDealsPage /></ProtectedRoute>} />
             <Route path="mentoring/tasks" element={<ProtectedRoute><MyMentoringTasksPage /></ProtectedRoute>} />
             <Route path="mentoring/tasks/:id" element={<ProtectedRoute><MentoringTaskDetailPage /></ProtectedRoute>} />

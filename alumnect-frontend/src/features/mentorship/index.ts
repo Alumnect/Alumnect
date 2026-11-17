@@ -9,6 +9,7 @@ export * from './components/MentoringTerms'
 export * from './components/MentoringTermsContent'
 export * from './components/MentoringTermsGate'
 export * from './components/MentoringTermsConsentModal'
+export * from './components/MentoringGuide'
 export * from './components/MentorshipLoadingSkeleton'
 
 // UC91 exports
