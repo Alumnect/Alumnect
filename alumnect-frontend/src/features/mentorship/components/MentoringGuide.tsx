@@ -789,17 +789,11 @@ export function MentoringGuide() {
                       className={cn(
                         'absolute rounded-xl pointer-events-auto transition-all duration-200 cursor-pointer z-20',
                         isHovered
-                          ? 'border-3 border-primary-solid bg-primary-solid/25 shadow-[0_0_30px_rgba(242,112,36,0.95)] ring-4 ring-primary-solid/30 scale-[1.01]'
-                          : 'border border-transparent bg-transparent hover:border-primary-solid/60 hover:bg-primary-solid/15'
+                          ? 'border-2 border-primary-solid/80 bg-primary-solid/8 shadow-[0_0_12px_rgba(242,112,36,0.35)] ring-2 ring-primary-solid/25'
+                          : 'border border-transparent bg-transparent hover:border-primary-solid/40 hover:bg-primary-solid/5'
                       )}
                       title={`Vị trí ${c.id}: ${c.title}`}
-                    >
-                      {isHovered && (
-                        <span className="absolute -top-3.5 -left-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-solid font-black text-white text-xs shadow-lg border-2 border-white ring-2 ring-primary-solid animate-pulse">
-                          {c.id}
-                        </span>
-                      )}
-                    </div>
+                    />
                   )
                 })}
               </div>
@@ -966,7 +960,7 @@ export function MentoringGuide() {
                               className={cn(
                                 'flex items-start gap-2.5 rounded-xl border p-2.5 transition-all duration-200 cursor-pointer',
                                 isHovered
-                                  ? 'border-primary-solid bg-primary-soft shadow-xs scale-[1.01] ring-2 ring-primary-solid/30'
+                                  ? 'border-primary-solid bg-primary-soft/80 shadow-2xs'
                                   : 'border-primary-soft-border/80 bg-primary-soft/30 hover:bg-primary-soft/60'
                               )}
                             >
@@ -974,7 +968,7 @@ export function MentoringGuide() {
                                 className={cn(
                                   'flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-black text-white text-[11px] transition-all',
                                   isHovered
-                                    ? 'bg-primary-solid scale-110 shadow-md ring-2 ring-primary-solid ring-offset-1'
+                                    ? 'bg-primary-solid shadow-xs ring-2 ring-primary-solid/25'
                                     : 'bg-primary-solid shadow-xs'
                                 )}
                               >
@@ -1076,17 +1070,11 @@ export function MentoringGuide() {
                               className={cn(
                                 'absolute rounded-xl pointer-events-auto transition-all duration-200 cursor-pointer z-10',
                                 isHovered
-                                  ? 'border-3 border-primary-solid bg-primary-solid/25 shadow-[0_0_26px_rgba(242,112,36,0.95)] ring-4 ring-primary-solid/30 scale-[1.01]'
-                                  : 'border border-transparent bg-transparent hover:border-primary-solid/60 hover:bg-primary-solid/15'
+                                  ? 'border-2 border-primary-solid/80 bg-primary-solid/8 shadow-[0_0_12px_rgba(242,112,36,0.35)] ring-2 ring-primary-solid/25'
+                                  : 'border border-transparent bg-transparent hover:border-primary-solid/40 hover:bg-primary-solid/5'
                               )}
                               title={`Vị trí ${c.id}: ${c.title} (Bấm để phóng to)`}
-                            >
-                              {isHovered && (
-                                <span className="absolute -top-3.5 -left-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-solid font-black text-white text-xs shadow-lg border-2 border-white ring-2 ring-primary-solid animate-pulse">
-                                  {c.id}
-                                </span>
-                              )}
-                            </div>
+                            />
                           )
                         })}
 
