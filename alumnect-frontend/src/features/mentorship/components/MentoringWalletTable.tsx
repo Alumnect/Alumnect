@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle, CheckCircle2, Clock, Wallet } from 'lucide-react'
 import { EmptyState } from '@/components/ui'
 import { vnd } from '@/lib/utils'
 import { MentoringBadge } from './MentoringUi'
 import { StatTile } from '@/components/brand/BrandBlocks'
+import { MentoringFinanceReportModal } from './MentoringFinanceReportModal'
 import type { MentoringWallet, MentoringWalletItem } from '../model/mentoringWalletTypes'
 
 const PROVIDER_STATUS_KEY_MAP: Record<string, string> = {
@@ -57,6 +59,8 @@ function StatusCell({ item }: { item: MentoringWalletItem }) {
 /** Tổng hợp và danh sách các khoản chi ra (thù lao Mentor hoặc hoàn tiền Học viên). */
 export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, emptyTitle, emptyDescription }: Props) {
   const { t } = useTranslation()
+  const [selectedReportItem, setSelectedReportItem] = useState<MentoringWalletItem | null>(null)
+
   if (isLoading) {
     return <div className="h-48 animate-pulse rounded-2xl bg-surface-2 dark:bg-white/[0.04]" />
   }
@@ -86,10 +90,22 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
                   <p className="shrink-0 font-display text-sm font-bold text-text">{vnd(item.amount)}</p>
                 </div>
                 <StatusCell item={item} />
-                <p className="text-xs text-text-subtle">
-                  {item.counterpartName ? `${counterpartLabel}: ${item.counterpartName} · ` : ''}
-                  {formatDate(item.transactedAt || item.createdAt)}
-                </p>
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <p className="text-xs text-text-subtle">
+                    {item.counterpartName ? `${counterpartLabel}: ${item.counterpartName} · ` : ''}
+                    {formatDate(item.transactedAt || item.createdAt)}
+                  </p>
+                  {item.status === 'FAILED' && item.taskId && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedReportItem(item)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 border border-danger/30 transition cursor-pointer"
+                    >
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      Báo cáo
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -103,6 +119,7 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
                 <th className="px-4 py-3 text-right">{t('mentoring.walletTableColAmount')}</th>
                 <th className="px-4 py-3">{t('mentoring.walletTableColStatus')}</th>
                 <th className="px-4 py-3">{t('mentoring.walletTableColTime')}</th>
+                <th className="px-4 py-3 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-plum-900/[0.05] dark:divide-white/5">
@@ -118,12 +135,34 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
                     <StatusCell item={item} />
                   </td>
                   <td className="px-4 py-3 text-xs text-text-subtle">{formatDate(item.transactedAt || item.createdAt)}</td>
+                  <td className="px-4 py-3 text-right">
+                    {item.status === 'FAILED' && item.taskId ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReportItem(item)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 border border-danger/30 transition cursor-pointer"
+                        title="Báo cáo sự cố dòng tiền cho Ban Quản Trị"
+                      >
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                        Báo cáo
+                      </button>
+                    ) : (
+                      <span className="text-text-subtle text-xs">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      {/* Modal Báo cáo sự cố dòng tiền */}
+      <MentoringFinanceReportModal
+        isOpen={Boolean(selectedReportItem)}
+        onClose={() => setSelectedReportItem(null)}
+        item={selectedReportItem}
+      />
     </div>
   )
 }

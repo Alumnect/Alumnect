@@ -9,6 +9,8 @@ import {
   Lock,
   ArrowUpRight,
   Undo2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { Badge, EmptyState, Pagination, Skeleton, SelectDropdown } from '@/components/ui'
 import { Button } from '@/components/ui/Button'
@@ -28,6 +30,7 @@ export function AdminMentoringFinancesPage() {
   // State mở modal xem sổ quỹ
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isAlertCollapsed, setIsAlertCollapsed] = useState(false)
 
   useEffect(() => {
     if (taskIdParam) {
@@ -123,7 +126,19 @@ export function AdminMentoringFinancesPage() {
   const pageTotalPayout = tasks.reduce((sum, t) => sum + (t.totalPayout || 0), 0)
   const pageTotalRefund = tasks.reduce((sum, t) => sum + (t.totalRefund || 0), 0)
 
-  const alertTasks = tasks.filter((t) => t.hasFinanceAlert)
+  const alertTasks = [...tasks]
+    .filter((t) => t.hasFinanceAlert)
+    .sort((a, b) => {
+      // 1. Ưu tiên số lượt ping nhiều hơn
+      const pingsA = a.pingCount ?? 1
+      const pingsB = b.pingCount ?? 1
+      if (pingsB !== pingsA) return pingsB - pingsA
+
+      // 2. Ưu tiên thời điểm ping/sự cố mới nhất
+      const timeA = new Date(a.lastPingAt || a.financeIssueReportedAt || a.updatedAt || 0).getTime()
+      const timeB = new Date(b.lastPingAt || b.financeIssueReportedAt || b.updatedAt || 0).getTime()
+      return timeB - timeA
+    })
 
   const handleOpenDetail = (taskId: number) => {
     setSelectedTaskId(taskId)
@@ -169,59 +184,87 @@ export function AdminMentoringFinancesPage() {
       {alertTasks.length > 0 && (
         <section
           aria-label="Cảnh báo sự cố dòng tiền"
-          className="rounded-2xl border border-danger/40 bg-danger-soft/60 p-4 space-y-3"
+          className="rounded-2xl border border-danger/40 bg-danger-soft/60 p-4 space-y-3 transition-all"
         >
-          <div className="flex items-center justify-between">
+          <div
+            className="flex items-center justify-between cursor-pointer select-none group"
+            onClick={() => setIsAlertCollapsed((prev) => !prev)}
+          >
             <div className="flex items-center gap-2 text-danger">
               <AlertTriangle className="h-5 w-5 shrink-0" />
               <h3 className="text-sm font-bold">
                 Có {alertTasks.length} nhiệm vụ có sự cố dòng tiền / khiếu nại đối soát cần xử lý!
               </h3>
             </div>
-            <span className="rounded-full bg-danger px-2.5 py-0.5 text-xs font-bold text-white">
-              Cần đối soát
-            </span>
-          </div>
-
-          <div className="divide-y divide-danger/20 rounded-xl border border-danger/20 bg-surface">
-            {alertTasks.map((t) => (
-              <div
-                key={t.taskId}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 hover:bg-danger-soft/30 transition"
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-danger px-2.5 py-0.5 text-xs font-bold text-white">
+                Cần đối soát
+              </span>
+              <button
+                type="button"
+                className="p-1 rounded-lg hover:bg-danger/20 text-danger transition cursor-pointer"
+                title={isAlertCollapsed ? 'Mở rộng danh sách' : 'Thu gọn danh sách'}
+                aria-label={isAlertCollapsed ? 'Mở rộng danh sách sự cố' : 'Thu gọn danh sách sự cố'}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsAlertCollapsed((prev) => !prev)
+                }}
               >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-bold text-danger">#{t.taskId}</span>
-                    <span className="font-semibold text-sm text-text">{t.taskTitle}</span>
-                    {t.failedLedgersCount && t.failedLedgersCount > 0 ? (
-                      <span className="rounded bg-danger/10 text-danger border border-danger/30 px-1.5 py-0.5 text-xs font-bold">
-                        {t.failedLedgersCount} lệnh chi lỗi
-                      </span>
-                    ) : null}
-                  </div>
-                  {t.financeIssueReason && (
-                    <p className="text-xs text-danger font-medium">
-                      <strong>Lý do phản ánh:</strong> {t.financeIssueReason}
-                    </p>
-                  )}
-                  <p className="text-xs text-text-subtle">
-                    {t.financeIssueReportedBy ? `Bởi: ${t.financeIssueReportedBy} • ` : ''}
-                    {t.financeIssueReportedAt ? `Thời gian: ${formatDateTime(t.financeIssueReportedAt)} • ` : ''}
-                    Học viên: <strong>{t.student?.fullName || 'N/A'}</strong> • Mentor: <strong>{t.mentor?.fullName || 'N/A'}</strong>
-                  </p>
-                </div>
-
-                <Button
-                  size="sm"
-                  onClick={() => handleOpenDetail(t.taskId)}
-                  className="shrink-0 text-xs font-bold bg-danger hover:bg-danger/90 text-white gap-1.5 cursor-pointer"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  Đối soát & Xử lý ngay
-                </Button>
-              </div>
-            ))}
+                {isAlertCollapsed ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
+
+          {!isAlertCollapsed && (
+            <div className="max-h-72 overflow-y-auto divide-y divide-danger/20 rounded-xl border border-danger/20 bg-surface [scrollbar-width:thin]">
+              {alertTasks.map((t) => (
+                <div
+                  key={t.taskId}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 hover:bg-danger-soft/30 transition"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs font-bold text-danger">#{t.taskId}</span>
+                      <span className="font-semibold text-sm text-text">{t.taskTitle}</span>
+                      {t.pingCount && t.pingCount > 1 ? (
+                        <span className="rounded bg-rose-500/15 text-rose-600 border border-rose-500/30 px-1.5 py-0.5 text-xs font-extrabold animate-pulse">
+                          🔔 Đã nhắc {t.pingCount} lần
+                        </span>
+                      ) : null}
+                      {t.failedLedgersCount && t.failedLedgersCount > 0 ? (
+                        <span className="rounded bg-danger/10 text-danger border border-danger/30 px-1.5 py-0.5 text-xs font-bold">
+                          {t.failedLedgersCount} lệnh chi lỗi
+                        </span>
+                      ) : null}
+                    </div>
+                    {t.financeIssueReason && (
+                      <p className="text-xs text-danger font-medium">
+                        <strong>Lý do phản ánh:</strong> {t.financeIssueReason}
+                      </p>
+                    )}
+                    <p className="text-xs text-text-subtle">
+                      {t.financeIssueReportedBy ? `Bởi: ${t.financeIssueReportedBy} • ` : ''}
+                      {t.lastPingAt || t.financeIssueReportedAt ? `Gần nhất: ${formatDateTime(t.lastPingAt || t.financeIssueReportedAt!)} • ` : ''}
+                      Học viên: <strong>{t.student?.fullName || 'N/A'}</strong> • Mentor: <strong>{t.mentor?.fullName || 'N/A'}</strong>
+                    </p>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    onClick={() => handleOpenDetail(t.taskId)}
+                    className="shrink-0 text-xs font-bold bg-danger hover:bg-danger/90 text-white gap-1.5 cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Đối soát & Xử lý ngay
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -365,6 +408,14 @@ export function AdminMentoringFinancesPage() {
                             <AlertTriangle className="w-3 h-3" /> CẦN ĐỐI SOÁT
                           </span>
                         )}
+                        {task.pingCount && task.pingCount > 1 ? (
+                          <span
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-bold bg-rose-500/15 text-rose-600 border border-rose-500/30"
+                            title={`Người dùng đã gửi nhắc nhở ${task.pingCount} lần`}
+                          >
+                            🔔 Nhắc {task.pingCount} lần
+                          </span>
+                        ) : null}
                         {task.activeTicketId && !task.hasFinanceAlert && (
                           <span
                             className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-danger-soft text-danger"
