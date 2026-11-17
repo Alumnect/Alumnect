@@ -220,6 +220,48 @@ if (-not (Test-Path $MobileDir)) {
     exit 1
 }
 
+# 6.1 Kiem tra node_modules
+$nodeModulesDir = Join-Path $MobileDir "node_modules"
+if (-not (Test-Path $nodeModulesDir)) {
+    Write-Host "  -> node_modules chua ton tai. Dang cai dat thu vien (npm install)..." -ForegroundColor Yellow
+    Push-Location $MobileDir
+    try {
+        npm install
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[X] Cai dat npm dependencies that bai!" -ForegroundColor Red
+            exit $LASTEXITCODE
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
+# 6.2 Kiem tra thu muc native android
+if (-not (Test-Path $AndroidDir)) {
+    Write-Host "  -> Thu muc android chua ton tai. Dang sinh ma native (npx expo prebuild)..." -ForegroundColor Yellow
+    Push-Location $MobileDir
+    try {
+        npx expo prebuild --platform android --no-install
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[X] Sinh thu muc native Android that bai!" -ForegroundColor Red
+            exit $LASTEXITCODE
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
+# 6.3 Dong bo file debug.keystore chia se cua team
+$sharedKeystore = Join-Path $MobileDir "certs\debug.keystore"
+$targetKeystore = Join-Path $AndroidDir "app\debug.keystore"
+if (Test-Path $sharedKeystore) {
+    $targetDir = Split-Path $targetKeystore -Parent
+    if (Test-Path $targetDir) {
+        Copy-Item $sharedKeystore $targetKeystore -Force
+        Write-Host "  [OK] Da dong bo certs\debug.keystore cho ban build Android." -ForegroundColor Green
+    }
+}
+
 # Neu nguoi dung yeu cau don dep cache
 if ($Clean) {
     Write-Host "  -> Dang don dep sach cache Gradle (gradlew clean)..." -ForegroundColor Magenta
@@ -270,6 +312,9 @@ if ($Variant -eq "release") {
 
         Write-Host "    [3/3] Khởi chạy Alumnect trên điện thoại..." -ForegroundColor White
         & adb -s $deviceId shell am start -n vn.edu.fpt.alumnect/vn.edu.fpt.alumnect.MainActivity
+    } catch {
+        Write-Host "`n[X] Xay ra loi khi build Release: $_" -ForegroundColor Red
+        exit 1
     } finally {
         Pop-Location
     }
