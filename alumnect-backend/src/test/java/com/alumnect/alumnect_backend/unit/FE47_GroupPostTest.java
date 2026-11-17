@@ -26,6 +26,7 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.service.group.GroupPostServiceImpl;
+import com.alumnect.alumnect_backend.service.moderation.ModerationResult;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -123,6 +124,14 @@ class FE47_GroupPostTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+                .when(contentModerationService.evaluateContent(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(ModerationResult.builder()
+                        .score(0.0)
+                        .detectedKeywords(List.of())
+                        .autoHide(false)
+                        .requiresReview(false)
+                        .build());
         org.mockito.Mockito.lenient()
                 .when(contentModerationService.sanitizeContent(org.mockito.ArgumentMatchers.anyString()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
