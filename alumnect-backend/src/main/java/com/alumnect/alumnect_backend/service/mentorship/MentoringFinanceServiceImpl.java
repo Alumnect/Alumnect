@@ -40,6 +40,9 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
     private final UserRepository userRepository;
     private final MentoringDisbursementService disbursementService;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private MentoringTicketMessageRepository ticketMessageRepository;
+
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AdminTaskFundSummaryResponse> getTaskFunds(
@@ -231,6 +234,8 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
         String financeIssueReason = null;
         String financeIssueReportedBy = null;
         Instant financeIssueReportedAt = null;
+        Integer pingCount = null;
+        Instant lastPingAt = null;
 
         if (activeTicket != null && activeTicket.getDisputeReason() != null && activeTicket.getDisputeReason().toLowerCase().contains("dòng tiền")) {
             financeIssueReason = activeTicket.getDisputeReason();
@@ -238,8 +243,28 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
                     ? activeTicket.getCreatedBy().getProfile().getFullName()
                     : (activeTicket.getCreatedBy() != null ? activeTicket.getCreatedBy().getEmail() : "Người dùng");
             financeIssueReportedAt = activeTicket.getCreatedAt();
+
+            // Đếm số lượt nhắc nhở: hỗ trợ cả đếm ticket khiếu nại dòng tiền và đếm tin nhắn log
+            int ticketCount = (int) ticketRepository.findByTaskIdOrderByCreatedAtDesc(task.getId()).stream()
+                    .filter(t -> t.getDisputeReason() != null && t.getDisputeReason().toLowerCase().contains("dòng tiền"))
+                    .count();
+            long msgCount = ticketMessageRepository != null ? ticketMessageRepository.countByTicketId(activeTicket.getId()) : 0;
+            pingCount = Math.max(ticketCount, (int) msgCount);
+            if (pingCount < 1) pingCount = 1;
+
+            lastPingAt = (ticketMessageRepository != null)
+                    ? ticketMessageRepository.findFirstByTicketIdOrderByCreatedAtDesc(activeTicket.getId())
+                            .map(MentoringTicketMessage::getCreatedAt)
+                            .orElse(activeTicket.getUpdatedAt() != null ? activeTicket.getUpdatedAt() : activeTicket.getCreatedAt())
+                    : (activeTicket.getUpdatedAt() != null ? activeTicket.getUpdatedAt() : activeTicket.getCreatedAt());
         } else if (hasFailedLedger) {
             financeIssueReason = "Có " + failedCount + " giao dịch chi trả/hoàn tiền bị lỗi (FAILED) trên kênh chi PayOS.";
+            pingCount = 1;
+            lastPingAt = ledgers.stream()
+                    .filter(l -> l.getStatus() == MentoringLedgerStatus.FAILED)
+                    .map(MentoringPaymentLedger::getCreatedAt)
+                    .max(Instant::compareTo)
+                    .orElse(task.getUpdatedAt());
         }
 
         return AdminTaskFundSummaryResponse.builder()
@@ -267,6 +292,8 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
                 .financeIssueReportedBy(financeIssueReportedBy)
                 .financeIssueReportedAt(financeIssueReportedAt)
                 .failedLedgersCount(failedCount)
+                .pingCount(pingCount)
+                .lastPingAt(lastPingAt)
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .build();
