@@ -21,8 +21,6 @@ import {
   UserCheck,
   ZoomIn,
   X,
-  Eye,
-  EyeOff,
 } from 'lucide-react'
 import { Card } from '@/components/ui/primitives'
 import { cn } from '@/lib/utils'
@@ -695,8 +693,6 @@ export function MentoringGuide() {
   const { t } = useTranslation()
   const [activeRole, setActiveRole] = useState<RoleType>('student')
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
-  const [showCallouts, setShowCallouts] = useState<boolean>(true)
-  const [hoveredCallout, setHoveredCallout] = useState<number | null>(null)
   const [previewImage, setPreviewImage] = useState<{
     src: string
     title: string
@@ -739,38 +735,22 @@ export function MentoringGuide() {
                 <span className="h-3 w-3 rounded-full bg-rose-500" />
                 <span className="h-3 w-3 rounded-full bg-amber-500" />
                 <span className="h-3 w-3 rounded-full bg-emerald-500" />
-                <h4 className="ml-2 text-xs font-bold text-text truncate max-w-[450px]">
+                <h4 className="ml-2 text-xs font-bold text-text truncate max-w-[550px]">
                   {previewImage.title}
                 </h4>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCallouts(!showCallouts)}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold transition cursor-pointer',
-                    showCallouts
-                      ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                      : 'bg-surface-3 text-text-subtle hover:text-text'
-                  )}
-                >
-                  {showCallouts ? <Eye size={13} /> : <EyeOff size={13} />}
-                  <span>{showCallouts ? 'Đang bật khoanh đỏ' : 'Đã ẩn khoanh đỏ'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPreviewImage(null)}
-                  className="grid h-8 w-8 place-items-center rounded-xl text-text-subtle hover:bg-surface-3 hover:text-text transition cursor-pointer"
-                  title="Đóng (ESC)"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="grid h-8 w-8 place-items-center rounded-xl text-text-subtle hover:bg-surface-3 hover:text-text transition cursor-pointer"
+                title="Đóng (ESC)"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            {/* Vùng hiển thị ảnh phóng to kèm Khoanh đỏ vector */}
+            {/* Vùng hiển thị ảnh phóng to */}
             <div className="max-h-[70vh] overflow-y-auto bg-surface-2/40 p-3">
               <div className="relative mx-auto inline-block w-full">
                 <img
@@ -778,43 +758,24 @@ export function MentoringGuide() {
                   alt={previewImage.title}
                   className="w-full h-auto rounded-lg shadow-xs block"
                 />
-
-                {/* Khoanh đỏ vector phủ trên ảnh lightbox */}
-                {showCallouts &&
-                  previewImage.callouts?.map((c) => (
-                    <div
-                      key={c.id}
-                      style={{
-                        top: `${c.top}%`,
-                        left: `${c.left}%`,
-                        width: `${c.width}%`,
-                        height: `${c.height}%`,
-                      }}
-                      className="absolute rounded-xl border-2 border-red-500 bg-red-500/15 shadow-[0_0_12px_rgba(239,68,68,0.5)] transition-all pointer-events-none"
-                    >
-                      <span className="absolute -top-3.5 -left-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 font-black text-white text-xs shadow-md border-2 border-white ring-2 ring-red-500">
-                        {c.id}
-                      </span>
-                    </div>
-                  ))}
               </div>
             </div>
 
-            {/* Bảng chú thích danh sách các điểm khoanh đỏ */}
+            {/* Bảng chú thích danh sách các điểm thao tác */}
             {previewImage.callouts && previewImage.callouts.length > 0 && (
-              <div className="border-t border-border bg-surface px-5 py-3 shrink-0">
+              <div className="border-t border-border bg-surface px-5 py-3.5 shrink-0">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {previewImage.callouts.map((c) => (
                     <div
                       key={c.id}
-                      className="flex items-start gap-2 text-[11.5px] leading-snug rounded-lg bg-surface-2/70 p-2 border border-border/70"
+                      className="flex items-start gap-2.5 text-[11.5px] leading-snug rounded-xl bg-primary-soft/30 p-2.5 border border-primary-soft-border/70"
                     >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-600 font-black text-white text-[10px]">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-solid font-black text-white text-[11px] shadow-xs">
                         {c.id}
                       </span>
                       <div className="min-w-0">
                         <p className="font-bold text-text truncate">{c.title}</p>
-                        <p className="text-text-muted text-[11px] line-clamp-2">{c.description}</p>
+                        <p className="text-text-muted text-[11px] line-clamp-2 mt-0.5">{c.description}</p>
                       </div>
                     </div>
                   ))}
@@ -901,22 +862,6 @@ export function MentoringGuide() {
             </span>
             <span>Quy trình làm việc dành cho {activeRole === 'student' ? 'Học viên' : 'Cố vấn'}</span>
           </h2>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowCallouts(!showCallouts)}
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition cursor-pointer shadow-2xs',
-                showCallouts
-                  ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
-                  : 'border-border bg-surface text-text-subtle hover:text-text'
-              )}
-            >
-              {showCallouts ? <Eye size={14} /> : <EyeOff size={14} />}
-              <span>{showCallouts ? 'Đang bật khoanh đỏ chú thích' : 'Đang ẩn khoanh đỏ'}</span>
-            </button>
-          </div>
         </div>
 
         <div className="space-y-8">
@@ -927,7 +872,7 @@ export function MentoringGuide() {
                 className="overflow-hidden border-border bg-surface p-5 sm:p-6 shadow-2xs transition hover:border-primary-soft-border"
               >
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                  {/* Cột trái: Thông tin bước, Mô tả & Danh mục chú thích khoanh đỏ */}
+                  {/* Cột trái: Thông tin bước, Mô tả & Danh mục thao tác chính */}
                   <div className="space-y-4 lg:col-span-6 flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2.5">
@@ -945,53 +890,24 @@ export function MentoringGuide() {
                       <p className="text-xs font-semibold text-text-subtle">{item.subtitle}</p>
                       <p className="text-xs leading-relaxed text-text-muted">{item.description}</p>
 
-                      {/* Bảng chú thích các điểm khoanh đỏ ① ② ③ */}
-                      <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-3.5 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-[11px] text-red-600 dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                            Vị trí khoanh đỏ trên ảnh
-                          </span>
-                          <span className="text-[10.5px] font-semibold text-text-subtle">
-                            Di chuột để làm nổi bật
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 text-xs">
-                          {item.callouts.map((c) => {
-                            const isHovered = hoveredCallout === c.id
-                            return (
-                              <div
-                                key={c.id}
-                                onMouseEnter={() => setHoveredCallout(c.id)}
-                                onMouseLeave={() => setHoveredCallout(null)}
-                                className={cn(
-                                  'flex items-start gap-2.5 rounded-lg p-2 transition cursor-pointer border',
-                                  isHovered
-                                    ? 'bg-red-500/15 border-red-500/40 shadow-xs'
-                                    : 'bg-surface/80 border-border/60 hover:bg-surface'
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-black text-[11px] transition-transform',
-                                    isHovered
-                                      ? 'bg-red-600 text-white scale-110'
-                                      : 'bg-red-500/20 text-red-600 dark:text-red-400'
-                                  )}
-                                >
-                                  {c.id}
-                                </span>
-                                <div className="min-w-0">
-                                  <p className="font-bold text-text text-xs leading-tight">{c.title}</p>
-                                  <p className="mt-0.5 text-[11px] text-text-muted leading-relaxed">
-                                    {c.description}
-                                  </p>
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
+                      {/* Danh mục các vị trí thao tác chính */}
+                      <div className="space-y-2 pt-1">
+                        {item.callouts.map((c) => (
+                          <div
+                            key={c.id}
+                            className="flex items-start gap-2.5 rounded-xl border border-primary-soft-border/80 bg-primary-soft/30 p-2.5 transition hover:bg-primary-soft/50"
+                          >
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-solid font-black text-white text-[11px] shadow-xs">
+                              {c.id}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="font-bold text-text text-xs leading-tight">{c.title}</p>
+                              <p className="mt-0.5 text-[11.5px] text-text-muted leading-relaxed">
+                                {c.description}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
 
                       {/* Hộp lưu ý / Tips */}
@@ -1039,15 +955,12 @@ export function MentoringGuide() {
                           <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
                           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
                         </div>
-                        <span className="font-mono text-[10px] font-semibold text-text-subtle truncate max-w-[200px]">
+                        <span className="font-mono text-[10px] font-semibold text-text-subtle truncate max-w-[280px]">
                           {item.imageCaption}
-                        </span>
-                        <span className="rounded bg-red-500/15 border border-red-500/30 px-1.5 py-0.5 text-[9.5px] font-bold text-red-600 dark:text-red-400">
-                          Có khoanh đỏ
                         </span>
                       </div>
 
-                      {/* Image container with Red Callout Overlays */}
+                      {/* Image container */}
                       <div
                         onClick={() =>
                           setPreviewImage({
@@ -1066,40 +979,6 @@ export function MentoringGuide() {
                           className="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01] block"
                           loading="lazy"
                         />
-
-                        {/* Các vùng khoanh đỏ trực tiếp trên ảnh */}
-                        {showCallouts &&
-                          item.callouts.map((c) => {
-                            const isHovered = hoveredCallout === c.id
-                            return (
-                              <div
-                                key={c.id}
-                                style={{
-                                  top: `${c.top}%`,
-                                  left: `${c.left}%`,
-                                  width: `${c.width}%`,
-                                  height: `${c.height}%`,
-                                }}
-                                className={cn(
-                                  'absolute rounded-lg border-2 transition-all pointer-events-none',
-                                  isHovered
-                                    ? 'border-red-500 bg-red-500/25 shadow-[0_0_16px_rgba(239,68,68,0.8)] scale-[1.02]'
-                                    : 'border-red-500 bg-red-500/15 shadow-[0_0_8px_rgba(239,68,68,0.4)]'
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    'absolute -top-3 -left-3 flex h-6 w-6 items-center justify-center rounded-full font-black text-xs shadow-md border-2 border-white ring-1 ring-red-500 transition-transform',
-                                    isHovered
-                                      ? 'bg-red-700 text-white scale-125'
-                                      : 'bg-red-600 text-white'
-                                  )}
-                                >
-                                  {c.id}
-                                </span>
-                              </div>
-                            )
-                          })}
 
                         {/* Hover Overlay Zoom Button */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3.5">
