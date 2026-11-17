@@ -199,3 +199,10 @@ export const MENTORSHIP_TERMS_ITEM: MentorshipNavigationItem = {
   icon: FileText,
   audience: 'common',
 }
+
+export const MENTORSHIP_GUIDE_ITEM: MentorshipNavigationItem = {
+  label: 'Hướng dẫn Mentoring',
+  to: '/app/mentoring/guide',
+  icon: BookOpen,
+  audience: 'common',
+}
