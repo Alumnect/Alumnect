@@ -12,6 +12,7 @@ import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -40,7 +41,7 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
     private final UserRepository userRepository;
     private final MentoringDisbursementService disbursementService;
 
-    @org.springframework.beans.factory.annotation.Autowired
+    @Autowired
     private MentoringTicketMessageRepository ticketMessageRepository;
 
     @Override

@@ -3,15 +3,21 @@ package com.alumnect.alumnect_backend.service.mentorship;
 import com.alumnect.alumnect_backend.common.api.PageResponse;
 import com.alumnect.alumnect_backend.common.enums.*;
 import com.alumnect.alumnect_backend.dao.mentorship.*;
+import com.alumnect.alumnect_backend.dao.user.UserRepository;
+import com.alumnect.alumnect_backend.dto.request.mentorship.PingAdminFinanceRequest;
 import com.alumnect.alumnect_backend.dto.response.mentorship.*;
 import com.alumnect.alumnect_backend.entity.mentorship.*;
+import com.alumnect.alumnect_backend.entity.message.Conversation;
 import com.alumnect.alumnect_backend.entity.user.User;
 import com.alumnect.alumnect_backend.entity.user.UserProfile;
+import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.mentorship.MentoringTaskMapper;
+import com.alumnect.alumnect_backend.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -45,12 +53,12 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
     private final RefundAccountResolver refundAccountResolver;
     private final MentoringRules mentoringRules;
     private final MentoringDisputeTicketRepository ticketRepository;
-    private final com.alumnect.alumnect_backend.dao.mentorship.MentoringTaskSettlementProposalRepository settlementProposalRepository;
-    private final com.alumnect.alumnect_backend.dao.user.UserRepository userRepository;
+    private final MentoringTaskSettlementProposalRepository settlementProposalRepository;
+    private final UserRepository userRepository;
     private final MentoringConversationService mentoringConversationService;
-    private final com.alumnect.alumnect_backend.service.notification.NotificationService notificationService;
+    private final NotificationService notificationService;
 
-    @org.springframework.beans.factory.annotation.Autowired
+    @Autowired
     private MentoringTicketMessageRepository ticketMessageRepository;
 
     @Override
@@ -614,13 +622,13 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         boolean hasFailedLedger = taskLedgers.stream().anyMatch(l -> l.getStatus() == MentoringLedgerStatus.FAILED);
 
         // Lấy đề xuất thỏa thuận dừng Task nếu có (UC109)
-        com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskSettlementProposal acceptedProposal =
-                settlementProposalRepository.findFirstByTaskIdAndStatus(task.getId(), com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus.ACCEPTED).orElse(null);
+        MentoringTaskSettlementProposal acceptedProposal =
+                settlementProposalRepository.findFirstByTaskIdAndStatus(task.getId(), MentoringSettlementProposalStatus.ACCEPTED).orElse(null);
         if (acceptedProposal == null) {
             acceptedProposal = settlementProposalRepository.findFirstByTaskIdOrderByCreatedAtDesc(task.getId()).orElse(null);
         }
 
-        com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket anyResolvedTicket =
+        MentoringDisputeTicket anyResolvedTicket =
                 ticketRepository.findByTaskIdOrderByCreatedAtDesc(task.getId()).stream()
                         .filter(t -> t.getStatus() == MentoringTicketStatus.RESOLVED || t.getMentorAmount() != null || t.getStudentRefund() != null)
                         .findFirst()
@@ -803,7 +811,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
 
     @Override
     @Transactional
-    public void pingAdminFinance(Long currentUserId, Long taskId, com.alumnect.alumnect_backend.dto.request.mentorship.PingAdminFinanceRequest request) {
+    public void pingAdminFinance(Long currentUserId, Long taskId, PingAdminFinanceRequest request) {
         log.info("Người dùng id={} yêu cầu ping Admin về sự cố dòng tiền cho Task id={}: {}", currentUserId, taskId, request.getReason());
 
         MentoringTask task = taskRepository.findById(taskId)
@@ -819,7 +827,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 ? currentUser.getProfile().getFullName() : currentUser.getEmail();
 
         // 1. Tạo Ticket tranh chấp dòng tiền
-        String datePart = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now());
+        String datePart = DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now());
         String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         String ticketCode = "FN-" + datePart + "-" + randomSuffix;
 
@@ -839,7 +847,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
             desiredSolution = desiredSolution.substring(0, 247) + "...";
         }
 
-        com.alumnect.alumnect_backend.entity.message.Conversation conv = task.getConversation() != null
+        Conversation conv = task.getConversation() != null
                 ? task.getConversation()
                 : (task.getDeal() != null ? task.getDeal().getConversation() : null);
 
@@ -860,9 +868,9 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                     : null;
             Instant lastPing = latestMessage != null ? latestMessage.getCreatedAt() : existingTicket.getUpdatedAt();
             if (lastPing != null) {
-                long secondsPassed = java.time.Duration.between(lastPing, now).getSeconds();
+                long secondsPassed = Duration.between(lastPing, now).getSeconds();
                 if (secondsPassed < 60) {
-                    throw new com.alumnect.alumnect_backend.exception.BadRequestException(
+                    throw new BadRequestException(
                             "Bạn vừa gửi phản ánh đối soát gần đây. Vui lòng đợi Ban Quản Trị xử lý hoặc thử lại sau " + (60 - secondsPassed) + " giây.");
                 }
             }

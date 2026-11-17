@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository truy vấn tin nhắn và thảo luận trong Ticket tranh chấp (UC119).
@@ -22,5 +23,5 @@ public interface MentoringTicketMessageRepository extends JpaRepository<Mentorin
 
     long countByTicketId(Long ticketId);
 
-    java.util.Optional<MentoringTicketMessage> findFirstByTicketIdOrderByCreatedAtDesc(Long ticketId);
+    Optional<MentoringTicketMessage> findFirstByTicketIdOrderByCreatedAtDesc(Long ticketId);
 }
