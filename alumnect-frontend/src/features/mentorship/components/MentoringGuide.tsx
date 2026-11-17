@@ -689,6 +689,8 @@ const FAQS = [
   },
 ]
 
+const GUIDE_IMAGE_VERSION = '?v=20261118_v4'
+
 export function MentoringGuide() {
   const { t } = useTranslation()
   const [activeRole, setActiveRole] = useState<RoleType>('student')
@@ -754,7 +756,7 @@ export function MentoringGuide() {
             <div className="max-h-[70vh] overflow-y-auto bg-surface-2/40 p-3">
               <div className="relative mx-auto inline-block w-full">
                 <img
-                  src={previewImage.src}
+                  src={`${previewImage.src}${GUIDE_IMAGE_VERSION}`}
                   alt={previewImage.title}
                   className="w-full h-auto rounded-lg shadow-xs block"
                 />
@@ -974,7 +976,7 @@ export function MentoringGuide() {
                         title="Bấm để phóng to xem rõ nét"
                       >
                         <img
-                          src={item.image}
+                          src={`${item.image}${GUIDE_IMAGE_VERSION}`}
                           alt={item.title}
                           className="w-full h-auto object-cover max-h-[380px] transition-transform duration-300 group-hover:scale-[1.01] block"
                           loading="lazy"
