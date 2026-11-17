@@ -81,28 +81,28 @@ const STUDENT_STEPS: GuideStep[] = [
         id: 1,
         title: 'Thanh tìm kiếm & Bộ lọc tiêu chí',
         description: 'Lọc nhanh theo Chuyên ngành (Kỹ thuật phần mềm SE, An toàn thông tin IA, Thiết kế đồ họa GD...), Lĩnh vực và Hình thức hướng dẫn 1-1.',
-        top: 35.4,
-        left: 27,
-        width: 65.2,
-        height: 5.5,
+        top: 33.9,
+        left: 25.6,
+        width: 67.0,
+        height: 9.8,
       },
       {
         id: 2,
         title: 'Thẻ thông tin Mentor',
         description: 'Hiển thị ảnh đại diện, chức danh hiện tại tại các tập đoàn lớn (Samsung, VNG, FPT...), chuyên ngành và các lĩnh vực đào tạo.',
-        top: 45,
-        left: 25.6,
-        width: 67.8,
-        height: 12,
+        top: 43.6,
+        left: 24.8,
+        width: 69.1,
+        height: 15.4,
       },
       {
         id: 3,
         title: 'Điểm uy tín & Nút Xem hồ sơ',
         description: 'Điểm uy tín, số đánh giá thực tế và nút màu cam "Xem hồ sơ" để xem chi tiết kinh nghiệm và các gói hỗ trợ của Mentor.',
-        top: 91.3,
-        left: 27.3,
-        width: 18.3,
-        height: 5.5,
+        top: 91.0,
+        left: 26.3,
+        width: 12.0,
+        height: 4.6,
       },
     ],
     mockup: {
@@ -787,10 +787,10 @@ export function MentoringGuide() {
                       onMouseEnter={() => setModalHoveredCallout(c.id)}
                       onMouseLeave={() => setModalHoveredCallout(null)}
                       className={cn(
-                        'absolute rounded-xl pointer-events-auto transition-all duration-200 cursor-pointer z-20',
+                        'absolute rounded-2xl pointer-events-auto transition-all duration-200 cursor-pointer z-20',
                         isHovered
-                          ? 'border-2 border-primary-solid/80 bg-primary-solid/8 shadow-[0_0_12px_rgba(242,112,36,0.35)] ring-2 ring-primary-solid/25'
-                          : 'border border-transparent bg-transparent hover:border-primary-solid/40 hover:bg-primary-solid/5'
+                          ? 'shadow-[0_0_18px_3px_rgba(242,112,36,0.75)] bg-primary-solid/5'
+                          : 'border-0 bg-transparent hover:bg-primary-solid/5'
                       )}
                       title={`Vị trí ${c.id}: ${c.title}`}
                     />
@@ -1068,10 +1068,10 @@ export function MentoringGuide() {
                                 })
                               }
                               className={cn(
-                                'absolute rounded-xl pointer-events-auto transition-all duration-200 cursor-pointer z-10',
+                                'absolute rounded-2xl pointer-events-auto transition-all duration-200 cursor-pointer z-10',
                                 isHovered
-                                  ? 'border-2 border-primary-solid/80 bg-primary-solid/8 shadow-[0_0_12px_rgba(242,112,36,0.35)] ring-2 ring-primary-solid/25'
-                                  : 'border border-transparent bg-transparent hover:border-primary-solid/40 hover:bg-primary-solid/5'
+                                  ? 'shadow-[0_0_16px_2px_rgba(242,112,36,0.7)] bg-primary-solid/5'
+                                  : 'border-0 bg-transparent hover:bg-primary-solid/5'
                               )}
                               title={`Vị trí ${c.id}: ${c.title} (Bấm để phóng to)`}
                             />
