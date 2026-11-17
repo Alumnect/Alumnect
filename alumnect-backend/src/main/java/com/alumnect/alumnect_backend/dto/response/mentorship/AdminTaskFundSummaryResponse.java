@@ -75,6 +75,8 @@ public class AdminTaskFundSummaryResponse {
     private String financeIssueReportedBy;
     private Instant financeIssueReportedAt;
     private Integer failedLedgersCount;
+    private Integer pingCount;
+    private Instant lastPingAt;
 
     /** Thời điểm khởi tạo Task */
     private Instant createdAt;

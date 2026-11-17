@@ -19,4 +19,8 @@ public interface MentoringTicketMessageRepository extends JpaRepository<Mentorin
     List<MentoringTicketMessage> findByTicketIdWithSenderOrderByCreatedAtAsc(@Param("ticketId") Long ticketId);
 
     List<MentoringTicketMessage> findByTicketIdOrderByCreatedAtAsc(Long ticketId);
+
+    long countByTicketId(Long ticketId);
+
+    java.util.Optional<MentoringTicketMessage> findFirstByTicketIdOrderByCreatedAtDesc(Long ticketId);
 }
