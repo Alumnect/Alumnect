@@ -92,5 +92,11 @@ public class MentoringWorkLogResponse {
 
     /** Cờ quyền hạn: Cho biết học viên hiện tại có được phép yêu cầu điều chỉnh log này hay không */
     private Boolean canReject;
+
+    /** Số giờ từ lúc ghi log đến khi phản hồi (hoặc đến hiện tại nếu chưa phản hồi) */
+    private Long pendingHours;
+
+    /** Đánh dấu nếu Work Log đang chờ phản hồi và đã quá hạn 72 giờ theo Điều khoản Mentoring UC90 */
+    private Boolean isOverdue72h;
 }
 

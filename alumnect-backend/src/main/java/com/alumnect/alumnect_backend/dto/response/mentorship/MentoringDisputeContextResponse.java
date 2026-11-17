@@ -48,6 +48,12 @@ public class MentoringDisputeContextResponse {
     private List<MentoringWorkLogResponse> confirmedWorkLogs;
     private int totalConfirmedLogs;
 
+    /** Toàn bộ nhật ký công việc của Task phục vụ đối soát tranh chấp */
+    private List<MentoringWorkLogResponse> allWorkLogs;
+    private int totalWorkLogs;
+    private int pendingWorkLogs;
+    private int overdueWorkLogs72h;
+
     /** Lần nộp nghiệm thu hoàn thành gần nhất (UC110) nếu có */
     private MentoringTaskCompletionResponse latestCompletionSubmission;
 

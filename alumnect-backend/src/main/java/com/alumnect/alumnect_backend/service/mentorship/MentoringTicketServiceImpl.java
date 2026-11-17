@@ -42,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -781,17 +782,42 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     .toList()
                 : Collections.emptyList();
 
-        // 5. Nhật ký công việc đã được nghiệm thu (Confirmed Work Logs)
+        // 5. Nhật ký công việc (toàn bộ logs & logs đã được nghiệm thu để đối soát tranh chấp)
         List<MentoringWorkLog> allLogs = workLogRepository != null
                 ? workLogRepository.findByTaskIdOrderByLogDateDesc(task.getId())
                 : Collections.emptyList();
 
-        List<MentoringWorkLogResponse> confirmedLogs = allLogs.stream()
-                .filter(w -> w.getStatus() == WorkLogStatus.CONFIRMED)
-                .map(workLogMapper::toWorkLogResponse)
-                .toList();
+        Instant now = Instant.now();
+        int pendingWorkLogs = 0;
+        int overdueWorkLogs72h = 0;
+        List<MentoringWorkLogResponse> allLogResponses = new ArrayList<>();
+        List<MentoringWorkLogResponse> confirmedLogs = new ArrayList<>();
 
-        int totalConfirmedLogs = confirmedLogs.size();
+        for (MentoringWorkLog w : allLogs) {
+            MentoringWorkLogResponse resp = workLogMapper.toWorkLogResponse(w);
+            if (w.getCreatedAt() != null) {
+                if (w.getStatus() == WorkLogStatus.CONFIRMED && w.getConfirmedAt() != null) {
+                    long hours = Duration.between(w.getCreatedAt(), w.getConfirmedAt()).toHours();
+                    resp.setPendingHours(hours);
+                    resp.setIsOverdue72h(false);
+                } else if (w.getStatus() == WorkLogStatus.PENDING_CONFIRMATION) {
+                    long hours = Duration.between(w.getCreatedAt(), now).toHours();
+                    resp.setPendingHours(hours);
+                    boolean isOverdue = hours >= 72;
+                    resp.setIsOverdue72h(isOverdue);
+                    pendingWorkLogs++;
+                    if (isOverdue) {
+                        overdueWorkLogs72h++;
+                    }
+                } else {
+                    resp.setIsOverdue72h(false);
+                }
+            }
+            allLogResponses.add(resp);
+            if (w.getStatus() == WorkLogStatus.CONFIRMED) {
+                confirmedLogs.add(resp);
+            }
+        }
 
         // 6. Lần nộp nghiệm thu gần nhất (nếu có submit completion)
         MentoringTaskCompletionResponse latestCompletion = completionRepository != null
@@ -822,7 +848,11 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 .isOverdue(isOverdue)
                 .extensionHistory(extensionHistory)
                 .confirmedWorkLogs(confirmedLogs)
-                .totalConfirmedLogs(totalConfirmedLogs)
+                .totalConfirmedLogs(confirmedLogs.size())
+                .allWorkLogs(allLogResponses)
+                .totalWorkLogs(allLogResponses.size())
+                .pendingWorkLogs(pendingWorkLogs)
+                .overdueWorkLogs72h(overdueWorkLogs72h)
                 .latestCompletionSubmission(latestCompletion)
                 .totalEscrowAmount(totalEscrowAmount)
                 .build();
