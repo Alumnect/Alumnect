@@ -1,6 +1,7 @@
 package com.alumnect.alumnect_backend.unit;
 
 import com.alumnect.alumnect_backend.common.enums.MentoringSettlementProposalStatus;
+import com.alumnect.alumnect_backend.common.enums.MentoringSettlementStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTaskStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTicketStatus;
 import com.alumnect.alumnect_backend.common.enums.MentoringTicketType;
@@ -23,6 +24,7 @@ import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringSettlement
 import com.alumnect.alumnect_backend.dto.response.mentorship.MentoringTicketEvidenceResponse;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDeal;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringDisputeTicket;
+import com.alumnect.alumnect_backend.entity.mentorship.MentoringPaymentLedger;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTask;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTaskSettlementProposal;
 import com.alumnect.alumnect_backend.entity.mentorship.MentoringTicketEvidence;
@@ -58,6 +60,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -216,7 +219,7 @@ class FE59_MentoringTicketDisputeTest {
     }
 
     @Test
-    @DisplayName("UTCID02 - Proposal ACCEPTED; amounts equal escrow -> submitSettlementTicket -> Ticket ST- OPEN; task CANCELLED")
+    @DisplayName("UTCID02 - Proposal ACCEPTED; amounts equal escrow -> submitSettlementTicket -> Ticket ST- RESOLVED; payout/refund dispatched; task RESOLVED")
     void utcid02_submitSettlementTicket_ok() {
         // Given
         SubmitSettlementTicketRequest request = SubmitSettlementTicketRequest.builder()
@@ -228,7 +231,8 @@ class FE59_MentoringTicketDisputeTest {
                 .id(TICKET_ID)
                 .ticketCode("ST-20261029-ABCD12")
                 .ticketType(MentoringTicketType.SETTLEMENT)
-                .status(MentoringTicketStatus.OPEN)
+                .status(MentoringTicketStatus.RESOLVED)
+                .settlementStatus(MentoringSettlementStatus.SETTLED)
                 .task(task)
                 .student(studentUser)
                 .mentor(mentorUser)
@@ -240,7 +244,12 @@ class FE59_MentoringTicketDisputeTest {
         when(taskRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
         when(userRepository.findById(STUDENT_USER_ID)).thenReturn(Optional.of(studentUser));
         when(proposalRepository.findById(PROPOSAL_ID)).thenReturn(Optional.of(proposal));
-        when(ticketRepository.existsByTaskIdAndStatusIn(eq(TASK_ID), any())).thenReturn(false);
+        when(ledgerRepository.save(any(MentoringPaymentLedger.class))).thenAnswer(inv -> {
+            MentoringPaymentLedger l = inv.getArgument(0);
+            l.setId(900L);
+            return l;
+        });
+        when(ticketRepository.findByTaskIdAndStatusIn(eq(TASK_ID), any())).thenReturn(Collections.emptyList());
         when(ticketRepository.save(any(MentoringDisputeTicket.class))).thenReturn(savedTicket);
 
         // When
@@ -248,9 +257,11 @@ class FE59_MentoringTicketDisputeTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(task.getStatus()).isEqualTo(MentoringTaskStatus.CANCELLED);
+        assertThat(response.getStatus()).isEqualTo(MentoringTicketStatus.RESOLVED);
+        assertThat(task.getStatus()).isEqualTo(MentoringTaskStatus.RESOLVED);
         verify(taskRepository).save(task);
         verify(ticketRepository).save(any(MentoringDisputeTicket.class));
+        verify(disbursementService, times(2)).dispatchPayoutAfterCommit(900L);
     }
 
     @Test
@@ -312,22 +323,47 @@ class FE59_MentoringTicketDisputeTest {
     }
 
     @Test
-    @DisplayName("UTCID06 - Active ticket exists -> submitSettlementTicket -> ConflictException")
-    void utcid06_submitSettlementTicket_conflict() {
-        // Given: ticketRepository returns true for active tickets
+    @DisplayName("UTCID06 - Active ticket exists -> submitSettlementTicket -> Auto-resolves active ticket (RESOLVED/SETTLED) & dispatches payout/refund; task RESOLVED")
+    void utcid06_submitSettlementTicket_autoResolvesActiveTicket() {
+        // Given: an existing OPEN dispute ticket on the task
         SubmitSettlementTicketRequest request = SubmitSettlementTicketRequest.builder()
                 .proposalId(PROPOSAL_ID)
+                .note("Hai bên tự đồng thuận giải quyết tranh chấp")
+                .build();
+
+        MentoringDisputeTicket openDisputeTicket = MentoringDisputeTicket.builder()
+                .id(301L)
+                .ticketCode("DP-20261029-XYZ789")
+                .ticketType(MentoringTicketType.DISPUTE)
+                .status(MentoringTicketStatus.OPEN)
+                .task(task)
+                .student(studentUser)
+                .mentor(mentorUser)
+                .createdBy(studentUser)
+                .totalAmount(proposal.getTotalAmount())
                 .build();
 
         when(taskRepository.findById(TASK_ID)).thenReturn(Optional.of(task));
         when(userRepository.findById(STUDENT_USER_ID)).thenReturn(Optional.of(studentUser));
         when(proposalRepository.findById(PROPOSAL_ID)).thenReturn(Optional.of(proposal));
-        when(ticketRepository.existsByTaskIdAndStatusIn(eq(TASK_ID), any())).thenReturn(true);
+        when(ledgerRepository.save(any(MentoringPaymentLedger.class))).thenAnswer(inv -> {
+            MentoringPaymentLedger l = inv.getArgument(0);
+            l.setId(901L);
+            return l;
+        });
+        when(ticketRepository.findByTaskIdAndStatusIn(eq(TASK_ID), any())).thenReturn(List.of(openDisputeTicket));
+        when(ticketRepository.save(any(MentoringDisputeTicket.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // When + Then
-        assertThatThrownBy(() -> ticketService.submitSettlementTicket(STUDENT_USER_ID, TASK_ID, request))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("Nhiệm vụ này đã có một Ticket đang chờ Ban Quản Trị tiếp nhận xử lý.");
+        // When
+        MentoringDisputeTicketResponse response = ticketService.submitSettlementTicket(STUDENT_USER_ID, TASK_ID, request);
+
+        // Then
+        assertThat(response).isNotNull();
+        assertThat(openDisputeTicket.getStatus()).isEqualTo(MentoringTicketStatus.RESOLVED);
+        assertThat(openDisputeTicket.getSettlementStatus()).isEqualTo(MentoringSettlementStatus.SETTLED);
+        assertThat(task.getStatus()).isEqualTo(MentoringTaskStatus.RESOLVED);
+        verify(ticketRepository).save(openDisputeTicket);
+        verify(disbursementService, times(2)).dispatchPayoutAfterCommit(901L);
     }
 
     // ================= UTCID07 -> UTCID10: Dispute Ticket =================

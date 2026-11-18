@@ -22,6 +22,8 @@ import com.alumnect.alumnect_backend.exception.BadRequestException;
 import com.alumnect.alumnect_backend.exception.ForbiddenException;
 import com.alumnect.alumnect_backend.exception.ResourceNotFoundException;
 import com.alumnect.alumnect_backend.mapper.post.PostMapper;
+import com.alumnect.alumnect_backend.service.moderation.ContentModerationService;
+import com.alumnect.alumnect_backend.service.moderation.ModerationResult;
 import com.alumnect.alumnect_backend.service.post.PostServiceImpl;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -46,7 +48,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -80,6 +84,9 @@ class FE20_PublishPostTest {
     @Mock
     private PostMapper postMapper;
 
+    @Mock
+    private ContentModerationService contentModerationService;
+
     @InjectMocks
     private PostServiceImpl postService;
 
@@ -91,6 +98,13 @@ class FE20_PublishPostTest {
     @BeforeEach
     void setUp() {
         validator = Validation.buildDefaultValidatorFactory().getValidator();
+        lenient().when(contentModerationService.evaluateContent(anyString()))
+                .thenReturn(ModerationResult.builder()
+                        .score(0.0)
+                        .detectedKeywords(List.of())
+                        .autoHide(false)
+                        .requiresReview(false)
+                        .build());
 
         studentUser = User.builder()
                 .id(1L)
