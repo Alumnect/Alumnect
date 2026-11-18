@@ -92,8 +92,6 @@ export interface MentoringWorkLog {
   canEdit?: boolean
   canConfirm?: boolean
   canReject?: boolean
-  pendingHours?: number | null
-  isOverdue72h?: boolean | null
 }
 
 /**
@@ -844,10 +842,6 @@ export interface MentoringDisputeContext {
   extensionHistory: MentoringTaskExtensionSummary[]
   confirmedWorkLogs: MentoringWorkLog[]
   totalConfirmedLogs: number
-  allWorkLogs?: MentoringWorkLog[]
-  totalWorkLogs?: number
-  pendingWorkLogs?: number
-  overdueWorkLogs72h?: number
   latestCompletionSubmission?: MentoringTaskCompletion | null
   totalEscrowAmount: number
 }
