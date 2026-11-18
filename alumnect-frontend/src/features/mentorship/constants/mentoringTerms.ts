@@ -14,98 +14,96 @@ export const MENTORING_TERMS_SECTIONS: TermsSection[] = [
     id: 1,
     title: '1. Trách nhiệm của người tham gia',
     content: [
-      'Các bên (Mentor và Student) cam kết cung cấp thông tin trung thực, chính xác và chịu trách nhiệm về nội dung hồ sơ, bằng cấp và kỹ năng của mình trên hệ thống.',
+      'Các bên (Cố vấn và Học viên) cam kết cung cấp thông tin trung thực, chính xác và chịu trách nhiệm về nội dung hồ sơ, bằng cấp và kỹ năng của mình trên hệ thống.',
       'Người tham gia có nghĩa vụ tự bảo vệ thông tin đăng nhập và các hoạt động phát sinh từ tài khoản của mình.',
-      'Student và Mentor chủ động duy trì liên lạc và thực hiện đúng các cam kết hỗ trợ đã thống nhất trong khuôn khổ chương trình.'
+      'Học viên và Cố vấn chủ động duy trì liên lạc và thực hiện đúng các cam kết hỗ trợ đã thống nhất trong khuôn khổ chương trình.'
     ]
   },
   {
     id: 2,
     title: '2. Quy tắc ứng xử',
     content: [
-      'Student và Mentor luôn giữ thái độ giao tiếp văn minh, tôn trọng lẫn nhau, chuyên nghiệp và đúng chuẩn mực học thuật cũng như văn hóa FPT University.',
+      'Học viên và Cố vấn luôn giữ thái độ giao tiếp văn minh, tôn trọng lẫn nhau, chuyên nghiệp và đúng chuẩn mực học thuật cũng như văn hóa Trường Đại học FPT.',
       'Không sử dụng ngôn từ kích động, xúc phạm, phân biệt đối xử hoặc quấy rối dưới bất kỳ hình thức nào trong quá trình trao đổi.',
       'Mọi ý kiến đóng góp, phản hồi cần mang tính xây dựng nhằm hỗ trợ sự phát triển chuyên môn và kỹ năng của người học.'
     ]
   },
   {
     id: 3,
-    title: '3. Trao đổi & hợp tác',
+    title: '3. Trao đổi, hợp tác & Quy định hủy lịch, vắng mặt',
     content: [
-      'Hai bên tuân thủ nghiêm ngặt phạm vi công việc, mục tiêu học tập và lộ trình hướng dẫn đã thỏa thuận ban đầu.',
-      'Không một bên nào được tự ý đơn phương thay đổi Thỏa thuận (Deal) đã được cả hai bên xác nhận trên hệ thống.',
-      'Các buổi gặp mặt hoặc hỗ trợ trực tuyến cần được thống nhất thời gian và phương thức rõ ràng từ trước.',
-      'Quy định vắng mặt (No-show): Nếu một bên vào trễ quá 15 phút mà không có lý do chính đáng và không thông báo trước, buổi hẹn được tính là Vắng mặt. Trường hợp Student vắng mặt không báo trước, Mentor vẫn có quyền ghi nhận Work Log cho thời gian đã dành để chờ đợi.'
+      'Hai bên tuân thủ nghiêm ngặt phạm vi công việc, mục tiêu học tập và lộ trình hướng dẫn đã thỏa thuận ban đầu; không bên nào được tự ý đơn phương thay đổi thỏa thuận đã được xác nhận trên hệ thống.',
+      'Quy định báo hủy và dời lịch hẹn: Các buổi gặp mặt trực tiếp hoặc hỗ trợ trực tuyến phải được thống nhất thời gian từ trước. Nếu muốn hủy hoặc dời lịch buổi hẹn, bên yêu cầu phải thông báo trước tối thiểu 12 giờ trước giờ bắt đầu để được coi là hợp lệ.',
+      'Quy định vắng mặt: Nếu một bên vào trễ quá 15 phút so với lịch hẹn mà không có lý do chính đáng và không thông báo trước, buổi hẹn được tính là vắng mặt.',
+      'Quyền lợi khi đối phương vắng mặt: Trường hợp Học viên vắng mặt không báo trước, Cố vấn vẫn được quyền ghi nhận nhật ký công việc hợp lệ cho buổi đó. Ngược lại, nếu Cố vấn vắng mặt không báo trước, Học viên có quyền yêu cầu xếp buổi học bù tương đương hoặc hoàn trả 100% chi phí phiên đó kèm trừ điểm uy tín của Cố vấn.'
     ]
   },
   {
     id: 4,
-    title: '4. Task & Deadline',
+    title: '4. Nhiệm vụ & Thời hạn hoàn thành',
     content: [
-      'Mentor thực hiện giao việc, hướng dẫn và đánh giá Task theo đúng kế hoạch của Deal đã được hai bên kích hoạt.',
-      'Student có trách nhiệm nỗ lực hoàn thành các bài tập, nhiệm vụ được giao đúng thời hạn (Deadline).',
-      'Mọi yêu cầu gia hạn Deadline cần có sự trao đổi và đồng thuận của cả hai bên trước khi thời hạn kết thúc.'
+      'Cố vấn thực hiện giao việc, hướng dẫn và đánh giá nhiệm vụ theo đúng kế hoạch của thỏa thuận đã được hai bên kích hoạt.',
+      'Học viên có trách nhiệm nỗ lực hoàn thành các bài tập, nhiệm vụ được giao đúng thời hạn cam kết.',
+      'Mọi yêu cầu gia hạn thời hạn hoàn thành cần có sự trao đổi và đồng thuận của cả hai bên trước khi thời hạn kết thúc.'
     ]
   },
   {
     id: 5,
-    title: '5. Work Log',
+    title: '5. Nhật ký công việc & Cơ chế tự động xác nhận',
     content: [
-      'Mentor có trách nhiệm ghi nhận Work Log chi tiết, minh bạch mỗi khi hoàn thành phiên hướng dẫn hoặc tác vụ công việc cụ thể.',
-      'Student có trách nhiệm kiểm tra và phản hồi Work Log trong vòng 72 giờ kể từ khi Mentor gửi.',
-      'Nếu quá 72 giờ mà Student không có phản hồi hay khiếu nại, đây sẽ là căn cứ pháp lý mặc định để Ban Quản Trị (Admin) công nhận kết quả và thực hiện giải ngân cho Mentor khi có yêu cầu đối soát hoặc phát sinh tranh chấp.',
-      'Dữ liệu Work Log là căn cứ pháp lý quan trọng nhất để giải quyết quyền lợi và các tranh chấp phát sinh.'
+      'Cố vấn có trách nhiệm ghi nhận nhật ký công việc chi tiết, minh bạch (nội dung hoàn thành, kết quả đạt được, tài liệu minh chứng) sau mỗi phiên hướng dẫn hoặc tác vụ công việc cụ thể.',
+      'Học viên có quyền và trách nhiệm kiểm tra, bấm xác nhận hoặc phản hồi yêu cầu chỉnh sửa nhật ký công việc trong vòng 72 giờ kể từ thời điểm Cố vấn tạo nhật ký.',
+      'Quy định tự động xác nhận: Nếu quá thời hạn 72 giờ mà Học viên im lặng, không phản hồi và không gửi khiếu nại, hệ thống cùng Ban Quản trị sẽ mặc định tự động xác nhận nhật ký công việc đó là hợp lệ để làm căn cứ quyết toán và giải ngân cho Cố vấn, ngăn chặn việc cố tình trì hoãn thanh toán.',
+      'Dữ liệu nhật ký công việc đã xác nhận là căn cứ pháp lý quan trọng nhất để bảo vệ quyền lợi đôi bên và phân xử khi có tranh chấp.'
     ]
   },
   {
     id: 6,
-    title: '6. Thanh toán & quyết toán',
+    title: '6. Thanh toán, Ký quỹ & Hoàn tiền',
     content: [
-      'Mọi giao dịch thanh toán trong module Mentoring bắt buộc phải được xử lý qua hệ thống thanh toán chính thức của AlumNect.',
-      'Khoản thanh toán của Student được hệ thống tạm giữ an toàn trong Quỹ ký quỹ (Escrow) và chỉ giải ngân cho Mentor khi Task/Deal hoàn tất hoặc có quyết định phân xử hợp lệ.',
-      'Nghiêm cấm các giao dịch thỏa thuận chuyển tiền riêng ngoài hệ thống nhằm trốn tránh trách nhiệm bảo hộ của nền tảng.',
-      'Chính sách hủy và hoàn tiền: Nếu báo hủy trước 24 giờ kể từ khi Task bắt đầu sẽ được hoàn tiền 100%; trường hợp hủy sát giờ dưới 24 giờ mà không có lý do bất khả kháng, bên hủy có thể chịu khấu trừ phí bồi hoàn theo quy định của nền tảng.',
-      'Trường hợp Task hoặc Deal không hoàn thành trọn vẹn, hệ thống sẽ chuyển sang quy trình Quyết toán (Settlement) dựa trên tỷ lệ công việc thực tế được xác nhận qua Work Log.'
+      'Mọi giao dịch thanh toán trong hoạt động cố vấn bắt buộc phải thực hiện qua cổng thanh toán chính thức của AlumNect; nghiêm cấm mọi thỏa thuận chuyển khoản riêng ngoài hệ thống.',
+      'Cơ chế giữ tiền ký quỹ và phí nền tảng: Khoản thanh toán của Học viên được hệ thống tạm giữ an toàn 100% trong quỹ ký quỹ và chỉ giải ngân cho Cố vấn khi nhiệm vụ hoặc thỏa thuận hoàn tất (hoặc có phán quyết phân xử hợp lệ). Mức phí nền tảng (hiện đang ưu đãi 0% trên giao dịch nhiệm vụ) được công khai minh bạch ngay trên biên lai thỏa thuận.',
+      'Chính sách hủy thỏa thuận và tỷ lệ hoàn tiền: Nếu Học viên báo hủy trước 24 giờ trước khi nhiệm vụ bắt đầu sẽ được hoàn tiền 100%; nếu Học viên tự ý hủy sát giờ (dưới 24 giờ) mà không có lý do bất khả kháng, hệ thống khấu trừ 20% phí bồi hoàn thời gian chuẩn bị cho Cố vấn và hoàn lại 80% cho Học viên. Trường hợp Cố vấn đơn phương hủy thỏa thuận, Học viên được hoàn tiền 100%.',
+      'Quyết toán khi dừng ngang chừng: Trường hợp nhiệm vụ hoặc thỏa thuận dừng giữa chừng khi đã triển khai, hệ thống thực hiện quyết toán phân chia quỹ ký quỹ dựa trên tỷ lệ khối lượng công việc thực tế đã được xác nhận qua nhật ký công việc.'
     ]
   },
   {
     id: 7,
-    title: '7. Tranh chấp & xử lý khiếu nại',
+    title: '7. Tranh chấp & Thời hiệu khiếu nại',
     content: [
-      'Khi phát sinh bất đồng không thể tự thương lượng, Student hoặc Mentor có quyền gửi yêu cầu tạo Phiếu hỗ trợ tranh chấp (Dispute Ticket).',
-      'Thời hiệu khiếu nại: Dispute Ticket chỉ được tiếp nhận trong vòng tối đa 07 ngày kể từ khi phát sinh sự cố hoặc kể từ thời điểm Task kết thúc. Quá thời hiệu này, hệ thống sẽ tự động đóng giao dịch và giải ngân theo dữ liệu Work Log hiện hành.',
-      'Ban Quản trị hệ thống (Admin) có thẩm quyền tiếp nhận, xem xét và chủ trì xử lý Ticket tranh chấp.',
-      'Student, Mentor và Admin có thể trao đổi trực tiếp, cung cấp tài liệu minh chứng trong Ticket.',
-      'Quyết định của Admin dựa trên Thỏa thuận (Deal), dữ liệu Work Log và bằng chứng đối chất thực tế là quyết định cuối cùng.'
+      'Khi phát sinh bất đồng không thể tự thương lượng, Học viên hoặc Cố vấn có quyền gửi yêu cầu tạo phiếu khiếu nại tranh chấp để tạm phong tỏa khoản tiền ký quỹ.',
+      'Thời hiệu khiếu nại: Phiếu khiếu nại tranh chấp chỉ được phép mở trong vòng tối đa 07 ngày kể từ thời điểm phát sinh sự cố hoặc kể từ ngày kết thúc thỏa thuận và nhiệm vụ. Quá thời hiệu 07 ngày, hệ thống tự động đóng quyền khiếu nại và giải ngân dứt điểm theo dữ liệu nhật ký công việc hiện hành.',
+      'Ban Quản trị hệ thống có thẩm quyền tiếp nhận, xem xét lịch sử trao đổi, đối chiếu nhật ký công việc và các bằng chứng hai bên cung cấp trong phiếu khiếu nại.',
+      'Phán quyết của Ban Quản trị dựa trên nội dung thỏa thuận, dữ liệu nhật ký công việc và bằng chứng thực tế là quyết định phân xử cuối cùng.'
     ]
   },
   {
     id: 8,
-    title: '8. Bảo mật & quyền sở hữu trí tuệ',
+    title: '8. Bảo mật & Quyền sở hữu trí tuệ',
     content: [
-      'Các bên tuyệt đối giữ bí mật thông tin cá nhân, tài liệu học tập, mã nguồn dự án và dữ liệu doanh nghiệp được chia sẻ trong quá trình Mentoring.',
-      'Quyền sở hữu trí tuệ: Các sản phẩm, mã nguồn, tài liệu chuyên môn do Mentor tạo ra riêng cho Student trong phạm vi Deal thuộc quyền sở hữu của Student sau khi đã hoàn tất thanh toán. Các giáo trình, tài liệu mẫu hoặc công cụ có sẵn từ trước của Mentor vẫn thuộc quyền sở hữu trí tuệ của Mentor.',
-      'Không phát tán, sao chép hoặc thương mại hóa bất kỳ tài liệu nào ra ngoài hệ thống nếu chưa có sự đồng ý bằng văn bản của bên cung cấp.',
-      'Mọi dữ liệu trao đổi trong nền tảng được bảo vệ theo Chính sách Quyền riêng tư của AlumNect.'
+      'Các bên tuyệt đối giữ bí mật thông tin cá nhân, tài liệu học tập, mã nguồn dự án và dữ liệu nội bộ được chia sẻ trong suốt quá trình hướng dẫn.',
+      'Quyền sở hữu trí tuệ: Các sản phẩm tạo ra trong quá trình hướng dẫn (đoạn mã nguồn, bản thiết kế, báo cáo, tài liệu giải pháp mà Cố vấn hướng dẫn hoặc cùng Học viên thực hiện trong phạm vi thỏa thuận) thuộc quyền sở hữu và quyền sử dụng của Học viên sau khi hoàn tất thanh toán. Ngược lại, các giáo trình, bài giảng mẫu, bộ khung tài liệu và công cụ có sẵn từ trước của Cố vấn vẫn thuộc quyền sở hữu trí tuệ riêng của Cố vấn.',
+      'Không bên nào được tự ý phát tán, sao chép trái phép hoặc thương mại hóa tài sản trí tuệ của bên kia ra ngoài hệ thống khi chưa có sự đồng ý bằng văn bản.',
+      'Mọi dữ liệu trao đổi trên nền tảng được bảo vệ nghiêm ngặt theo Chính sách quyền riêng tư của AlumNect.'
     ]
   },
   {
     id: 9,
     title: '9. Hành vi nghiêm cấm',
     content: [
-      'Nghiêm cấm các hành vi gian lận thi cử, làm hộ bài tập lớn, thi hộ hoặc vi phạm liêm chính học thuật dưới mọi hình thức.',
-      'Nghiêm cấm chia sẻ nội dung độc hại, lừa đảo, phát tán mã độc hoặc sử dụng module cho các mục đích thương mại trái phép.',
+      'Nghiêm cấm các hành vi gian lận thi cử, làm hộ bài tập lớn, viết hộ khóa luận, thi hộ hoặc vi phạm liêm chính học thuật dưới mọi hình thức.',
+      'Nghiêm cấm chia sẻ nội dung độc hại, lừa đảo, phát tán mã độc hoặc lợi dụng hoạt động hướng dẫn cho các mục đích thương mại trái phép.',
       'Tài khoản vi phạm sẽ bị khóa vĩnh viễn và bị thu hồi toàn bộ quyền lợi trên mạng lưới AlumNect.'
     ]
   },
   {
     id: 10,
-    title: '10. Quyền và trách nhiệm của nền tảng',
+    title: '10. Quyền, trách nhiệm & Miễn trừ trách nhiệm của nền tảng',
     content: [
-      'AlumNect cung cấp giải pháp công nghệ kết nối, giám sát và bảo đảm an toàn cho các hoạt động Hướng dẫn & Hỗ trợ.',
-      'Miễn trừ trách nhiệm chuyên môn: AlumNect đóng vai trò là nền tảng kết nối và bảo đảm an toàn giao dịch; AlumNect không cam kết hay chịu trách nhiệm trực tiếp về điểm số môn học, kết quả đồ án hoặc cơ hội tuyển dụng cuối cùng của Student.',
-      'Hệ thống có quyền tạm khóa hoặc đình chỉ Deal khi phát hiện dấu hiệu bất thường hoặc vi phạm Điều khoản.',
-      'Điều khoản Hướng dẫn & Hỗ trợ có thể được cập nhật định kỳ. Người dùng sẽ được yêu cầu xác nhận lại trước khi tiếp tục sử dụng module.'
+      'AlumNect cung cấp giải pháp công nghệ kết nối, giám sát tiến độ và bảo đảm an toàn giao dịch cho các hoạt động hướng dẫn và hỗ trợ.',
+      'Miễn trừ trách nhiệm chuyên môn: Nền tảng AlumNect đóng vai trò kết nối và bảo đảm giao dịch minh bạch, hoàn toàn không cam kết hay chịu trách nhiệm về kết quả điểm số trên lớp, kết quả bảo vệ đồ án hoặc kết quả tuyển dụng cuối cùng của Học viên.',
+      'Hệ thống có quyền tạm khóa tài khoản hoặc đình chỉ thỏa thuận khi phát hiện dấu hiệu gian lận hoặc vi phạm điều khoản.',
+      'Điều khoản hướng dẫn và hỗ trợ có thể được cập nhật định kỳ; người dùng sẽ được thông báo và xác nhận lại trước khi tiếp tục sử dụng dịch vụ.'
     ]
   }
 ]
@@ -132,12 +130,12 @@ export const MENTORING_TERMS_SECTIONS_EN: TermsSection[] = [
   },
   {
     id: 3,
-    title: '3. Communication & collaboration',
+    title: '3. Collaboration, Cancellation & No-show Policy',
     content: [
-      'Both parties strictly follow the scope of work, learning goals and mentoring plan agreed at the start.',
-      'Neither party may unilaterally change a Deal that both parties have confirmed on the system.',
-      'In-person or online sessions must have their time and format agreed clearly in advance.',
-      'No-show & Late Policy: If either party is more than 15 minutes late without a valid reason or prior notice, the session is counted as a No-show. If the Student is absent without notice, the Mentor retains the right to record a Work Log for the time spent waiting.',
+      'Both parties strictly follow the scope of work, learning goals and mentoring plan agreed at the start; neither party may unilaterally change a confirmed Deal.',
+      'Session Cancellation & Rescheduling: Online or offline session times must be agreed in advance. Any request to cancel or reschedule a session must be notified at least 12 hours before the scheduled start time to be considered valid.',
+      'No-show Policy: If either party is more than 15 minutes late without a valid reason and without prior notice, the session is counted as a No-show.',
+      'Rights upon Counterparty No-show: If the Student is absent without prior notice, the Mentor retains the right to log a valid Work Log for that session. Conversely, if the Mentor is absent without prior notice, the Student is entitled to a make-up session or a 100% refund for that session along with a reputation penalty applied to the Mentor.',
     ],
   },
   {
@@ -151,67 +149,65 @@ export const MENTORING_TERMS_SECTIONS_EN: TermsSection[] = [
   },
   {
     id: 5,
-    title: '5. Work Log',
+    title: '5. Work Log & Auto-approve Mechanism',
     content: [
-      'The Mentor is responsible for recording a detailed and transparent Work Log whenever a mentoring session or specific task is completed.',
-      'The Student is responsible for reviewing and responding to the Work Log within 72 hours of submission.',
-      'If 72 hours pass without a response or dispute from the Student, this serves as the default legal basis for Administrators (Admin) to recognize the work and disburse payment to the Mentor upon audit or dispute resolution.',
-      'Work Log data is the primary legal basis for resolving rights and any disputes that may arise.',
+      'The Mentor is responsible for recording a detailed and transparent Work Log (completed work, deliverables, supporting evidence) after each mentoring session or task.',
+      'The Student has the right and responsibility to review, confirm, or request revisions to a Work Log within 72 hours of its creation by the Mentor.',
+      'Auto-approve Rule: If 72 hours pass and the Student remains silent without confirming or filing a dispute, the system and Administrators (Admin) will automatically approve (Auto-approve) the Work Log as valid legal grounds for settlement and payout to the Mentor, preventing deliberate payment avoidance.',
+      'Confirmed Work Log data serves as the primary legal basis for protecting both parties and resolving disputes.',
     ],
   },
   {
     id: 6,
-    title: '6. Payment & settlement',
+    title: '6. Payment, Escrow & Refund Policy',
     content: [
-      'All payment transactions in the Mentoring module must be processed through AlumNect\'s official payment system.',
-      'Student payments are safely held in an Escrow fund and are only disbursed to the Mentor once the Task/Deal is fully confirmed or upon a valid dispute resolution decision.',
-      'Private money transfers outside the system to avoid the platform\'s protection are strictly prohibited.',
-      'Cancellation & Refund Policy: Notice given at least 24 hours before the Task starts is eligible for a 100% refund. Cancellations made within 24 hours without a force majeure reason may incur a penalty deduction under platform policy.',
-      'If a Task or Deal is not fully completed, the system moves to a Settlement process based on the actual share of work confirmed through Work Logs.',
+      'All payment transactions in the Mentoring module must be processed through AlumNect\'s official payment gateway; private off-platform transfers are strictly prohibited.',
+      'Escrow Mechanism & Platform Fee: Student payments are 100% safely held in the platform\'s Escrow fund and are only disbursed to the Mentor once the Task/Deal is completed (or upon a valid arbitration ruling). Platform fees (currently 0% promotional fee on Task transactions) are transparently displayed prior to Deal confirmation.',
+      'Deal Cancellation & Refund Rates: If the Student cancels at least 24 hours before the Task begins, a 100% refund is issued. If the Student cancels within 24 hours without force majeure, a 20% compensation fee is deducted for the Mentor\'s preparation time and 80% is refunded to the Student. If the Mentor unilaterally cancels the Deal, the Student receives a 100% refund.',
+      'Mid-task Settlement: If a Task or Deal is terminated mid-way after work has started, the system initiates a Settlement process to split the Escrow fund proportionally based on actual work confirmed through Work Logs.',
     ],
   },
   {
     id: 7,
-    title: '7. Disputes & complaint handling',
+    title: '7. Disputes & Statute of Limitations',
     content: [
-      'When a disagreement cannot be settled by negotiation, the Student or Mentor may submit a Dispute Ticket.',
-      'Statute of Limitations: Dispute Tickets are only accepted within a maximum of 7 days from the occurrence of the incident or Task completion. After this window, the system automatically closes the transaction and disburses according to existing Work Logs.',
-      'System administrators (Admin) are authorized to receive, review and lead the handling of dispute Tickets.',
-      'Students, Mentors and Admins can discuss directly and provide supporting documents within the Ticket.',
-      'The Admin\'s decision, based on the Deal, Work Log data and the evidence presented, is final.',
+      'When a disagreement cannot be settled by negotiation, the Student or Mentor may submit a Dispute Ticket to freeze the Escrow fund (ON_HOLD).',
+      'Statute of Limitations: Dispute Tickets may only be opened within a maximum of 07 days from the date of the incident or the Deal/Task completion date. After 07 days, the system automatically closes the dispute window and finalizes payout based on recorded Work Logs.',
+      'System Administrators (Admin) are authorized to review chat history, audit Work Logs, and evaluate evidence submitted by both parties within the Ticket.',
+      'The Admin\'s decision, based on the Deal terms, Work Log data, and verified evidence, is final and binding.',
     ],
   },
   {
     id: 8,
-    title: '8. Information security & intellectual property',
+    title: '8. Confidentiality & Intellectual Property (IP)',
     content: [
-      'All parties must keep personal information, study materials, project source code and business data shared during Mentoring strictly confidential.',
-      'Intellectual Property (IP): Deliverables, source code, and custom materials produced specifically for the Student under the Deal become the property of the Student upon full payment. Pre-existing materials, curriculum, and tools belonging to the Mentor remain the Mentor\'s intellectual property.',
-      'Do not distribute, copy or commercialize any material outside the system without the written consent of the party who provided it.',
-      'All data exchanged on the platform is protected under AlumNect\'s Privacy Policy.',
+      'All parties must keep personal information, study materials, project source code, and internal data shared during Mentoring strictly confidential.',
+      'Intellectual Property (IP): Deliverables created during Mentoring (code snippets, designs, reports, or solutions developed for or co-created with the Student under the Deal) belong to the Student upon full payment. Conversely, the Mentor\'s pre-existing curricula, templates, and tools remain the sole intellectual property of the Mentor for the Student\'s personal learning use only.',
+      'Neither party may distribute, copy, or commercialize the other party\'s intellectual property outside the platform without prior written consent.',
+      'All data exchanged on the platform is strictly protected under AlumNect\'s Privacy Policy.',
     ],
   },
   {
     id: 9,
     title: '9. Prohibited conduct',
     content: [
-      'Cheating on exams, doing assignments or exams for others, or violating academic integrity in any form is strictly prohibited.',
-      'Sharing harmful or fraudulent content, spreading malware, or using the module for unauthorized commercial purposes is strictly prohibited.',
-      'Violating accounts will be permanently locked and all of their benefits on the AlumNect network revoked.',
+      'Cheating on exams, ghostwriting assignments or theses, taking exams for others, or violating academic integrity in any form is strictly prohibited.',
+      'Sharing harmful or fraudulent content, spreading malware, or using Mentoring activities for unauthorized commercial purposes is strictly prohibited.',
+      'Violating accounts will be permanently banned and all privileges on the AlumNect network revoked.',
     ],
   },
   {
     id: 10,
-    title: '10. Platform rights and responsibilities',
+    title: '10. Platform Rights, Responsibilities & Disclaimer',
     content: [
-      'AlumNect provides the technology to connect, monitor and keep Mentoring activities safe.',
-      'Academic & Career Disclaimer: AlumNect acts solely as a connecting and transaction-protection platform; AlumNect does not guarantee nor assume liability for course grades, academic results, or final employment outcomes for Students.',
-      'The system may temporarily lock or suspend a Deal when it detects abnormal signs or violations of the Terms.',
-      'The Mentoring Terms may be updated periodically. Users will be asked to confirm again before continuing to use the module.',
+      'AlumNect provides the technology infrastructure to connect participants, monitor progress, and safeguard transactions for Mentoring activities.',
+      'Professional Disclaimer: AlumNect acts as a connecting and transaction-protection platform and does not guarantee or assume liability for classroom grades, thesis defense scores, or final employment outcomes of the Student.',
+      'The system reserves the right to suspend accounts or freeze Deals upon detecting fraud or violations of these Terms.',
+      'The Mentoring Terms may be updated periodically; users will be notified and asked to re-confirm before continuing to use the service.',
     ],
   },
 ]
 
 /** Lấy điều khoản theo ngôn ngữ giao diện hiện tại. */
 export const getMentoringTermsSections = (language: string): TermsSection[] =>
-  language === 'en' ? MENTORING_TERMS_SECTIONS_EN : MENTORING_TERMS_SECTIONS
+  language?.startsWith('en') ? MENTORING_TERMS_SECTIONS_EN : MENTORING_TERMS_SECTIONS
