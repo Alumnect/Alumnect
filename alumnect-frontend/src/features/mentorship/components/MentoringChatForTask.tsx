@@ -231,14 +231,18 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
     return [...messagesData.pages.flatMap((page) => page.content || [])].reverse()
   }, [messagesData])
 
-  // Business events already have dedicated tickets and banners. Keep the chat
-  // focused on the conversation, except actionable adjustment requests.
+  // Hiển thị tin nhắn trò chuyện và thông báo sự kiện hệ thống (kết quả nghiệm thu, ticket task, thanh toán...)
+  // Ẩn thông báo phát hành Deal Ticket vì đã có thẻ MentoringDiscordTicketEmbed hiển thị từ snapshots
   const visibleMessages = useMemo(
     () =>
-      messages.filter(
-        (message) =>
-          message.type !== 'SYSTEM' || Boolean(parseAdjustmentMessage(message.content))
-      ),
+      messages.filter((message) => {
+        if (message.type !== 'SYSTEM') return true
+        if (parseAdjustmentMessage(message.content)) return true
+        const isDealIssuance = Boolean(
+          message.content && /đã gửi Deal Ticket phiên bản \d+/i.test(message.content)
+        )
+        return !isDealIssuance
+      }),
     [messages]
   )
 

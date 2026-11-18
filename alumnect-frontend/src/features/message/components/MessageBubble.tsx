@@ -81,7 +81,7 @@ export function MessageBubble({ message, isMe, isGroup, position = 'single' }: M
         {formattedTime && (
           <span className="text-xs font-medium text-text-subtle dark:text-text-subtle">{formattedTime}</span>
         )}
-        <span className="rounded-full bg-surface-2 px-3.5 py-1 text-xs font-medium text-text-muted shadow-2xs">
+        <span className="max-w-[85%] rounded-2xl bg-surface-2 px-3.5 py-1.5 text-center text-xs font-medium text-text-muted shadow-2xs whitespace-pre-line leading-relaxed">
           {message.content}
         </span>
       </div>
