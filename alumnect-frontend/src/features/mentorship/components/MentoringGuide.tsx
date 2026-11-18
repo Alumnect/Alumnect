@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   BookOpen,
@@ -30,12 +29,13 @@ type RoleType = 'student' | 'mentor'
 interface CalloutPin {
   id: number
   title: string
+  shortLabel: string
   description: string
-  // Percentage coordinates on the image
-  top: number
-  left: number
-  width: number
-  height: number
+  targetX: number
+  targetY: number
+  labelX: number
+  labelY: number
+  path: string
 }
 
 interface GuideStep {
@@ -49,6 +49,8 @@ interface GuideStep {
   image: string
   imageCaption: string
   imageNotes: string
+  imageWidth?: number
+  imageHeight?: number
   callouts: CalloutPin[]
   mockup: {
     badge: string
@@ -73,36 +75,42 @@ const STUDENT_STEPS: GuideStep[] = [
     actionLabel: 'Đến trang Khám phá Mentor',
     actionLink: '/app/mentoring/discover',
     image: '/images/guide/student-step1-discover.png',
-    imageCaption: 'Giao diện Khám phá & Lọc Mentor (alumnect.vn/app/mentoring/discover)',
+    imageCaption: 'Giao diện Khám phá & Lọc Mentor',
     imageNotes:
       'Giao diện hiển thị số điểm uy tín, số đánh giá, số buổi hoàn thành và các thẻ chuyên ngành nổi bật của từng Mentor.',
     callouts: [
       {
         id: 1,
-        title: 'Thanh tìm kiếm & Bộ lọc tiêu chí',
+        title: 'Thanh tìm kiếm & sắp xếp Mentor',
+        shortLabel: 'Thanh tìm kiếm & sắp xếp',
         description: 'Lọc nhanh theo Chuyên ngành (Kỹ thuật phần mềm SE, An toàn thông tin IA, Thiết kế đồ họa GD...), Lĩnh vực và Hình thức hướng dẫn 1-1.',
-        top: 34.6,
-        left: 26.5,
-        width: 66.1,
-        height: 7.0,
+        targetX: 480,
+        targetY: 306,
+        labelX: 480,
+        labelY: 242,
+        path: 'M 480 242 L 480 296',
       },
       {
         id: 2,
-        title: 'Thẻ thông tin Mentor',
-        description: 'Hiển thị ảnh đại diện, chức danh hiện tại tại các tập đoàn lớn (Samsung, VNG, FPT...), chuyên ngành và các lĩnh vực đào tạo.',
-        top: 44.3,
-        left: 25.2,
-        width: 68.8,
-        height: 13.5,
+        title: 'Bộ lọc tiêu chí chuyên ngành',
+        shortLabel: 'Bộ lọc tiêu chí',
+        description: 'Hiển thị các bộ lọc chi tiết theo Lĩnh vực, Chuyên ngành, Hình thức làm việc và Hình thức hướng dẫn.',
+        targetX: 658,
+        targetY: 421,
+        labelX: 658,
+        labelY: 368,
+        path: 'M 658 368 L 658 410',
       },
       {
         id: 3,
         title: 'Điểm uy tín & Nút Xem hồ sơ',
+        shortLabel: 'Nút Xem hồ sơ',
         description: 'Điểm uy tín, số đánh giá thực tế và nút màu cam "Xem hồ sơ" để xem chi tiết kinh nghiệm và các gói hỗ trợ của Mentor.',
-        top: 90.8,
-        left: 27.0,
-        width: 18.9,
-        height: 6.5,
+        targetX: 465,
+        targetY: 752,
+        labelX: 465,
+        labelY: 638,
+        path: 'M 465 638 L 465 740',
       },
     ],
     mockup: {
@@ -132,36 +140,42 @@ const STUDENT_STEPS: GuideStep[] = [
     actionLabel: 'Tạo yêu cầu Cố vấn mới',
     actionLink: '/app/mentoring/requests/create',
     image: '/images/guide/student-step2-request.png',
-    imageCaption: 'Biểu mẫu Khởi tạo Yêu cầu Cố vấn (alumnect.vn/app/mentoring/requests/create)',
+    imageCaption: 'Biểu mẫu Khởi tạo Yêu cầu Cố vấn',
     imageNotes:
       'Mô tả chi tiết và tải lên tài liệu/đề cương giúp hệ thống matching chuẩn xác và Mentor phản hồi nhanh hơn.',
     callouts: [
       {
         id: 1,
         title: 'Tiêu đề yêu cầu hỗ trợ',
+        shortLabel: 'Tiêu đề yêu cầu',
         description: 'Tóm tắt ngắn gọn bài toán kỹ thuật (Ví dụ: Cố vấn định hướng đồ án Capstone Spring Boot & Microservices).',
-        top: 46.4,
-        left: 27.4,
-        width: 64.2,
-        height: 10.0,
+        targetX: 600,
+        targetY: 423,
+        labelX: 780,
+        labelY: 372,
+        path: 'M 780 372 L 600 372 L 600 412',
       },
       {
         id: 2,
         title: 'Mô tả chi tiết nhu cầu',
+        shortLabel: 'Mô tả chi tiết nhu cầu',
         description: 'Trình bày cụ thể bối cảnh hiện tại, mục tiêu muốn đạt được và những khó khăn đang gặp (tối thiểu 20 ký tự, tối đa 3000 ký tự).',
-        top: 57.4,
-        left: 27.4,
-        width: 64.2,
-        height: 23.5,
+        targetX: 600,
+        targetY: 545,
+        labelX: 780,
+        labelY: 468,
+        path: 'M 780 468 L 600 468 L 600 534',
       },
       {
         id: 3,
         title: 'Lĩnh vực & Chuyên môn hỗ trợ',
+        shortLabel: 'Lĩnh vực & Chuyên môn',
         description: 'Chọn chuyên môn kỹ thuật để hệ thống matching chuẩn xác tới các Mentor có năng lực chuyên sâu trong ngành.',
-        top: 86.0,
-        left: 25.2,
-        width: 68.8,
-        height: 14.0,
+        targetX: 655,
+        targetY: 735,
+        labelX: 870,
+        labelY: 735,
+        path: 'M 870 735 L 667 735',
       },
     ],
     mockup: {
@@ -191,36 +205,42 @@ const STUDENT_STEPS: GuideStep[] = [
     actionLabel: 'Xem danh sách Thỏa thuận (Deals)',
     actionLink: '/app/mentoring/deals',
     image: '/images/guide/student-step3-deals.png',
-    imageCaption: 'Giao diện Thỏa thuận & Nút Mở Task (alumnect.vn/app/mentoring/deals)',
+    imageCaption: 'Giao diện Thỏa thuận & Nút Mở Task',
     imageNotes:
       'Khi trạng thái chuyển sang "Đã thanh toán", tiền được giữ an toàn tại Escrow AlumNect. Nút "Mở Task" sẽ xuất hiện để bắt đầu làm việc.',
     callouts: [
       {
         id: 1,
         title: 'Trạng thái Đã thanh toán (Ký quỹ Escrow)',
+        shortLabel: 'Đã thanh toán (Escrow)',
         description: 'Huy hiệu xanh lá "Đã thanh toán" xác nhận nguồn tiền của bạn đã vào quỹ bảo đảm Escrow AlumNect an toàn 100%.',
-        top: 43.8,
-        left: 27.0,
-        width: 9.8,
-        height: 3.8,
+        targetX: 408,
+        targetY: 363,
+        labelX: 640,
+        labelY: 312,
+        path: 'M 640 312 L 408 312 L 408 352',
       },
       {
         id: 2,
         title: 'Mức giá thỏa thuận & Hạn chót Deadline',
+        shortLabel: 'Mức giá & Hạn chót',
         description: 'Chi phí cam kết cố định không phát sinh phụ phí và mốc thời gian hoàn thành nhiệm vụ rõ ràng.',
-        top: 68.7,
-        left: 27.0,
-        width: 19.1,
-        height: 9.3,
+        targetX: 830,
+        targetY: 586,
+        labelX: 1050,
+        labelY: 586,
+        path: 'M 1050 586 L 842 586',
       },
       {
         id: 3,
         title: 'Nút "Mở Task" màu cam để bắt đầu',
+        shortLabel: 'Nút Mở Task',
         description: 'Bấm nút [Mở Task] để truy cập không gian làm việc, theo dõi tiến trình 3 giai đoạn và nhận Work Log từ Mentor.',
-        top: 81.1,
-        left: 38.4,
-        width: 7.7,
-        height: 5.0,
+        targetX: 540,
+        targetY: 669,
+        labelX: 540,
+        labelY: 745,
+        path: 'M 540 745 L 540 682',
       },
     ],
     mockup: {
@@ -250,36 +270,44 @@ const STUDENT_STEPS: GuideStep[] = [
     actionLabel: 'Xem chi tiết Task & Work Log',
     actionLink: '/app/mentoring/tasks',
     image: '/images/guide/student-step4-task.png',
-    imageCaption: 'Chi tiết Task công việc & Theo dõi Work Log (alumnect.vn/app/mentoring/tasks/:id)',
+    imageCaption: 'Chi tiết Task công việc & Theo dõi Work Log',
     imageNotes:
       'Hiển thị rõ 3 giai đoạn tiến trình (Chuẩn bị -> Đang thực hiện -> Kết thúc & Nghiệm thu), thông tin Deadline và danh sách Work Log từng buổi.',
+    imageWidth: 1280,
+    imageHeight: 1200,
     callouts: [
       {
         id: 1,
         title: 'Tiến trình Mentoring Task 3 Giai đoạn',
+        shortLabel: 'Tiến trình 3 giai đoạn',
         description: 'Thanh tiến độ % và 3 giai đoạn trực quan: Giai đoạn 1 (Chuẩn bị), Giai đoạn 2 (Đang thực hiện), Giai đoạn 3 (Kết thúc & Nghiệm thu).',
-        top: 21.2,
-        left: 27.1,
-        width: 64.8,
-        height: 17.0,
+        targetX: 675,
+        targetY: 388,
+        labelX: 675,
+        labelY: 275,
+        path: 'M 675 275 L 675 372',
       },
       {
         id: 2,
         title: 'Thời hạn hoàn thành (Deadline)',
+        shortLabel: 'Thời hạn Deadline',
         description: 'Mốc thời gian hạn chót cam kết hoàn thành công việc để hai bên cùng đối chiếu tiến độ.',
-        top: 41.0,
-        left: 25.3,
-        width: 45.2,
-        height: 25.0,
+        targetX: 544,
+        targetY: 615,
+        labelX: 700,
+        labelY: 530,
+        path: 'M 700 530 L 544 530 L 544 602',
       },
       {
         id: 3,
         title: 'Nhật ký công việc (Work Logs) & Căn cứ 72h',
+        shortLabel: 'Nhật ký Work Log',
         description: 'Chi tiết từng buổi học (tóm tắt, nội dung, sản phẩm đạt được) và nút xác nhận. QUAN TRỌNG: Quá 72h không phản hồi là căn cứ pháp lý để Admin công nhận kết quả.',
-        top: 68.7,
-        left: 25.3,
-        width: 45.2,
-        height: 28.0,
+        targetX: 796,
+        targetY: 968,
+        labelX: 796,
+        labelY: 880,
+        path: 'M 796 880 L 796 955',
       },
     ],
     mockup: {
@@ -313,36 +341,42 @@ const STUDENT_STEPS: GuideStep[] = [
     actionLabel: 'Khai báo Tài khoản Nhận Hoàn tiền',
     actionLink: '/app/mentoring/refunds',
     image: '/images/guide/student-step5-refunds.png',
-    imageCaption: 'Giao diện Khai báo Tài khoản & Đối soát Hoàn tiền (alumnect.vn/app/mentoring/refunds)',
+    imageCaption: 'Giao diện Khai báo Tài khoản & Đối soát Hoàn tiền',
     imageNotes:
       'Khai báo số tài khoản ngân hàng chính chủ để nhận hoàn tiền tự động 100% khi có tranh chấp hoặc Mentor vi phạm thỏa thuận.',
     callouts: [
       {
         id: 1,
-        title: 'Trạng thái Đã khai báo tài khoản hoàn tiền',
-        description: 'Thông báo xác nhận tài khoản ngân hàng đã sẵn sàng nhận tiền hoàn (Ví dụ: Vietcombank ··· 4622).',
-        top: 34.2,
-        left: 25.6,
-        width: 67.8,
-        height: 4.2,
+        title: 'Banner cảnh báo STK ngân hàng',
+        shortLabel: 'Cảnh báo khai báo STK',
+        description: 'Thông báo bắt buộc khai báo số tài khoản chính chủ trước khi kích hoạt hoàn tiền hoặc kết thúc Task.',
+        targetX: 550,
+        targetY: 296,
+        labelX: 550,
+        labelY: 235,
+        path: 'M 550 235 L 550 285',
       },
       {
         id: 2,
-        title: 'Biểu mẫu Khai báo Tài khoản thụ hưởng',
-        description: 'Chọn ngân hàng, nhập số tài khoản và tên chủ tài khoản (IN HOA, không dấu) để hệ thống PayOS chuyển khoản tự động.',
-        top: 40.5,
-        left: 25.6,
-        width: 67.8,
-        height: 38.2,
+        title: 'Dropdown chọn ngân hàng & nhập số tài khoản',
+        shortLabel: 'Chọn ngân hàng & STK',
+        description: 'Hỗ trợ hệ thống ngân hàng liên kết VietQR (Vietcombank, MB, Techcombank, TPBank...). Bấm [Lưu tài khoản] để ghi nhận.',
+        targetX: 580,
+        targetY: 426,
+        labelX: 780,
+        labelY: 362,
+        path: 'M 780 362 L 580 362 L 580 415',
       },
       {
         id: 3,
-        title: 'Bảng đối soát hoàn tiền tự động',
-        description: 'Bảng theo dõi 3 trạng thái tiền hoàn: Đã nhận, Đang xử lý, và Chưa thành công để hỗ trợ xử lý thủ công kịp thời.',
-        top: 80.6,
-        left: 25.6,
-        width: 67.8,
-        height: 11.9,
+        title: 'Bảng đối soát trạng thái tiền hoàn',
+        shortLabel: 'Bảng đối soát hoàn tiền',
+        description: 'Theo dõi chi tiết số tiền Đã nhận, Đang xử lý đối soát và Chưa thành công để hỗ trợ khiếu nại kịp thời.',
+        targetX: 470,
+        targetY: 673,
+        labelX: 640,
+        labelY: 762,
+        path: 'M 640 762 L 470 762 L 470 685',
       },
     ],
     mockup: {
@@ -375,36 +409,42 @@ const MENTOR_STEPS: GuideStep[] = [
     actionLabel: 'Cập nhật Hồ sơ Mentor',
     actionLink: '/app/mentoring/become-mentor',
     image: '/images/guide/mentor-step1-profile.png',
-    imageCaption: 'Hồ sơ Cố vấn & Trạng thái Hoạt động (alumnect.vn/app/mentoring/become-mentor)',
+    imageCaption: 'Hồ sơ Cố vấn & Trạng thái Hoạt động',
     imageNotes:
       'Hiển thị thông tin cựu sinh viên FPT, chức danh công việc, trạng thái hồ sơ "Đang hoạt động" và nút quản lý gói dịch vụ.',
     callouts: [
       {
         id: 1,
-        title: 'Huy hiệu Trạng thái "Đang hoạt động"',
-        description: 'Huy hiệu màu xanh xác nhận hồ sơ của bạn đã đủ điều kiện hiển thị trên danh sách tìm kiếm để sinh viên gửi yêu cầu.',
-        top: 21.6,
-        left: 35.6,
-        width: 8.4,
-        height: 4.3,
+        title: 'Trạng thái Bản nháp (Chưa hoàn thiện)',
+        shortLabel: 'Trạng thái Bản nháp',
+        description: 'Hồ sơ ở trạng thái Bản nháp cần cập nhật đầy đủ thông tin trước khi gửi duyệt kích hoạt huy hiệu Mentor.',
+        targetX: 510,
+        targetY: 191,
+        labelX: 720,
+        labelY: 191,
+        path: 'M 720 191 L 522 191',
       },
       {
         id: 2,
-        title: 'Thông tin cá nhân & Thiết lập hồ sơ',
-        description: 'Cập nhật thông tin chuyên môn, kinh nghiệm làm việc và liên kết tài khoản để sinh viên tin tưởng lựa chọn.',
-        top: 35.4,
-        left: 25.2,
-        width: 68.8,
-        height: 38.0,
+        title: 'Thông tin cá nhân & Lĩnh vực đào tạo',
+        shortLabel: 'Thông tin cá nhân',
+        description: 'Khai báo họ tên, chức danh hiện tại, cơ sở đào tạo FPTU và kinh nghiệm chuyên môn để sinh viên tin tưởng kết nối.',
+        targetX: 570,
+        targetY: 435,
+        labelX: 780,
+        labelY: 335,
+        path: 'M 780 335 L 570 335 L 570 422',
       },
       {
         id: 3,
-        title: 'Nút "Hoàn tất ->" lưu hồ sơ',
-        description: 'Lưu lại các thông tin đã cập nhật để hệ thống đồng bộ và hiển thị ngay trên trang Khám phá Mentor.',
-        top: 82.5,
-        left: 79.8,
-        width: 12.4,
-        height: 6.0,
+        title: 'Nút "Hoàn tất ->" gửi duyệt hồ sơ',
+        shortLabel: 'Nút Hoàn tất hồ sơ',
+        description: 'Sau khi điền đủ các mục, bấm nút màu cam [Hoàn tất ->] để hoàn thành và kích hoạt quyền nhận yêu cầu.',
+        targetX: 1101,
+        targetY: 685,
+        labelX: 1050,
+        labelY: 615,
+        path: 'M 1050 615 L 1101 615 L 1101 672',
       },
     ],
     mockup: {
@@ -434,36 +474,42 @@ const MENTOR_STEPS: GuideStep[] = [
     actionLabel: 'Xem các Gói dịch vụ Mentor',
     actionLink: '/app/mentoring/packages',
     image: '/images/guide/mentor-step2-packages.png',
-    imageCaption: 'Bảng Gói dịch vụ Mentor (alumnect.vn/app/mentoring/packages)',
+    imageCaption: 'Bảng Gói dịch vụ Mentor',
     imageNotes:
       'Hiển thị thời hạn gói đang dùng, chi phí theo kỳ hạn, huy hiệu Mentor trên hồ sơ và kết nối cổng đối soát thù lao PayOS.',
     callouts: [
       {
         id: 1,
         title: 'Banner Gói dịch vụ đang kích hoạt',
-        description: 'Hiển thị chi tiết Gói đang dùng (Ví dụ: Gói Cao Cấp 6 Tháng), trạng thái Đang hoạt động và Hạn dùng đến 08/11/2027.',
-        top: 33.0,
-        left: 25.2,
-        width: 68.8,
-        height: 9.5,
+        shortLabel: 'Gói dịch vụ đang kích hoạt',
+        description: 'Hiển thị chi tiết Gói đang dùng (Ví dụ: Gói Cao Cấp 6 Tháng), trạng thái Đang hoạt động và Hạn dùng đến 21/04/2027.',
+        targetX: 590,
+        targetY: 303,
+        labelX: 590,
+        labelY: 235,
+        path: 'M 590 235 L 590 292',
       },
       {
         id: 2,
         title: 'Bảng 3 gói dịch vụ đa dạng kỳ hạn',
+        shortLabel: 'Bảng 3 gói dịch vụ Mentor',
         description: 'Gói Tiêu Chuẩn 1 Tháng, Gói Phổ Biến 3 Tháng, và Gói Cao Cấp 6 Tháng kèm mức giá ưu đãi theo tháng.',
-        top: 43.1,
-        left: 25.2,
-        width: 68.8,
-        height: 51.4,
+        targetX: 762,
+        targetY: 420,
+        labelX: 762,
+        labelY: 365,
+        path: 'M 762 365 L 762 408',
       },
       {
         id: 3,
         title: 'Quyền lợi Đối soát thù lao qua PayOS',
+        shortLabel: 'Quyền lợi đối soát PayOS',
         description: 'Huy hiệu xác thực Mentor và hệ thống bảo trợ đối soát thù lao tự động 100% qua cổng thanh toán PayOS.',
-        top: 43.1,
-        left: 71.4,
-        width: 22.5,
-        height: 51.4,
+        targetX: 1058,
+        targetY: 704,
+        labelX: 762,
+        labelY: 704,
+        path: 'M 762 704 L 1045 704',
       },
     ],
     mockup: {
@@ -493,36 +539,42 @@ const MENTOR_STEPS: GuideStep[] = [
     actionLabel: 'Xem Hòm thư Yêu cầu gửi đến',
     actionLink: '/app/mentoring/incoming-requests',
     image: '/images/guide/mentor-step3-incoming.png',
-    imageCaption: 'Hòm thư Tiếp nhận Yêu cầu Cố vấn (alumnect.vn/app/mentoring/incoming-requests)',
+    imageCaption: 'Hòm thư Tiếp nhận Yêu cầu Cố vấn',
     imageNotes:
       'Xem thông tin chi tiết sinh viên, tiêu đề nhu cầu, hình thức (Online/Offline), hạn chót và nút hành động "Xem & phản hồi".',
     callouts: [
       {
         id: 1,
         title: 'Trạng thái Chờ phản hồi & Thông tin Sinh viên',
+        shortLabel: 'Thông tin sinh viên gửi yêu cầu',
         description: 'Hiển thị rõ thông tin sinh viên gửi yêu cầu, khóa học (K16/K18 FPTU) và thời gian gửi đến.',
-        top: 53.2,
-        left: 27.0,
-        width: 65.2,
-        height: 6.0,
+        targetX: 460,
+        targetY: 452,
+        labelX: 780,
+        labelY: 452,
+        path: 'M 780 452 L 472 452',
       },
       {
         id: 2,
         title: 'Tiêu đề nhu cầu, Mức ngân sách & Hạn chót',
-        description: 'Tóm tắt bài toán kỹ thuật (Frontend ReactJS/TS), mức ngân sách đề xuất (2.000đ), hình thức (Offline) và hạn chót mong muốn.',
-        top: 59.7,
-        left: 27.0,
-        width: 65.2,
-        height: 14.5,
+        shortLabel: 'Nhu cầu & Mức ngân sách',
+        description: 'Tóm tắt bài toán kỹ thuật, mức ngân sách đề xuất (300.000đ - 700.000đ), hình thức và hạn chót mong muốn.',
+        targetX: 595,
+        targetY: 572,
+        labelX: 595,
+        labelY: 665,
+        path: 'M 595 665 L 595 584',
       },
       {
         id: 3,
         title: 'Nút "Xem & phản hồi ->" màu cam',
+        shortLabel: 'Nút Xem & phản hồi',
         description: 'Bấm nút [Xem & phản hồi] để mở kênh trao đổi tin nhắn, làm rõ đề bài và khởi tạo Thỏa thuận Deal Ticket chính thức.',
-        top: 76.0,
-        left: 80.0,
-        width: 12.0,
-        height: 6.0,
+        targetX: 1108,
+        targetY: 632,
+        labelX: 880,
+        labelY: 632,
+        path: 'M 880 632 L 1095 632',
       },
     ],
     mockup: {
@@ -552,36 +604,44 @@ const MENTOR_STEPS: GuideStep[] = [
     actionLabel: 'Đến trang Quản lý Task & Work Log',
     actionLink: '/app/mentoring/tasks',
     image: '/images/guide/mentor-step4-tasks.png',
-    imageCaption: 'Giao diện Chi tiết Task & Thêm Work Log mới (alumnect.vn/app/mentoring/tasks/:id)',
+    imageCaption: 'Giao diện Chi tiết Task & Thêm Work Log mới',
     imageNotes:
       'Giao diện trực quan với nút "+ Thêm Work Log" màu cam, lịch sử Work Log từng buổi, trạng thái xác nhận và nút trao đổi tin nhắn nhanh.',
+    imageWidth: 1280,
+    imageHeight: 1200,
     callouts: [
       {
         id: 1,
         title: 'Nút "+ Thêm Work Log" màu cam',
-        description: 'Bấm nút này sau mỗi buổi hướng dẫn để ghi chép nội dung đã dạy, bài tập giao và kết quả học viên đạt được.',
-        top: 71.0,
-        left: 55.6,
-        width: 13.0,
-        height: 3.7,
+        shortLabel: 'Nút + Thêm Work Log',
+        description: 'Bấm nút [+ Thêm Work Log] sau mỗi buổi làm việc để ghi lại nhật ký, nội dung giảng dạy và sản phẩm bàn giao.',
+        targetX: 794,
+        targetY: 874,
+        labelX: 794,
+        labelY: 805,
+        path: 'M 794 805 L 794 862',
       },
       {
         id: 2,
-        title: 'Bản ghi Work Log từng buổi & Căn cứ 72h',
-        description: 'Hiển thị Log #1, ngày thực hiện và trạng thái "Đã xác nhận". QUAN TRỌNG: Nếu học viên im lặng quá 72h, Admin mặc định công nhận Work Log này.',
-        top: 77.4,
-        left: 27.1,
-        width: 41.6,
-        height: 20.0,
+        title: 'Thẻ Work Log ghi nhận từng phiên',
+        shortLabel: 'Nhật ký buổi hướng dẫn (Log #1)',
+        description: 'Liệt kê tóm tắt buổi hướng dẫn, nội dung đạt được và ngày thực hiện để học viên xác nhận trong vòng 72 giờ.',
+        targetX: 405,
+        targetY: 968,
+        labelX: 740,
+        labelY: 1030,
+        path: 'M 740 1030 L 405 1030 L 405 980',
       },
       {
         id: 3,
-        title: 'Thỏa thuận gốc #DEAL & Nút "Mở tin nhắn"',
-        description: 'Đối chiếu nhanh nội dung phạm vi cam kết ban đầu và mở kênh chat trao đổi với học viên khi cần giải đáp.',
-        top: 73.1,
-        left: 71.6,
-        width: 22.3,
-        height: 25.0,
+        title: 'Thỏa thuận gốc #DEAL và thông tin nhiệm vụ',
+        shortLabel: 'Thỏa thuận gốc #DEAL',
+        description: 'Xem lại thỏa thuận ban đầu, mức thù lao đã chốt và mở tin nhắn trao đổi nhanh với học viên.',
+        targetX: 1050,
+        targetY: 975,
+        labelX: 1050,
+        labelY: 900,
+        path: 'M 1050 900 L 1050 963',
       },
     ],
     mockup: {
@@ -615,36 +675,42 @@ const MENTOR_STEPS: GuideStep[] = [
     actionLabel: 'Xem Bảng kê Thu nhập & Lịch sử Payout',
     actionLink: '/app/mentoring/earnings',
     image: '/images/guide/mentor-step5-earnings.png',
-    imageCaption: 'Bảng kê Thu nhập & Lịch sử Chuyển khoản Payout (alumnect.vn/app/mentoring/earnings)',
+    imageCaption: 'Bảng kê Thu nhập & Lịch sử Chuyển khoản Payout',
     imageNotes:
       'Bảng điều khiển chi tiết số tiền "Đã nhận", "Đang xử lý", danh sách Task kèm tên học viên, số tiền và trạng thái chuyển khoản tự động.',
     callouts: [
       {
         id: 1,
-        title: '3 Thẻ tổng quan Thu nhập',
-        description: 'Tổng tiền "Đã nhận" (đã về tài khoản ngân hàng), "Đang xử lý" (chờ học viên nghiệm thu) và "Chưa thành công".',
-        top: 33.9,
-        left: 25.2,
-        width: 68.8,
-        height: 12.3,
+        title: 'Thẻ tổng quan thu nhập "Đã nhận"',
+        shortLabel: 'Tổng quan Đã nhận',
+        description: 'Tổng số tiền thù lao đã giải ngân thành công sau khi học viên bấm nghiệm thu nhiệm vụ.',
+        targetX: 460,
+        targetY: 319,
+        labelX: 460,
+        labelY: 235,
+        path: 'M 460 235 L 460 308',
       },
       {
         id: 2,
-        title: 'Bảng kê giao dịch & Lịch sử Payout',
-        description: 'Bảng theo dõi chi tiết từng mã giao dịch, số tiền thù lao giải ngân và mã tham chiếu ngân hàng liên kết.',
-        top: 46.6,
-        left: 25.2,
-        width: 68.8,
-        height: 26.0,
+        title: 'Bảng kê chi tiết Task hoàn thành',
+        shortLabel: 'Bảng kê chi tiết Task',
+        description: 'Danh sách các Task đã bàn giao, thông tin học viên (Lê Thảo Vy) và mức thù lao tương ứng (350.000 đ).',
+        targetX: 420,
+        targetY: 455,
+        labelX: 450,
+        labelY: 545,
+        path: 'M 450 545 L 420 545 L 420 468',
       },
       {
         id: 3,
-        title: 'Cột Trạng thái "Đã chuyển" tự động',
-        description: 'Xác nhận tiền thù lao từ quỹ Escrow đã được chuyển khoản tự động tức thì về số tài khoản của bạn qua cổng PayOS.',
-        top: 52.1,
-        left: 64.0,
-        width: 11.6,
-        height: 8.6,
+        title: 'Huy hiệu "Đã chuyển" giải ngân thành công',
+        shortLabel: 'Huy hiệu Đã chuyển',
+        description: 'Trạng thái chuyển khoản tự động về tài khoản ngân hàng của bạn, minh bạch và an toàn 100%.',
+        targetX: 886,
+        targetY: 453,
+        labelX: 886,
+        labelY: 545,
+        path: 'M 886 545 L 886 465',
       },
     ],
     mockup: {
@@ -689,10 +755,9 @@ const FAQS = [
   },
 ]
 
-const GUIDE_IMAGE_VERSION = '?v=20261118_v5'
+const GUIDE_IMAGE_VERSION = '?v=20261118_v11'
 
 export function MentoringGuide() {
-  const { t } = useTranslation()
   const [activeRole, setActiveRole] = useState<RoleType>('student')
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
   const [hoveredCallout, setHoveredCallout] = useState<{ step: number; id: number } | null>(null)
@@ -702,6 +767,8 @@ export function MentoringGuide() {
     title: string
     notes?: string
     callouts?: CalloutPin[]
+    imageWidth?: number
+    imageHeight?: number
   } | null>(null)
 
   const steps = activeRole === 'student' ? STUDENT_STEPS : MENTOR_STEPS
@@ -772,39 +839,95 @@ export function MentoringGuide() {
                   className="w-full h-auto rounded-lg shadow-xs block"
                 />
 
-                {/* Vùng khoanh cam chú thích tương tác trong Modal */}
-                {previewImage.callouts?.map((c) => {
-                  const isHovered = modalHoveredCallout === c.id
+                {/* SVG Leader Lines & Target Anchor Dots trong Modal */}
+                {(() => {
+                  const modalImgW = previewImage.imageWidth || 1280
+                  const modalImgH =
+                    previewImage.imageHeight || (previewImage.src?.includes('step4') ? 1200 : 800)
                   return (
-                    <div
-                      key={c.id}
-                      style={{
-                        top: `${c.top}%`,
-                        left: `${c.left}%`,
-                        width: `${c.width}%`,
-                        height: `${c.height}%`,
-                      }}
-                      onMouseEnter={() => setModalHoveredCallout(c.id)}
-                      onMouseLeave={() => setModalHoveredCallout(null)}
-                      className={cn(
-                        'absolute rounded-2xl pointer-events-auto transition-all duration-200 cursor-pointer z-20',
-                        isHovered
-                          ? 'border-2 border-primary-solid bg-primary-solid/8 shadow-[0_0_16px_2px_rgba(242,112,36,0.7)] ring-2 ring-primary-solid/25'
-                          : 'border-2 border-primary-solid/75 bg-primary-solid/3 hover:border-primary-solid hover:bg-primary-solid/6'
-                      )}
-                      title={`Vị trí ${c.id}: ${c.title}`}
-                    >
-                      <span
-                        className={cn(
-                          'absolute -top-2.5 -left-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-solid font-black text-white text-[10.5px] border-2 border-white shadow-2xs transition-all',
-                          isHovered ? 'scale-110 shadow-md ring-2 ring-primary-solid/40' : ''
-                        )}
+                    <>
+                      <svg
+                        viewBox={`0 0 ${modalImgW} ${modalImgH}`}
+                        className="absolute inset-0 w-full h-full pointer-events-none z-10"
                       >
-                        {c.id}
-                      </span>
-                    </div>
+                        {previewImage.callouts?.map((c) => {
+                          const isHovered = modalHoveredCallout === c.id
+                          return (
+                            <g key={c.id} className="transition-all duration-200">
+                              {/* Target Halo */}
+                              <circle
+                                cx={c.targetX}
+                                cy={c.targetY}
+                                r={isHovered ? 13 : 9.5}
+                                className={cn(
+                                  'transition-all duration-200',
+                                  isHovered
+                                    ? 'fill-primary-solid/35 stroke-primary-solid stroke-[2px]'
+                                    : 'fill-primary-solid/15 stroke-primary-solid/65 stroke-[1.5px]'
+                                )}
+                              />
+                              {/* Target Dot */}
+                              <circle
+                                cx={c.targetX}
+                                cy={c.targetY}
+                                r={isHovered ? 5.5 : 4.5}
+                                className="fill-primary-solid stroke-white stroke-[2.5px] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))]"
+                              />
+                              {/* Connector Leader Line */}
+                              <path
+                                d={c.path}
+                                className={cn(
+                                  'fill-none transition-all duration-200 stroke-linecap-round stroke-linejoin-round',
+                                  isHovered
+                                    ? 'stroke-primary-solid stroke-[2.5px] [filter:drop-shadow(0_0_6px_rgba(242,112,36,0.8))]'
+                                    : 'stroke-primary-solid/85 stroke-[1.8px] [filter:drop-shadow(0_1px_3px_rgba(242,112,36,0.35))]'
+                                )}
+                              />
+                            </g>
+                          )
+                        })}
+                      </svg>
+
+                      {/* Nhãn chữ chỉ dẫn (Pill Labels) nổi trên ảnh trong Modal */}
+                      {previewImage.callouts?.map((c) => {
+                        const isHovered = modalHoveredCallout === c.id
+                        const xPct = (c.labelX / modalImgW) * 100
+                        const yPct = (c.labelY / modalImgH) * 100
+
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            style={{
+                              left: `${xPct}%`,
+                              top: `${yPct}%`,
+                              transform: 'translate(-50%, -50%)',
+                            }}
+                            onMouseEnter={() => setModalHoveredCallout(c.id)}
+                            onMouseLeave={() => setModalHoveredCallout(null)}
+                            className={cn(
+                              'absolute inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-xs border transition-all duration-200 cursor-pointer pointer-events-auto z-20 max-w-[220px]',
+                              isHovered
+                                ? 'bg-white text-primary-solid border-primary-solid shadow-[0_4px_16px_rgba(242,112,36,0.45)] ring-2 ring-primary-solid/30 scale-105'
+                                : 'bg-white/95 text-text border-primary-solid/80 hover:bg-white hover:border-primary-solid hover:scale-102'
+                            )}
+                            title={`Vị trí ${c.id}: ${c.title}`}
+                          >
+                            <span
+                              className={cn(
+                                'flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary-solid font-black text-white text-[10px] transition-transform',
+                                isHovered ? 'scale-110' : ''
+                              )}
+                            >
+                              {c.id}
+                            </span>
+                            <span className="truncate">{c.shortLabel}</span>
+                          </button>
+                        )
+                      })}
+                    </>
                   )
-                })}
+                })()}
               </div>
             </div>
 
@@ -900,7 +1023,7 @@ export function MentoringGuide() {
             )}
           >
             <GraduationCap size={16} />
-            <span>Dành cho Sinh viên / Người học (Student)</span>
+            <span>Dành cho Sinh viên / Người học</span>
           </button>
 
           <button
@@ -914,7 +1037,7 @@ export function MentoringGuide() {
             )}
           >
             <Briefcase size={16} />
-            <span>Dành cho Cố vấn (Mentor)</span>
+            <span>Dành cho Cố vấn</span>
           </button>
         </div>
       </Card>
@@ -1039,7 +1162,7 @@ export function MentoringGuide() {
                           <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
                           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
                         </div>
-                        <span className="font-mono text-[10px] font-semibold text-text-subtle truncate max-w-[200px] sm:max-w-[280px]">
+                        <span className="font-mono text-[10px] font-semibold text-text-subtle truncate max-w-[280px] sm:max-w-[360px]">
                           {item.imageCaption}
                         </span>
                         <button
@@ -1050,6 +1173,8 @@ export function MentoringGuide() {
                               title: item.title,
                               notes: item.imageNotes,
                               callouts: item.callouts,
+                              imageWidth: item.imageWidth,
+                              imageHeight: item.imageHeight,
                             })
                           }
                           className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-text-subtle hover:text-primary-solid bg-surface px-2 py-0.5 rounded-md border border-border shadow-2xs hover:border-primary-soft-border transition cursor-pointer shrink-0"
@@ -1072,53 +1197,114 @@ export function MentoringGuide() {
                               title: item.title,
                               notes: item.imageNotes,
                               callouts: item.callouts,
+                              imageWidth: item.imageWidth,
+                              imageHeight: item.imageHeight,
                             })
                           }
                           loading="lazy"
                         />
 
-                        {/* Khoanh cam chú thích tương tác & Sáng dịu khi rê chuột */}
-                        {item.callouts.map((c) => {
-                          const isHovered =
-                            hoveredCallout?.step === item.step && hoveredCallout?.id === c.id
+                        {/* SVG Leader Lines & Target Anchor Dots */}
+                        {(() => {
+                          const imgW = item.imageWidth || 1280
+                          const imgH =
+                            item.imageHeight || (item.image.includes('step4') ? 1200 : 800)
                           return (
-                            <div
-                              key={c.id}
-                              style={{
-                                top: `${c.top}%`,
-                                left: `${c.left}%`,
-                                width: `${c.width}%`,
-                                height: `${c.height}%`,
-                              }}
-                              onMouseEnter={() => setHoveredCallout({ step: item.step, id: c.id })}
-                              onMouseLeave={() => setHoveredCallout(null)}
-                              onClick={() =>
-                                setPreviewImage({
-                                  src: item.image,
-                                  title: item.title,
-                                  notes: item.imageNotes,
-                                  callouts: item.callouts,
-                                })
-                              }
-                              className={cn(
-                                'absolute rounded-2xl pointer-events-auto transition-all duration-200 cursor-pointer z-10',
-                                isHovered
-                                  ? 'border-2 border-primary-solid bg-primary-solid/8 shadow-[0_0_16px_2px_rgba(242,112,36,0.7)] ring-2 ring-primary-solid/25'
-                                  : 'border-2 border-primary-solid/75 bg-primary-solid/3 hover:border-primary-solid hover:bg-primary-solid/6'
-                              )}
-                              title={`Vị trí ${c.id}: ${c.title} (Bấm để phóng to)`}
-                            >
-                              <span
-                                className={cn(
-                                  'absolute -top-2.5 -left-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-solid font-black text-white text-[10.5px] border-2 border-white shadow-2xs transition-all',
-                                  isHovered ? 'scale-110 shadow-md ring-2 ring-primary-solid/40' : ''
-                                )}
+                            <>
+                              <svg
+                                viewBox={`0 0 ${imgW} ${imgH}`}
+                                className="absolute inset-0 w-full h-full pointer-events-none z-10"
                               >
-                                {c.id}
-                              </span>
-                            </div>
+                                {item.callouts.map((c) => {
+                                  const isHovered =
+                                    hoveredCallout?.step === item.step && hoveredCallout?.id === c.id
+                                  return (
+                                    <g key={c.id} className="transition-all duration-200">
+                                      {/* Target Halo */}
+                                      <circle
+                                        cx={c.targetX}
+                                        cy={c.targetY}
+                                        r={isHovered ? 13 : 9.5}
+                                        className={cn(
+                                          'transition-all duration-200',
+                                          isHovered
+                                            ? 'fill-primary-solid/35 stroke-primary-solid stroke-[2px]'
+                                            : 'fill-primary-solid/15 stroke-primary-solid/65 stroke-[1.5px]'
+                                        )}
+                                      />
+                                      {/* Target Dot */}
+                                      <circle
+                                        cx={c.targetX}
+                                        cy={c.targetY}
+                                        r={isHovered ? 5.5 : 4.5}
+                                        className="fill-primary-solid stroke-white stroke-[2.5px] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.35))]"
+                                      />
+                                      {/* Connector Leader Line */}
+                                      <path
+                                        d={c.path}
+                                        className={cn(
+                                          'fill-none transition-all duration-200 stroke-linecap-round stroke-linejoin-round',
+                                          isHovered
+                                            ? 'stroke-primary-solid stroke-[2.5px] [filter:drop-shadow(0_0_6px_rgba(242,112,36,0.8))]'
+                                            : 'stroke-primary-solid/85 stroke-[1.8px] [filter:drop-shadow(0_1px_3px_rgba(242,112,36,0.35))]'
+                                        )}
+                                      />
+                                    </g>
+                                  )
+                                })}
+                              </svg>
+
+                              {/* Nhãn chữ chỉ dẫn (Pill Labels) nổi trên ảnh */}
+                              {item.callouts.map((c) => {
+                                const isHovered =
+                                  hoveredCallout?.step === item.step && hoveredCallout?.id === c.id
+                                const xPct = (c.labelX / imgW) * 100
+                                const yPct = (c.labelY / imgH) * 100
+
+                                return (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    style={{
+                                      left: `${xPct}%`,
+                                      top: `${yPct}%`,
+                                      transform: 'translate(-50%, -50%)',
+                                    }}
+                                    onMouseEnter={() => setHoveredCallout({ step: item.step, id: c.id })}
+                                    onMouseLeave={() => setHoveredCallout(null)}
+                                    onClick={() =>
+                                      setPreviewImage({
+                                        src: item.image,
+                                        title: item.title,
+                                        notes: item.imageNotes,
+                                        callouts: item.callouts,
+                                        imageWidth: item.imageWidth,
+                                        imageHeight: item.imageHeight,
+                                      })
+                                    }
+                                    className={cn(
+                                      'absolute inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold shadow-xs border transition-all duration-200 cursor-pointer pointer-events-auto z-20 max-w-[155px] sm:max-w-[210px]',
+                                      isHovered
+                                        ? 'bg-white text-primary-solid border-primary-solid shadow-[0_4px_16px_rgba(242,112,36,0.45)] ring-2 ring-primary-solid/30 scale-105'
+                                        : 'bg-white/95 text-text border-primary-solid/80 hover:bg-white hover:border-primary-solid hover:scale-102'
+                                    )}
+                                    title={`Vị trí ${c.id}: ${c.title} (Bấm để phóng to)`}
+                                  >
+                                    <span
+                                      className={cn(
+                                        'flex h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 items-center justify-center rounded-full bg-primary-solid font-black text-white text-[9px] sm:text-[10px] transition-transform',
+                                        isHovered ? 'scale-110' : ''
+                                      )}
+                                    >
+                                      {c.id}
+                                    </span>
+                                    <span className="truncate">{c.shortLabel}</span>
+                                  </button>
+                                )
+                              })}
+                            </>
                           )
-                        })}
+                        })()}
                       </div>
 
                       {/* Chú thích chân ảnh */}
