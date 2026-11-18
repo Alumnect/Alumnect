@@ -12,6 +12,7 @@ import { useMentoringTermsStatus } from '../hooks/useMentoringTerms'
 import {
   MENTORSHIP_NAVIGATION,
   MENTORSHIP_TERMS_ITEM,
+  MENTORSHIP_GUIDE_ITEM,
   type MentorshipNavigationItem,
 } from '../constants/mentorshipNavigation'
 import { mentoringGroupApi } from '../api/mentoringGroupApi'
@@ -41,6 +42,7 @@ const LABEL_KEY_MAP: Record<string, string> = {
   'Gói dịch vụ': 'mentoring.navPackages',
   'Yêu cầu gửi đến': 'mentoring.navIncomingRequests',
   'Điều khoản dịch vụ': 'mentoring.navTerms',
+  'Hướng dẫn Mentoring': 'mentoring.navGuide',
 }
 
 type MentorshipSidebarContentProps = { onNavigate?: () => void }
@@ -220,8 +222,9 @@ function MentorshipSidebarContent({ onNavigate }: MentorshipSidebarContentProps)
         </div>
       )}
 
-      <div className="mt-3 border-t border-border pt-2.5">
+      <div className="mt-3 border-t border-border pt-2.5 space-y-0.5">
         {renderLink(MENTORSHIP_TERMS_ITEM)}
+        {renderLink(MENTORSHIP_GUIDE_ITEM)}
         {hasAcceptedTerms && isAlumni && mentorStatus && (
           <div className="mt-2 flex items-center gap-2 rounded-xl border border-brand-100/70 bg-primary-soft px-3 py-2 dark:border-brand-500/20">
             <span className={cn('h-2 w-2 shrink-0 rounded-full', mentorStatus.active ? 'bg-success' : 'bg-warning')} />

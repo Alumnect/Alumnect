@@ -1425,6 +1425,7 @@
     "navPackages": "Service Packages",
     "navIncomingRequests": "Incoming Requests",
     "navTerms": "Terms of Service",
+    "navGuide": "Mentoring Guide",
     "completeConfirmation": "Complete verification step",
     "acceptTermsDesc": "Read and accept terms to use Mentoring features.",
     "mentorStatusLabel": "Mentor status",
