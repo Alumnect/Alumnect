@@ -723,254 +723,255 @@ export function MentoringTaskReportModal({
                           {isEn ? 'Download PDF' : 'Tải PDF'}
                         </Button>
                       </div>
-                  </div>
-                )}
-
-                      {/* Mentor Side Invoice Card */}
-                      {(!partyView || partyView === 'mentor') && (
-                        <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isMentor || partyView === 'mentor'
-                          ? 'bg-info-soft border-info ring-2 ring-info'
-                          : 'bg-surface border-border'
-                          }`}>
-                          <div>
-                            <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
-                              <span className="font-bold text-xs text-info">
-                                {isEn ? 'Mentor Side Invoice' : 'Hóa đơn Phía Cố vấn'}
-                              </span>
-                              {isMentor && (
-                                <span className="text-xs px-1.5 py-0.5 rounded bg-info-soft text-info font-bold">
-                                  {isEn ? 'Your Role' : 'Vai trò của bạn'}
-                                </span>
-                              )}
-                            </div>
-                            <div className="space-y-2 text-xs">
-                              <div className="flex justify-between">
-                                <span className="text-text-subtle">{isEn ? 'Gross Compensation:' : 'Thù lao công việc gốc:'}</span>
-                                <span className="font-semibold text-text">
-                                  {formatVnd(mentorGross)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-text-subtle">{isEn ? 'Platform Fee:' : 'Phí nền tảng:'}</span>
-                                <span className={`font-bold ${mentorFee > 0 ? 'text-danger' : 'text-text-subtle'}`}>
-                                  {mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
-                                <span>{isEn ? 'Net Payout Received:' : 'Thù lao thực nhận:'}</span>
-                                <span className="text-success">
-                                  {formatVnd(mentorNet)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center text-xs pt-1">
-                                <span className="text-text-subtle">{isEn ? 'Payout Status:' : 'Trạng thái chi trả:'}</span>
-                                {getMoneyStatusBadge(effectiveMentorStatus)}
-                              </div>
-                              {report.mentorPayoutNote && effectiveMentorStatus === 'FAILED' && (
-                                <p className="text-[11px] text-danger font-medium mt-1 leading-relaxed">
-                                  ⚠️ {report.mentorPayoutNote}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-border">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handlePrintPartyInvoice('mentor')}
-                              className="text-xs font-semibold gap-1 py-1 px-2.5 h-7"
-                            >
-                              <Printer className="w-3 h-3" />
-                              {isEn ? 'Print / PDF' : 'In / Lưu PDF'}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={() => handleDownloadPartyInvoice('mentor')}
-                              className="text-xs font-bold bg-primary-solid hover:bg-primary-hover text-on-primary gap-1 py-1 px-2.5 h-7 shadow-2xs"
-                            >
-                              <Download className="w-3 h-3" />
-                              {isEn ? 'Download PDF' : 'Tải PDF'}
-                            </Button>
-                          </div>
-                        </div>
-                      )}
                     </div>
+                  )}
 
-                    {/* Ping Admin Action Banner if canPingAdminFinance */}
-                    {report.canPingAdminFinance !== false && (
-                      <div className="p-4 bg-danger-soft/60 border border-danger/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <div className="space-y-0.5 text-xs">
-                          <p className="font-bold text-danger flex items-center gap-1.5 text-sm">
-                            <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
-                            {isEn ? 'Refund issue or amount discrepancy?' : 'Sự cố hoàn tiền hoặc sai lệch số tiền?'}
-                          </p>
-                          <p className="text-text-muted">
-                            {isEn
-                              ? 'If your refund or payout has not arrived or the amount is incorrect, click to alert Administrators for ledger reconciliation.'
-                              : 'Nếu tiền hoàn chưa về tài khoản, chưa nhận được thù lao hoặc số tiền sai lệch, bấm nút để gửi cảnh báo Ban Quản Trị đối soát.'}
-                          </p>
+                  {/* Mentor Side Invoice Card */}
+                  {(!partyView || partyView === 'mentor') && (
+                    <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isMentor || partyView === 'mentor'
+                      ? 'bg-info-soft border-info ring-2 ring-info'
+                      : 'bg-surface border-border'
+                      }`}>
+                      <div>
+                        <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
+                          <span className="font-bold text-xs text-info">
+                            {isEn ? 'Mentor Side Invoice' : 'Hóa đơn Phía Cố vấn'}
+                          </span>
+                          {isMentor && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-info-soft text-info font-bold">
+                              {isEn ? 'Your Role' : 'Vai trò của bạn'}
+                            </span>
+                          )}
                         </div>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-text-subtle">{isEn ? 'Gross Compensation:' : 'Thù lao công việc gốc:'}</span>
+                            <span className="font-semibold text-text">
+                              {formatVnd(mentorGross)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-text-subtle">{isEn ? 'Platform Fee:' : 'Phí nền tảng:'}</span>
+                            <span className={`font-bold ${mentorFee > 0 ? 'text-danger' : 'text-text-subtle'}`}>
+                              {mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
+                            <span>{isEn ? 'Net Payout Received:' : 'Thù lao thực nhận:'}</span>
+                            <span className="text-success">
+                              {formatVnd(mentorNet)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs pt-1">
+                            <span className="text-text-subtle">{isEn ? 'Payout Status:' : 'Trạng thái chi trả:'}</span>
+                            {getMoneyStatusBadge(effectiveMentorStatus)}
+                          </div>
+                          {report.mentorPayoutNote && effectiveMentorStatus === 'FAILED' && (
+                            <p className="text-[11px] text-danger font-medium mt-1 leading-relaxed">
+                              ⚠️ {report.mentorPayoutNote}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-border">
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => setIsPingOpen(true)}
-                          className="shrink-0 text-xs font-bold text-danger border-danger/40 hover:bg-danger hover:text-white transition gap-1.5"
+                          onClick={() => handlePrintPartyInvoice('mentor')}
+                          className="text-xs font-semibold gap-1 py-1 px-2.5 h-7"
                         >
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          {isEn ? 'Report Financial Issue' : 'Báo cáo sự cố dòng tiền'}
+                          <Printer className="w-3 h-3" />
+                          {isEn ? 'Print / PDF' : 'In / Lưu PDF'}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => handleDownloadPartyInvoice('mentor')}
+                          className="text-xs font-bold bg-primary-solid hover:bg-primary-hover text-on-primary gap-1 py-1 px-2.5 h-7 shadow-2xs"
+                        >
+                          <Download className="w-3 h-3" />
+                          {isEn ? 'Download PDF' : 'Tải PDF'}
                         </Button>
                       </div>
-                    )}
-                  </div>
-                </>
-              )
-            })()}
-          </div>
-
-          {/* Subdialog Ping Admin */}
-              {isPingOpen && (
-                <DialogFrame
-                  onClose={() => setIsPingOpen(false)}
-                  zIndexClassName="z-[110]"
-                  maxWidthClassName="max-w-md"
-                  className="p-6 space-y-4"
-                >
-                  <div className="flex items-center justify-between border-b border-border pb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 bg-danger-soft text-danger rounded-lg">
-                        <AlertTriangle className="w-4 h-4" />
-                      </div>
-                      <h4 className="font-bold text-base text-text">
-                        {isEn ? 'Report Financial Issue' : 'Báo cáo sự cố dòng tiền'}
-                      </h4>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsPingOpen(false)}
-                      className="p-1 text-text-subtle hover:text-text rounded-md hover:bg-surface-2 transition cursor-pointer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                  )}
+                </div>
 
-                  <p className="text-xs text-text-muted">
-                    {isEn
-                      ? `Send a report to Administrators to reconcile the ledger and re-process the refund or payout for Task #${taskId}.`
-                      : `Gửi phản ánh tới Ban Quản Trị để đối soát sổ quỹ và xử lý lại giao dịch hoàn tiền hoặc thù lao cho Nhiệm vụ #${taskId}.`}
-                  </p>
-
-                  <div className="space-y-2">
-                    <span className="text-xs font-bold text-text-subtle uppercase">
-                      {isEn ? 'Quick Reasons' : 'Chọn nhanh lý do'}
-                    </span>
-                    <div className="space-y-1.5">
-                      {(isEn
-                        ? [
-                          'Have not received refund in bank account',
-                          'Refund or payout amount is inaccurate',
-                          'Have not received payout after task completion',
-                          'Beneficiary bank account reported transaction error',
-                        ]
-                        : [
-                          'Chưa nhận được tiền hoàn trả về tài khoản',
-                          'Số tiền hoàn / chi trả bị sai lệch',
-                          'Chưa nhận được thù lao sau khi hoàn thành',
-                          'Tài khoản nhận tiền báo lỗi giao dịch',
-                        ]
-                      ).map((reasonText) => {
-                        const isSelected = selectedQuickReason === reasonText
-                        return (
-                          <button
-                            key={reasonText}
-                            type="button"
-                            onClick={() => {
-                              if (isSelected) {
-                                setSelectedQuickReason(null)
-                              } else {
-                                setSelectedQuickReason(reasonText)
-                                setPingReason(reasonText)
-                              }
-                            }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition cursor-pointer ${isSelected
-                              ? 'bg-primary-soft text-primary-solid border-primary-500 font-semibold'
-                              : 'bg-surface hover:bg-surface-2 text-text border-border'
-                              }`}
-                          >
-                            {reasonText}
-                          </button>
-                        )
-                      })}
+                {/* Ping Admin Action Banner if canPingAdminFinance */}
+                {report.canPingAdminFinance !== false && (
+                  <div className="p-4 bg-danger-soft/60 border border-danger/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-0.5 text-xs">
+                      <p className="font-bold text-danger flex items-center gap-1.5 text-sm">
+                        <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
+                        {isEn ? 'Refund issue or amount discrepancy?' : 'Sự cố hoàn tiền hoặc sai lệch số tiền?'}
+                      </p>
+                      <p className="text-text-muted">
+                        {isEn
+                          ? 'If your refund or payout has not arrived or the amount is incorrect, click to alert Administrators for ledger reconciliation.'
+                          : 'Nếu tiền hoàn chưa về tài khoản, chưa nhận được thù lao hoặc số tiền sai lệch, bấm nút để gửi cảnh báo Ban Quản Trị đối soát.'}
+                      </p>
                     </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <span className="text-xs font-bold text-text-subtle uppercase">
-                      {isEn ? 'Detailed Description' : 'Mô tả cụ thể'}
-                    </span>
-                    <textarea
-                      rows={3}
-                      value={pingReason}
-                      onChange={(e) => setPingReason(e.target.value)}
-                      placeholder={
-                        isEn
-                          ? 'Provide details about when you checked your account, missing amount...'
-                          : 'Chi tiết về thời gian kiểm tra tài khoản, số tiền chưa nhận được...'
-                      }
-                      className="w-full p-2.5 bg-surface-2 border border-border rounded-lg text-xs text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                     <Button
                       type="button"
+                      size="sm"
                       variant="outline"
-                      size="sm"
-                      onClick={() => setIsPingOpen(false)}
-                      className="text-xs"
+                      onClick={() => setIsPingOpen(true)}
+                      className="shrink-0 text-xs font-bold text-danger border-danger/40 hover:bg-danger hover:text-white transition gap-1.5"
                     >
-                      {isEn ? 'Cancel' : 'Hủy'}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={pingMutation.isPending}
-                      onClick={handleSendPing}
-                      className="text-xs font-bold bg-danger hover:bg-danger/90 text-white gap-1.5"
-                    >
-                      {pingMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> {isEn ? 'Sending...' : 'Đang gửi...'}
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-3.5 h-3.5" /> {isEn ? 'Send Report' : 'Gửi phản ánh'}
-                        </>
-                      )}
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      {isEn ? 'Report Financial Issue' : 'Báo cáo sự cố dòng tiền'}
                     </Button>
                   </div>
-                </DialogFrame>
-              )}
-
-              {/* Footer */}
-              <div className="px-6 py-3.5 bg-surface-2 border-t border-border flex items-center justify-between">
-                <p className="text-xs text-text-subtle">
-                  {isEn
-                    ? 'Report data is automatically synchronized from the AlumNect transaction ledger.'
-                    : 'Dữ liệu báo cáo được cập nhật tự động từ hệ thống sổ giao dịch AlumNect.'}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  className="text-xs px-4 py-1.5"
-                >
-                  {t('common.close', isEn ? 'Close' : 'Đóng')}
-                </Button>
+                )}
               </div>
+            </>
+          )
+        })()}
+      </div>
+
+      {/* Subdialog Ping Admin */}
+      {isPingOpen && (
+        <DialogFrame
+          onClose={() => setIsPingOpen(false)}
+                zIndexClassName="z-[110]"
+                maxWidthClassName="max-w-md"
+                className="p-6 space-y-4"
+              >
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-danger-soft text-danger rounded-lg">
+                      <AlertTriangle className="w-4 h-4" />
+                    </div>
+                    <h4 className="font-bold text-base text-text">
+                      {isEn ? 'Report Financial Issue' : 'Báo cáo sự cố dòng tiền'}
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPingOpen(false)}
+                    className="p-1 text-text-subtle hover:text-text rounded-md hover:bg-surface-2 transition cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-text-muted">
+                  {isEn
+                    ? `Send a report to Administrators to reconcile the ledger and re-process the refund or payout for Task #${taskId}.`
+                    : `Gửi phản ánh tới Ban Quản Trị để đối soát sổ quỹ và xử lý lại giao dịch hoàn tiền hoặc thù lao cho Nhiệm vụ #${taskId}.`}
+                </p>
+
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-text-subtle uppercase">
+                    {isEn ? 'Quick Reasons' : 'Chọn nhanh lý do'}
+                  </span>
+                  <div className="space-y-1.5">
+                    {(isEn
+                      ? [
+                        'Have not received refund in bank account',
+                        'Refund or payout amount is inaccurate',
+                        'Have not received payout after task completion',
+                        'Beneficiary bank account reported transaction error',
+                      ]
+                      : [
+                        'Chưa nhận được tiền hoàn trả về tài khoản',
+                        'Số tiền hoàn / chi trả bị sai lệch',
+                        'Chưa nhận được thù lao sau khi hoàn thành',
+                        'Tài khoản nhận tiền báo lỗi giao dịch',
+                      ]
+                    ).map((reasonText) => {
+                      const isSelected = selectedQuickReason === reasonText
+                      return (
+                        <button
+                          key={reasonText}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedQuickReason(null)
+                            } else {
+                              setSelectedQuickReason(reasonText)
+                              setPingReason(reasonText)
+                            }
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition cursor-pointer ${isSelected
+                            ? 'bg-primary-soft text-primary-solid border-primary-500 font-semibold'
+                            : 'bg-surface hover:bg-surface-2 text-text border-border'
+                            }`}
+                        >
+                          {reasonText}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-text-subtle uppercase">
+                    {isEn ? 'Detailed Description' : 'Mô tả cụ thể'}
+                  </span>
+                  <textarea
+                    rows={3}
+                    value={pingReason}
+                    onChange={(e) => setPingReason(e.target.value)}
+                    placeholder={
+                      isEn
+                        ? 'Provide details about when you checked your account, missing amount...'
+                        : 'Chi tiết về thời gian kiểm tra tài khoản, số tiền chưa nhận được...'
+                    }
+                    className="w-full p-2.5 bg-surface-2 border border-border rounded-lg text-xs text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsPingOpen(false)}
+                    className="text-xs"
+                  >
+                    {isEn ? 'Cancel' : 'Hủy'}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pingMutation.isPending}
+                    onClick={handleSendPing}
+                    className="text-xs font-bold bg-danger hover:bg-danger/90 text-white gap-1.5"
+                  >
+                    {pingMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> {isEn ? 'Sending...' : 'Đang gửi...'}
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" /> {isEn ? 'Send Report' : 'Gửi phản ánh'}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </DialogFrame>
+            )
+          }
+
+          {/* Footer */ }
+          <div className="px-6 py-3.5 bg-surface-2 border-t border-border flex items-center justify-between">
+            <p className="text-xs text-text-subtle">
+              {isEn
+                ? 'Report data is automatically synchronized from the AlumNect transaction ledger.'
+                : 'Dữ liệu báo cáo được cập nhật tự động từ hệ thống sổ giao dịch AlumNect.'}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="text-xs px-4 py-1.5"
+            >
+              {t('common.close', isEn ? 'Close' : 'Đóng')}
+            </Button>
+          </div>
             </DialogFrame >
   )
-        }
+}
