@@ -400,16 +400,16 @@ export function AdminTaskLedgerDetailModal({
                     ) : (
                       <div className="rounded-2xl border border-border overflow-hidden bg-surface dark:bg-[#1a1c1e]">
                         <div className="overflow-x-auto">
-                        <table className="w-full min-w-[960px] table-fixed text-left text-sm">
+                        <table className="w-full min-w-[1020px] table-fixed text-left text-sm">
                           <thead className="bg-surface-2 text-xs font-bold text-text-subtle border-b border-border">
                             <tr>
-                              <th className="w-[60px] px-2 py-3.5">Mã GD</th>
+                              <th className="w-[56px] px-2 py-3.5">Mã GD</th>
                               <th className="w-[124px] px-2 py-3.5">Thời gian</th>
                               <th className="w-[132px] px-2 py-3.5">Loại giao dịch</th>
-                              <th className="w-[112px] px-2 py-3.5">Số tiền</th>
-                              <th className="w-[154px] px-2 py-3.5">Trạng thái</th>
+                              <th className="w-[165px] px-2 py-3.5">Số tiền</th>
+                              <th className="w-[140px] px-2 py-3.5">Trạng thái</th>
                               <th className="w-[178px] px-2 py-3.5">Mã đối soát / Snapshot</th>
-                              <th className="w-[200px] px-2 py-3.5">Ghi chú</th>
+                              <th className="w-[225px] px-2 py-3.5">Ghi chú</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
@@ -424,25 +424,34 @@ export function AdminTaskLedgerDetailModal({
                                 <td className="px-2 py-3">
                                   {renderLedgerTypeBadge(l.transactionType)}
                                 </td>
-                                <td className="px-2 py-3 font-bold text-sm">
+                                <td className="px-2 py-3 whitespace-nowrap align-top">
                                   <div>
                                     <span
-                                      className={
+                                      className={`font-bold text-sm ${
                                         l.transactionType === 'ESCROW_COLLECTION' || l.transactionType === 'TOP_UP'
                                           ? 'text-success'
                                           : l.transactionType === 'PAYOUT'
                                           ? 'text-purple-600 dark:text-purple-400'
                                           : 'text-warning'
-                                      }
+                                      }`}
                                     >
                                       {l.transactionType === 'PAYOUT' || l.transactionType === 'REFUND' ? '-' : '+'}
                                       {formatVnd(l.amount)}
                                     </span>
                                     {(l.transactionType === 'PAYOUT' || l.transactionType === 'REFUND') && l.amount > 3000 && (
-                                      <div className="text-[11px] font-normal text-text-subtle mt-0.5 flex items-center gap-1">
-                                        <span className="text-danger font-semibold">-3.000 ₫</span>
-                                        <span className="text-text-subtle">phí PayOS · Thực:</span>
-                                        <span className="font-bold text-text">{formatVnd(l.amount - 3000)}</span>
+                                      <div className="mt-1 space-y-0.5 text-[11px] leading-tight">
+                                        <div className="flex items-center gap-1 text-text-subtle">
+                                          <span>Phí cổng PayOS:</span>
+                                          <span className="font-semibold text-danger">-3.000 ₫</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-text">
+                                          <span className="text-text-subtle">
+                                            {l.transactionType === 'PAYOUT' ? 'Thực nhận:' : 'Thực hoàn:'}
+                                          </span>
+                                          <span className="font-bold text-success">
+                                            {formatVnd(l.amount - 3000)}
+                                          </span>
+                                        </div>
                                       </div>
                                     )}
                                   </div>
