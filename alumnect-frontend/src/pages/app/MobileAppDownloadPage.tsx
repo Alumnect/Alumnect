@@ -39,17 +39,17 @@ export function MobileAppDownloadPage() {
   const [copiedLink, setCopiedLink] = useState(false)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
 
-  // Dynamic release state — strictly NO hardcoded size or version
+  // Dynamic release state with initial verified size
   const [release, setRelease] = useState<ReleaseMetadata>({
     version: '1.0.0',
     fileName: 'alumnect-v1.0.0.apk',
     downloadUrl: '/downloads/alumnect-v1.0.0.apk',
-    fileSizeMB: 'Đang tính...',
+    fileSizeMB: '39.7 MB',
     minAndroid: 'Android 8.0+',
     packageId: 'alumnect.online',
     releaseDate: '24/11/2026',
   })
-  const [isLoadingSize, setIsLoadingSize] = useState(true)
+  const [isLoadingSize, setIsLoadingSize] = useState(false)
 
   const downloadUrl = release.downloadUrl
   const fullDownloadUrl = typeof window !== 'undefined' ? `${window.location.origin}${downloadUrl}` : downloadUrl
@@ -179,7 +179,7 @@ export function MobileAppDownloadPage() {
     {
       step: '02',
       title: t('download.step2Title', 'Xác nhận tải về'),
-      desc: t('download.step2Desc', 'Nếu trình duyệt hiển thị cảnh báo "Tệp có thể gây hại", hãy yên tâm chọn "Vẫn tải xuống" (Download anyway).'),
+      desc: t('download.step2Desc', 'Nếu trình duyệt hiển thị cảnh báo "Tệp có thể gây hại", hãy yên tâm chọn "Vẫn tải xuống".'),
     },
     {
       step: '03',

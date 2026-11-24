@@ -115,6 +115,8 @@
     "profile": "Profile",
     "changePassword": "Change Password",
     "downloadApp": "Download Mobile App",
+    "downloadAppShort": "Download App",
+    "downloadAppTiny": "Get App",
     "subscription": "Subscription",
     "adminPanel": "Admin Dashboard"
   },
