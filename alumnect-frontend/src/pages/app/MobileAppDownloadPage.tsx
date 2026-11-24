@@ -179,7 +179,7 @@ export function MobileAppDownloadPage() {
     {
       step: '02',
       title: t('download.step2Title', 'Xác nhận tải về'),
-      desc: t('download.step2Desc', 'Nếu trình duyệt hiển thị cảnh báo "Tệp có thể gây hại", hãy yên tâm chọn "Vẫn tải xuống" (Download anyway).'),
+      desc: t('download.step2Desc', 'Nếu trình duyệt hiển thị cảnh báo "Tệp có thể gây hại", hãy yên tâm chọn "Vẫn tải xuống".'),
     },
     {
       step: '03',
