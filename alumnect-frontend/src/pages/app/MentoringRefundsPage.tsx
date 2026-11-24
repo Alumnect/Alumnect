@@ -196,6 +196,7 @@ function MentoringRefundsContent() {
         counterpartLabel="Mentor"
         emptyTitle={t('mentoring.noRefundsTitle')}
         emptyDescription={t('mentoring.noRefundsDesc')}
+        party="student"
       />
     </div>
   )

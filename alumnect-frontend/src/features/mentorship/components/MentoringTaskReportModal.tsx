@@ -27,6 +27,7 @@ interface MentoringTaskReportModalProps {
   taskId: number
   isStudent?: boolean
   isMentor?: boolean
+  partyView?: 'student' | 'mentor'
 }
 
 export function MentoringTaskReportModal({
@@ -35,6 +36,7 @@ export function MentoringTaskReportModal({
   taskId,
   isStudent = false,
   isMentor = false,
+  partyView,
 }: MentoringTaskReportModalProps) {
   const { t, i18n } = useTranslation()
   const isEn = i18n.language?.startsWith('en')
@@ -610,16 +612,21 @@ export function MentoringTaskReportModal({
                 </div>
               </div>
 
-              {/* Section 3: Hóa đơn tách riêng cho Phía Học viên và Phía Cố vấn */}
+              {/* Section 3: Hóa đơn riêng theo vai trò */}
               <div className="space-y-3">
                 <h5 className="text-xs font-bold text-text-subtle flex items-center gap-1.5">
                   <CreditCard className="w-4 h-4 text-info" />
-                  {isEn ? '3. Separate Invoices for Learner Side & Mentor Side' : '3. Hóa đơn riêng cho Phía Học viên & Phía Cố vấn'}
+                  {partyView === 'student'
+                    ? (isEn ? '3. Learner Side Invoice' : '3. Hóa đơn Phía Học viên')
+                    : partyView === 'mentor'
+                    ? (isEn ? '3. Mentor Side Invoice' : '3. Hóa đơn Phía Cố vấn')
+                    : (isEn ? '3. Separate Invoices for Learner Side & Mentor Side' : '3. Hóa đơn riêng cho Phía Học viên & Phía Cố vấn')}
                 </h5>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={partyView ? 'w-full' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
                   {/* Learner Side Invoice Card */}
-                  <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isStudent
+                  {(!partyView || partyView === 'student') && (
+                  <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isStudent || partyView === 'student'
                       ? 'bg-info-soft border-info ring-2 ring-info'
                       : 'bg-surface border-border'
                     }`}>
@@ -723,9 +730,11 @@ export function MentoringTaskReportModal({
                       </Button>
                     </div>
                   </div>
+                  )}
 
                   {/* Mentor Side Invoice Card */}
-                  <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isMentor
+                  {(!partyView || partyView === 'mentor') && (
+                  <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isMentor || partyView === 'mentor'
                       ? 'bg-info-soft border-info ring-2 ring-info'
                       : 'bg-surface border-border'
                     }`}>
@@ -793,6 +802,7 @@ export function MentoringTaskReportModal({
                       </Button>
                     </div>
                   </div>
+                  )}
                 </div>
 
                 {/* Ping Admin Action Banner if canPingAdminFinance */}

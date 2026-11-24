@@ -101,7 +101,7 @@ const QUICK_REASONS = [
 /** UC104: báo cáo nhiệm vụ & dòng tiền (Meetup Ledger Style, toàn bộ tiếng Việt). */
 export default function TaskReportScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, party } = useLocalSearchParams<{ id: string; party?: string }>()
   const queryClient = useQueryClient()
   const q = useQuery({ queryKey: ['mentoring-task-report', id], queryFn: () => taskApi.report(Number(id)) })
   const qSnap = useQuery({ queryKey: ['mentoring-task-snapshot', id], queryFn: () => taskApi.settlementSnapshot(Number(id)), enabled: !!id })
@@ -337,7 +337,10 @@ export default function TaskReportScreen() {
 
   return (
     <Screen bg={colors.bg}>
-      <Header title="Báo cáo & Dòng tiền" subtitle={`Nhiệm vụ #${id}`} />
+      <Header
+        title={party === 'mentor' ? 'Hóa đơn Phía Cố vấn' : party === 'student' ? 'Hóa đơn Phía Học viên' : 'Báo cáo & Dòng tiền'}
+        subtitle={`Nhiệm vụ #${id}`}
+      />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => { void q.refetch() }} tintColor={viridian} colors={[viridian]} />}
@@ -445,76 +448,80 @@ export default function TaskReportScreen() {
         </Enter>
 
         {/* Hóa đơn Phía Học viên */}
-        <Enter delay={180}>
-          <Card title="Hóa đơn Phía Học viên" brand="people">
-            <Row label="Phí nền tảng khi thanh toán" value={formatVnd(0)} color="#16A34A" />
-            <Row label="Tổng tiền đã thanh toán" hint="Tạm giữ nguyên vẹn trên PayOS" value={formatVnd(r.studentTotalPaid)} strong />
-            {studentGross > 0 ? (
-              <>
-                <Row label="Khoản hoàn phân bổ gốc" value={formatVnd(studentGross)} />
-                <Row
-                  label="Phí nền tảng"
-                  value={`-${formatVnd(studentFee)}`}
-                  color="#DC2626"
-                />
-                <Row
-                  label="Số tiền hoàn thực nhận"
-                  value={formatVnd(studentNet)}
-                  strong
-                  color="#0284C7"
-                />
-              </>
-            ) : null}
-            <Row
-              label={studentGross > 0 ? 'Trạng thái hoàn tiền' : 'Trạng thái quỹ'}
-              hint={studentStatusHint}
-              tag={moneyStatus(effectiveStudentStatus)}
-              last
-            />
-            <View style={{ marginTop: 12 }}>
-              <Button
-                title="Xem & Tải hóa đơn Phía Học viên"
-                size="sm"
-                textColor="#FFFFFF"
-                style={{ backgroundColor: '#0284C7', borderColor: '#0284C7' }}
-                onPress={() => setPreviewParty('student')}
+        {(!party || party === 'student') && (
+          <Enter delay={180}>
+            <Card title="Hóa đơn Phía Học viên" brand="people">
+              <Row label="Phí nền tảng khi thanh toán" value={formatVnd(0)} color="#16A34A" />
+              <Row label="Tổng tiền đã thanh toán" hint="Tạm giữ nguyên vẹn trên PayOS" value={formatVnd(r.studentTotalPaid)} strong />
+              {studentGross > 0 ? (
+                <>
+                  <Row label="Khoản hoàn phân bổ gốc" value={formatVnd(studentGross)} />
+                  <Row
+                    label="Phí nền tảng"
+                    value={`-${formatVnd(studentFee)}`}
+                    color="#DC2626"
+                  />
+                  <Row
+                    label="Số tiền hoàn thực nhận"
+                    value={formatVnd(studentNet)}
+                    strong
+                    color="#0284C7"
+                  />
+                </>
+              ) : null}
+              <Row
+                label={studentGross > 0 ? 'Trạng thái hoàn tiền' : 'Trạng thái quỹ'}
+                hint={studentStatusHint}
+                tag={moneyStatus(effectiveStudentStatus)}
+                last
               />
-            </View>
-          </Card>
-        </Enter>
+              <View style={{ marginTop: 12 }}>
+                <Button
+                  title="Xem & Tải hóa đơn Phía Học viên"
+                  size="sm"
+                  textColor="#FFFFFF"
+                  style={{ backgroundColor: '#0284C7', borderColor: '#0284C7' }}
+                  onPress={() => setPreviewParty('student')}
+                />
+              </View>
+            </Card>
+          </Enter>
+        )}
 
         {/* Hóa đơn Phía Cố vấn */}
-        <Enter delay={240}>
-          <Card title="Hóa đơn Phía Cố vấn" brand="suitcase">
-            <Row label="Thù lao công việc gốc" value={formatVnd(mentorGross)} />
-            <Row
-              label="Phí nền tảng"
-              value={mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)}
-              color={mentorFee > 0 ? '#DC2626' : colors.textSecondary}
-            />
-            <Row
-              label="Thù lao thực nhận"
-              value={formatVnd(mentorNet)}
-              strong
-              color={viridian}
-            />
-            <Row
-              label="Trạng thái chi trả"
-              hint={mentorStatusHint}
-              tag={moneyStatus(effectiveMentorStatus)}
-              last
-            />
-            <View style={{ marginTop: 12 }}>
-              <Button
-                title="Xem & Tải hóa đơn Phía Cố vấn"
-                size="sm"
-                textColor="#FFFFFF"
-                style={{ backgroundColor: viridian, borderColor: viridian }}
-                onPress={() => setPreviewParty('mentor')}
+        {(!party || party === 'mentor') && (
+          <Enter delay={240}>
+            <Card title="Hóa đơn Phía Cố vấn" brand="suitcase">
+              <Row label="Thù lao công việc gốc" value={formatVnd(mentorGross)} />
+              <Row
+                label="Phí nền tảng"
+                value={mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)}
+                color={mentorFee > 0 ? '#DC2626' : colors.textSecondary}
               />
-            </View>
-          </Card>
-        </Enter>
+              <Row
+                label="Thù lao thực nhận"
+                value={formatVnd(mentorNet)}
+                strong
+                color={viridian}
+              />
+              <Row
+                label="Trạng thái chi trả"
+                hint={mentorStatusHint}
+                tag={moneyStatus(effectiveMentorStatus)}
+                last
+              />
+              <View style={{ marginTop: 12 }}>
+                <Button
+                  title="Xem & Tải hóa đơn Phía Cố vấn"
+                  size="sm"
+                  textColor="#FFFFFF"
+                  style={{ backgroundColor: viridian, borderColor: viridian }}
+                  onPress={() => setPreviewParty('mentor')}
+                />
+              </View>
+            </Card>
+          </Enter>
+        )}
 
         {/* Nút Ping lại Admin khi có sự cố */}
         {r.canPingAdminFinance !== false ? (

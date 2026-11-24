@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
+import { useRouter } from 'expo-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Empty, Tag, Txt } from '@/components/ui'
 import { BrandIcon } from '@/components/BrandIcon'
@@ -22,10 +23,15 @@ const QUICK_REASONS = [
 /** Tổng quan + danh sách khoản thù lao / hoàn tiền (KakaoPay x Meetup Ledger 2026 — Cam - Trắng - Đen). */
 export function WalletView({ wallet, counterpartLabel, emptyText }: { wallet?: Wallet; counterpartLabel: string; emptyText: string }) {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
+  const router = useRouter()
   const queryClient = useQueryClient()
   const [selectedItem, setSelectedItem] = useState<WalletItem | null>(null)
   const [reason, setReason] = useState('')
   const [selectedQuick, setSelectedQuick] = useState<string | null>(null)
+
+  const isMentorViewer = counterpartLabel === 'Học viên'
+  const targetParty = isMentorViewer ? 'mentor' : 'student'
+  const invoiceBtnLabel = 'Hóa đơn'
 
   const pingMutation = useMutation({
     mutationFn: ({ taskId, text, issueType }: { taskId: number; text: string; issueType?: string }) =>
@@ -183,24 +189,44 @@ export function WalletView({ wallet, counterpartLabel, emptyText }: { wallet?: W
                   label={WALLET_STATUS_LABEL[it.status] ?? itemStatus(it.status)}
                   tone={it.status === 'SUCCEEDED' ? 'success' : it.status === 'FAILED' ? 'danger' : 'warning'}
                 />
-                {it.status === 'FAILED' && it.taskId ? (
-                  <Pressable
-                    onPress={() => setSelectedItem(it)}
-                    style={({ pressed }) => [
-                      styles.reportBtn,
-                      {
-                        backgroundColor: isDark ? '#2B1414' : '#FEF2F2',
-                        borderColor: '#DC2626',
-                        opacity: pressed ? 0.75 : 1,
-                      },
-                    ]}
-                  >
-                    <ShieldAlert size={12} color="#DC2626" weight="bold" />
-                    <Txt size={11} weight="700" style={{ color: '#DC2626' }}>
-                      Báo cáo
-                    </Txt>
-                  </Pressable>
-                ) : null}
+                <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+                  {it.taskId ? (
+                    <Pressable
+                      onPress={() => router.push({ pathname: '/mentoring/tasks/[id]/report', params: { id: String(it.taskId), party: targetParty } })}
+                      style={({ pressed }) => [
+                        styles.reportBtn,
+                        {
+                          backgroundColor: isDark ? '#14202E' : '#EFF6FF',
+                          borderColor: '#0284C7',
+                          opacity: pressed ? 0.75 : 1,
+                        },
+                      ]}
+                    >
+                      <Receipt size={12} color="#0284C7" weight="bold" />
+                      <Txt size={11} weight="700" style={{ color: '#0284C7' }}>
+                        {invoiceBtnLabel}
+                      </Txt>
+                    </Pressable>
+                  ) : null}
+                  {it.status === 'FAILED' && it.taskId ? (
+                    <Pressable
+                      onPress={() => setSelectedItem(it)}
+                      style={({ pressed }) => [
+                        styles.reportBtn,
+                        {
+                          backgroundColor: isDark ? '#2B1414' : '#FEF2F2',
+                          borderColor: '#DC2626',
+                          opacity: pressed ? 0.75 : 1,
+                        },
+                      ]}
+                    >
+                      <ShieldAlert size={12} color="#DC2626" weight="bold" />
+                      <Txt size={11} weight="700" style={{ color: '#DC2626' }}>
+                        Báo cáo
+                      </Txt>
+                    </Pressable>
+                  ) : null}
+                </View>
               </View>
             </View>
           ))}

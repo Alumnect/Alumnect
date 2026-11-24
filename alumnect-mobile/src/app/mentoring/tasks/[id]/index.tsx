@@ -215,16 +215,6 @@ export default function TaskDetailScreen() {
           },
         ]
       : []),
-    ...(canReviewMentor && !myReview.isLoading && !myReview.data
-      ? [
-          {
-            key: 'review',
-            label: 'Đánh giá Mentor',
-            icon: <Star size={19} color={viridian} weight="fill" />,
-            onPress: () => go('review'),
-          },
-        ]
-      : []),
     ...(p.canCreateDisputeTicket
       ? [
           {

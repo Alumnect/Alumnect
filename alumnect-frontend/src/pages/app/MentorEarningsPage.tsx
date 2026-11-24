@@ -46,6 +46,7 @@ function MentorEarningsContent() {
         counterpartLabel={t('mentoring.studentCounterpart')}
         emptyTitle={t('mentoring.noEarningsTitle')}
         emptyDescription={t('mentoring.noEarningsDesc')}
+        party="mentor"
       />
     </div>
   )
