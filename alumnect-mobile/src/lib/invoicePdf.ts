@@ -38,3 +38,4 @@ export async function shareOrDownloadInvoicePdf(htmlContent: string, fileNameWit
     })
   }
 }
+

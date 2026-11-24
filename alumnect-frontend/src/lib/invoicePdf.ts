@@ -7,17 +7,18 @@ import html2pdf from 'html2pdf.js'
 export async function downloadInvoicePdf(htmlContent: string, fileName: string): Promise<void> {
   const finalFileName = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
 
-  // Create temporary container
+  // Create temporary container inside visible DOM coordinates but behind UI
   const container = document.createElement('div')
   container.id = 'invoice-pdf-render-root'
   container.style.position = 'fixed'
-  container.style.left = '-9999px'
   container.style.top = '0'
-  container.style.width = '760px'
+  container.style.left = '0'
+  container.style.width = '720px'
   container.style.padding = '0'
   container.style.margin = '0'
   container.style.backgroundColor = '#ffffff'
-  container.style.zIndex = '-1000'
+  container.style.zIndex = '-99999'
+  container.style.pointerEvents = 'none'
 
   // Extract style tags and body/invoice content
   const parser = new DOMParser()
@@ -43,6 +44,10 @@ export async function downloadInvoicePdf(htmlContent: string, fileName: string):
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      scrollX: 0,
+      scrollY: 0,
+      x: 0,
+      y: 0,
     },
     jsPDF: {
       unit: 'mm',
@@ -52,7 +57,9 @@ export async function downloadInvoicePdf(htmlContent: string, fileName: string):
   }
 
   try {
-    await html2pdf().set(opt).from(container).save()
+    // Wait for styles and DOM rendering calculation
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    await html2pdf().set(opt).from(clonedContent).save()
   } catch (err) {
     console.warn('html2pdf generation error, using native print-to-pdf fallback:', err)
     const printWin = window.open('', '_blank', 'width=840,height=720')

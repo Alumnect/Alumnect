@@ -720,7 +720,7 @@ export function MentoringTaskReportModal({
                           className="text-xs font-bold bg-info hover:bg-info/90 text-white gap-1 py-1 px-2.5 h-7 shadow-2xs"
                         >
                           <Download className="w-3 h-3" />
-                          {isEn ? 'Download PDF' : 'Tải PDF'}
+                          {isEn ? 'Download Invoice' : 'Tải hóa đơn'}
                         </Button>
                       </div>
                     </div>
@@ -792,7 +792,7 @@ export function MentoringTaskReportModal({
                           className="text-xs font-bold bg-primary-solid hover:bg-primary-hover text-on-primary gap-1 py-1 px-2.5 h-7 shadow-2xs"
                         >
                           <Download className="w-3 h-3" />
-                          {isEn ? 'Download PDF' : 'Tải PDF'}
+                          {isEn ? 'Download Invoice' : 'Tải hóa đơn'}
                         </Button>
                       </div>
                     </div>

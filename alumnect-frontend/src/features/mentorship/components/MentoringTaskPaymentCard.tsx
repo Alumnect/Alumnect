@@ -103,8 +103,8 @@ export function MentoringTaskPaymentCard({
 
     <div class="footer">
       ${isEn
-        ? 'Electronic payment invoice generated automatically via PayOS & AlumNect.'
-        : 'Hóa đơn thanh toán điện tử được khởi tạo tự động qua cổng PayOS & hệ thống AlumNect.'}
+          ? 'Electronic payment invoice generated automatically via PayOS & AlumNect.'
+          : 'Hóa đơn thanh toán điện tử được khởi tạo tự động qua cổng PayOS & hệ thống AlumNect.'}
     </div>
   </div>
 </body>
