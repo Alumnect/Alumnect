@@ -18,6 +18,7 @@ import {
   Printer,
 } from 'lucide-react'
 import { Button, DialogFrame, toast } from '@/components/ui'
+import { downloadInvoicePdf } from '@/lib/invoicePdf'
 import { useTaskReport } from '../hooks/useMentoringTasks'
 import { mentoringTaskApi } from '../api/mentoringTaskApi'
 
@@ -372,28 +373,21 @@ export function MentoringTaskReportModal({
 </html>`
           }
 
-          const handleDownloadPartyInvoice = (party: 'student' | 'mentor') => {
+          const handleDownloadPartyInvoice = async (party: 'student' | 'mentor') => {
+            const fileName = party === 'student'
+              ? (isEn ? `Learner-Invoice-Task-${taskId}.pdf` : `Hoa-don-Phia-Hoc-vien-Task-${taskId}.pdf`)
+              : (isEn ? `Mentor-Invoice-Task-${taskId}.pdf` : `Hoa-don-Phia-Co-van-Task-${taskId}.pdf`)
             try {
               const html = buildPartyInvoiceHtml(party)
-              const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              const fileName = party === 'student'
-                ? (isEn ? `Learner-Invoice-Task-${taskId}.html` : `Hoa-don-Phia-Hoc-vien-Task-${taskId}.html`)
-                : (isEn ? `Mentor-Invoice-Task-${taskId}.html` : `Hoa-don-Phia-Co-van-Task-${taskId}.html`)
-              a.href = url
-              a.download = fileName
-              document.body.appendChild(a)
-              a.click()
-              document.body.removeChild(a)
-              URL.revokeObjectURL(url)
+              toast.info(isEn ? 'Generating PDF invoice...' : 'Đang khởi tạo hóa đơn PDF...')
+              await downloadInvoicePdf(html, fileName)
               toast.success(
                 isEn
-                  ? `Downloaded ${party === 'student' ? 'Learner Side' : 'Mentor Side'} invoice!`
-                  : `Đã tải ${party === 'student' ? 'Hóa đơn Phía Học viên' : 'Hóa đơn Phía Cố vấn'} về máy!`
+                  ? `Downloaded ${party === 'student' ? 'Learner Side' : 'Mentor Side'} PDF invoice!`
+                  : `Đã tải ${party === 'student' ? 'Hóa đơn Phía Học viên' : 'Hóa đơn Phía Cố vấn'} (PDF) về máy!`
               )
             } catch {
-              toast.error(isEn ? 'Could not download invoice.' : 'Không thể tải hóa đơn, vui lòng thử lại.')
+              toast.error(isEn ? 'Could not download PDF invoice.' : 'Không thể tải hóa đơn PDF, vui lòng thử lại.')
             }
           }
 
@@ -726,7 +720,7 @@ export function MentoringTaskReportModal({
                         className="text-xs font-bold bg-info hover:bg-info/90 text-white gap-1 py-1 px-2.5 h-7 shadow-2xs"
                       >
                         <Download className="w-3 h-3" />
-                        {isEn ? 'Download Invoice' : 'Tải hóa đơn'}
+                        {isEn ? 'Download PDF' : 'Tải PDF'}
                       </Button>
                     </div>
                   </div>
@@ -798,7 +792,7 @@ export function MentoringTaskReportModal({
                         className="text-xs font-bold bg-primary-solid hover:bg-primary-hover text-on-primary gap-1 py-1 px-2.5 h-7 shadow-2xs"
                       >
                         <Download className="w-3 h-3" />
-                        {isEn ? 'Download Invoice' : 'Tải hóa đơn'}
+                        {isEn ? 'Download PDF' : 'Tải PDF'}
                       </Button>
                     </div>
                   </div>

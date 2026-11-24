@@ -1,6 +1,7 @@
 import { CheckCircle2, Download } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button, toast } from '@/components/ui'
+import { downloadInvoicePdf } from '@/lib/invoicePdf'
 import type { MentoringPaymentSummary } from '../model/mentoringTaskTypes'
 
 interface MentoringTaskPaymentCardProps {
@@ -46,7 +47,7 @@ export function MentoringTaskPaymentCard({
   const formatVnd = (amt?: number | null) =>
     new Intl.NumberFormat('vi-VN').format(typeof amt === 'number' ? amt : 0) + (isEn ? ' VND' : 'đ')
 
-  const handleDownloadPaymentInvoice = () => {
+  const handleDownloadPaymentInvoice = async () => {
     try {
       const code = `INV-PAY-${payment.orderCode || taskId || payment.paymentId}`
       const issuedDate = paidAt || new Date().toLocaleString(isEn ? 'en-GB' : 'vi-VN')
@@ -108,18 +109,12 @@ export function MentoringTaskPaymentCard({
   </div>
 </body>
 </html>`
-      const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = isEn ? `Payment-Invoice-${code}.html` : `Hoa-don-Thanh-toan-${code}.html`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      toast.success(isEn ? 'Payment invoice downloaded!' : 'Đã tải hóa đơn thanh toán về máy!')
+      const fileName = isEn ? `Payment-Invoice-${code}.pdf` : `Hoa-don-Thanh-toan-${code}.pdf`
+      toast.info(isEn ? 'Generating payment PDF...' : 'Đang khởi tạo hóa đơn thanh toán PDF...')
+      await downloadInvoicePdf(html, fileName)
+      toast.success(isEn ? 'Payment invoice (PDF) downloaded!' : 'Đã tải hóa đơn thanh toán (PDF) về máy!')
     } catch {
-      toast.error(isEn ? 'Could not download payment invoice.' : 'Không thể tải hóa đơn thanh toán.')
+      toast.error(isEn ? 'Could not download payment invoice.' : 'Không thể tải hóa đơn thanh toán PDF.')
     }
   }
 

@@ -16,6 +16,7 @@ import { formatVnd } from '@/api/mentoring'
 import { statusTone } from '@/constants/status'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { errMsg, toast } from '@/lib/toast'
+import { shareOrDownloadInvoicePdf } from '@/lib/invoicePdf'
 
 /** Trạng thái hoàn tiền / giải ngân từ BE (MentoringTaskServiceImpl) → tiếng Việt + tông màu. */
 const MONEY_STATUS: Record<string, [string, Tone]> = {
@@ -246,31 +247,119 @@ export default function TaskReportScreen() {
     ].join('\n')
   }
 
+  const buildPartyInvoiceHtml = (party: 'student' | 'mentor') => {
+    const issuedAt = new Date(r.invoiceIssuedAt || Date.now()).toLocaleString('vi-VN')
+    const partyCode = `${invoiceCode}-${party === 'student' ? 'HV' : 'CV'}`
+    const partyTitle = party === 'student' ? 'HÓA ĐƠN PHÍA HỌC VIÊN' : 'HÓA ĐƠN PHÍA CỐ VẤN'
+    const statusLabel = TASK_STATUS_LABEL[r.taskStatus] ?? r.taskStatus
+
+    const bodyRows = party === 'student'
+      ? `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+          <span>Giá thỏa thuận gốc:</span>
+          <strong>${formatVnd(r.originalPrice)}</strong>
+        </div>
+        ${delta > 0 ? `
+          <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px; color:#d97706;">
+            <span>Bổ sung điều chỉnh:</span>
+            <strong>+${formatVnd(delta)}</strong>
+          </div>
+        ` : ''}
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+          <span>Phí nền tảng khi thanh toán:</span>
+          <strong style="color:#16a34a;">${formatVnd(0)}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0 6px; font-size:15px; font-weight:bold; border-top:1px dashed #cbd5e1; color:#0284c7;">
+          <span>Tổng tiền đã thanh toán:</span>
+          <span>${formatVnd(r.studentTotalPaid)}</span>
+        </div>
+        ${studentGross > 0 ? `
+          <div style="margin-top:12px; padding-top:10px; border-top:1px solid #e2e8f0;">
+            <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+              <span>Khoản hoàn phân bổ gốc:</span>
+              <strong>${formatVnd(studentGross)}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px; color:#dc2626; font-weight:bold;">
+              <span>Phí nền tảng:</span>
+              <span>-${formatVnd(studentFee)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px 0 6px; font-size:16px; font-weight:bold; border-top:1px dashed #cbd5e1; color:#0284c7;">
+              <span>SỐ TIỀN HOÀN THỰC NHẬN:</span>
+              <span>${formatVnd(studentNet)}</span>
+            </div>
+          </div>
+        ` : ''}
+      `
+      : `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+          <span>Thù lao công việc gốc:</span>
+          <strong>${formatVnd(mentorGross)}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px; color:#dc2626; font-weight:bold;">
+          <span>Phí nền tảng:</span>
+          <span>${mentorFee > 0 ? '-' + formatVnd(mentorFee) : formatVnd(0)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0 6px; font-size:16px; font-weight:bold; border-top:1px dashed #cbd5e1; color:#16a34a;">
+          <span>THÙ LAO THỰC NHẬN:</span>
+          <span>${formatVnd(mentorNet)}</span>
+        </div>
+      `
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>${partyTitle} - ${partyCode}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #ffffff; color: #0f172a; margin: 0; padding: 24px; }
+          .invoice { max-width: 640px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; background: #ffffff; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f27024; padding-bottom: 16px; margin-bottom: 20px; }
+          .logo { font-size: 32px; font-weight: bold; line-height: 1; }
+          .sub { font-size: 13px; font-weight: bold; color: #475569; margin-top: 6px; }
+          .meta { text-align: right; font-size: 13px; color: #334155; line-height: 1.5; }
+          .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-top: 16px; }
+          .footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="invoice">
+          <div class="header">
+            <div>
+              <div class="logo"><span style="color:#0a58ca;">Alum</span><span style="color:#c84b11;">Nect</span></div>
+              <div class="sub">${partyTitle}</div>
+            </div>
+            <div class="meta">
+              <div>Mã HĐ: <strong>${partyCode}</strong></div>
+              <div>Nhiệm vụ: <strong>#${id}</strong></div>
+              <div>Ngày xuất: <strong>${issuedAt}</strong></div>
+              <div>Trạng thái: <strong>${statusLabel}</strong></div>
+            </div>
+          </div>
+          <div style="font-size: 14px; margin-bottom: 12px;"><strong>Nhiệm vụ:</strong> ${title}</div>
+          <div class="card">
+            ${bodyRows}
+          </div>
+          <div class="footer">
+            Chứng từ đối soát điện tử được trích xuất tự động từ hệ thống sổ giao dịch AlumNect.
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  }
+
   const handleDownloadPartyInvoice = async (party: 'student' | 'mentor') => {
-    const invoiceContent = buildPartyInvoiceText(party)
     const partyCode = `${invoiceCode}-${party === 'student' ? 'HV' : 'CV'}`
     const partyLabel = party === 'student' ? 'Hóa đơn Phía Học viên' : 'Hóa đơn Phía Cố vấn'
+    const fileName = `${party === 'student' ? 'Hoa-don-Phia-Hoc-vien' : 'Hoa-don-Phia-Co-van'}-Task-${id}.pdf`
     try {
-      if (Platform.OS === 'web' && typeof document !== 'undefined') {
-        const blob = new Blob([invoiceContent], { type: 'text/plain;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${party === 'student' ? 'Hoa-don-Phia-Hoc-vien' : 'Hoa-don-Phia-Co-van'}-Task-${id}.txt`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        toast.success(`Đã tải ${partyLabel} (${partyCode}) về máy!`)
-        return
-      }
-      await Share.share({
-        title: `${partyLabel} - ${partyCode}`,
-        message: invoiceContent,
-      })
+      const html = buildPartyInvoiceHtml(party)
+      toast.info('Đang khởi tạo hóa đơn PDF...')
+      await shareOrDownloadInvoicePdf(html, fileName)
+      toast.success(`Đã xuất ${partyLabel} (${partyCode}) thành công!`)
     } catch {
-      await Clipboard.setStringAsync(invoiceContent)
-      toast.success(`Đã sao chép ${partyLabel} (${partyCode}) vào bộ nhớ tạm!`)
+      toast.error(`Không thể xuất ${partyLabel} PDF.`)
     }
   }
 

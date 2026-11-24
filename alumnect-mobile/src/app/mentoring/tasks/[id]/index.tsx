@@ -35,6 +35,7 @@ import type { TaskCheckout } from '@/api/mentoringTask'
 import { formatVnd } from '@/api/mentoring'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { toast, errMsg } from '@/lib/toast'
+import { shareOrDownloadInvoicePdf } from '@/lib/invoicePdf'
 
 /** UC96–101, 104: trung tâm quản lý một task — nhật ký, gia hạn, điều chỉnh, nghiệm thu, hòa giải, tranh chấp. */
 export default function TaskDetailScreen() {
@@ -91,27 +92,79 @@ export default function TaskDetailScreen() {
     ].join('\n')
   }
 
+  const buildPaymentInvoiceHtml = () => {
+    const title = q.data?.overview.taskTitle || q.data?.overview.taskScope || 'Nhiệm vụ Cố vấn'
+    const code = `PAY-TASK-${tid}`
+    const price = q.data?.overview.agreedPrice ?? 0
+    const paidAt = new Date().toLocaleString('vi-VN')
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Hóa đơn thanh toán - ${code}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #ffffff; color: #0f172a; margin: 0; padding: 24px; }
+          .invoice { max-width: 640px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; background: #ffffff; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f27024; padding-bottom: 16px; margin-bottom: 20px; }
+          .logo { font-size: 32px; font-weight: bold; line-height: 1; }
+          .sub { font-size: 13px; font-weight: bold; color: #475569; margin-top: 6px; }
+          .meta { text-align: right; font-size: 13px; color: #334155; line-height: 1.5; }
+          .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-top: 16px; }
+          .footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="invoice">
+          <div class="header">
+            <div>
+              <div class="logo"><span style="color:#0a58ca;">Alum</span><span style="color:#c84b11;">Nect</span></div>
+              <div class="sub">HÓA ĐƠN THANH TOÁN YÊU CẦU CỐ VẤN</div>
+            </div>
+            <div class="meta">
+              <div>Mã GD: <strong>${code}</strong></div>
+              <div>Nhiệm vụ: <strong>#${tid}</strong></div>
+              <div>Ngày TT: <strong>${paidAt}</strong></div>
+            </div>
+          </div>
+          <div style="font-size: 14px; margin-bottom: 12px;"><strong>Nhiệm vụ:</strong> ${title}</div>
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+              <span>Giá trị thỏa thuận gốc:</span>
+              <strong>${formatVnd(price)}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+              <span>Phí nền tảng khi thanh toán:</span>
+              <strong style="color:#16a34a;">${formatVnd(0)}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px 0 6px; font-size:16px; font-weight:bold; border-top:1px dashed #cbd5e1; color:#16a34a;">
+              <span>TỔNG TIỀN ĐÃ THANH TOÁN:</span>
+              <span>${formatVnd(price)}</span>
+            </div>
+            <div style="margin-top:10px; padding-top:8px; border-top:1px solid #e2e8f0; font-size:12px; color:#64748b;">
+              Trạng thái tiền: Đang tạm giữ nguyên vẹn trên PayOS (Ký quỹ Escrow bảo vệ hai bên).
+            </div>
+          </div>
+          <div class="footer">
+            Hóa đơn thanh toán điện tử được khởi tạo tự động qua cổng PayOS & hệ thống AlumNect.
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  }
+
   const handleDownloadPaymentInvoice = async () => {
-    const content = buildPaymentInvoiceText()
+    const code = `PAY-TASK-${tid}`
+    const fileName = `Hoa-don-Thanh-toan-${code}.pdf`
     try {
-      if (Platform.OS === 'web') {
-        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `Hoa-don-Thanh-toan-Task-${tid}.txt`
-        a.click()
-        URL.revokeObjectURL(url)
-        toast.success('Đã tải hóa đơn thanh toán thành công!')
-      } else {
-        await Share.share({
-          message: content,
-          title: `Hóa đơn thanh toán Task #${tid}`,
-        })
-      }
+      const html = buildPaymentInvoiceHtml()
+      toast.info('Đang khởi tạo hóa đơn PDF...')
+      await shareOrDownloadInvoicePdf(html, fileName)
+      toast.success('Đã xuất hóa đơn thanh toán PDF thành công!')
     } catch {
-      await Clipboard.setStringAsync(content)
-      toast.success('Đã sao chép hóa đơn thanh toán vào bộ nhớ tạm!')
+      toast.error('Không thể xuất hóa đơn thanh toán PDF.')
     }
   }
 
