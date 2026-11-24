@@ -17,6 +17,7 @@ import {
   GlobeSimple,
   GraduationCap,
 } from '@/components/icons'
+import { Smartphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_PRIMARY_NAV, APP_MORE_NAV, APP_ACCOUNT_NAV } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
@@ -232,6 +233,7 @@ export function AppShell() {
     '/admin': { label: 'nav.adminPanel' },
     '/app/messages': { label: 'nav.messages' },
     '/app/notifications': { label: 'nav.notifications' },
+    '/app/download': { label: 'nav.downloadApp' },
   }
 
   // Bảng sắc thái pastel riêng cho từng tiện ích trong menu "Khám phá thêm" (hỗ trợ cả Light & Dark mode)
@@ -535,6 +537,19 @@ export function AppShell() {
                       <span>Nâng cấp Cựu sinh viên</span>
                     </button>
                   )}
+                  <Link
+                    to="/app/download"
+                    onClick={() => setActivePopover(null)}
+                    className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Smartphone size={17} className="shrink-0 text-primary-solid" />
+                      <span>{t('nav.downloadApp', 'Tải ứng dụng Mobile')}</span>
+                    </div>
+                    <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[10px] font-bold text-primary-solid">
+                      APK
+                    </span>
+                  </Link>
                   <div className="my-1 h-px bg-border" />
                   <button
                     type="button"
@@ -748,6 +763,13 @@ export function AppShell() {
                       className="col-span-2 rounded-xl bg-surface px-4 py-3 text-center text-sm font-semibold text-text-muted ring-1 ring-inset ring-border"
                     >
                       {t('nav.profile')}
+                    </Link>
+                    <Link
+                      to="/app/download"
+                      className="col-span-2 flex items-center justify-center gap-2 rounded-xl bg-surface-2 px-4 py-3 text-center text-sm font-bold text-primary-solid ring-1 ring-inset ring-border"
+                    >
+                      <Smartphone size={18} />
+                      <span>{t('nav.downloadApp', 'Tải ứng dụng Mobile (APK)')}</span>
                     </Link>
                     <button onClick={() => logoutM.mutate()} className="col-span-2 rounded-xl bg-danger-soft px-4 py-3 text-center text-sm font-semibold text-danger">{t('common.logout')}</button>
                   </>
