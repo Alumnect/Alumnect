@@ -561,11 +561,22 @@ export function AppShell() {
                 </Popover>
               </>
             ) : (
-              <Link to="/login" className="ml-1">
-                <Button size="sm" variant="primary" className="rounded-xl font-bold shadow-sm">
-                  {t('common.login')}
-                </Button>
-              </Link>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Link
+                  to="/app/download"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-2.5 sm:px-3 py-1.5 text-xs font-bold text-text hover:bg-surface-2 hover:border-primary/30 transition-all shadow-xs"
+                  title={t('nav.downloadApp', 'Tải ứng dụng Mobile (APK)')}
+                >
+                  <Smartphone size={15} className="text-primary-solid" />
+                  <span className="hidden sm:inline">{t('nav.downloadAppShort', 'Tải ứng dụng')}</span>
+                  <span className="sm:hidden">{t('nav.downloadAppTiny', 'Tải App')}</span>
+                </Link>
+                <Link to="/login" className="ml-0.5">
+                  <Button size="sm" variant="primary" className="rounded-xl font-bold shadow-sm">
+                    {t('common.login')}
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -774,7 +785,16 @@ export function AppShell() {
                     <button onClick={() => logoutM.mutate()} className="col-span-2 rounded-xl bg-danger-soft px-4 py-3 text-center text-sm font-semibold text-danger">{t('common.logout')}</button>
                   </>
                 ) : (
-                  <Link to="/login" className="col-span-2 rounded-xl bg-primary-solid px-4 py-3 text-center text-sm font-semibold text-on-primary shadow-raised hover:bg-primary-hover">{t('common.login')}</Link>
+                  <>
+                    <Link
+                      to="/app/download"
+                      className="col-span-2 flex items-center justify-center gap-2 rounded-xl bg-surface-2 px-4 py-3 text-center text-sm font-bold text-primary-solid ring-1 ring-inset ring-border"
+                    >
+                      <Smartphone size={18} />
+                      <span>{t('nav.downloadApp', 'Tải ứng dụng Mobile (APK)')}</span>
+                    </Link>
+                    <Link to="/login" className="col-span-2 rounded-xl bg-primary-solid px-4 py-3 text-center text-sm font-semibold text-on-primary shadow-raised hover:bg-primary-hover">{t('common.login')}</Link>
+                  </>
                 )}
               </div>
             </motion.div>

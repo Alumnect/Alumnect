@@ -425,18 +425,27 @@ export function AdminTaskLedgerDetailModal({
                                   {renderLedgerTypeBadge(l.transactionType)}
                                 </td>
                                 <td className="px-2 py-3 font-bold text-sm">
-                                  <span
-                                    className={
-                                      l.transactionType === 'ESCROW_COLLECTION' || l.transactionType === 'TOP_UP'
-                                        ? 'text-success'
-                                        : l.transactionType === 'PAYOUT'
-                                        ? 'text-purple-600 dark:text-purple-400'
-                                        : 'text-warning'
-                                    }
-                                  >
-                                    {l.transactionType === 'PAYOUT' || l.transactionType === 'REFUND' ? '-' : '+'}
-                                    {formatVnd(l.amount)}
-                                  </span>
+                                  <div>
+                                    <span
+                                      className={
+                                        l.transactionType === 'ESCROW_COLLECTION' || l.transactionType === 'TOP_UP'
+                                          ? 'text-success'
+                                          : l.transactionType === 'PAYOUT'
+                                          ? 'text-purple-600 dark:text-purple-400'
+                                          : 'text-warning'
+                                      }
+                                    >
+                                      {l.transactionType === 'PAYOUT' || l.transactionType === 'REFUND' ? '-' : '+'}
+                                      {formatVnd(l.amount)}
+                                    </span>
+                                    {(l.transactionType === 'PAYOUT' || l.transactionType === 'REFUND') && l.amount > 3000 && (
+                                      <div className="text-[11px] font-normal text-text-subtle mt-0.5 flex items-center gap-1">
+                                        <span className="text-danger font-semibold">-3.000 ₫</span>
+                                        <span className="text-text-subtle">phí PayOS · Thực:</span>
+                                        <span className="font-bold text-text">{formatVnd(l.amount - 3000)}</span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="px-2 py-3">
                                   {renderLedgerStatusBadge(l.status)}

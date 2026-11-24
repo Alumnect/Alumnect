@@ -368,30 +368,60 @@ export function AdminResolveTicketModal({
             </div>
           )}
 
-          {/* Bảng đối soát tài chính phân bổ */}
-          <div className="space-y-2 rounded-xl border border-border bg-surface-2 p-4">
-            <div className="mb-1 text-xs font-semibold text-text">
-              Bảng đối soát tài chính & Hóa đơn khấu trừ phí nền tảng (-3.000 đ / lệnh phát sinh)
-            </div>
-            <div className="flex justify-between gap-4 border-b border-border py-1 text-xs">
-              <span className="text-text-muted">
-                Cố vấn (Mentor): {formatVnd(calculatedMentorAmount)}{' '}
-                {calculatedMentorAmount > 0 ? <strong className="text-danger">(-3.000 đ phí nền tảng)</strong> : '(0 đ phí)'}
+          {/* Bảng đối soát tài chính phân bổ & Khấu trừ phí PayOS (-3.000 đ / lệnh) */}
+          <div className="space-y-3 rounded-xl border border-border bg-surface-2 p-4">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="text-xs font-bold text-text">
+                Bảng đối soát dòng tiền & Phí cổng thanh toán PayOS
               </span>
-              <span className="font-bold text-success">
-                Thực nhận: {formatVnd(calculatedMentorAmount > 0 ? Math.max(0, calculatedMentorAmount - 3000) : 0)}
+              <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-3xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                -3.000 ₫ / lệnh giải ngân
               </span>
             </div>
-            <div className="flex justify-between gap-4 border-b border-border py-1 text-xs">
-              <span className="text-text-muted">
-                Học viên (Student): {formatVnd(calculatedStudentRefund)}{' '}
-                {calculatedStudentRefund > 0 ? <strong className="text-danger">(-3.000 đ phí nền tảng)</strong> : '(0 đ phí)'}
-              </span>
-              <span className="font-bold text-info">
-                Thực hoàn: {formatVnd(calculatedStudentRefund > 0 ? Math.max(0, calculatedStudentRefund - 3000) : 0)}
-              </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Box Cố vấn */}
+              <div className="rounded-lg border border-border bg-surface p-3 space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-purple-600 dark:text-purple-400">Cố vấn (Mentor)</span>
+                  <span className="text-text font-bold">{formatVnd(calculatedMentorAmount)}</span>
+                </div>
+                <div className="flex items-center justify-between text-2xs text-text-subtle">
+                  <span>Phí xử lý PayOS:</span>
+                  <span className={calculatedMentorAmount > 0 ? 'text-danger font-semibold' : 'text-text-subtle'}>
+                    {calculatedMentorAmount > 0 ? '-3.000 ₫' : '0 ₫'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-bold pt-1 border-t border-border/60">
+                  <span className="text-text-muted">Thực nhận tài khoản:</span>
+                  <span className="text-success font-black text-sm">
+                    {formatVnd(calculatedMentorAmount > 0 ? Math.max(0, calculatedMentorAmount - 3000) : 0)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Box Học viên */}
+              <div className="rounded-lg border border-border bg-surface p-3 space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-sky-600 dark:text-sky-400">Học viên (Student)</span>
+                  <span className="text-text font-bold">{formatVnd(calculatedStudentRefund)}</span>
+                </div>
+                <div className="flex items-center justify-between text-2xs text-text-subtle">
+                  <span>Phí xử lý PayOS:</span>
+                  <span className={calculatedStudentRefund > 0 ? 'text-danger font-semibold' : 'text-text-subtle'}>
+                    {calculatedStudentRefund > 0 ? '-3.000 ₫' : '0 ₫'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-bold pt-1 border-t border-border/60">
+                  <span className="text-text-muted">Thực hoàn tài khoản:</span>
+                  <span className="text-info font-black text-sm">
+                    {formatVnd(calculatedStudentRefund > 0 ? Math.max(0, calculatedStudentRefund - 3000) : 0)}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between text-xs pt-1 font-bold">
+
+            <div className="flex items-center justify-between text-xs pt-1 border-t border-border font-bold">
               <span className="text-text">Tổng phân bổ gốc / Quỹ khả dụng:</span>
               <span className={isFundBalanced ? 'text-success' : 'text-danger'}>
                 {formatVnd(totalAllocated)} / {formatVnd(availableFund)}
