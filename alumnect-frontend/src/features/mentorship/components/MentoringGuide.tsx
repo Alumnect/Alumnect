@@ -5,7 +5,6 @@ import {
   BookOpen,
   Search,
   FileText,
-  ShieldCheck,
   CheckCircle2,
   Clock,
   AlertCircle,
@@ -16,7 +15,6 @@ import {
   Briefcase,
   CreditCard,
   MessageSquare,
-  Scale,
   DollarSign,
   UserCheck,
   ZoomIn,
@@ -1693,21 +1691,6 @@ export function MentoringGuide() {
               ? 'Standardized 5-step workflow from connecting, confirming the Deal agreement, secure Escrow payment, logging session Work Logs, to final acceptance and payout.'
               : 'Quy trình làm việc chuẩn hóa 5 bước từ lúc kết nối, thống nhất thỏa thuận, ký quỹ an toàn, ghi nhận nhật ký công việc đến nghiệm thu và giải ngân thù lao.'}
           </p>
-
-          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-text-subtle">
-            <div className="flex items-center gap-1.5 rounded-lg bg-surface px-2.5 py-1 shadow-2xs border border-border">
-              <ShieldCheck size={14} className="text-emerald-500" />
-              <span>{isEn ? '100% Escrow Protection' : 'Bảo vệ quỹ ký quỹ'}</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-lg bg-surface px-2.5 py-1 shadow-2xs border border-border">
-              <Clock size={14} className="text-amber-500" />
-              <span>{isEn ? '72-Hour Log Verification' : 'Đối soát nhật ký 72 giờ'}</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-lg bg-surface px-2.5 py-1 shadow-2xs border border-border">
-              <Scale size={14} className="text-primary-solid" />
-              <span>{isEn ? 'Policy Compliant' : 'Chuẩn quy định'}</span>
-            </div>
-          </div>
         </div>
       </div>
 
