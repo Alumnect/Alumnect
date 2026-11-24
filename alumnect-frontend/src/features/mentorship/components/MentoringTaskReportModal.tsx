@@ -324,22 +324,27 @@ export function MentoringTaskReportModal({
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 32px; }
-    .invoice { max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px rgba(15,23,42,0.06); }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f27024; padding-bottom: 20px; margin-bottom: 24px; }
+    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #ffffff; color: #000000; margin: 0; padding: 32px; }
+    .invoice { max-width: 680px; margin: 0 auto; background: #ffffff; color: #000000; border: 1px solid #cbd5e1; border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px rgba(15,23,42,0.06); }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f27024; padding-bottom: 20px; margin-bottom: 24px; color: #000000; }
     .logo-wordmark { font-family: 'Caveat', 'Segoe Script', 'Comic Sans MS', cursive; font-size: 42px; font-weight: 700; line-height: 1; letter-spacing: 0.5px; display: inline-block; }
     .logo-alum { color: #0a58ca; }
     .logo-nect { color: #c84b11; }
-    .subtitle { font-size: 13px; font-weight: 700; color: #475569; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.4px; }
-    .meta { text-align: right; font-size: 13px; color: #334155; line-height: 1.6; }
-    .meta strong { color: #0f172a; }
-    .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: #f8fafc; }
-    .card h3 { margin: 0 0 14px 0; font-size: 15px; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px; }
-    .row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; }
-    .row.fee { color: #dc2626; font-weight: 700; }
-    .row.total { border-top: 1px dashed #94a3b8; margin-top: 10px; padding-top: 12px; font-size: 16px; font-weight: 800; color: #16a34a; }
-    .row.total.student { color: #0284c7; }
-    .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+    .subtitle { font-size: 13px; font-weight: 700; color: #000000; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .meta { text-align: right; font-size: 13px; color: #000000; line-height: 1.6; }
+    .meta div { color: #000000; }
+    .meta strong { color: #000000; font-weight: 700; }
+    .task-title { margin-bottom: 20px; font-size: 14px; line-height: 1.6; color: #000000; word-break: break-all; }
+    .task-title strong { color: #000000; }
+    .card { border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; background: #f8fafc; color: #000000; }
+    .card h3 { margin: 0 0 14px 0; font-size: 15px; color: #000000; font-weight: 800; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px; }
+    .row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; color: #000000; }
+    .row span { color: #000000; font-weight: 600; }
+    .row strong { color: #000000; font-weight: 700; }
+    .row.fee, .row.fee span { color: #dc2626 !important; font-weight: 700; }
+    .row.total, .row.total span { border-top: 1px dashed #94a3b8; margin-top: 10px; padding-top: 12px; font-size: 16px; font-weight: 800; color: #16a34a !important; }
+    .row.total.student, .row.total.student span { color: #0284c7 !important; }
+    .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #334155; text-align: center; }
   </style>
 </head>
 <body>
@@ -357,7 +362,7 @@ export function MentoringTaskReportModal({
       </div>
     </div>
 
-    <div style="margin-bottom: 20px; font-size: 14px; line-height: 1.6;">
+    <div class="task-title">
       <strong>${isEn ? 'Task Title:' : 'Tên nhiệm vụ:'}</strong> ${report.taskTitle}
     </div>
 
@@ -835,143 +840,143 @@ export function MentoringTaskReportModal({
       {isPingOpen && (
         <DialogFrame
           onClose={() => setIsPingOpen(false)}
-                zIndexClassName="z-[110]"
-                maxWidthClassName="max-w-md"
-                className="p-6 space-y-4"
-              >
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-danger-soft text-danger rounded-lg">
-                      <AlertTriangle className="w-4 h-4" />
-                    </div>
-                    <h4 className="font-bold text-base text-text">
-                      {isEn ? 'Report Financial Issue' : 'Báo cáo sự cố dòng tiền'}
-                    </h4>
-                  </div>
+          zIndexClassName="z-[110]"
+          maxWidthClassName="max-w-md"
+          className="p-6 space-y-4"
+        >
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-danger-soft text-danger rounded-lg">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <h4 className="font-bold text-base text-text">
+                {isEn ? 'Report Financial Issue' : 'Báo cáo sự cố dòng tiền'}
+              </h4>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPingOpen(false)}
+              className="p-1 text-text-subtle hover:text-text rounded-md hover:bg-surface-2 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <p className="text-xs text-text-muted">
+            {isEn
+              ? `Send a report to Administrators to reconcile the ledger and re-process the refund or payout for Task #${taskId}.`
+              : `Gửi phản ánh tới Ban Quản Trị để đối soát sổ quỹ và xử lý lại giao dịch hoàn tiền hoặc thù lao cho Nhiệm vụ #${taskId}.`}
+          </p>
+
+          <div className="space-y-2">
+            <span className="text-xs font-bold text-text-subtle uppercase">
+              {isEn ? 'Quick Reasons' : 'Chọn nhanh lý do'}
+            </span>
+            <div className="space-y-1.5">
+              {(isEn
+                ? [
+                  'Have not received refund in bank account',
+                  'Refund or payout amount is inaccurate',
+                  'Have not received payout after task completion',
+                  'Beneficiary bank account reported transaction error',
+                ]
+                : [
+                  'Chưa nhận được tiền hoàn trả về tài khoản',
+                  'Số tiền hoàn / chi trả bị sai lệch',
+                  'Chưa nhận được thù lao sau khi hoàn thành',
+                  'Tài khoản nhận tiền báo lỗi giao dịch',
+                ]
+              ).map((reasonText) => {
+                const isSelected = selectedQuickReason === reasonText
+                return (
                   <button
+                    key={reasonText}
                     type="button"
-                    onClick={() => setIsPingOpen(false)}
-                    className="p-1 text-text-subtle hover:text-text rounded-md hover:bg-surface-2 transition cursor-pointer"
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedQuickReason(null)
+                      } else {
+                        setSelectedQuickReason(reasonText)
+                        setPingReason(reasonText)
+                      }
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition cursor-pointer ${isSelected
+                      ? 'bg-primary-soft text-primary-solid border-primary-500 font-semibold'
+                      : 'bg-surface hover:bg-surface-2 text-text border-border'
+                      }`}
                   >
-                    <X className="w-4 h-4" />
+                    {reasonText}
                   </button>
-                </div>
+                )
+              })}
+            </div>
+          </div>
 
-                <p className="text-xs text-text-muted">
-                  {isEn
-                    ? `Send a report to Administrators to reconcile the ledger and re-process the refund or payout for Task #${taskId}.`
-                    : `Gửi phản ánh tới Ban Quản Trị để đối soát sổ quỹ và xử lý lại giao dịch hoàn tiền hoặc thù lao cho Nhiệm vụ #${taskId}.`}
-                </p>
+          <div className="space-y-1.5">
+            <span className="text-xs font-bold text-text-subtle uppercase">
+              {isEn ? 'Detailed Description' : 'Mô tả cụ thể'}
+            </span>
+            <textarea
+              rows={3}
+              value={pingReason}
+              onChange={(e) => setPingReason(e.target.value)}
+              placeholder={
+                isEn
+                  ? 'Provide details about when you checked your account, missing amount...'
+                  : 'Chi tiết về thời gian kiểm tra tài khoản, số tiền chưa nhận được...'
+              }
+              className="w-full p-2.5 bg-surface-2 border border-border rounded-lg text-xs text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
 
-                <div className="space-y-2">
-                  <span className="text-xs font-bold text-text-subtle uppercase">
-                    {isEn ? 'Quick Reasons' : 'Chọn nhanh lý do'}
-                  </span>
-                  <div className="space-y-1.5">
-                    {(isEn
-                      ? [
-                        'Have not received refund in bank account',
-                        'Refund or payout amount is inaccurate',
-                        'Have not received payout after task completion',
-                        'Beneficiary bank account reported transaction error',
-                      ]
-                      : [
-                        'Chưa nhận được tiền hoàn trả về tài khoản',
-                        'Số tiền hoàn / chi trả bị sai lệch',
-                        'Chưa nhận được thù lao sau khi hoàn thành',
-                        'Tài khoản nhận tiền báo lỗi giao dịch',
-                      ]
-                    ).map((reasonText) => {
-                      const isSelected = selectedQuickReason === reasonText
-                      return (
-                        <button
-                          key={reasonText}
-                          type="button"
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedQuickReason(null)
-                            } else {
-                              setSelectedQuickReason(reasonText)
-                              setPingReason(reasonText)
-                            }
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition cursor-pointer ${isSelected
-                            ? 'bg-primary-soft text-primary-solid border-primary-500 font-semibold'
-                            : 'bg-surface hover:bg-surface-2 text-text border-border'
-                            }`}
-                        >
-                          {reasonText}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-text-subtle uppercase">
-                    {isEn ? 'Detailed Description' : 'Mô tả cụ thể'}
-                  </span>
-                  <textarea
-                    rows={3}
-                    value={pingReason}
-                    onChange={(e) => setPingReason(e.target.value)}
-                    placeholder={
-                      isEn
-                        ? 'Provide details about when you checked your account, missing amount...'
-                        : 'Chi tiết về thời gian kiểm tra tài khoản, số tiền chưa nhận được...'
-                    }
-                    className="w-full p-2.5 bg-surface-2 border border-border rounded-lg text-xs text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsPingOpen(false)}
-                    className="text-xs"
-                  >
-                    {isEn ? 'Cancel' : 'Hủy'}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={pingMutation.isPending}
-                    onClick={handleSendPing}
-                    className="text-xs font-bold bg-danger hover:bg-danger/90 text-white gap-1.5"
-                  >
-                    {pingMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> {isEn ? 'Sending...' : 'Đang gửi...'}
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-3.5 h-3.5" /> {isEn ? 'Send Report' : 'Gửi phản ánh'}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </DialogFrame>
-            )
-          }
-
-          {/* Footer */ }
-          <div className="px-6 py-3.5 bg-surface-2 border-t border-border flex items-center justify-between">
-            <p className="text-xs text-text-subtle">
-              {isEn
-                ? 'Report data is automatically synchronized from the AlumNect transaction ledger.'
-                : 'Dữ liệu báo cáo được cập nhật tự động từ hệ thống sổ giao dịch AlumNect.'}
-            </p>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
-              className="text-xs px-4 py-1.5"
+              size="sm"
+              onClick={() => setIsPingOpen(false)}
+              className="text-xs"
             >
-              {t('common.close', isEn ? 'Close' : 'Đóng')}
+              {isEn ? 'Cancel' : 'Hủy'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={pingMutation.isPending}
+              onClick={handleSendPing}
+              className="text-xs font-bold bg-danger hover:bg-danger/90 text-white gap-1.5"
+            >
+              {pingMutation.isPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> {isEn ? 'Sending...' : 'Đang gửi...'}
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" /> {isEn ? 'Send Report' : 'Gửi phản ánh'}
+                </>
+              )}
             </Button>
           </div>
-            </DialogFrame >
+        </DialogFrame>
+      )
+      }
+
+      {/* Footer */}
+      <div className="px-6 py-3.5 bg-surface-2 border-t border-border flex items-center justify-between">
+        <p className="text-xs text-text-subtle">
+          {isEn
+            ? 'Report data is automatically synchronized from the AlumNect transaction ledger.'
+            : 'Dữ liệu báo cáo được cập nhật tự động từ hệ thống sổ giao dịch AlumNect.'}
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          className="text-xs px-4 py-1.5"
+        >
+          {t('common.close', isEn ? 'Close' : 'Đóng')}
+        </Button>
+      </div>
+    </DialogFrame >
   )
 }

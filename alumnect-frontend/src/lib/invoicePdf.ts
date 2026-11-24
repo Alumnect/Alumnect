@@ -17,6 +17,7 @@ export async function downloadInvoicePdf(htmlContent: string, fileName: string):
   container.style.padding = '0'
   container.style.margin = '0'
   container.style.backgroundColor = '#ffffff'
+  container.style.color = '#000000'
   container.style.zIndex = '-99999'
   container.style.pointerEvents = 'none'
 
@@ -26,11 +27,67 @@ export async function downloadInvoicePdf(htmlContent: string, fileName: string):
   const styles = doc.querySelectorAll('style')
   styles.forEach((s) => container.appendChild(s.cloneNode(true)))
 
+  // Guarantee black text for all default/gray elements against white PDF paper
+  const resetStyle = document.createElement('style')
+  resetStyle.textContent = `
+    #invoice-pdf-render-root, #invoice-pdf-render-root .invoice {
+      color: #000000 !important;
+      background-color: #ffffff !important;
+    }
+    #invoice-pdf-render-root .invoice .card {
+      color: #000000 !important;
+      background-color: #f8fafc !important;
+    }
+    #invoice-pdf-render-root .invoice .task-title,
+    #invoice-pdf-render-root .invoice .task-title * {
+      color: #000000 !important;
+    }
+    #invoice-pdf-render-root .invoice .meta,
+    #invoice-pdf-render-root .invoice .meta div {
+      color: #1e293b !important;
+    }
+    #invoice-pdf-render-root .invoice .meta strong {
+      color: #000000 !important;
+    }
+    #invoice-pdf-render-root .invoice .card h3 {
+      color: #000000 !important;
+    }
+    #invoice-pdf-render-root .invoice .row {
+      color: #000000 !important;
+    }
+    #invoice-pdf-render-root .invoice .row span {
+      color: #000000 !important;
+      font-weight: 600 !important;
+    }
+    #invoice-pdf-render-root .invoice .row strong {
+      color: #000000 !important;
+      font-weight: 700 !important;
+    }
+    #invoice-pdf-render-root .invoice .row.fee,
+    #invoice-pdf-render-root .invoice .row.fee span {
+      color: #dc2626 !important;
+    }
+    #invoice-pdf-render-root .invoice .row.total,
+    #invoice-pdf-render-root .invoice .row.total span {
+      color: #16a34a !important;
+    }
+    #invoice-pdf-render-root .invoice .row.total.student,
+    #invoice-pdf-render-root .invoice .row.total.student span {
+      color: #0284c7 !important;
+    }
+    #invoice-pdf-render-root .invoice .footer {
+      color: #475569 !important;
+    }
+  `
+  container.appendChild(resetStyle)
+
   const invoiceNode = doc.querySelector('.invoice') || doc.body
   const clonedContent = invoiceNode.cloneNode(true) as HTMLElement
   clonedContent.style.maxWidth = '100%'
   clonedContent.style.boxShadow = 'none'
   clonedContent.style.margin = '0'
+  clonedContent.style.backgroundColor = '#ffffff'
+  clonedContent.style.color = '#000000'
   container.appendChild(clonedContent)
 
   document.body.appendChild(container)

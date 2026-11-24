@@ -61,19 +61,26 @@ export function MentoringTaskPaymentCard({
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 32px; }
-    .invoice { max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px rgba(15,23,42,0.06); }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f27024; padding-bottom: 20px; margin-bottom: 24px; }
+    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #ffffff; color: #000000; margin: 0; padding: 32px; }
+    .invoice { max-width: 680px; margin: 0 auto; background: #ffffff; color: #000000; border: 1px solid #cbd5e1; border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px rgba(15,23,42,0.06); }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f27024; padding-bottom: 20px; margin-bottom: 24px; color: #000000; }
     .logo-wordmark { font-family: 'Caveat', 'Segoe Script', 'Comic Sans MS', cursive; font-size: 42px; font-weight: 700; line-height: 1; display: inline-block; }
     .logo-alum { color: #0a58ca; }
     .logo-nect { color: #c84b11; }
-    .subtitle { font-size: 13px; font-weight: 700; color: #475569; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.4px; }
-    .meta { text-align: right; font-size: 13px; color: #334155; line-height: 1.6; }
-    .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: #f8fafc; }
-    .card h3 { margin: 0 0 14px 0; font-size: 15px; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px; }
-    .row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; }
-    .row.total { border-top: 1px dashed #94a3b8; margin-top: 10px; padding-top: 12px; font-size: 16px; font-weight: 800; color: #0284c7; }
-    .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+    .subtitle { font-size: 13px; font-weight: 700; color: #000000; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .meta { text-align: right; font-size: 13px; color: #000000; line-height: 1.6; }
+    .meta div { color: #000000; }
+    .meta strong { color: #000000; font-weight: 700; }
+    .task-title { margin-bottom: 18px; font-size: 14px; line-height: 1.6; color: #000000; word-break: break-all; }
+    .task-title strong { color: #000000; }
+    .card { border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; background: #f8fafc; color: #000000; }
+    .card h3 { margin: 0 0 14px 0; font-size: 15px; color: #000000; font-weight: 800; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px; }
+    .row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; color: #000000; }
+    .row span { color: #000000; font-weight: 600; }
+    .row strong { color: #000000; font-weight: 700; }
+    .row.fee, .row.fee span { color: #dc2626 !important; font-weight: 700; }
+    .row.total, .row.total span { border-top: 1px dashed #94a3b8; margin-top: 10px; padding-top: 12px; font-size: 16px; font-weight: 800; color: #0284c7 !important; }
+    .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #334155; text-align: center; }
   </style>
 </head>
 <body>
@@ -90,7 +97,7 @@ export function MentoringTaskPaymentCard({
       </div>
     </div>
 
-    ${taskTitle ? `<div style="margin-bottom: 18px; font-size: 14px;"><strong>${isEn ? 'Task:' : 'Nhiệm vụ:'}</strong> ${taskTitle}</div>` : ''}
+    ${taskTitle ? `<div class="task-title"><strong>${isEn ? 'Task:' : 'Nhiệm vụ:'}</strong> ${taskTitle}</div>` : ''}
 
     <div class="card">
       <h3>${isEn ? 'PAYMENT DETAILS (LEARNER SIDE)' : 'CHI TIẾT THANH TOÁN YÊU CẦU (PHÍA HỌC VIÊN)'}</h3>
