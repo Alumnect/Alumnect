@@ -2,7 +2,7 @@ import React from 'react'
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, FileText } from '@/components/icons'
+import { AlertTriangle, CheckCircle2, FileText, HelpCircle } from '@/components/icons'
 import { Button, Loading, Screen, Txt } from './ui'
 import { Header } from './Header'
 import { BrandIcon } from './BrandIcon'
@@ -55,6 +55,13 @@ export function MentoringTermsGate({ children, header = true }: { children: Reac
           textColor="#FFFFFF"
           onPress={() => router.push('/mentoring/terms')}
           style={{ marginTop: 18, backgroundColor: viridian, borderColor: viridian }}
+        />
+        <Button
+          title="Xem Cẩm nang hướng dẫn (5 bước)"
+          variant="secondary"
+          icon={<HelpCircle size={16} color={viridian} />}
+          onPress={() => router.push('/mentoring/guide')}
+          style={{ marginTop: 10 }}
         />
       </View>
     </View>
