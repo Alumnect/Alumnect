@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useForm, useWatch, type FieldErrors } from 'react-hook-form'
+import { Controller, useForm, useWatch, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -560,14 +560,33 @@ export const CreateMentoringRequestForm: React.FC<CreateMentoringRequestFormProp
               {t('mentoring.budgetLevelVnd')}
             </label>
             <div className="relative">
-              <input
-                id="budgetMin"
-                type="number"
-                min="0"
-                step="any"
-                placeholder={t('mentoring.budgetPlaceholder')}
-                {...register('budgetMin')}
-                className="w-full rounded-2xl border border-border bg-surface px-4 py-3 pr-12 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
+              {/* Hiển thị tách hàng nghìn bằng dấu chấm (300.000) cho dễ đọc; giá trị lưu trong form vẫn là số nguyên */}
+              <Controller
+                control={control}
+                name="budgetMin"
+                render={({ field }) => (
+                  <input
+                    id="budgetMin"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder={t('mentoring.budgetPlaceholder')}
+                    name={field.name}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    value={
+                      field.value === null || field.value === undefined || field.value === ''
+                        ? ''
+                        : new Intl.NumberFormat('vi-VN').format(Number(field.value))
+                    }
+                    onChange={(e) => {
+                      // Chỉ giữ chữ số, tối đa 12 chữ số để tránh số quá lớn
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 12)
+                      field.onChange(digits === '' ? null : Number(digits))
+                    }}
+                    className="w-full rounded-2xl border border-border bg-surface px-4 py-3 pr-12 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-3 focus:ring-brand-500/15"
+                  />
+                )}
               />
               <span className="absolute right-4 top-3.5 text-xs font-bold text-text-subtle">
                 VND
