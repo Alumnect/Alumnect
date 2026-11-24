@@ -562,9 +562,10 @@ export function AppShell() {
               </>
             ) : (
               <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Từ màn sm trở lên: cùng chiều cao h-9, padding và cỡ chữ text-sm với nút Đăng nhập (Button size sm) */}
                 <Link
                   to="/app/download"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-2.5 sm:px-3 py-1.5 text-xs font-bold text-text hover:bg-surface-2 hover:border-primary/30 transition-all shadow-xs"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-2.5 py-1.5 text-xs font-bold text-text hover:bg-surface-2 hover:border-primary/30 transition-all shadow-xs sm:h-9 sm:px-4 sm:py-0 sm:text-sm"
                   title={t('nav.downloadApp', 'Tải ứng dụng Mobile (APK)')}
                 >
                   <Smartphone size={15} className="text-primary-solid" />
