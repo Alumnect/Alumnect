@@ -223,7 +223,8 @@ export function MentoringTaskReviewModal({
 
           {/* Bước Đánh giá Cố vấn trước khi xác nhận nghiệm thu */}
           <div className="p-4 bg-primary-soft/50 border border-primary-soft-border rounded-xl space-y-3">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
+            {/* Nhãn số sao luôn ở dòng riêng dưới tiêu đề: nếu để chung hàng có flex-wrap thì nhãn ngắn (4 sao) nằm cạnh tiêu đề còn nhãn dài xuống dòng, bố cục nhảy khi rê chuột */}
+            <div className="flex flex-col items-start gap-2">
               <div>
                 <h4 className="text-xs font-bold text-text flex items-center gap-1.5">
                   <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
