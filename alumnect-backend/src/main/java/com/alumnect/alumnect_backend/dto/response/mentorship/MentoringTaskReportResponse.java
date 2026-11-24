@@ -58,15 +58,21 @@ public class MentoringTaskReportResponse {
     private Boolean canPingAdminFinance;
     private Boolean hasFailedLedger;
 
-    // 7. Financial Breakdown
+    // 7. Financial Breakdown & Bilateral Invoice
+    private String invoiceCode;
+    private Instant invoiceIssuedAt;
+
     private BigDecimal originalPrice;
     private BigDecimal totalAgreedPrice;
     private BigDecimal studentTotalPaid;
+    private BigDecimal studentGrossRefundAmount;
+    private BigDecimal studentPlatformFee;
     private BigDecimal studentRefundAmount;
     private String studentRefundStatus; // NO_REFUND, PROCESSING, REFUNDED, ON_HOLD, FAILED
     private String studentRefundNote;
 
     private BigDecimal mentorEarnedAmount;
+    private BigDecimal mentorPlatformFee;
     private BigDecimal platformFee;
     private BigDecimal mentorNetPayout;
     private String mentorPayoutStatus; // PENDING_ESCROW, PROCESSING, PAID, ON_HOLD, FAILED

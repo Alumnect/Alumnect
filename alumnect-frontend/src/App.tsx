@@ -29,6 +29,7 @@ const MessagesPage = lazyPage(() => import('@/pages/app/MessagesPage'), 'Message
 const NotificationsPage = lazyPage(() => import('@/pages/app/NotificationsPage'), 'NotificationsPage')
 const ProfilePage = lazyPage(() => import('@/pages/app/ProfilePage'), 'ProfilePage')
 const ChangePasswordPage = lazyPage(() => import('@/pages/app/ChangePasswordPage'), 'ChangePasswordPage')
+const MobileAppDownloadPage = lazyPage(() => import('@/pages/app/MobileAppDownloadPage'), 'MobileAppDownloadPage')
 const MentoringHomePage = lazyPage(() => import('@/pages/app/MentoringHomePage'), 'MentoringHomePage')
 const MentorEarningsPage = lazyPage(() => import('@/pages/app/MentorEarningsPage'), 'MentorEarningsPage')
 const MentoringRefundsPage = lazyPage(() => import('@/pages/app/MentoringRefundsPage'), 'MentoringRefundsPage')
@@ -76,6 +77,7 @@ function App() {
         <Routes location={location}>
           {/* Trang chủ mở thẳng vào app ở chế độ khách (đã bỏ landing page) */}
           <Route path="/" element={<Navigate to="/app" replace />} />
+          <Route path="/download" element={<Navigate to="/app/download" replace />} />
 
           {/* Auth (full-screen, own scaffold) */}
           <Route path="/login" element={<LoginPage />} />
@@ -90,6 +92,7 @@ function App() {
             {/* --- PUBLIC ROUTES (No login required) --- */}
             <Route index element={<FeedPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="download" element={<MobileAppDownloadPage />} />
             <Route path="posts/:id" element={<PostDetailPage />} />
             <Route path="jobs" element={<JobsPage />} />
             <Route path="events" element={<EventsPage />} />

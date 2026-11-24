@@ -186,11 +186,16 @@ public class MentoringFinanceServiceImpl implements MentoringFinanceService {
                 .map(MentoringPaymentLedger::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Phí xử lý tranh chấp / Phí nền tảng (nếu có từ phán quyết vé)
+        // Phí xử lý tranh chấp / Phí nền tảng (3.000đ mỗi lệnh chi/hoàn thực tế phát sinh)
         BigDecimal platformFee = ticketRepository.findByTaskIdOrderByCreatedAtDesc(task.getId()).stream()
                 .filter(t -> t.getStatus() == MentoringTicketStatus.RESOLVED && t.getDisputeFee() != null)
                 .map(MentoringDisputeTicket::getDisputeFee)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (platformFee.compareTo(BigDecimal.ZERO) == 0) {
+            BigDecimal feeFromPayout = totalPayout.compareTo(BigDecimal.ZERO) > 0 ? MentoringRules.PLATFORM_TRANSFER_FEE : BigDecimal.ZERO;
+            BigDecimal feeFromRefund = totalRefund.compareTo(BigDecimal.ZERO) > 0 ? MentoringRules.PLATFORM_TRANSFER_FEE : BigDecimal.ZERO;
+            platformFee = feeFromPayout.add(feeFromRefund);
+        }
 
         // Tiền đang giữ trong quỹ Escrow khả dụng = Tổng thu - Payout - Refund - Phí
         BigDecimal escrowHolding = totalCollected.subtract(totalPayout).subtract(totalRefund).subtract(platformFee);

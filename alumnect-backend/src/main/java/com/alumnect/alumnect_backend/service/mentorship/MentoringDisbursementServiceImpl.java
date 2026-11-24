@@ -46,19 +46,28 @@ public class MentoringDisbursementServiceImpl implements MentoringDisbursementSe
             return existing.get();
         }
 
+        BigDecimal grossAmount = task.getAgreedPrice() != null ? task.getAgreedPrice() : BigDecimal.ZERO;
+        BigDecimal platformFee = MentoringRules.calculateTransferFee(grossAmount);
+        BigDecimal netPayoutAmount = MentoringRules.calculateNetTransfer(grossAmount);
+        String feeSuffix = String.format(" (Thù lao gốc: %s, Phí nền tảng: -%s, Thực nhận: %s)",
+                MentoringRules.formatVnd(grossAmount),
+                MentoringRules.formatVnd(platformFee),
+                MentoringRules.formatVnd(netPayoutAmount));
+        String fullNote = (note != null ? note : "Quyết toán thù lao hoàn thành Task #" + task.getId()) + feeSuffix;
+
         MentoringPaymentLedger ledger = ledgerRepository.saveAndFlush(MentoringPaymentLedger.builder()
                 .request(task.getRequest() != null ? task.getRequest() : task.getDeal().getRequest())
                 .task(task)
                 .deal(task.getDeal())
                 .student(task.getStudent())
                 .mentor(task.getMentor())
-                .amount(task.getAgreedPrice())
+                .amount(netPayoutAmount)
                 .transactionType(MentoringLedgerTransactionType.PAYOUT)
                 .status(MentoringLedgerStatus.PENDING)
                 .idempotencyKey("ALUMNECT-PAYOUT-TASK-" + task.getId())
                 .providerStatus(MentoringPayoutProcessor.QUEUED)
                 .deadlineSnapshot(task.getDeadline())
-                .note(note)
+                .note(fullNote)
                 .build());
         dispatchPayoutAfterCommit(ledger.getId());
         return ledger;

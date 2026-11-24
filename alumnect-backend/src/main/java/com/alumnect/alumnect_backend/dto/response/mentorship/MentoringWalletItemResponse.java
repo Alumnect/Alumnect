@@ -20,6 +20,9 @@ public class MentoringWalletItemResponse {
     private String taskTitle;
     private String counterpartName;
     private BigDecimal amount;
+    private BigDecimal grossAmount;
+    private BigDecimal platformFee;
+    private BigDecimal netAmount;
     private MentoringLedgerStatus status;
     private String providerStatus;
     private String note;

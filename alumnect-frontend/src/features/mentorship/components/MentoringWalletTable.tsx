@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, CheckCircle2, Clock, Wallet } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Clock, Receipt, Wallet } from 'lucide-react'
 import { EmptyState } from '@/components/ui'
 import { vnd } from '@/lib/utils'
 import { MentoringBadge } from './MentoringUi'
 import { StatTile } from '@/components/brand/BrandBlocks'
 import { MentoringFinanceReportModal } from './MentoringFinanceReportModal'
+import { MentoringTaskReportModal } from './MentoringTaskReportModal'
 import type { MentoringWallet, MentoringWalletItem } from '../model/mentoringWalletTypes'
 
 const PROVIDER_STATUS_KEY_MAP: Record<string, string> = {
@@ -27,6 +28,7 @@ interface Props {
   counterpartLabel: string
   emptyTitle: string
   emptyDescription: string
+  party?: 'mentor' | 'student'
 }
 
 function formatDate(value?: string | null) {
@@ -57,9 +59,19 @@ function StatusCell({ item }: { item: MentoringWalletItem }) {
 }
 
 /** Tổng hợp và danh sách các khoản chi ra (thù lao Mentor hoặc hoàn tiền Học viên). */
-export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, emptyTitle, emptyDescription }: Props) {
-  const { t } = useTranslation()
+export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, emptyTitle, emptyDescription, party }: Props) {
+  const { t, i18n } = useTranslation()
+  const isEn = i18n.language?.startsWith('en')
   const [selectedReportItem, setSelectedReportItem] = useState<MentoringWalletItem | null>(null)
+  const [selectedInvoiceTaskId, setSelectedInvoiceTaskId] = useState<number | null>(null)
+
+  const invoiceButtonLabel = isEn ? 'Invoice' : 'Hóa đơn'
+
+  const invoiceButtonTitle = party === 'mentor'
+    ? (isEn ? 'View and download Mentor invoice' : 'Xem và tải hóa đơn Phía Cố vấn')
+    : party === 'student'
+    ? (isEn ? 'View and download Learner invoice' : 'Xem và tải hóa đơn Phía Học viên')
+    : (isEn ? 'View and download invoice' : 'Xem và tải hóa đơn')
 
   if (isLoading) {
     return <div className="h-48 animate-pulse rounded-2xl bg-surface-2 dark:bg-white/[0.04]" />
@@ -95,16 +107,29 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
                     {item.counterpartName ? `${counterpartLabel}: ${item.counterpartName} · ` : ''}
                     {formatDate(item.transactedAt || item.createdAt)}
                   </p>
-                  {item.status === 'FAILED' && item.taskId && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedReportItem(item)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 border border-danger/30 transition cursor-pointer"
-                    >
-                      <AlertTriangle className="h-3 w-3 shrink-0" />
-                      Báo cáo
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {item.taskId && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedInvoiceTaskId(item.taskId!)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/25 transition cursor-pointer"
+                        title={invoiceButtonTitle}
+                      >
+                        <Receipt className="h-3 w-3 shrink-0" />
+                        {invoiceButtonLabel}
+                      </button>
+                    )}
+                    {item.status === 'FAILED' && item.taskId && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReportItem(item)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 border border-danger/30 transition cursor-pointer"
+                      >
+                        <AlertTriangle className="h-3 w-3 shrink-0" />
+                        Báo cáo
+                      </button>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}
@@ -136,19 +161,33 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
                   </td>
                   <td className="px-4 py-3 text-xs text-text-subtle">{formatDate(item.transactedAt || item.createdAt)}</td>
                   <td className="px-4 py-3 text-right">
-                    {item.status === 'FAILED' && item.taskId ? (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedReportItem(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 border border-danger/30 transition cursor-pointer"
-                        title="Báo cáo sự cố dòng tiền cho Ban Quản Trị"
-                      >
-                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                        Báo cáo
-                      </button>
-                    ) : (
-                      <span className="text-text-subtle text-xs">—</span>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                      {item.taskId && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedInvoiceTaskId(item.taskId!)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/25 transition cursor-pointer"
+                          title={invoiceButtonTitle}
+                        >
+                          <Receipt className="h-3.5 w-3.5 shrink-0" />
+                          {invoiceButtonLabel}
+                        </button>
+                      )}
+                      {item.status === 'FAILED' && item.taskId && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedReportItem(item)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-danger bg-danger/10 hover:bg-danger/20 border border-danger/30 transition cursor-pointer"
+                          title="Báo cáo sự cố dòng tiền cho Ban Quản Trị"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                          Báo cáo
+                        </button>
+                      )}
+                      {!item.taskId && item.status !== 'FAILED' && (
+                        <span className="text-text-subtle text-xs">—</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -163,6 +202,18 @@ export function MentoringWalletTable({ wallet, isLoading, counterpartLabel, empt
         onClose={() => setSelectedReportItem(null)}
         item={selectedReportItem}
       />
+
+      {/* Modal Hóa đơn điện tử riêng theo vai trò Cố vấn / Học viên */}
+      {selectedInvoiceTaskId && (
+        <MentoringTaskReportModal
+          taskId={selectedInvoiceTaskId}
+          isOpen={Boolean(selectedInvoiceTaskId)}
+          partyView={party}
+          isMentor={party === 'mentor'}
+          isStudent={party === 'student'}
+          onClose={() => setSelectedInvoiceTaskId(null)}
+        />
+      )}
     </div>
   )
 }

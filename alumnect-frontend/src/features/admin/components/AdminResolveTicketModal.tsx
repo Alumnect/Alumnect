@@ -371,18 +371,28 @@ export function AdminResolveTicketModal({
           {/* Bảng đối soát tài chính phân bổ */}
           <div className="space-y-2 rounded-xl border border-border bg-surface-2 p-4">
             <div className="mb-1 text-xs font-semibold text-text">
-              Bảng đối soát tài chính phân bổ
+              Bảng đối soát tài chính & Hóa đơn khấu trừ phí nền tảng (-3.000 đ / lệnh phát sinh)
             </div>
             <div className="flex justify-between gap-4 border-b border-border py-1 text-xs">
-              <span className="text-text-muted">Cố vấn (Mentor) thực nhận:</span>
-              <span className="font-bold text-success">{formatVnd(calculatedMentorAmount)}</span>
+              <span className="text-text-muted">
+                Cố vấn (Mentor): {formatVnd(calculatedMentorAmount)}{' '}
+                {calculatedMentorAmount > 0 ? <strong className="text-danger">(-3.000 đ phí nền tảng)</strong> : '(0 đ phí)'}
+              </span>
+              <span className="font-bold text-success">
+                Thực nhận: {formatVnd(calculatedMentorAmount > 0 ? Math.max(0, calculatedMentorAmount - 3000) : 0)}
+              </span>
             </div>
             <div className="flex justify-between gap-4 border-b border-border py-1 text-xs">
-              <span className="text-text-muted">Học viên (Student) hoàn trả:</span>
-              <span className="font-bold text-info">{formatVnd(calculatedStudentRefund)}</span>
+              <span className="text-text-muted">
+                Học viên (Student): {formatVnd(calculatedStudentRefund)}{' '}
+                {calculatedStudentRefund > 0 ? <strong className="text-danger">(-3.000 đ phí nền tảng)</strong> : '(0 đ phí)'}
+              </span>
+              <span className="font-bold text-info">
+                Thực hoàn: {formatVnd(calculatedStudentRefund > 0 ? Math.max(0, calculatedStudentRefund - 3000) : 0)}
+              </span>
             </div>
             <div className="flex justify-between text-xs pt-1 font-bold">
-              <span className="text-text">Tổng phân bổ / Quỹ khả dụng:</span>
+              <span className="text-text">Tổng phân bổ gốc / Quỹ khả dụng:</span>
               <span className={isFundBalanced ? 'text-success' : 'text-danger'}>
                 {formatVnd(totalAllocated)} / {formatVnd(availableFund)}
               </span>

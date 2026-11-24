@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
+  FileText,
 } from 'lucide-react'
 import { Container, Button, EmptyState } from '@/components/ui'
 import {
@@ -20,6 +21,8 @@ import {
   MentoringWorkLogList,
   MentoringWorkLogModal,
   MentoringTaskHistoryTimeline,
+  MentoringTaskReportModal,
+  MentoringTaskReviewModal,
   useTaskDetail,
   type MentoringWorkLog,
 } from '@/features/mentorship'
@@ -28,13 +31,16 @@ import {
  * Trang chi tiết toàn diện Mentoring Task (UC106) & Quản lý Work Log (UC107).
  */
 function MentoringTaskDetailContent() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isEn = i18n.language?.startsWith('en')
   const { id } = useParams<{ id: string }>()
   const taskId = id ? parseInt(id, 10) : undefined
   const navigate = useNavigate()
 
   const [isWorkLogModalOpen, setIsWorkLogModalOpen] = useState(false)
   const [selectedEditingLog, setSelectedEditingLog] = useState<MentoringWorkLog | null>(null)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [isReviewCompletionOpen, setIsReviewCompletionOpen] = useState(false)
 
   const { data: taskDetail, isLoading, isError, error, refetch, isFetching } = useTaskDetail(taskId)
 
@@ -131,7 +137,7 @@ function MentoringTaskDetailContent() {
           <ArrowLeft className="h-4 w-4" />
           {t('mentoring.myTasksNav')}
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -142,6 +148,25 @@ function MentoringTaskDetailContent() {
           >
             {t('mentoring.updateBtn')}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsReportModalOpen(true)}
+            leftIcon={<FileText className="h-3.5 w-3.5" />}
+            className="h-9 rounded-xl text-xs"
+          >
+            {isEn ? 'Report & Invoices' : 'Báo cáo & Hóa đơn'}
+          </Button>
+          {permissions.canConfirmCompletion && detail.latestCompletion && (
+            <Button
+              size="sm"
+              onClick={() => setIsReviewCompletionOpen(true)}
+              leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
+              className="h-9 rounded-xl text-xs bg-primary-solid text-on-primary"
+            >
+              {isEn ? 'Rate & Accept' : 'Đánh giá & Nghiệm thu'}
+            </Button>
+          )}
           {conversationId && (
             <Button
               size="sm"
@@ -192,7 +217,7 @@ function MentoringTaskDetailContent() {
       {/* Main 2-Column Content Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Cột trái: thông tin công việc, Work Log, lịch sử */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-6 lg:col-span-2 min-w-0">
           {/* Section 1: Task Overview */}
           <MentoringTaskOverviewCard overview={overview} />
 
@@ -212,7 +237,7 @@ function MentoringTaskDetailContent() {
         </div>
 
         {/* Cột phải: người tham gia, thỏa thuận, thanh toán */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Participants */}
           {(student || mentor) && (
             <MentoringTaskParticipantsCard student={student} mentor={mentor} />
@@ -222,7 +247,15 @@ function MentoringTaskDetailContent() {
           {deal && <MentoringTaskDealSection deal={deal} conversationId={conversationId} />}
 
           {/* Payment Summary */}
-          {payment && <MentoringTaskPaymentCard payment={payment} />}
+          {payment && (
+            <MentoringTaskPaymentCard
+              payment={payment}
+              taskId={overview.id}
+              taskTitle={overview.taskTitle}
+              studentName={student?.fullName}
+              studentEmail={student?.email}
+            />
+          )}
         </div>
       </div>
 
@@ -236,6 +269,28 @@ function MentoringTaskDetailContent() {
           refetch()
         }}
       />
+
+      {/* Modal Báo cáo kết quả & Hóa đơn đối soát 2 bên */}
+      <MentoringTaskReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        taskId={overview.id}
+        isStudent={permissions.isStudent}
+        isMentor={permissions.isMentor}
+      />
+
+      {/* Modal Đánh giá Cố vấn & Xác nhận nghiệm thu */}
+      {detail.latestCompletion && (
+        <MentoringTaskReviewModal
+          isOpen={isReviewCompletionOpen}
+          onClose={() => setIsReviewCompletionOpen(false)}
+          taskId={overview.id}
+          completion={detail.latestCompletion}
+          onSuccess={() => {
+            refetch()
+          }}
+        />
+      )}
     </div>
   )
 }

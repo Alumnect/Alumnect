@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native'
+import React, { useState } from 'react'
+import { Platform, Pressable, RefreshControl, Share, StyleSheet, TextInput, View } from 'react-native'
+import * as Clipboard from 'expo-clipboard'
 import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -15,6 +16,7 @@ import { formatVnd } from '@/api/mentoring'
 import { statusTone } from '@/constants/status'
 import { useMentoringTheme } from '@/theme/mentoringTheme'
 import { errMsg, toast } from '@/lib/toast'
+import { shareOrDownloadInvoicePdf } from '@/lib/invoicePdf'
 
 /** Trạng thái hoàn tiền / giải ngân từ BE (MentoringTaskServiceImpl) → tiếng Việt + tông màu. */
 const MONEY_STATUS: Record<string, [string, Tone]> = {
@@ -100,7 +102,7 @@ const QUICK_REASONS = [
 /** UC104: báo cáo nhiệm vụ & dòng tiền (Meetup Ledger Style, toàn bộ tiếng Việt). */
 export default function TaskReportScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, party } = useLocalSearchParams<{ id: string; party?: string }>()
   const queryClient = useQueryClient()
   const q = useQuery({ queryKey: ['mentoring-task-report', id], queryFn: () => taskApi.report(Number(id)) })
   const qSnap = useQuery({ queryKey: ['mentoring-task-snapshot', id], queryFn: () => taskApi.settlementSnapshot(Number(id)), enabled: !!id })
@@ -117,6 +119,7 @@ export default function TaskReportScreen() {
   const [pingOpen, setPingOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [selectedQuick, setSelectedQuick] = useState<string | null>(null)
+  const [previewParty, setPreviewParty] = useState<'student' | 'mentor' | null>(null)
 
   const pingMutation = useMutation({
     mutationFn: ({ reason: text, issueType }: { reason: string; issueType?: string }) =>
@@ -179,14 +182,186 @@ export default function TaskReportScreen() {
     resolvedTicket?.decision === 'PARTIAL_SPLIT' ||
     r.resolutionDecision === 'PARTIAL_SPLIT'
 
-  // Số tiền phân chia: ưu tiên từ r (nếu backend trả > 0), fallback sang snapshot và ticket
-  const mentorSplit = (r.mentorEarnedAmount && r.mentorEarnedAmount > 0)
+  // Số tiền phân chia gốc & sau khi khấu trừ -3.000 ₫ phí nền tảng
+  const mentorGross = (r.mentorEarnedAmount && r.mentorEarnedAmount > 0)
     ? r.mentorEarnedAmount
     : (resolvedTicket?.mentorAmount ?? snap?.mentorAmount ?? 0)
+  const mentorFee = r.mentorPlatformFee != null
+    ? r.mentorPlatformFee
+    : (mentorGross > 0 ? Math.min(3000, mentorGross) : 0)
+  const mentorNet = Math.max(0, mentorGross - mentorFee)
 
-  const studentSplit = (r.studentRefundAmount && r.studentRefundAmount > 0)
-    ? r.studentRefundAmount
-    : (resolvedTicket?.studentRefund ?? snap?.studentRefund ?? 0)
+  const studentGross = (r.studentGrossRefundAmount != null && r.studentGrossRefundAmount > 0)
+    ? r.studentGrossRefundAmount
+    : (resolvedTicket?.studentRefund ?? snap?.studentRefund ?? r.studentRefundAmount ?? 0)
+  const studentFee = r.studentPlatformFee != null
+    ? r.studentPlatformFee
+    : (studentGross > 0 ? Math.min(3000, studentGross) : 0)
+  const studentNet = Math.max(0, studentGross - studentFee)
+
+  const mentorSplit = mentorNet
+  const studentSplit = studentNet
+  const invoiceCode = r.invoiceCode || `INV-TASK-${id}`
+
+  const buildPartyInvoiceText = (party: 'student' | 'mentor') => {
+    const issuedAt = new Date(r.invoiceIssuedAt || Date.now()).toLocaleString('vi-VN')
+    const partyCode = `${invoiceCode}-${party === 'student' ? 'HV' : 'CV'}`
+    if (party === 'student') {
+      return [
+        '================================================',
+        '       AlumNect - HÓA ĐƠN PHÍA HỌC VIÊN         ',
+        '================================================',
+        `Mã hóa đơn : ${partyCode}`,
+        `Nhiệm vụ   : #${id} - ${title}`,
+        `Ngày xuất  : ${issuedAt}`,
+        `Trạng thái : ${TASK_STATUS_LABEL[r.taskStatus] ?? r.taskStatus}`,
+        '------------------------------------------------',
+        `• Giá thỏa thuận gốc        : ${formatVnd(r.originalPrice)}`,
+        `• Điều chỉnh bổ sung        : +${formatVnd(Math.max(0, delta))}`,
+        `• Phí nền tảng khi thanh toán: ${formatVnd(0)}`,
+        `• Tổng tiền đã thanh toán   : ${formatVnd(r.studentTotalPaid)}`,
+        ...(studentGross > 0
+          ? [
+              '------------------------------------------------',
+              `• Khoản hoàn phân bổ gốc    : ${formatVnd(studentGross)}`,
+              `• Phí nền tảng              : -${formatVnd(studentFee)}`,
+              `• SỐ TIỀN HOÀN THỰC NHẬN    : ${formatVnd(studentNet)}`,
+            ]
+          : []),
+        '================================================',
+      ].join('\n')
+    }
+    return [
+      '================================================',
+      '        AlumNect - HÓA ĐƠN PHÍA CỐ VẤN          ',
+      '================================================',
+      `Mã hóa đơn : ${partyCode}`,
+      `Nhiệm vụ   : #${id} - ${title}`,
+      `Ngày xuất  : ${issuedAt}`,
+      `Trạng thái : ${TASK_STATUS_LABEL[r.taskStatus] ?? r.taskStatus}`,
+      '------------------------------------------------',
+      `• Thù lao công việc gốc     : ${formatVnd(mentorGross)}`,
+      `• Phí nền tảng              : ${mentorFee > 0 ? '-' + formatVnd(mentorFee) : formatVnd(0)}`,
+      `• THÙ LAO THỰC NHẬN         : ${formatVnd(mentorNet)}`,
+      '================================================',
+    ].join('\n')
+  }
+
+  const buildPartyInvoiceHtml = (party: 'student' | 'mentor') => {
+    const issuedAt = new Date(r.invoiceIssuedAt || Date.now()).toLocaleString('vi-VN')
+    const partyCode = `${invoiceCode}-${party === 'student' ? 'HV' : 'CV'}`
+    const partyTitle = party === 'student' ? 'HÓA ĐƠN PHÍA HỌC VIÊN' : 'HÓA ĐƠN PHÍA CỐ VẤN'
+    const statusLabel = TASK_STATUS_LABEL[r.taskStatus] ?? r.taskStatus
+
+    const bodyRows = party === 'student'
+      ? `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+          <span>Giá thỏa thuận gốc:</span>
+          <strong>${formatVnd(r.originalPrice)}</strong>
+        </div>
+        ${delta > 0 ? `
+          <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px; color:#d97706;">
+            <span>Bổ sung điều chỉnh:</span>
+            <strong>+${formatVnd(delta)}</strong>
+          </div>
+        ` : ''}
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+          <span>Phí nền tảng khi thanh toán:</span>
+          <strong style="color:#16a34a;">${formatVnd(0)}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0 6px; font-size:15px; font-weight:bold; border-top:1px dashed #cbd5e1; color:#0284c7;">
+          <span>Tổng tiền đã thanh toán:</span>
+          <span>${formatVnd(r.studentTotalPaid)}</span>
+        </div>
+        ${studentGross > 0 ? `
+          <div style="margin-top:12px; padding-top:10px; border-top:1px solid #e2e8f0;">
+            <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+              <span>Khoản hoàn phân bổ gốc:</span>
+              <strong>${formatVnd(studentGross)}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px; color:#dc2626; font-weight:bold;">
+              <span>Phí nền tảng:</span>
+              <span>-${formatVnd(studentFee)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px 0 6px; font-size:16px; font-weight:bold; border-top:1px dashed #cbd5e1; color:#0284c7;">
+              <span>SỐ TIỀN HOÀN THỰC NHẬN:</span>
+              <span>${formatVnd(studentNet)}</span>
+            </div>
+          </div>
+        ` : ''}
+      `
+      : `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+          <span>Thù lao công việc gốc:</span>
+          <strong>${formatVnd(mentorGross)}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px; color:#dc2626; font-weight:bold;">
+          <span>Phí nền tảng:</span>
+          <span>${mentorFee > 0 ? '-' + formatVnd(mentorFee) : formatVnd(0)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0 6px; font-size:16px; font-weight:bold; border-top:1px dashed #cbd5e1; color:#16a34a;">
+          <span>THÙ LAO THỰC NHẬN:</span>
+          <span>${formatVnd(mentorNet)}</span>
+        </div>
+      `
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>${partyTitle} - ${partyCode}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #ffffff; color: #0f172a; margin: 0; padding: 24px; }
+          .invoice { max-width: 640px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; background: #ffffff; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f27024; padding-bottom: 16px; margin-bottom: 20px; }
+          .logo { font-size: 32px; font-weight: bold; line-height: 1; }
+          .sub { font-size: 13px; font-weight: bold; color: #475569; margin-top: 6px; }
+          .meta { text-align: right; font-size: 13px; color: #334155; line-height: 1.5; }
+          .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-top: 16px; }
+          .footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="invoice">
+          <div class="header">
+            <div>
+              <div class="logo"><span style="color:#0a58ca;">Alum</span><span style="color:#c84b11;">Nect</span></div>
+              <div class="sub">${partyTitle}</div>
+            </div>
+            <div class="meta">
+              <div>Mã HĐ: <strong>${partyCode}</strong></div>
+              <div>Nhiệm vụ: <strong>#${id}</strong></div>
+              <div>Ngày xuất: <strong>${issuedAt}</strong></div>
+              <div>Trạng thái: <strong>${statusLabel}</strong></div>
+            </div>
+          </div>
+          <div style="font-size: 14px; margin-bottom: 12px;"><strong>Nhiệm vụ:</strong> ${title}</div>
+          <div class="card">
+            ${bodyRows}
+          </div>
+          <div class="footer">
+            Chứng từ đối soát điện tử được trích xuất tự động từ hệ thống sổ giao dịch AlumNect.
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  }
+
+  const handleDownloadPartyInvoice = async (party: 'student' | 'mentor') => {
+    const partyCode = `${invoiceCode}-${party === 'student' ? 'HV' : 'CV'}`
+    const partyLabel = party === 'student' ? 'Hóa đơn Phía Học viên' : 'Hóa đơn Phía Cố vấn'
+    const fileName = `${party === 'student' ? 'Hoa-don-Phia-Hoc-vien' : 'Hoa-don-Phia-Co-van'}-Task-${id}.pdf`
+    try {
+      const html = buildPartyInvoiceHtml(party)
+      toast.info('Đang khởi tạo hóa đơn PDF...')
+      await shareOrDownloadInvoicePdf(html, fileName)
+      toast.success(`Đã xuất ${partyLabel} (${partyCode}) thành công!`)
+    } catch {
+      toast.error(`Không thể xuất ${partyLabel} PDF.`)
+    }
+  }
 
   // Tiêu đề & nội dung quyết định giải quyết
   const resolutionTitle =
@@ -251,7 +426,10 @@ export default function TaskReportScreen() {
 
   return (
     <Screen bg={colors.bg}>
-      <Header title="Báo cáo & Dòng tiền" subtitle={`Nhiệm vụ #${id}`} />
+      <Header
+        title={party === 'mentor' ? 'Hóa đơn Phía Cố vấn' : party === 'student' ? 'Hóa đơn Phía Học viên' : 'Báo cáo & Dòng tiền'}
+        subtitle={`Nhiệm vụ #${id}`}
+      />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => { void q.refetch() }} tintColor={viridian} colors={[viridian]} />}
@@ -358,41 +536,81 @@ export default function TaskReportScreen() {
           </Card>
         </Enter>
 
-        {/* Phía Học viên */}
-        <Enter delay={180}>
-          <Card title="Phía Học viên" brand="people">
-            <Row label="Đã thanh toán" hint="Nền tảng tạm giữ cho đến khi nghiệm thu" value={formatVnd(r.studentTotalPaid)} />
-            <Row
-              label="Được hoàn lại"
-              value={formatVnd(studentSplit)}
-              color={studentSplit > 0 ? '#0284C7' : undefined}
-            />
-            <Row
-              label="Trạng thái hoàn tiền"
-              hint={studentStatusHint}
-              tag={moneyStatus(effectiveStudentStatus)}
-              last
-            />
-          </Card>
-        </Enter>
+        {/* Hóa đơn Phía Học viên */}
+        {(!party || party === 'student') && (
+          <Enter delay={180}>
+            <Card title="Hóa đơn Phía Học viên" brand="people">
+              <Row label="Phí nền tảng khi thanh toán" value={formatVnd(0)} color="#16A34A" />
+              <Row label="Tổng tiền đã thanh toán" hint="Tạm giữ nguyên vẹn trên PayOS" value={formatVnd(r.studentTotalPaid)} strong />
+              {studentGross > 0 ? (
+                <>
+                  <Row label="Khoản hoàn phân bổ gốc" value={formatVnd(studentGross)} />
+                  <Row
+                    label="Phí nền tảng"
+                    value={`-${formatVnd(studentFee)}`}
+                    color="#DC2626"
+                  />
+                  <Row
+                    label="Số tiền hoàn thực nhận"
+                    value={formatVnd(studentNet)}
+                    strong
+                    color="#0284C7"
+                  />
+                </>
+              ) : null}
+              <Row
+                label={studentGross > 0 ? 'Trạng thái hoàn tiền' : 'Trạng thái quỹ'}
+                hint={studentStatusHint}
+                tag={moneyStatus(effectiveStudentStatus)}
+                last
+              />
+              <View style={{ marginTop: 12 }}>
+                <Button
+                  title="Xem & Tải hóa đơn Phía Học viên"
+                  size="sm"
+                  textColor="#FFFFFF"
+                  style={{ backgroundColor: '#0284C7', borderColor: '#0284C7' }}
+                  onPress={() => setPreviewParty('student')}
+                />
+              </View>
+            </Card>
+          </Enter>
+        )}
 
-        {/* Phía Mentor */}
-        <Enter delay={240}>
-          <Card title="Phía Mentor" brand="suitcase">
-            <Row
-              label="Thù lao thực nhận"
-              value={formatVnd(mentorSplit)}
-              strong
-              color={viridian}
-            />
-            <Row
-              label="Trạng thái chi trả"
-              hint={mentorStatusHint}
-              tag={moneyStatus(effectiveMentorStatus)}
-              last
-            />
-          </Card>
-        </Enter>
+        {/* Hóa đơn Phía Cố vấn */}
+        {(!party || party === 'mentor') && (
+          <Enter delay={240}>
+            <Card title="Hóa đơn Phía Cố vấn" brand="suitcase">
+              <Row label="Thù lao công việc gốc" value={formatVnd(mentorGross)} />
+              <Row
+                label="Phí nền tảng"
+                value={mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)}
+                color={mentorFee > 0 ? '#DC2626' : colors.textSecondary}
+              />
+              <Row
+                label="Thù lao thực nhận"
+                value={formatVnd(mentorNet)}
+                strong
+                color={viridian}
+              />
+              <Row
+                label="Trạng thái chi trả"
+                hint={mentorStatusHint}
+                tag={moneyStatus(effectiveMentorStatus)}
+                last
+              />
+              <View style={{ marginTop: 12 }}>
+                <Button
+                  title="Xem & Tải hóa đơn Phía Cố vấn"
+                  size="sm"
+                  textColor="#FFFFFF"
+                  style={{ backgroundColor: viridian, borderColor: viridian }}
+                  onPress={() => setPreviewParty('mentor')}
+                />
+              </View>
+            </Card>
+          </Enter>
+        )}
 
         {/* Nút Ping lại Admin khi có sự cố */}
         {r.canPingAdminFinance !== false ? (
@@ -409,6 +627,79 @@ export default function TaskReportScreen() {
           </Enter>
         ) : null}
       </ScrollView>
+
+      {/* Sheet Hóa đơn điện tử tách riêng kèm Logo AlumNect trên Mobile */}
+      <SheetModal visible={previewParty !== null} onClose={() => setPreviewParty(null)}>
+        {previewParty ? (
+          <View style={{ padding: 20 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 2, borderBottomColor: '#F27024', paddingBottom: 14, marginBottom: 16 }}>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                  <Txt size={28} weight="800" style={{ color: '#0A58CA', fontStyle: 'italic' }}>Alum</Txt>
+                  <Txt size={28} weight="800" style={{ color: '#C84B11', fontStyle: 'italic' }}>Nect</Txt>
+                </View>
+                <Txt size={11.5} weight="800" style={{ color: colors.textSecondary, marginTop: 4, letterSpacing: 0.4 }}>
+                  {previewParty === 'student' ? 'HÓA ĐƠN PHÍA HỌC VIÊN' : 'HÓA ĐƠN PHÍA CỐ VẤN'}
+                </Txt>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Txt size={11.5} style={{ color: colors.textSecondary }}>
+                  Mã: <Txt size={11.5} weight="800" style={{ color: colors.text }}>{`${invoiceCode}-${previewParty === 'student' ? 'HV' : 'CV'}`}</Txt>
+                </Txt>
+                <Txt size={11.5} style={{ color: colors.textSecondary, marginTop: 2 }}>
+                  Nhiệm vụ: <Txt size={11.5} weight="800" style={{ color: colors.text }}>{`#${id}`}</Txt>
+                </Txt>
+              </View>
+            </View>
+
+            <Txt size={13} style={{ color: colors.text, marginBottom: 12 }} numberOfLines={2}>
+              <Txt size={13} weight="800">Tên nhiệm vụ: </Txt>{title}
+            </Txt>
+
+            <View style={{ backgroundColor: isDark ? colors.surface : '#F8FAFC', borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}>
+              {previewParty === 'student' ? (
+                <>
+                  <Row label="Giá thỏa thuận gốc" value={formatVnd(r.originalPrice)} />
+                  <Row label="Điều chỉnh bổ sung" value={`+${formatVnd(Math.max(0, delta))}`} />
+                  <Row label="Phí nền tảng khi thanh toán" value={formatVnd(0)} color="#16A34A" />
+                  <Row label="Tổng tiền đã thanh toán (Giữ trên PayOS)" value={formatVnd(r.studentTotalPaid)} strong color="#0284C7" last={studentGross <= 0} />
+                  {studentGross > 0 ? (
+                    <>
+                      <Row label="Khoản hoàn trả phân bổ gốc" value={formatVnd(studentGross)} />
+                      <Row label="Phí nền tảng" value={`-${formatVnd(studentFee)}`} color="#DC2626" />
+                      <Row label="Số tiền hoàn thực nhận" value={formatVnd(studentNet)} strong color="#0284C7" last />
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <Row label="Thù lao công việc gốc" value={formatVnd(mentorGross)} />
+                  <Row label="Phí nền tảng" value={mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)} color={mentorFee > 0 ? '#DC2626' : colors.textSecondary} />
+                  <Row label="Thù lao thực nhận" value={formatVnd(mentorNet)} strong color={viridian} />
+                  <Row label="Trạng thái chi trả" tag={moneyStatus(effectiveMentorStatus)} last />
+                </>
+              )}
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+              <Button
+                title="Đóng"
+                variant="outline"
+                size="sm"
+                style={{ flex: 1 }}
+                onPress={() => setPreviewParty(null)}
+              />
+              <Button
+                title="Tải hóa đơn về máy"
+                size="sm"
+                textColor="#FFFFFF"
+                style={{ flex: 2, backgroundColor: previewParty === 'student' ? '#0284C7' : viridian, borderColor: previewParty === 'student' ? '#0284C7' : viridian }}
+                onPress={() => { void handleDownloadPartyInvoice(previewParty) }}
+              />
+            </View>
+          </View>
+        ) : null}
+      </SheetModal>
 
       {/* Modal Ping lại Admin về sự cố dòng tiền */}
       <SheetModal visible={pingOpen} onClose={() => setPingOpen(false)}>
