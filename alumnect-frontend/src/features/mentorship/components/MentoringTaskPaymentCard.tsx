@@ -144,7 +144,7 @@ export function MentoringTaskPaymentCard({
           className="shrink-0 text-xs font-bold gap-1.5 h-8 px-2.5 bg-surface"
         >
           <Download className="h-3.5 w-3.5" />
-          <span>{isEn ? 'Payment Invoice' : 'Tải hóa đơn thanh toán'}</span>
+          <span>{isEn ? 'Download Invoice' : 'Tải hóa đơn'}</span>
         </Button>
       </div>
     </div>

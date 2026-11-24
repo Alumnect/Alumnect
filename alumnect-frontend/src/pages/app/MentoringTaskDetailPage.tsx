@@ -217,7 +217,7 @@ function MentoringTaskDetailContent() {
       {/* Main 2-Column Content Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Cột trái: thông tin công việc, Work Log, lịch sử */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-6 lg:col-span-2 min-w-0">
           {/* Section 1: Task Overview */}
           <MentoringTaskOverviewCard overview={overview} />
 
@@ -237,7 +237,7 @@ function MentoringTaskDetailContent() {
         </div>
 
         {/* Cột phải: người tham gia, thỏa thuận, thanh toán */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Participants */}
           {(student || mentor) && (
             <MentoringTaskParticipantsCard student={student} mentor={mentor} />
