@@ -6,14 +6,19 @@ import {
   Loader2,
   ShieldAlert,
   Send,
-  Plus,
   Trash2,
-  Link as LinkIcon,
+  ImagePlus,
+  FileText,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button, SelectDropdown, DialogFrame } from '@/components/ui'
 import { useCreateDisputeTicket } from '../hooks/useMentoringTickets'
+import { mentoringTaskApi } from '../api/mentoringTaskApi'
 import type { TicketEvidencePayload } from '../model/mentoringTaskTypes'
+
+/** Bằng chứng tải lên: ảnh hoặc PDF, tối đa 10 MB mỗi tệp */
+const EVIDENCE_ACCEPT = 'image/*,application/pdf'
+const EVIDENCE_MAX_SIZE = 10 * 1024 * 1024
 
 interface MentoringCreateDisputeModalProps {
   isOpen: boolean
@@ -70,7 +75,7 @@ export function MentoringCreateDisputeModal({
   const [desiredSolution, setDesiredSolution] = useState('')
   const [evidences, setEvidences] = useState<TicketEvidencePayload[]>([])
   const [newEvidenceTitle, setNewEvidenceTitle] = useState('')
-  const [newEvidenceUrl, setNewEvidenceUrl] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -81,6 +86,7 @@ export function MentoringCreateDisputeModal({
       setDescription('')
       setDesiredSolution('')
       setEvidences([])
+      setNewEvidenceTitle('')
       setErrorMsg(null)
     }
   }, [isOpen, isRequesterRole])
@@ -89,17 +95,46 @@ export function MentoringCreateDisputeModal({
 
   if (!isOpen) return null
 
-  const handleAddEvidence = () => {
-    if (!newEvidenceUrl.trim()) return
-    setEvidences([
-      ...evidences,
-      {
-        title: newEvidenceTitle.trim() || t('mentoring.defaultEvidenceTitle'),
-        fileUrl: newEvidenceUrl.trim(),
-      },
-    ])
-    setNewEvidenceTitle('')
-    setNewEvidenceUrl('')
+  // Chọn ảnh/PDF từ máy → tải lên kho tệp → lưu đường dẫn trả về làm bằng chứng
+  const handleUploadEvidence = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (files.length === 0) return
+    setErrorMsg(null)
+
+    const tooBig = files.find((f) => f.size > EVIDENCE_MAX_SIZE)
+    if (tooBig) {
+      setErrorMsg(t('mentoring.evidenceFileTooLarge', { name: tooBig.name }))
+      return
+    }
+    const invalid = files.find((f) => !f.type.startsWith('image/') && f.type !== 'application/pdf')
+    if (invalid) {
+      setErrorMsg(t('mentoring.evidenceFileInvalidType', { name: invalid.name }))
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      const customTitle = newEvidenceTitle.trim()
+      const uploaded: TicketEvidencePayload[] = []
+      for (const file of files) {
+        const res = await mentoringTaskApi.uploadWorkLogAttachment(file, 'mentoring_disputes')
+        uploaded.push({
+          title: customTitle || file.name,
+          fileUrl: res.fileUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type || undefined,
+        })
+      }
+      setEvidences((prev) => [...prev, ...uploaded])
+      setNewEvidenceTitle('')
+    } catch (err) {
+      const e2 = err as { response?: { data?: { message?: string } }; message?: string }
+      setErrorMsg(e2?.response?.data?.message || e2?.message || t('mentoring.uploadFileError'))
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const handleRemoveEvidence = (index: number) => {
@@ -301,10 +336,21 @@ export function MentoringCreateDisputeModal({
                       key={idx}
                       className="p-2 rounded-lg bg-surface border border-border flex items-center justify-between text-xs gap-2"
                     >
-                      <div className="flex items-center gap-2 truncate">
-                        <LinkIcon className="w-3.5 h-3.5 text-info shrink-0" />
+                      <a
+                        href={ev.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 min-w-0 hover:underline"
+                      >
+                        {ev.fileType?.startsWith('image/') ? (
+                          <img src={ev.fileUrl} alt={ev.title} className="w-10 h-10 rounded-md object-cover border border-border shrink-0" />
+                        ) : (
+                          <span className="w-10 h-10 rounded-md bg-surface-2 border border-border flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4 text-info" />
+                          </span>
+                        )}
                         <span className="font-medium text-text truncate">{ev.title}</span>
-                      </div>
+                      </a>
                       <button aria-label={t('common.delete')}
                         type="button"
                         onClick={() => handleRemoveEvidence(idx)}
@@ -317,33 +363,40 @@ export function MentoringCreateDisputeModal({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  value={newEvidenceTitle}
-                  onChange={(e) => setNewEvidenceTitle(e.target.value)}
-                  placeholder={t('mentoring.evidenceTitlePlaceholder')}
-                  className="px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-text"
-                />
-                <input
-                  type="url"
-                  value={newEvidenceUrl}
-                  onChange={(e) => setNewEvidenceUrl(e.target.value)}
-                  placeholder={t('mentoring.evidenceUrlPlaceholder')}
-                  className="px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-text"
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddEvidence}
-                disabled={!newEvidenceUrl.trim()}
-                className="h-7 text-xs w-full"
+              <input
+                type="text"
+                value={newEvidenceTitle}
+                onChange={(e) => setNewEvidenceTitle(e.target.value)}
+                maxLength={255}
+                placeholder={t('mentoring.evidenceTitlePlaceholder')}
+                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-surface text-text"
+              />
+              <label
+                className={`flex items-center justify-center gap-1.5 w-full py-2.5 rounded-lg border border-dashed border-border-strong bg-surface text-xs font-medium text-text-muted transition ${
+                  isUploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:border-primary hover:text-primary'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5 mr-1" />
-                {t('mentoring.addEvidenceToList')}
-              </Button>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {t('mentoring.uploadingEvidence')}
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="w-3.5 h-3.5" />
+                    {t('mentoring.uploadEvidenceBtn')}
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept={EVIDENCE_ACCEPT}
+                  multiple
+                  disabled={isUploading}
+                  onChange={handleUploadEvidence}
+                  className="sr-only"
+                />
+              </label>
+              <p className="text-xs text-text-subtle">{t('mentoring.uploadEvidenceHint')}</p>
             </div>
 
             {/* Warning Alert */}
@@ -369,7 +422,7 @@ export function MentoringCreateDisputeModal({
               </Button>
               <Button
                 type="submit"
-                disabled={createDisputeMutation.isPending}
+                disabled={createDisputeMutation.isPending || isUploading}
                 className="bg-danger hover:opacity-90 text-text-inverse font-semibold"
               >
                 {createDisputeMutation.isPending ? (

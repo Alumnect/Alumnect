@@ -17,7 +17,6 @@ const PROVIDER_STATUS_KEY_MAP: Record<string, string> = {
   RECEIVED: 'mentoring.provStatusReceived',
   PROCESSING: 'mentoring.provStatusProcessing',
   REJECTED: 'mentoring.provStatusRejected',
-  BELOW_MINIMUM: 'mentoring.provStatusBelowMinimum',
   INVALID_REQUEST: 'mentoring.provStatusInvalidRequest',
   MOCK_VOIDED: 'mentoring.provStatusMockVoided',
 }
@@ -49,7 +48,8 @@ function StatusCell({ item }: { item: MentoringWalletItem }) {
   return (
     <div className="space-y-1">
       {badge}
-      {item.status !== 'SUCCEEDED' && item.providerStatus && (
+      {/* Không hiện ghi chú "dưới mức chi tối thiểu" cho người dùng; Admin vẫn thấy trạng thái này ở trang quản trị */}
+      {item.status !== 'SUCCEEDED' && item.providerStatus && item.providerStatus !== 'BELOW_MINIMUM' && (
         <p className="max-w-[260px] text-xs text-text-subtle">
           {PROVIDER_STATUS_KEY_MAP[item.providerStatus] ? t(PROVIDER_STATUS_KEY_MAP[item.providerStatus]) : item.providerStatus}
         </p>

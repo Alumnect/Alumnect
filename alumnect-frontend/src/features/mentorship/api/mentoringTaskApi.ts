@@ -203,9 +203,9 @@ export const mentoringTaskApi = {
   },
 
   /**
-   * Upload tệp minh chứng cho Work Log qua Presigned URL lên Cloudflare R2 / S3.
+   * Upload tệp minh chứng (Work Log, bằng chứng khiếu nại) qua Presigned URL lên Cloudflare R2 / S3.
    */
-  uploadWorkLogAttachment: async (file: File): Promise<WorkLogAttachmentPayload> => {
+  uploadWorkLogAttachment: async (file: File, folder = 'mentoring_work_logs'): Promise<WorkLogAttachmentPayload> => {
     let mediaType: AttachmentMediaType = 'FILE'
     if (file.type.startsWith('image/')) {
       mediaType = 'IMAGE'
@@ -217,7 +217,7 @@ export const mentoringTaskApi = {
       params: {
         fileName: file.name,
         contentType: file.type || 'application/octet-stream',
-        folder: 'mentoring_work_logs',
+        folder,
       },
     })
 

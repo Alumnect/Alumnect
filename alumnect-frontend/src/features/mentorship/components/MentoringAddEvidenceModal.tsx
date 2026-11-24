@@ -6,15 +6,28 @@ import {
   AlertCircle,
   Loader2,
   Send,
-  Link as LinkIcon,
   ExternalLink,
   ShieldAlert,
   Paperclip,
   CheckCircle2,
+  ImagePlus,
+  Trash2,
 } from 'lucide-react'
 import { Button, DialogFrame } from '@/components/ui'
 import { useTicketEvidences, useAddTicketEvidence } from '../hooks/useMentoringTickets'
+import { mentoringTaskApi } from '../api/mentoringTaskApi'
 import type { MentoringDisputeTicket } from '../model/mentoringTaskTypes'
+
+/** Bằng chứng tải lên: ảnh hoặc PDF, tối đa 10 MB */
+const EVIDENCE_ACCEPT = 'image/*,application/pdf'
+const EVIDENCE_MAX_SIZE = 10 * 1024 * 1024
+
+interface UploadedEvidenceFile {
+  fileUrl: string
+  fileName: string
+  fileSize: number
+  fileType?: string
+}
 import { MENTORING_TICKET_STATUS_LABELS } from '../model/mentoringFlowLabels'
 
 /** Mã lý do khiếu nại (do form tạo ticket lưu) → khóa dịch. Lý do tự nhập (OTHER) giữ nguyên nội dung. */
@@ -52,8 +65,8 @@ export function MentoringAddEvidenceModal({
   const disputeReasonLabel = (code: string) => (DISPUTE_REASON_KEYS[code] ? t(DISPUTE_REASON_KEYS[code]) : code)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [fileUrl, setFileUrl] = useState('')
-  const [fileName, setFileName] = useState('')
+  const [uploadedFile, setUploadedFile] = useState<UploadedEvidenceFile | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
@@ -79,15 +92,8 @@ export function MentoringAddEvidenceModal({
       return
     }
 
-    if (!fileUrl.trim()) {
-      setErrorMsg(t('mentoring.evidenceUrlRequired'))
-      return
-    }
-
-    try {
-      new URL(fileUrl.trim())
-    } catch {
-      setErrorMsg(t('mentoring.invalidFileUrl'))
+    if (!uploadedFile) {
+      setErrorMsg(t('mentoring.evidenceFileRequired'))
       return
     }
 
@@ -95,15 +101,16 @@ export function MentoringAddEvidenceModal({
       await addEvidenceMutation.mutateAsync({
         title: title.trim(),
         description: description.trim() || undefined,
-        fileUrl: fileUrl.trim(),
-        fileName: fileName.trim() || undefined,
+        fileUrl: uploadedFile.fileUrl,
+        fileName: uploadedFile.fileName,
+        fileSize: uploadedFile.fileSize,
+        fileType: uploadedFile.fileType,
       })
 
       setSuccessMsg(t('mentoring.evidenceSubmittedSuccess'))
       setTitle('')
       setDescription('')
-      setFileUrl('')
-      setFileName('')
+      setUploadedFile(null)
 
       if (onSuccess) {
         onSuccess()
@@ -111,6 +118,35 @@ export function MentoringAddEvidenceModal({
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || t('mentoring.cannotSubmitEvidence')
       setErrorMsg(msg)
+    }
+  }
+
+  // Chọn ảnh/PDF từ máy → tải lên kho tệp ngay, nộp bằng chứng dùng đường dẫn trả về
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setErrorMsg(null)
+    setSuccessMsg(null)
+
+    if (file.size > EVIDENCE_MAX_SIZE) {
+      setErrorMsg(t('mentoring.evidenceFileTooLarge', { name: file.name }))
+      return
+    }
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      setErrorMsg(t('mentoring.evidenceFileInvalidType', { name: file.name }))
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      const res = await mentoringTaskApi.uploadWorkLogAttachment(file, 'mentoring_disputes')
+      setUploadedFile({ fileUrl: res.fileUrl, fileName: file.name, fileSize: file.size, fileType: file.type || undefined })
+    } catch (err) {
+      const e2 = err as { response?: { data?: { message?: string } }; message?: string }
+      setErrorMsg(e2?.response?.data?.message || e2?.message || t('mentoring.uploadFileError'))
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -312,41 +348,69 @@ export function MentoringAddEvidenceModal({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-text-muted mb-1">
-                      {t('mentoring.fileUrlField')} <span className="text-danger">*</span>
-                    </label>
-                    <div className="relative">
-                      <LinkIcon className="w-3.5 h-3.5 text-text-subtle absolute left-2.5 top-2.5" />
-                      <input
-                        type="url"
-                        value={fileUrl}
-                        onChange={(e) => setFileUrl(e.target.value)}
-                        placeholder="https://..."
-                        className="w-full text-xs pl-8 pr-3 py-2 bg-surface border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 tabular-nums"
-                      />
+                <div>
+                  <label className="block text-xs font-medium text-text-muted mb-1">
+                    {t('mentoring.evidenceFileField')} <span className="text-danger">*</span>
+                  </label>
+                  {uploadedFile ? (
+                    <div className="p-2 rounded-lg bg-surface border border-border-strong flex items-center justify-between gap-2 text-xs">
+                      <a
+                        href={uploadedFile.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 min-w-0 hover:underline"
+                      >
+                        {uploadedFile.fileType?.startsWith('image/') ? (
+                          <img src={uploadedFile.fileUrl} alt={uploadedFile.fileName} className="w-10 h-10 rounded-md object-cover border border-border shrink-0" />
+                        ) : (
+                          <span className="w-10 h-10 rounded-md bg-surface-2 border border-border flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4 text-info" />
+                          </span>
+                        )}
+                        <span className="font-medium text-text truncate">{uploadedFile.fileName}</span>
+                      </a>
+                      <button
+                        type="button"
+                        aria-label={t('common.delete')}
+                        onClick={() => setUploadedFile(null)}
+                        className="text-text-subtle hover:text-danger p-1 rounded transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-text-muted mb-1">
-                      {t('mentoring.fileNameOptional')}
+                  ) : (
+                    <label
+                      className={`flex items-center justify-center gap-1.5 w-full py-2.5 rounded-lg border border-dashed border-border-strong bg-surface text-xs font-medium text-text-muted transition ${
+                        isUploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:border-primary hover:text-primary'
+                      }`}
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          {t('mentoring.uploadingEvidence')}
+                        </>
+                      ) : (
+                        <>
+                          <ImagePlus className="w-3.5 h-3.5" />
+                          {t('mentoring.uploadEvidenceBtn')}
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept={EVIDENCE_ACCEPT}
+                        disabled={isUploading}
+                        onChange={handleUploadFile}
+                        className="sr-only"
+                      />
                     </label>
-                    <input
-                      type="text"
-                      value={fileName}
-                      onChange={(e) => setFileName(e.target.value)}
-                      placeholder={t('mentoring.evidenceFileNamePlaceholder')}
-                      className="w-full text-xs px-3 py-2 bg-surface border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    />
-                  </div>
+                  )}
+                  <p className="mt-1 text-xs text-text-subtle">{t('mentoring.uploadEvidenceHintSingle')}</p>
                 </div>
 
                 <div className="flex justify-end pt-1">
                   <Button
                     type="submit"
-                    disabled={addEvidenceMutation.isPending}
+                    disabled={addEvidenceMutation.isPending || isUploading}
                     className="text-xs bg-primary-solid hover:bg-primary-hover text-on-primary font-medium px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-sm"
                   >
                     {addEvidenceMutation.isPending ? (
