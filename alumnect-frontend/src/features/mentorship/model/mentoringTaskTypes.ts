@@ -567,6 +567,8 @@ export interface SubmitTaskCompletionPayload {
 export interface RespondTaskCompletionPayload {
   accept: boolean
   feedbackNote?: string
+  rating?: number
+  reviewComment?: string
 }
 
 /**
@@ -767,14 +769,20 @@ export interface MentoringTaskReport {
   canPingAdminFinance?: boolean
   hasFailedLedger?: boolean
 
+  invoiceCode?: string | null
+  invoiceIssuedAt?: string | null
+
   originalPrice: number
   totalAgreedPrice: number
   studentTotalPaid: number
+  studentGrossRefundAmount?: number
+  studentPlatformFee?: number
   studentRefundAmount: number
   studentRefundStatus: 'NO_REFUND' | 'PENDING_REFUND' | 'PROCESSING' | 'REFUNDED' | 'FAILED' | 'ON_HOLD' | string
   studentRefundNote?: string | null
 
   mentorEarnedAmount: number
+  mentorPlatformFee?: number
   platformFee: number
   mentorNetPayout: number
   mentorPayoutStatus: 'PENDING_ESCROW' | 'PROCESSING' | 'PAID' | 'FAILED' | 'ON_HOLD' | 'CANCELLED' | string

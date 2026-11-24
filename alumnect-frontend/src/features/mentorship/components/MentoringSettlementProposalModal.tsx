@@ -152,6 +152,19 @@ export function MentoringSettlementProposalModal({
           </MentoringField>
         </div>
 
+        {/* Bảng tính phí nền tảng 3.000đ theo từng lệnh chi / hoàn thực tế */}
+        <div className="rounded-xl border border-border bg-surface-2/80 p-3 text-xs space-y-1.5">
+          <div className="font-bold text-text">Chi tiết khấu trừ phí nền tảng (-3.000đ / lệnh phát sinh):</div>
+          <div className="flex justify-between text-text-muted">
+            <span>• Cố vấn (Mentor): {formatVnd(mentorAmount)} {mentorAmount > 0 ? '(-3.000đ phí nền tảng)' : '(Không chi -> 0đ phí)'}</span>
+            <span className="font-bold text-success">Thực nhận: {formatVnd(mentorAmount > 0 ? Math.max(0, mentorAmount - 3000) : 0)}</span>
+          </div>
+          <div className="flex justify-between text-text-muted">
+            <span>• Học viên (Student): {formatVnd(studentRefund)} {studentRefund > 0 ? '(-3.000đ phí nền tảng)' : '(Không hoàn -> 0đ phí)'}</span>
+            <span className="font-bold text-info">Thực hoàn: {formatVnd(studentRefund > 0 ? Math.max(0, studentRefund - 3000) : 0)}</span>
+          </div>
+        </div>
+
         {blockedByRefundAccount && (
           <div className="rounded-xl border border-danger-border bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
             {t('mentoring.refundAccountRequiredNotice')}{' '}

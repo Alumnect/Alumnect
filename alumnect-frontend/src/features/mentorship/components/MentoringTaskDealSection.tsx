@@ -30,17 +30,17 @@ export function MentoringTaskDealSection({
   }
 
   return (
-    <div className="rounded-3xl border border-border bg-surface p-6 shadow-xs">
+    <div className="rounded-3xl border border-border bg-surface p-6 shadow-xs min-w-0 overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4 dark:border-white/[0.06]">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-solid">
             <Handshake className="h-5 w-5" />
           </div>
-          <div>
-            <h4 className="text-base font-bold text-text">
+          <div className="min-w-0">
+            <h4 className="text-base font-bold text-text truncate">
               {t('mentoring.originalDealTitle')}
             </h4>
-            <span className="text-xs tabular-nums font-bold text-text-subtle">
+            <span className="text-xs tabular-nums font-bold text-text-subtle truncate block">
               #DEAL-{deal.id} ({t('mentoring.version')} v{deal.version})
             </span>
           </div>
@@ -49,7 +49,7 @@ export function MentoringTaskDealSection({
         {conversationId && (
           <Link
             to={`/app/mentoring/chats/${conversationId}`}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-soft"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary-soft px-3.5 py-2 text-xs font-bold text-primary-solid transition-colors hover:bg-primary-soft"
           >
             <MessageSquare className="h-4 w-4" />
             <span>{t('mentoring.openMessage')}</span>
@@ -57,23 +57,23 @@ export function MentoringTaskDealSection({
         )}
       </div>
 
-      <div className="mt-5 space-y-4">
-        <div>
+      <div className="mt-5 space-y-4 min-w-0">
+        <div className="min-w-0">
           <span className="text-xs font-bold text-text-subtle">
             {t('mentoring.finalizedTaskScope')}
           </span>
-          <p className="mt-1 text-sm leading-relaxed text-text">
+          <p className="mt-1 text-sm leading-relaxed text-text whitespace-pre-wrap break-words break-all [overflow-wrap:anywhere]">
             {deal.taskScope}
           </p>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <span className="text-xs font-bold text-text-subtle">
             {t('mentoring.expectedOutputResult')}
           </span>
-          <div className="mt-1 flex items-start gap-2 rounded-2xl border border-border bg-cream-100/70 p-3.5 text-sm text-text-muted dark:bg-bg">
+          <div className="mt-1 flex items-start gap-2 rounded-2xl border border-border bg-cream-100/70 p-3.5 text-sm text-text-muted dark:bg-bg min-w-0">
             <Target className="h-4 w-4 shrink-0 text-primary-solid mt-0.5" />
-            <p className="leading-relaxed">{deal.expectedResult}</p>
+            <p className="leading-relaxed min-w-0 flex-1 whitespace-pre-wrap break-words break-all [overflow-wrap:anywhere]">{deal.expectedResult}</p>
           </div>
         </div>
 

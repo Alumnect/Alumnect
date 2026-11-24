@@ -603,12 +603,15 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
         }
 
         BigDecimal mentorEarnedAmount;
-        BigDecimal platformFee = BigDecimal.ZERO;
+        BigDecimal mentorPlatformFee = BigDecimal.ZERO;
         BigDecimal mentorNetPayout;
         String mentorPayoutStatus;
 
+        BigDecimal studentGrossRefundAmount = BigDecimal.ZERO;
+        BigDecimal studentPlatformFee = BigDecimal.ZERO;
         BigDecimal studentRefundAmount = BigDecimal.ZERO;
         String studentRefundStatus = "NO_REFUND";
+        BigDecimal platformFee = BigDecimal.ZERO;
 
         List<MentoringPaymentLedger> taskLedgers = ledgerRepository.findByTaskId(task.getId());
         MentoringPaymentLedger latestPayout = taskLedgers.stream()
@@ -670,80 +673,103 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
 
         if (isDisputed) {
             mentorEarnedAmount = latestTicket != null && latestTicket.getMentorAmount() != null ? latestTicket.getMentorAmount() : BigDecimal.ZERO;
-            mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
+            mentorPlatformFee = MentoringRules.calculateTransferFee(mentorEarnedAmount);
+            mentorNetPayout = MentoringRules.calculateNetTransfer(mentorEarnedAmount);
             mentorPayoutStatus = "ON_HOLD";
-            studentRefundAmount = latestTicket != null && latestTicket.getStudentRefund() != null ? latestTicket.getStudentRefund() : BigDecimal.ZERO;
+            studentGrossRefundAmount = latestTicket != null && latestTicket.getStudentRefund() != null ? latestTicket.getStudentRefund() : BigDecimal.ZERO;
+            studentPlatformFee = MentoringRules.calculateTransferFee(studentGrossRefundAmount);
+            studentRefundAmount = MentoringRules.calculateNetTransfer(studentGrossRefundAmount);
             studentRefundStatus = "ON_HOLD";
         } else if (task.getStatus() == MentoringTaskStatus.RESOLVED || (latestTicket != null && latestTicket.getStatus() == MentoringTicketStatus.RESOLVED) || anyResolvedTicket != null) {
-            BigDecimal pAmt = latestPayout != null ? latestPayout.getAmount() : null;
-            if (pAmt == null || pAmt.compareTo(BigDecimal.ZERO) == 0) {
-                if (latestTicket != null && latestTicket.getMentorAmount() != null && latestTicket.getMentorAmount().compareTo(BigDecimal.ZERO) > 0) {
-                    pAmt = latestTicket.getMentorAmount();
-                } else if (anyResolvedTicket != null && anyResolvedTicket.getMentorAmount() != null && anyResolvedTicket.getMentorAmount().compareTo(BigDecimal.ZERO) > 0) {
-                    pAmt = anyResolvedTicket.getMentorAmount();
-                } else if (acceptedProposal != null && acceptedProposal.getMentorAmount() != null) {
-                    pAmt = acceptedProposal.getMentorAmount();
-                } else {
-                    pAmt = BigDecimal.ZERO;
-                }
+            BigDecimal grossMentor = null;
+            if (latestTicket != null && latestTicket.getMentorAmount() != null && latestTicket.getMentorAmount().compareTo(BigDecimal.ZERO) > 0) {
+                grossMentor = latestTicket.getMentorAmount();
+            } else if (anyResolvedTicket != null && anyResolvedTicket.getMentorAmount() != null && anyResolvedTicket.getMentorAmount().compareTo(BigDecimal.ZERO) > 0) {
+                grossMentor = anyResolvedTicket.getMentorAmount();
+            } else if (acceptedProposal != null && acceptedProposal.getMentorAmount() != null && acceptedProposal.getMentorAmount().compareTo(BigDecimal.ZERO) > 0) {
+                grossMentor = acceptedProposal.getMentorAmount();
+            } else if (latestPayout != null && latestPayout.getAmount() != null && latestPayout.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+                grossMentor = latestPayout.getAmount().add(MentoringRules.PLATFORM_TRANSFER_FEE);
+            } else {
+                grossMentor = BigDecimal.ZERO;
             }
-            mentorEarnedAmount = pAmt;
-            mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
+            mentorEarnedAmount = grossMentor;
+            mentorPlatformFee = MentoringRules.calculateTransferFee(mentorEarnedAmount);
+            mentorNetPayout = MentoringRules.calculateNetTransfer(mentorEarnedAmount);
             if (mentorEarnedAmount.compareTo(BigDecimal.ZERO) > 0) {
                 mentorPayoutStatus = ledgerProgressStatus(latestPayout, "PAID", "PROCESSING");
             } else {
                 mentorPayoutStatus = "CANCELLED";
             }
 
-            BigDecimal rAmt = latestRefund != null ? latestRefund.getAmount() : null;
-            if (rAmt == null || rAmt.compareTo(BigDecimal.ZERO) == 0) {
-                if (latestTicket != null && latestTicket.getStudentRefund() != null && latestTicket.getStudentRefund().compareTo(BigDecimal.ZERO) > 0) {
-                    rAmt = latestTicket.getStudentRefund();
-                } else if (anyResolvedTicket != null && anyResolvedTicket.getStudentRefund() != null && anyResolvedTicket.getStudentRefund().compareTo(BigDecimal.ZERO) > 0) {
-                    rAmt = anyResolvedTicket.getStudentRefund();
-                } else if (acceptedProposal != null && acceptedProposal.getStudentRefund() != null) {
-                    rAmt = acceptedProposal.getStudentRefund();
-                } else {
-                    rAmt = BigDecimal.ZERO;
-                }
+            BigDecimal grossStudent = null;
+            if (latestTicket != null && latestTicket.getStudentRefund() != null && latestTicket.getStudentRefund().compareTo(BigDecimal.ZERO) > 0) {
+                grossStudent = latestTicket.getStudentRefund();
+            } else if (anyResolvedTicket != null && anyResolvedTicket.getStudentRefund() != null && anyResolvedTicket.getStudentRefund().compareTo(BigDecimal.ZERO) > 0) {
+                grossStudent = anyResolvedTicket.getStudentRefund();
+            } else if (acceptedProposal != null && acceptedProposal.getStudentRefund() != null && acceptedProposal.getStudentRefund().compareTo(BigDecimal.ZERO) > 0) {
+                grossStudent = acceptedProposal.getStudentRefund();
+            } else if (latestRefund != null && latestRefund.getAmount() != null && latestRefund.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+                grossStudent = latestRefund.getAmount().add(MentoringRules.PLATFORM_TRANSFER_FEE);
+            } else {
+                grossStudent = BigDecimal.ZERO;
             }
-            studentRefundAmount = rAmt;
-            if (studentRefundAmount.compareTo(BigDecimal.ZERO) > 0) {
+            studentGrossRefundAmount = grossStudent;
+            studentPlatformFee = MentoringRules.calculateTransferFee(studentGrossRefundAmount);
+            studentRefundAmount = MentoringRules.calculateNetTransfer(studentGrossRefundAmount);
+            if (studentGrossRefundAmount.compareTo(BigDecimal.ZERO) > 0) {
                 studentRefundStatus = ledgerProgressStatus(latestRefund, "REFUNDED", "PROCESSING");
             } else {
                 studentRefundStatus = "NO_REFUND";
             }
         } else if (activeTicket != null && activeTicket.getTicketType() == MentoringTicketType.SETTLEMENT) {
             mentorEarnedAmount = activeTicket.getMentorAmount() != null ? activeTicket.getMentorAmount() : BigDecimal.ZERO;
-            mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
+            mentorPlatformFee = MentoringRules.calculateTransferFee(mentorEarnedAmount);
+            mentorNetPayout = MentoringRules.calculateNetTransfer(mentorEarnedAmount);
             mentorPayoutStatus = mentorEarnedAmount.compareTo(BigDecimal.ZERO) > 0
                     ? ledgerProgressStatus(latestPayout, "PAID", "PROCESSING")
                     : "CANCELLED";
-            studentRefundAmount = activeTicket.getStudentRefund() != null ? activeTicket.getStudentRefund() : BigDecimal.ZERO;
-            studentRefundStatus = studentRefundAmount.compareTo(BigDecimal.ZERO) > 0
+            studentGrossRefundAmount = activeTicket.getStudentRefund() != null ? activeTicket.getStudentRefund() : BigDecimal.ZERO;
+            studentPlatformFee = MentoringRules.calculateTransferFee(studentGrossRefundAmount);
+            studentRefundAmount = MentoringRules.calculateNetTransfer(studentGrossRefundAmount);
+            studentRefundStatus = studentGrossRefundAmount.compareTo(BigDecimal.ZERO) > 0
                     ? ledgerProgressStatus(latestRefund, "REFUNDED", "PROCESSING")
                     : "NO_REFUND";
         } else if (task.getStatus() == MentoringTaskStatus.COMPLETED) {
             mentorEarnedAmount = totalAgreedPrice;
-            mentorNetPayout = mentorEarnedAmount.subtract(platformFee);
+            mentorPlatformFee = MentoringRules.calculateTransferFee(mentorEarnedAmount);
+            mentorNetPayout = MentoringRules.calculateNetTransfer(mentorEarnedAmount);
             mentorPayoutStatus = ledgerProgressStatus(latestPayout, "PAID", "PENDING_ESCROW");
+            studentGrossRefundAmount = BigDecimal.ZERO;
+            studentPlatformFee = BigDecimal.ZERO;
             studentRefundAmount = BigDecimal.ZERO;
             studentRefundStatus = "NO_REFUND";
         } else if (task.getStatus() == MentoringTaskStatus.CANCELLED) {
             mentorEarnedAmount = BigDecimal.ZERO;
+            mentorPlatformFee = BigDecimal.ZERO;
             mentorNetPayout = BigDecimal.ZERO;
             mentorPayoutStatus = "CANCELLED";
-            studentRefundAmount = studentTotalPaid;
-            studentRefundStatus = studentRefundAmount.compareTo(BigDecimal.ZERO) > 0
+            studentGrossRefundAmount = studentTotalPaid;
+            studentPlatformFee = MentoringRules.calculateTransferFee(studentGrossRefundAmount);
+            studentRefundAmount = MentoringRules.calculateNetTransfer(studentGrossRefundAmount);
+            studentRefundStatus = studentGrossRefundAmount.compareTo(BigDecimal.ZERO) > 0
                     ? ledgerProgressStatus(latestRefund, "REFUNDED", "PROCESSING")
                     : "NO_REFUND";
         } else {
-            mentorEarnedAmount = BigDecimal.ZERO;
-            mentorNetPayout = BigDecimal.ZERO;
+            mentorEarnedAmount = totalAgreedPrice;
+            mentorPlatformFee = MentoringRules.calculateTransferFee(mentorEarnedAmount);
+            mentorNetPayout = MentoringRules.calculateNetTransfer(mentorEarnedAmount);
             mentorPayoutStatus = "PENDING_ESCROW";
+            studentGrossRefundAmount = BigDecimal.ZERO;
+            studentPlatformFee = BigDecimal.ZERO;
             studentRefundAmount = BigDecimal.ZERO;
             studentRefundStatus = "NO_REFUND";
         }
+
+        platformFee = mentorPlatformFee.add(studentPlatformFee);
+        String invoiceCode = String.format("INV-TASK-%d-%s", task.getId(),
+                DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now()));
+        Instant invoiceIssuedAt = task.getCompletedAt() != null ? task.getCompletedAt() : Instant.now();
 
         String mentorPayoutNote = latestPayout != null ? latestPayout.getNote() : null;
         String studentRefundNote = latestRefund != null ? latestRefund.getNote() : null;
@@ -756,7 +782,7 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 || mentorEarnedAmount.compareTo(BigDecimal.ZERO) > 0
                 || hasFailedLedger;
 
-        String platformFeeNote = "Hệ thống AlumNect áp dụng cơ chế ký quỹ Escrow bảo đảm 100% dòng tiền giao dịch. Toàn bộ tiền được bảo vệ an toàn cho tới khi hoàn thành hoặc có phán quyết trọng tài từ Ban Quản Trị.";
+        String platformFeeNote = null;
 
         // 9. Participants
         MentoringParticipantResponse student = toParticipantResponse(task.getStudent(), "STUDENT");
@@ -792,13 +818,18 @@ public class MentoringTaskServiceImpl implements MentoringTaskService {
                 .resolutionNote(resolutionNote)
                 .canPingAdminFinance(canPingAdminFinance)
                 .hasFailedLedger(hasFailedLedger)
+                .invoiceCode(invoiceCode)
+                .invoiceIssuedAt(invoiceIssuedAt)
                 .originalPrice(originalPrice)
                 .totalAgreedPrice(totalAgreedPrice)
                 .studentTotalPaid(studentTotalPaid)
+                .studentGrossRefundAmount(studentGrossRefundAmount)
+                .studentPlatformFee(studentPlatformFee)
                 .studentRefundAmount(studentRefundAmount)
                 .studentRefundStatus(studentRefundStatus)
                 .studentRefundNote(studentRefundNote)
                 .mentorEarnedAmount(mentorEarnedAmount)
+                .mentorPlatformFee(mentorPlatformFee)
                 .platformFee(platformFee)
                 .mentorNetPayout(mentorNetPayout)
                 .mentorPayoutStatus(mentorPayoutStatus)

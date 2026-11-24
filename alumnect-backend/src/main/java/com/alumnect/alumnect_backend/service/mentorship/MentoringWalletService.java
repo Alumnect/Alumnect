@@ -93,18 +93,37 @@ public class MentoringWalletService {
                 accountRequired = true;
             }
         }
-        List<MentoringWalletItemResponse> items = ledgers.stream().map(l -> MentoringWalletItemResponse.builder()
-                .ledgerId(l.getId())
-                .taskId(l.getTask() != null ? l.getTask().getId() : null)
-                .taskTitle(l.getTask() != null ? l.getTask().getTaskTitle() : null)
-                .counterpartName(displayName(refund ? l.getMentor() : l.getStudent()))
-                .amount(l.getAmount())
-                .status(l.getStatus())
-                .providerStatus(l.getProviderStatus())
-                .note(l.getNote())
-                .transactedAt(l.getTransactedAt())
-                .createdAt(l.getCreatedAt())
-                .build()).toList();
+        List<MentoringWalletItemResponse> items = ledgers.stream().map(l -> {
+            BigDecimal amt = l.getAmount() != null ? l.getAmount() : BigDecimal.ZERO;
+            BigDecimal gross = amt;
+            BigDecimal fee = BigDecimal.ZERO;
+            BigDecimal net = amt;
+
+            if (l.getNote() != null && l.getNote().contains("Phí nền tảng:")) {
+                fee = MentoringRules.PLATFORM_TRANSFER_FEE;
+                gross = amt.add(fee);
+                net = amt;
+            } else if (amt.compareTo(BigDecimal.ZERO) > 0) {
+                gross = amt;
+                net = amt;
+            }
+
+            return MentoringWalletItemResponse.builder()
+                    .ledgerId(l.getId())
+                    .taskId(l.getTask() != null ? l.getTask().getId() : null)
+                    .taskTitle(l.getTask() != null ? l.getTask().getTaskTitle() : null)
+                    .counterpartName(displayName(refund ? l.getMentor() : l.getStudent()))
+                    .amount(amt)
+                    .grossAmount(gross)
+                    .platformFee(fee)
+                    .netAmount(net)
+                    .status(l.getStatus())
+                    .providerStatus(l.getProviderStatus())
+                    .note(l.getNote())
+                    .transactedAt(l.getTransactedAt())
+                    .createdAt(l.getCreatedAt())
+                    .build();
+        }).toList();
         return MentoringWalletResponse.builder()
                 .totalReceived(received)
                 .totalProcessing(processing)

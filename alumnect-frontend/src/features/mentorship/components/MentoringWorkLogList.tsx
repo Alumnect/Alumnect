@@ -292,30 +292,30 @@ export function MentoringWorkLogList({
                 </div>
 
                 {/* Log Content Grid */}
-                <div className="mt-4 space-y-3 text-sm">
-                  <div>
+                <div className="mt-4 space-y-3 text-sm min-w-0">
+                  <div className="min-w-0">
                     <span className="block text-xs font-bold text-text-subtle">
                       {t('mentoring.summaryDescription')}
                     </span>
-                    <p className="mt-1 font-bold text-text leading-relaxed">
+                    <p className="mt-1 font-bold text-text leading-relaxed whitespace-pre-wrap break-words break-all [overflow-wrap:anywhere]">
                       {log.description}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg">
+                  <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg min-w-0">
                     <span className="block text-xs font-bold text-text-subtle">
                       {t('mentoring.completedWorkContent')}
                     </span>
-                    <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed">
+                    <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed break-words break-all [overflow-wrap:anywhere]">
                       {log.workCompleted}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg">
+                  <div className="rounded-2xl border border-border bg-cream-100/70 p-4 dark:bg-bg min-w-0">
                     <span className="block text-xs font-bold text-text-subtle">
                       {t('mentoring.achievedResultsDeliverables')}
                     </span>
-                    <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed">
+                    <p className="mt-1.5 whitespace-pre-line text-sm font-medium text-text leading-relaxed break-words break-all [overflow-wrap:anywhere]">
                       {log.result}
                     </p>
                   </div>

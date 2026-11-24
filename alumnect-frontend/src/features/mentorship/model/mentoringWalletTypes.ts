@@ -6,6 +6,9 @@ export interface MentoringWalletItem {
   taskTitle?: string | null
   counterpartName?: string | null
   amount: number
+  grossAmount?: number | null
+  platformFee?: number | null
+  netAmount?: number | null
   status: WalletLedgerStatus
   providerStatus?: string | null
   note?: string | null

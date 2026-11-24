@@ -158,9 +158,14 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
             throw new BadRequestException("Số tiền phân chia không hợp lệ: Tổng tiền chia (" + total + ") không khớp với ngân sách của Task (" + proposal.getTotalAmount() + ").");
         }
 
-        // 4. Tự động chi tiền cho Mentor và hoàn tiền cho Student theo mức hai bên đã đồng thuận
+        // 4. Tự động chi tiền cho Mentor và hoàn tiền cho Student theo mức hai bên đã đồng thuận (trừ 3.000đ phí nền tảng cho mỗi lệnh phát sinh > 0)
         BigDecimal mentorAmount = proposal.getMentorAmount() != null ? proposal.getMentorAmount() : BigDecimal.ZERO;
         BigDecimal studentRefund = proposal.getStudentRefund() != null ? proposal.getStudentRefund() : BigDecimal.ZERO;
+        BigDecimal mentorFee = MentoringRules.calculateTransferFee(mentorAmount);
+        BigDecimal studentFee = MentoringRules.calculateTransferFee(studentRefund);
+        BigDecimal mentorNetPayout = MentoringRules.calculateNetTransfer(mentorAmount);
+        BigDecimal studentNetRefund = MentoringRules.calculateNetTransfer(studentRefund);
+        BigDecimal totalDisputeFee = mentorFee.add(studentFee);
         Instant now = Instant.now();
 
         MentoringPaymentLedger savedPayout = null;
@@ -171,13 +176,13 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     .deal(task.getDeal())
                     .student(task.getStudent())
                     .mentor(task.getMentor())
-                    .amount(mentorAmount)
+                    .amount(mentorNetPayout)
                     .transactionType(MentoringLedgerTransactionType.PAYOUT)
                     .status(MentoringLedgerStatus.PENDING)
                     .providerStatus(MentoringPayoutProcessor.QUEUED)
                     .idempotencyKey("ALUMNECT-PAYOUT-SETTLEMENT-" + proposal.getId())
                     .deadlineSnapshot(task.getDeadline())
-                    .note("Thù lao theo thỏa thuận dừng Task #" + task.getId() + " giữa hai bên: " + proposal.getReason())
+                    .note("Thù lao theo thỏa thuận dừng Task #" + task.getId() + " (Gốc: " + formatVnd(mentorAmount) + ", Phí nền tảng: -" + formatVnd(mentorFee) + ", Thực nhận: " + formatVnd(mentorNetPayout) + "): " + proposal.getReason())
                     .build();
             savedPayout = ledgerRepository.save(payoutLedger);
             disbursementService.dispatchPayoutAfterCommit(savedPayout.getId());
@@ -191,13 +196,13 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     .deal(task.getDeal())
                     .student(task.getStudent())
                     .mentor(task.getMentor())
-                    .amount(studentRefund)
+                    .amount(studentNetRefund)
                     .transactionType(MentoringLedgerTransactionType.REFUND)
                     .status(MentoringLedgerStatus.PENDING)
                     .providerStatus(MentoringPayoutProcessor.QUEUED)
                     .idempotencyKey("ALUMNECT-REFUND-SETTLEMENT-" + proposal.getId())
                     .deadlineSnapshot(task.getDeadline())
-                    .note("Hoàn phí theo thỏa thuận dừng Task #" + task.getId() + " giữa hai bên: " + proposal.getReason())
+                    .note("Hoàn phí theo thỏa thuận dừng Task #" + task.getId() + " (Gốc: " + formatVnd(studentRefund) + ", Phí nền tảng: -" + formatVnd(studentFee) + ", Thực nhận: " + formatVnd(studentNetRefund) + "): " + proposal.getReason())
                     .build();
             savedRefund = ledgerRepository.save(refundLedger);
             disbursementService.dispatchPayoutAfterCommit(savedRefund.getId());
@@ -211,9 +216,10 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 t.setStatus(MentoringTicketStatus.RESOLVED);
                 t.setSettlementStatus(MentoringSettlementStatus.SETTLED);
                 t.setDecision(MentoringTicketDecision.PARTIAL_SPLIT);
-                t.setResolutionNote("Hai bên đã đạt thỏa thuận dừng Task và hệ thống tự động chi trả theo mức thỏa thuận.");
+                t.setResolutionNote("Hai bên đã đạt thỏa thuận dừng Task và hệ thống tự động chi trả theo mức thỏa thuận (Phí nền tảng: -3.000đ/lệnh phát sinh).");
                 t.setMentorAmount(mentorAmount);
                 t.setStudentRefund(studentRefund);
+                t.setDisputeFee(totalDisputeFee);
                 t.setResolvedAt(now);
                 if (savedPayout != null) t.setMentorPayoutLedger(savedPayout);
                 if (savedRefund != null) t.setStudentRefundLedger(savedRefund);
@@ -244,11 +250,12 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     .description(description)
                     .mentorAmount(mentorAmount)
                     .studentRefund(studentRefund)
+                    .disputeFee(totalDisputeFee)
                     .totalAmount(proposal.getTotalAmount())
                     .status(MentoringTicketStatus.RESOLVED)
                     .settlementStatus(MentoringSettlementStatus.SETTLED)
                     .decision(MentoringTicketDecision.PARTIAL_SPLIT)
-                    .resolutionNote("Hệ thống tự động chi trả theo thỏa thuận đồng thuận giữa hai bên.")
+                    .resolutionNote("Hệ thống tự động chi trả theo thỏa thuận đồng thuận giữa hai bên (Phí nền tảng: -3.000đ/lệnh phát sinh).")
                     .resolvedAt(now)
                     .mentorPayoutLedger(savedPayout)
                     .studentRefundLedger(savedRefund)
@@ -1157,6 +1164,13 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
         mentoringRules.requireWholeVnd(mentorAmount, "Số tiền chi cho Mentor");
         mentoringRules.requireWholeVnd(studentRefund, "Số tiền hoàn cho Học viên");
 
+        // Tính phí nền tảng 3.000đ chỉ cho bên nào thực sự phát sinh lệnh chi (> 0) hoặc hoàn (> 0)
+        BigDecimal mentorFee = MentoringRules.calculateTransferFee(mentorAmount);
+        BigDecimal studentFee = MentoringRules.calculateTransferFee(studentRefund);
+        BigDecimal mentorNetPayout = MentoringRules.calculateNetTransfer(mentorAmount);
+        BigDecimal studentNetRefund = MentoringRules.calculateNetTransfer(studentRefund);
+        disputeFee = mentorFee.add(studentFee);
+
         // 2. Cập nhật Ticket
         ticket.setDecision(request.getDecision());
         ticket.setResolutionNote(request.getDecisionReason());
@@ -1186,7 +1200,7 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     mentorReputationService.applyPenalty(profile.getId(), "Tranh chấp " + ticket.getTicketCode() + " được phân xử hoàn tiền toàn bộ cho Học viên"));
         }
 
-        // 4. Ghi Sổ quỹ giao dịch Mentoring (Payout & Refund độc lập - Bước 63 UC120)
+        // 4. Ghi Sổ quỹ giao dịch Mentoring (Payout & Refund độc lập đã trừ 3.000đ phí nền tảng - Bước 63 UC120)
         if (mentorAmount.compareTo(BigDecimal.ZERO) > 0) {
             MentoringPaymentLedger payoutLedger = MentoringPaymentLedger.builder()
                     .request(task.getRequest() != null ? task.getRequest() : task.getDeal().getRequest())
@@ -1194,13 +1208,13 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     .deal(task.getDeal())
                     .student(task.getStudent())
                     .mentor(task.getMentor())
-                    .amount(mentorAmount)
+                    .amount(mentorNetPayout)
                     .transactionType(MentoringLedgerTransactionType.PAYOUT)
                     .status(MentoringLedgerStatus.PENDING)
                     .providerStatus(MentoringPayoutProcessor.QUEUED)
                     .idempotencyKey("ALUMNECT-PAYOUT-TICKET-" + ticket.getTicketCode())
                     .deadlineSnapshot(task.getDeadline())
-                    .note("Thù lao theo phán quyết Ticket " + ticket.getTicketCode() + ": " + request.getDecisionReason())
+                    .note("Thù lao theo phán quyết Ticket " + ticket.getTicketCode() + " (Gốc: " + formatVnd(mentorAmount) + ", Phí nền tảng: -" + formatVnd(mentorFee) + ", Thực nhận: " + formatVnd(mentorNetPayout) + "): " + request.getDecisionReason())
                     .build();
             MentoringPaymentLedger savedPayout = ledgerRepository.save(payoutLedger);
             ticket.setMentorPayoutLedger(savedPayout);
@@ -1215,13 +1229,13 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                     .deal(task.getDeal())
                     .student(task.getStudent())
                     .mentor(task.getMentor())
-                    .amount(studentRefund)
+                    .amount(studentNetRefund)
                     .transactionType(MentoringLedgerTransactionType.REFUND)
                     .status(MentoringLedgerStatus.PENDING)
                     .providerStatus(MentoringPayoutProcessor.QUEUED)
                     .idempotencyKey("ALUMNECT-REFUND-TICKET-" + ticket.getTicketCode())
                     .deadlineSnapshot(task.getDeadline())
-                    .note("Hoàn phí theo phán quyết Ticket " + ticket.getTicketCode() + ": " + request.getDecisionReason())
+                    .note("Hoàn phí theo phán quyết Ticket " + ticket.getTicketCode() + " (Gốc: " + formatVnd(studentRefund) + ", Phí nền tảng: -" + formatVnd(studentFee) + ", Thực nhận: " + formatVnd(studentNetRefund) + "): " + request.getDecisionReason())
                     .build();
             MentoringPaymentLedger savedRefund = ledgerRepository.save(refundLedger);
             ticket.setStudentRefundLedger(savedRefund);
@@ -1240,10 +1254,17 @@ public class MentoringTicketServiceImpl implements MentoringTicketService {
                 case PARTIAL_SPLIT -> "Hòa giải phân chia tài chính";
             };
 
+            String mentorFeeDetail = mentorAmount.compareTo(BigDecimal.ZERO) > 0
+                    ? " (Phí nền tảng: -" + formatVnd(mentorFee) + " → Thực nhận: " + formatVnd(mentorNetPayout) + ")"
+                    : " (Không phát sinh chi → Phí: 0đ)";
+            String studentFeeDetail = studentRefund.compareTo(BigDecimal.ZERO) > 0
+                    ? " (Phí nền tảng: -" + formatVnd(studentFee) + " → Thực nhận: " + formatVnd(studentNetRefund) + ")"
+                    : " (Không phát sinh hoàn → Phí: 0đ)";
+
             String systemMsgContent = "PHÁN QUYẾT CHÍNH THỨC TỪ BAN QUẢN TRỊ:\n"
                     + "• Phương án: " + decisionLabel + "\n"
-                    + "• Thù lao Cố vấn (Mentor): " + formatVnd(mentorAmount) + " VNĐ\n"
-                    + "• Hoàn trả Học viên (Student): " + formatVnd(studentRefund) + " VNĐ\n"
+                    + "• Thù lao Cố vấn (Mentor): " + formatVnd(mentorAmount) + mentorFeeDetail + "\n"
+                    + "• Hoàn trả Học viên (Student): " + formatVnd(studentRefund) + studentFeeDetail + "\n"
                     + "• Căn cứ & Lý do phán quyết: " + request.getDecisionReason();
 
             MentoringTicketMessage resolutionMsg = MentoringTicketMessage.builder()

@@ -208,6 +208,8 @@ export interface TaskDetail {
 }
 
 export interface TaskReport {
+  invoiceCode?: string | null
+  invoiceIssuedAt?: string | null
   taskTitle: string
   taskStatus: TaskStatus
   extensionCount: number
@@ -220,10 +222,13 @@ export interface TaskReport {
   originalPrice: number
   totalAgreedPrice: number
   studentTotalPaid: number
+  studentGrossRefundAmount?: number
+  studentPlatformFee?: number
   studentRefundAmount: number
   studentRefundStatus: string
   studentRefundNote?: string | null
   mentorEarnedAmount: number
+  mentorPlatformFee?: number
   platformFee: number
   mentorNetPayout: number
   mentorPayoutStatus: string
@@ -235,6 +240,8 @@ export interface TaskReport {
   resolutionNote?: string | null
   canPingAdminFinance?: boolean
   hasFailedLedger?: boolean
+  student?: Participant
+  mentor?: Participant
 }
 
 export interface SettlementSnapshot {
@@ -309,7 +316,8 @@ export const taskApi = {
   submitSettlementTicket: (id: number, p: { proposalId: number; note?: string }) => d(http.post<unknown, ApiResponse<Ticket>>(`${T}/${id}/settlement-tickets`, p)),
 
   submitCompletion: (id: number, p: { finalSummary: string; deliverables?: string; attachmentUrls?: string[] }) => d(http.post<unknown, ApiResponse<Completion>>(`${T}/${id}/completions`, p)),
-  respondCompletion: (id: number, cid: number, accept: boolean, feedbackNote?: string) => d(http.put<unknown, ApiResponse<Completion>>(`${T}/${id}/completions/${cid}/respond`, { accept, feedbackNote })),
+  respondCompletion: (id: number, cid: number, accept: boolean, feedbackNote?: string, rating?: number, reviewComment?: string) =>
+    d(http.put<unknown, ApiResponse<Completion>>(`${T}/${id}/completions/${cid}/respond`, { accept, feedbackNote, rating, reviewComment })),
 
   createDispute: (id: number, p: { title: string; disputeReason: string; description: string; desiredSolution: string; initialEvidences?: { fileUrl: string; fileName?: string; title?: string }[] }) =>
     d(http.post<unknown, ApiResponse<Ticket>>(`${T}/${id}/dispute-tickets`, p)),

@@ -3,6 +3,9 @@
     "name": "Alumnect",
     "slug": "alumnect-mobile",
     "version": "1.0.0",
+    "platforms": [
+      "android"
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -17,7 +20,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "vn.edu.fpt.alumnect"
+      "package": "alumnect.online"
     },
     "plugins": [
       "expo-router",

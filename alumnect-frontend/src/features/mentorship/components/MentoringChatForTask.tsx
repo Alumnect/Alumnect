@@ -22,7 +22,6 @@ import {
   MessagesSquare,
   MoreHorizontal,
   RefreshCw,
-  Star,
   ThumbsUp,
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -517,9 +516,8 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   type PrimaryAction = { label: string; icon: React.ReactNode; onClick: () => void }
   let primaryAction: PrimaryAction | null = null
   if (isTaskFinished) {
-    if (canReviewMentor && !myReview) {
-      primaryAction = { label: t('mentoring.reviewMentorAction'), icon: <Star className="h-3.5 w-3.5" />, onClick: () => setIsReviewOpen(true) }
-    }
+    // Đã đánh giá trực tiếp trước khi nghiệm thu hoàn thành, không hiển thị lại nút đánh giá sau nghiệm thu
+    primaryAction = null
   } else if (isStudent && isDealLockedUnpaid && deal?.canPay) {
     primaryAction = {
       label: lastPaymentStatus && lastPaymentStatus !== 'PENDING' ? t('mentoring.payAgainAction') : t('mentoring.payAction'),
@@ -541,7 +539,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   // "Chi tiết yêu cầu" đã có sẵn trên dải thông tin yêu cầu, không lặp lại trong menu
   const openRequestDetail = () =>
     navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`)
-  if (ctx.taskId && isMentor) viewItems.push({ label: t('mentoring.taskFinancialReportAction'), icon: <FileText />, onClick: () => setIsTaskReportOpen(true) })
+  if (ctx.taskId && (isMentor || isStudent)) viewItems.push({ label: t('mentoring.taskFinancialReportAction'), icon: <FileText />, onClick: () => setIsTaskReportOpen(true) })
 
   const proposalItems: ActionItem[] = []
   if (isTaskActive && isMentor && permissions?.canRequestExtension && taskDetail?.activeExtension?.status !== 'PENDING') {

@@ -6,6 +6,7 @@ module.exports = () => {
   const cleartext = (process.env.EXPO_PUBLIC_API_URL || '').startsWith('http://')
   return {
     ...base.expo,
+    platforms: ['android'],
     plugins: [
       ...base.expo.plugins,
       ['expo-build-properties', { android: { usesCleartextTraffic: cleartext } }],
