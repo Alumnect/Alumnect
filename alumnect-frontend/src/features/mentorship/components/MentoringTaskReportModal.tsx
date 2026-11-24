@@ -365,8 +365,8 @@ export function MentoringTaskReportModal({
 
     <div class="footer">
       ${isEn
-        ? 'Electronic invoice automatically generated from the AlumNect transaction ledger.'
-        : 'Chứng từ đối soát điện tử được trích xuất tự động từ hệ thống sổ giao dịch AlumNect.'}
+                ? 'Electronic invoice automatically generated from the AlumNect transaction ledger.'
+                : 'Chứng từ đối soát điện tử được trích xuất tự động từ hệ thống sổ giao dịch AlumNect.'}
     </div>
   </div>
 </body>
@@ -613,94 +613,94 @@ export function MentoringTaskReportModal({
                   {partyView === 'student'
                     ? (isEn ? '3. Learner Side Invoice' : '3. Hóa đơn Phía Học viên')
                     : partyView === 'mentor'
-                    ? (isEn ? '3. Mentor Side Invoice' : '3. Hóa đơn Phía Cố vấn')
-                    : (isEn ? '3. Separate Invoices for Learner Side & Mentor Side' : '3. Hóa đơn riêng cho Phía Học viên & Phía Cố vấn')}
+                      ? (isEn ? '3. Mentor Side Invoice' : '3. Hóa đơn Phía Cố vấn')
+                      : (isEn ? '3. Separate Invoices for Learner Side & Mentor Side' : '3. Hóa đơn riêng cho Phía Học viên & Phía Cố vấn')}
                 </h5>
 
                 <div className={partyView ? 'w-full' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
                   {/* Learner Side Invoice Card */}
                   {(!partyView || partyView === 'student') && (
-                  <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isStudent || partyView === 'student'
+                    <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isStudent || partyView === 'student'
                       ? 'bg-info-soft border-info ring-2 ring-info'
                       : 'bg-surface border-border'
-                    }`}>
-                    <div>
-                      <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
-                        <span className="font-bold text-xs text-info">
-                          {isEn ? 'Learner Side Invoice' : 'Hóa đơn Phía Học viên'}
-                        </span>
-                        {isStudent && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-info-soft text-info font-bold">
-                            {isEn ? 'Your Role' : 'Vai trò của bạn'}
+                      }`}>
+                      <div>
+                        <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
+                          <span className="font-bold text-xs text-info">
+                            {isEn ? 'Learner Side Invoice' : 'Hóa đơn Phía Học viên'}
                           </span>
-                        )}
-                      </div>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-text-subtle">{isEn ? 'Original Agreed Price:' : 'Giá thỏa thuận gốc:'}</span>
-                          <span className="font-medium text-text">
-                            {formatVnd(report.originalPrice)}
-                          </span>
+                          {isStudent && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-info-soft text-info font-bold">
+                              {isEn ? 'Your Role' : 'Vai trò của bạn'}
+                            </span>
+                          )}
                         </div>
-                        {report.totalAdditionalAmount > 0 && (
-                          <div className="flex justify-between text-warning">
-                            <span>{isEn ? 'Amendment Addition:' : 'Bổ sung điều chỉnh:'}</span>
-                            <span className="font-medium">
-                              +{formatVnd(report.totalAdditionalAmount)}
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-text-subtle">{isEn ? 'Original Agreed Price:' : 'Giá thỏa thuận gốc:'}</span>
+                            <span className="font-medium text-text">
+                              {formatVnd(report.originalPrice)}
                             </span>
                           </div>
-                        )}
-                        <div className="flex justify-between">
-                          <span className="text-text-subtle">{isEn ? 'Platform Fee on Payment:' : 'Phí nền tảng khi thanh toán:'}</span>
-                          <span className="font-semibold text-success">
-                            {formatVnd(0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
-                          <span>{isEn ? 'Total Amount Paid:' : 'Tổng tiền đã thanh toán:'}</span>
-                          <span className="text-info">
-                            {formatVnd(report.studentTotalPaid)}
-                          </span>
-                        </div>
+                          {report.totalAdditionalAmount > 0 && (
+                            <div className="flex justify-between text-warning">
+                              <span>{isEn ? 'Amendment Addition:' : 'Bổ sung điều chỉnh:'}</span>
+                              <span className="font-medium">
+                                +{formatVnd(report.totalAdditionalAmount)}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span className="text-text-subtle">{isEn ? 'Platform Fee on Payment:' : 'Phí nền tảng khi thanh toán:'}</span>
+                            <span className="font-semibold text-success">
+                              {formatVnd(0)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
+                            <span>{isEn ? 'Total Amount Paid:' : 'Tổng tiền đã thanh toán:'}</span>
+                            <span className="text-info">
+                              {formatVnd(report.studentTotalPaid)}
+                            </span>
+                          </div>
 
-                        {studentGross > 0 && (
-                          <>
-                            <div className="flex justify-between pt-1 text-text-muted">
-                              <span>{isEn ? 'Allocated Refund Amount:' : 'Khoản hoàn trả phân bổ gốc:'}</span>
-                              <span className="font-semibold text-text">
-                                {formatVnd(studentGross)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-text-subtle">{isEn ? 'Platform Fee:' : 'Phí nền tảng:'}</span>
-                              <span className="font-bold text-danger">
-                                -{formatVnd(studentFee)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
-                              <span>{isEn ? 'Net Refund Received:' : 'Số tiền hoàn thực nhận:'}</span>
-                              <span className="font-bold text-info">
-                                {formatVnd(studentNet)}
-                              </span>
-                            </div>
-                          </>
-                        )}
+                          {studentGross > 0 && (
+                            <>
+                              <div className="flex justify-between pt-1 text-text-muted">
+                                <span>{isEn ? 'Allocated Refund Amount:' : 'Khoản hoàn trả phân bổ gốc:'}</span>
+                                <span className="font-semibold text-text">
+                                  {formatVnd(studentGross)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-text-subtle">{isEn ? 'Platform Fee:' : 'Phí nền tảng:'}</span>
+                                <span className="font-bold text-danger">
+                                  -{formatVnd(studentFee)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
+                                <span>{isEn ? 'Net Refund Received:' : 'Số tiền hoàn thực nhận:'}</span>
+                                <span className="font-bold text-info">
+                                  {formatVnd(studentNet)}
+                                </span>
+                              </div>
+                            </>
+                          )}
 
-                        <div className="flex justify-between items-center text-xs pt-1">
-                          <span className="text-text-subtle">
-                            {studentGross > 0
-                              ? (isEn ? 'Refund Status:' : 'Trạng thái hoàn tiền:')
-                              : (isEn ? 'Fund Status:' : 'Trạng thái quỹ:')}
-                          </span>
-                          {getMoneyStatusBadge(effectiveStudentStatus)}
+                          <div className="flex justify-between items-center text-xs pt-1">
+                            <span className="text-text-subtle">
+                              {studentGross > 0
+                                ? (isEn ? 'Refund Status:' : 'Trạng thái hoàn tiền:')
+                                : (isEn ? 'Fund Status:' : 'Trạng thái quỹ:')}
+                            </span>
+                            {getMoneyStatusBadge(effectiveStudentStatus)}
+                          </div>
+                          {report.studentRefundNote && effectiveStudentStatus === 'FAILED' && (
+                            <p className="text-[11px] text-danger font-medium mt-1 leading-relaxed">
+                              ⚠️ {report.studentRefundNote}
+                            </p>
+                          )}
                         </div>
-                        {report.studentRefundNote && effectiveStudentStatus === 'FAILED' && (
-                          <p className="text-[11px] text-danger font-medium mt-1 leading-relaxed">
-                            ⚠️ {report.studentRefundNote}
-                          </p>
-                        )}
                       </div>
-                    </div>
 
                     <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-border">
                       <Button
@@ -724,55 +724,55 @@ export function MentoringTaskReportModal({
                       </Button>
                     </div>
                   </div>
-                  )}
+                )}
 
                   {/* Mentor Side Invoice Card */}
                   {(!partyView || partyView === 'mentor') && (
-                  <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isMentor || partyView === 'mentor'
+                    <div className={`p-4 rounded-xl border transition flex flex-col justify-between ${isMentor || partyView === 'mentor'
                       ? 'bg-info-soft border-info ring-2 ring-info'
                       : 'bg-surface border-border'
-                    }`}>
-                    <div>
-                      <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
-                        <span className="font-bold text-xs text-info">
-                          {isEn ? 'Mentor Side Invoice' : 'Hóa đơn Phía Cố vấn'}
-                        </span>
-                        {isMentor && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-info-soft text-info font-bold">
-                            {isEn ? 'Your Role' : 'Vai trò của bạn'}
+                      }`}>
+                      <div>
+                        <div className="flex items-center justify-between pb-2 border-b border-border mb-3">
+                          <span className="font-bold text-xs text-info">
+                            {isEn ? 'Mentor Side Invoice' : 'Hóa đơn Phía Cố vấn'}
                           </span>
-                        )}
+                          {isMentor && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-info-soft text-info font-bold">
+                              {isEn ? 'Your Role' : 'Vai trò của bạn'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-text-subtle">{isEn ? 'Gross Compensation:' : 'Thù lao công việc gốc:'}</span>
+                            <span className="font-semibold text-text">
+                              {formatVnd(mentorGross)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-text-subtle">{isEn ? 'Platform Fee:' : 'Phí nền tảng:'}</span>
+                            <span className={`font-bold ${mentorFee > 0 ? 'text-danger' : 'text-text-subtle'}`}>
+                              {mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
+                            <span>{isEn ? 'Net Payout Received:' : 'Thù lao thực nhận:'}</span>
+                            <span className="text-success">
+                              {formatVnd(mentorNet)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs pt-1">
+                            <span className="text-text-subtle">{isEn ? 'Payout Status:' : 'Trạng thái chi trả:'}</span>
+                            {getMoneyStatusBadge(effectiveMentorStatus)}
+                          </div>
+                          {report.mentorPayoutNote && effectiveMentorStatus === 'FAILED' && (
+                            <p className="text-[11px] text-danger font-medium mt-1 leading-relaxed">
+                              ⚠️ {report.mentorPayoutNote}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-text-subtle">{isEn ? 'Gross Compensation:' : 'Thù lao công việc gốc:'}</span>
-                          <span className="font-semibold text-text">
-                            {formatVnd(mentorGross)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-text-subtle">{isEn ? 'Platform Fee:' : 'Phí nền tảng:'}</span>
-                          <span className={`font-bold ${mentorFee > 0 ? 'text-danger' : 'text-text-subtle'}`}>
-                            {mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-border">
-                          <span>{isEn ? 'Net Payout Received:' : 'Thù lao thực nhận:'}</span>
-                          <span className="text-success">
-                            {formatVnd(mentorNet)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs pt-1">
-                          <span className="text-text-subtle">{isEn ? 'Payout Status:' : 'Trạng thái chi trả:'}</span>
-                          {getMoneyStatusBadge(effectiveMentorStatus)}
-                        </div>
-                        {report.mentorPayoutNote && effectiveMentorStatus === 'FAILED' && (
-                          <p className="text-[11px] text-danger font-medium mt-1 leading-relaxed">
-                            ⚠️ {report.mentorPayoutNote}
-                          </p>
-                        )}
-                      </div>
-                    </div>
 
                     <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-border">
                       <Button
@@ -796,7 +796,7 @@ export function MentoringTaskReportModal({
                       </Button>
                     </div>
                   </div>
-                  )}
+                )}
                 </div>
 
                 {/* Ping Admin Action Banner if canPingAdminFinance */}
@@ -870,17 +870,17 @@ export function MentoringTaskReportModal({
             <div className="space-y-1.5">
               {(isEn
                 ? [
-                    'Have not received refund in bank account',
-                    'Refund or payout amount is inaccurate',
-                    'Have not received payout after task completion',
-                    'Beneficiary bank account reported transaction error',
-                  ]
+                  'Have not received refund in bank account',
+                  'Refund or payout amount is inaccurate',
+                  'Have not received payout after task completion',
+                  'Beneficiary bank account reported transaction error',
+                ]
                 : [
-                    'Chưa nhận được tiền hoàn trả về tài khoản',
-                    'Số tiền hoàn / chi trả bị sai lệch',
-                    'Chưa nhận được thù lao sau khi hoàn thành',
-                    'Tài khoản nhận tiền báo lỗi giao dịch',
-                  ]
+                  'Chưa nhận được tiền hoàn trả về tài khoản',
+                  'Số tiền hoàn / chi trả bị sai lệch',
+                  'Chưa nhận được thù lao sau khi hoàn thành',
+                  'Tài khoản nhận tiền báo lỗi giao dịch',
+                ]
               ).map((reasonText) => {
                 const isSelected = selectedQuickReason === reasonText
                 return (
@@ -896,8 +896,8 @@ export function MentoringTaskReportModal({
                       }
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition cursor-pointer ${isSelected
-                        ? 'bg-primary-soft text-primary-solid border-primary-500 font-semibold'
-                        : 'bg-surface hover:bg-surface-2 text-text border-border'
+                      ? 'bg-primary-soft text-primary-solid border-primary-500 font-semibold'
+                      : 'bg-surface hover:bg-surface-2 text-text border-border'
                       }`}
                   >
                     {reasonText}
