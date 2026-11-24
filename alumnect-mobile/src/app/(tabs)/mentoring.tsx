@@ -15,6 +15,7 @@ import {
   ClipboardList,
   FileText,
   Handshake,
+  HelpCircle,
   IgMessenger,
   Landmark,
   LayoutGrid,
@@ -165,6 +166,7 @@ export default function MentoringTab() {
   // Phần "Tìm mentor" chỉ giữ lối tắt liên quan việc tìm kiếm; các mục quản lý đã chuyển sang "Của tôi".
   const quickShortcuts: { key: string; label: string; brand: BrandIconName; href: string; primary?: boolean }[] = [
     { key: 'create', label: 'Đăng bài toán tìm mentor', brand: 'pencil', href: '/mentoring/create-request', primary: true },
+    { key: 'guide', label: 'Hướng dẫn', brand: 'binoculars', href: '/mentoring/guide' },
     { key: 'rank', label: 'Bảng xếp hạng', brand: 'star', href: '/mentoring/rankings' },
     { key: 'groups', label: 'Nhóm Cố vấn', brand: 'people2', href: '/mentoring/groups' },
   ]
@@ -181,6 +183,24 @@ export default function MentoringTab() {
       <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.borderSubtle }]}>
         <MentoringHeaderBrand />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <MotionPressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
+              router.push('/mentoring/guide')
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Cẩm nang hướng dẫn Cố vấn"
+            style={[
+              styles.headerActionBtn,
+              {
+                backgroundColor: isDark ? '#2E1C10' : viridianSoft,
+                borderColor: isDark ? '#54321C' : '#FAD9C2',
+              },
+            ]}
+          >
+            <HelpCircle size={20} color={viridian} weight="bold" />
+          </MotionPressable>
+
           <MotionPressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
@@ -655,6 +675,28 @@ export default function MentoringTab() {
             onPress={() => {
               setUtilitySheet(false)
               router.push('/mentoring/refunds')
+            }}
+          />
+
+          <UtilityRow
+            brandIcon="binoculars"
+            icon={<HelpCircle size={20} color={viridian} weight="bold" />}
+            title="Cẩm nang Hướng dẫn Cố vấn"
+            desc="Lộ trình 5 bước kèm ảnh chụp thực tế & giải đáp FAQ"
+            onPress={() => {
+              setUtilitySheet(false)
+              router.push('/mentoring/guide')
+            }}
+          />
+
+          <UtilityRow
+            brandIcon="writing"
+            icon={<FileText size={20} color={viridian} />}
+            title="Điều khoản & Quy chế Mentoring"
+            desc="Xem đầy đủ 10 điều khoản, Ký quỹ PayOS & thuế NĐ 117/2025"
+            onPress={() => {
+              setUtilitySheet(false)
+              router.push('/mentoring/terms')
             }}
           />
         </ScrollView>

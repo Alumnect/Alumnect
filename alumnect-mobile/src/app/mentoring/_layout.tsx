@@ -10,9 +10,9 @@ export default function MentoringLayout() {
   const { colors } = useMentoringTheme()
   const pathname = usePathname()
   const terms = useQuery({ queryKey: ['mentoring-terms'], queryFn: mentoringApi.termsStatus, staleTime: 60_000 })
-  // Giống Web: mọi màn hình Mentoring yêu cầu đã đồng ý điều khoản (trừ chính trang điều khoản).
+  // Giống Web: mọi màn hình Mentoring yêu cầu đã đồng ý điều khoản (trừ trang điều khoản & cẩm nang hướng dẫn).
   // Cổng được phủ lên trên Stack để không làm mất trạng thái điều hướng khi mở trang điều khoản.
-  const gated = !terms.data?.accepted && pathname !== '/mentoring/terms'
+  const gated = !terms.data?.accepted && pathname !== '/mentoring/terms' && pathname !== '/mentoring/guide' && pathname !== '/mentoring/guide-step'
   return (
     <View style={{ flex: 1 }}>
       <Stack
