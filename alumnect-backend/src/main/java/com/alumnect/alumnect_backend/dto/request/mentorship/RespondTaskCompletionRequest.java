@@ -21,4 +21,11 @@ public class RespondTaskCompletionRequest {
     /** Ghi chú giải thích hoặc lý do yêu cầu chỉnh sửa/bổ sung */
     @Size(max = 1000, message = "Ghi chú phản hồi không vượt quá 1000 ký tự")
     private String feedbackNote;
+
+    /** Số sao đánh giá Mentor (1 - 5 sao) thực hiện ngay trước khi xác nhận nghiệm thu */
+    private Integer rating;
+
+    /** Nhận xét đánh giá Mentor đi kèm khi nghiệm thu */
+    @Size(max = 1000, message = "Nhận xét đánh giá không vượt quá 1000 ký tự")
+    private String reviewComment;
 }

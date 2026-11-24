@@ -503,9 +503,20 @@ export default function TaskActionScreen() {
               <View style={[styles.splitBar, { backgroundColor: isDark ? colors.surface : '#F1F2F4' }]}>
                 <View style={{ width: `${total ? (mentorAmount / total) * 100 : 0}%`, backgroundColor: viridian }} />
               </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, marginBottom: 12 }}>
                 <Txt size={12.5} weight="700" style={{ color: viridian }}>{`Mentor: ${formatVnd(mentorAmount)}`}</Txt>
                 <Txt size={12.5} weight="700" style={{ color: colors.text }}>{`Học viên được hoàn: ${formatVnd(refundAmount)}`}</Txt>
+              </View>
+              <View style={{ padding: 12, borderRadius: 12, backgroundColor: isDark ? colors.surface : '#F8FAFC', borderWidth: 1, borderColor: colors.borderSubtle, marginBottom: 16, gap: 4 }}>
+                <Txt size={12} weight="800" style={{ color: colors.text }}>
+                  Khấu trừ phí nền tảng (-3.000 ₫ / lệnh chuyển phát sinh):
+                </Txt>
+                <Txt size={12} style={{ color: colors.textSecondary }}>
+                  {`• Mentor thực nhận: ${formatVnd(mentorAmount > 0 ? Math.max(0, mentorAmount - 3000) : 0)} ${mentorAmount > 0 ? '(-3.000 ₫ phí nền tảng)' : '(Không chi -> 0 ₫ phí)'}`}
+                </Txt>
+                <Txt size={12} style={{ color: colors.textSecondary }}>
+                  {`• Học viên thực hoàn: ${formatVnd(refundAmount > 0 ? Math.max(0, refundAmount - 3000) : 0)} ${refundAmount > 0 ? '(-3.000 ₫ phí nền tảng)' : '(Không hoàn -> 0 ₫ phí)'}`}
+                </Txt>
               </View>
               <Field label="Lý do đề xuất dừng & hòa giải" required value={v('reason')} onChange={set('reason')} maxLength={1000} lines={3} error={errors.reason}
                 placeholder="Mô tả phần việc đã làm được và lý do chia tiền như trên."

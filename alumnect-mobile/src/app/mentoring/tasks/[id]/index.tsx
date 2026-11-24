@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Platform, Pressable, Share, StyleSheet, View } from 'react-native'
+import * as Clipboard from 'expo-clipboard'
 import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -11,6 +12,7 @@ import {
   CalendarPlus,
   ChevronRight,
   Clock,
+  CreditCard,
   FileCheck2,
   FilePen,
   History,
@@ -26,6 +28,7 @@ import {
 } from '@/components/icons'
 import { Header } from '@/components/Header'
 import { PaymentSheet } from '@/components/PaymentSheet'
+import { SheetModal } from '@/components/SheetModal'
 import { WorkLogCard } from '@/components/WorkLogCard'
 import { TASK_STATUS_LABEL, TICKET_STATUS_LABEL, taskApi } from '@/api/mentoringTask'
 import type { TaskCheckout } from '@/api/mentoringTask'
@@ -41,12 +44,15 @@ export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const tid = Number(id)
   const [feedback, setFeedback] = useState<Record<number, string>>({})
+  const [completionRating, setCompletionRating] = useState<number>(5)
   const [checkout, setCheckout] = useState<TaskCheckout | null>(null)
+  const [showPaymentInvoice, setShowPaymentInvoice] = useState<boolean>(false)
 
   const q = useQuery({ queryKey: ['mentoring-task', tid], queryFn: () => taskApi.detail(tid) })
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['mentoring-task', tid] })
     qc.invalidateQueries({ queryKey: ['mentoring-tasks'] })
+    qc.invalidateQueries({ queryKey: ['mentoring-review', tid] })
   }
   const run = (fn: () => Promise<unknown>, ok: string) =>
     fn()
@@ -58,6 +64,57 @@ export default function TaskDetailScreen() {
   const go = (type: string, extra?: Record<string, string>) =>
     router.push({ pathname: '/mentoring/tasks/[id]/action', params: { id: String(tid), type, ...extra } })
 
+  const buildPaymentInvoiceText = () => {
+    const issuedAt = new Date().toLocaleString('vi-VN')
+    const price = q.data?.overview.agreedPrice ?? 0
+    return [
+      '================================================',
+      '   AlumNect - HÓA ĐƠN XÁC NHẬN THANH TOÁN DEAL  ',
+      '================================================',
+      `Mã hóa đơn : INV-PAY-${tid}`,
+      `Nhiệm vụ   : #${tid} - ${q.data?.overview.taskScope || 'Nhiệm vụ Mentoring'}`,
+      `Người thanh toán : ${q.data?.student?.fullName || 'Học viên'}`,
+      `Người nhận dự kiến: ${q.data?.mentor?.fullName || 'Cố vấn'}`,
+      `Thời gian  : ${issuedAt}`,
+      `Cổng thanh toán  : PayOS (Tích hợp bảo đảm Escrow)`,
+      '------------------------------------------------',
+      `• Giá trị thỏa thuận gốc     : ${formatVnd(price)}`,
+      `• Phí vận hành nền tảng      : ${formatVnd(0)} (Miễn phí)`,
+      `• TỔNG TIỀN ĐÃ THANH TOÁN    : ${formatVnd(price)}`,
+      '------------------------------------------------',
+      'Ghi chú an toàn dòng tiền:',
+      '- Phí nền tảng khi thanh toán là 0đ.',
+      '- Toàn bộ số tiền đang được tạm giữ nguyên vẹn',
+      '  trên PayOS và chỉ giải ngân hoặc hoàn trả theo',
+      '  kết quả nghiệm thu/hòa giải hợp lệ.',
+      '================================================',
+    ].join('\n')
+  }
+
+  const handleDownloadPaymentInvoice = async () => {
+    const content = buildPaymentInvoiceText()
+    try {
+      if (Platform.OS === 'web') {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `Hoa-don-Thanh-toan-Task-${tid}.txt`
+        a.click()
+        URL.revokeObjectURL(url)
+        toast.success('Đã tải hóa đơn thanh toán thành công!')
+      } else {
+        await Share.share({
+          message: content,
+          title: `Hóa đơn thanh toán Task #${tid}`,
+        })
+      }
+    } catch {
+      await Clipboard.setStringAsync(content)
+      toast.success('Đã sao chép hóa đơn thanh toán vào bộ nhớ tạm!')
+    }
+  }
+
   const topup = useMutation({
     mutationFn: (amendmentId: number) => taskApi.checkout(q.data!.deal.id, amendmentId),
     onSuccess: setCheckout,
@@ -65,8 +122,8 @@ export default function TaskDetailScreen() {
   })
 
   const d = q.data
-  // Giống Web (MentoringChatForTask): chỉ cho đánh giá khi task COMPLETED và học viên chưa đánh giá.
-  const canReviewMentor = !!d?.permissions.isStudent && d?.overview.status === 'COMPLETED'
+  // Cho phép đánh giá ngay từ khi Mentor nộp kết quả (SUBMITTED) trước khi Confirm nghiệm thu, hoặc khi COMPLETED.
+  const canReviewMentor = !!d?.permissions.isStudent && (d?.overview.status === 'COMPLETED' || d?.overview.status === 'SUBMITTED')
   const myReview = useQuery({
     queryKey: ['mentoring-review', tid],
     queryFn: () => taskApi.myReview(tid),
@@ -260,6 +317,66 @@ export default function TaskDetailScreen() {
             <Txt size={13} weight="700" style={{ color: viridian, flex: 1 }} numberOfLines={2}>
               {`Bạn đã đánh giá mentor ${myReview.data.rating}/5 sao${myReview.data.comment ? ` · “${myReview.data.comment}”` : ''}`}
             </Txt>
+          </View>
+        ) : null}
+
+        {/* Thông tin thanh toán ban đầu (0đ phí nền tảng, tiền giữ an toàn trên PayOS) */}
+        {p.isStudent ? (
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginBottom: 16,
+              padding: 16,
+              borderRadius: 16,
+              backgroundColor: colors.card,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <CreditCard size={18} color={viridian} />
+                <Txt size={14} weight="800" style={{ color: colors.text }}>
+                  Thông tin thanh toán
+                </Txt>
+              </View>
+              <View
+                style={{
+                  backgroundColor: '#DCFCE7',
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: '#BBF7D0',
+                }}
+              >
+                <Txt size={11} weight="800" style={{ color: '#15803D' }}>
+                  Đã thanh toán (0đ phí)
+                </Txt>
+              </View>
+            </View>
+
+            <Txt size={12} style={{ color: colors.textSecondary, marginBottom: 8 }}>
+              Tạm giữ an toàn trên PayOS · Chưa giải ngân cho Cố vấn
+            </Txt>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+              <Txt size={13} style={{ color: colors.textSecondary }}>
+                Số tiền đã thanh toán:
+              </Txt>
+              <Txt size={16} weight="800" style={{ color: '#0284C7' }}>
+                {formatVnd(o.agreedPrice)}
+              </Txt>
+            </View>
+
+            <Button
+              title="Tải / Xem hóa đơn thanh toán"
+              size="sm"
+              variant="outline"
+              style={{ borderColor: '#0284C7' }}
+              textColor="#0284C7"
+              onPress={() => setShowPaymentInvoice(true)}
+            />
           </View>
         ) : null}
 
@@ -488,19 +605,49 @@ export default function TaskDetailScreen() {
               </Txt>
             ) : null}
             {p.canConfirmCompletion && d.latestCompletion.canConfirm ? (
-              <View style={{ marginTop: 10 }}>
+              <View style={{ marginTop: 12 }}>
+                <View style={{ padding: 12, borderRadius: 12, backgroundColor: isDark ? colors.surface : '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', marginBottom: 10 }}>
+                  <Txt size={12.5} weight="800" style={{ color: colors.text, marginBottom: 6 }}>
+                    Đánh giá Cố vấn trước khi xác nhận nghiệm thu *
+                  </Txt>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Pressable
+                        key={star}
+                        onPress={() => setCompletionRating(star)}
+                        hitSlop={6}
+                        style={{ padding: 2 }}
+                      >
+                        <Star
+                          size={28}
+                          color={star <= completionRating ? '#F59E0B' : colors.border}
+                          weight={star <= completionRating ? 'fill' : 'regular'}
+                        />
+                      </Pressable>
+                    ))}
+                    <Txt size={12.5} weight="700" style={{ color: '#D97706', marginLeft: 4 }}>
+                      {`${completionRating}/5 sao`}
+                    </Txt>
+                  </View>
+                </View>
+
                 <Input
                   value={feedback[-1] ?? ''}
                   onChangeText={(v) => setFeedback({ ...feedback, [-1]: v })}
-                  placeholder="Nhận xét nghiệm thu (tùy chọn)"
+                  placeholder="Nhận xét đánh giá Mentor / Lý do yêu cầu làm lại"
                 />
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <Button
-                    title="Nghiệm thu hoàn tất"
+                    title="Đánh giá & Nghiệm thu"
                     size="sm"
                     textColor="#FFFFFF"
                     style={{ flex: 1, backgroundColor: viridian, borderColor: viridian }}
-                    onPress={() => run(() => taskApi.respondCompletion(tid, d.latestCompletion!.id, true, feedback[-1]), 'Đã nghiệm thu nhiệm vụ.')}
+                    onPress={() =>
+                      run(
+                        () => taskApi.respondCompletion(tid, d.latestCompletion!.id, true, feedback[-1], completionRating, feedback[-1]),
+                        'Đã đánh giá Mentor và nghiệm thu hoàn tất nhiệm vụ!'
+                      )
+                    }
                   />
                   <Button
                     title="Yêu cầu làm lại"
@@ -636,6 +783,69 @@ export default function TaskDetailScreen() {
           setCheckout(null)
         }}
       />
+
+      {/* Sheet Hóa đơn thanh toán ban đầu (0đ phí, giữ trên PayOS) */}
+      <SheetModal visible={showPaymentInvoice} onClose={() => setShowPaymentInvoice(false)}>
+        <View style={{ padding: 20 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 2, borderBottomColor: '#F27024', paddingBottom: 14, marginBottom: 16 }}>
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                <Txt size={28} weight="800" style={{ color: '#0A58CA', fontStyle: 'italic' }}>Alum</Txt>
+                <Txt size={28} weight="800" style={{ color: '#C84B11', fontStyle: 'italic' }}>Nect</Txt>
+              </View>
+              <Txt size={11.5} weight="800" style={{ color: colors.textSecondary, marginTop: 4, letterSpacing: 0.4 }}>
+                HÓA ĐƠN THANH TOÁN YÊU CẦU
+              </Txt>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Txt size={11.5} style={{ color: colors.textSecondary }}>
+                Mã: <Txt size={11.5} weight="800" style={{ color: colors.text }}>{`INV-PAY-${tid}`}</Txt>
+              </Txt>
+              <Txt size={11.5} style={{ color: colors.textSecondary, marginTop: 2 }}>
+                Nhiệm vụ: <Txt size={11.5} weight="800" style={{ color: colors.text }}>{`#${tid}`}</Txt>
+              </Txt>
+            </View>
+          </View>
+
+          <View style={{ backgroundColor: isDark ? colors.surface : '#F8FAFC', borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14, gap: 10 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Txt size={13} style={{ color: colors.textSecondary }}>Giá thỏa thuận:</Txt>
+              <Txt size={13} weight="700" style={{ color: colors.text }}>{formatVnd(o.agreedPrice)}</Txt>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Txt size={13} style={{ color: colors.textSecondary }}>Phí nền tảng thanh toán:</Txt>
+              <Txt size={13} weight="700" style={{ color: '#16A34A' }}>0 ₫ (Miễn phí)</Txt>
+            </View>
+            <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Txt size={13.5} weight="800" style={{ color: colors.text }}>Tổng thanh toán:</Txt>
+              <Txt size={16} weight="800" style={{ color: '#0284C7' }}>{formatVnd(o.agreedPrice)}</Txt>
+            </View>
+            <View style={{ marginTop: 4, padding: 10, borderRadius: 10, backgroundColor: isDark ? '#1E293B' : '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE' }}>
+              <Txt size={11.5} style={{ color: '#1E40AF', lineHeight: 16 }}>
+                Trạng thái: Đang tạm giữ nguyên vẹn trên PayOS (chưa giải ngân cho Cố vấn).
+              </Txt>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+            <Button
+              title="Đóng"
+              variant="outline"
+              size="sm"
+              style={{ flex: 1 }}
+              onPress={() => setShowPaymentInvoice(false)}
+            />
+            <Button
+              title="Tải hóa đơn về máy"
+              size="sm"
+              textColor="#FFFFFF"
+              style={{ flex: 2, backgroundColor: '#0284C7', borderColor: '#0284C7' }}
+              onPress={() => { void handleDownloadPaymentInvoice() }}
+            />
+          </View>
+        </View>
+      </SheetModal>
     </Screen>
   )
 }

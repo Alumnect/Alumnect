@@ -537,7 +537,7 @@ export function MentoringChatForTask({ conversationId, onBack }: MentoringChatFo
   // "Chi tiết yêu cầu" đã có sẵn trên dải thông tin yêu cầu, không lặp lại trong menu
   const openRequestDetail = () =>
     navigate(isMentor ? `/app/mentoring/incoming-requests/${ctx.requestId}` : `/app/mentoring/requests/${ctx.requestId}`)
-  if (ctx.taskId && isMentor) viewItems.push({ label: t('mentoring.taskFinancialReportAction'), icon: <FileText />, onClick: () => setIsTaskReportOpen(true) })
+  if (ctx.taskId && (isMentor || isStudent)) viewItems.push({ label: t('mentoring.taskFinancialReportAction'), icon: <FileText />, onClick: () => setIsTaskReportOpen(true) })
 
   const proposalItems: ActionItem[] = []
   if (isTaskActive && isMentor && permissions?.canRequestExtension && taskDetail?.activeExtension?.status !== 'PENDING') {

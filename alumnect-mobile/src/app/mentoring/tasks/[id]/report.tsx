@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native'
+import React, { useState } from 'react'
+import { Platform, Pressable, RefreshControl, Share, StyleSheet, TextInput, View } from 'react-native'
+import * as Clipboard from 'expo-clipboard'
 import { ScrollView } from '@/components/ScrollView'
 import { useLocalSearchParams } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -117,6 +118,7 @@ export default function TaskReportScreen() {
   const [pingOpen, setPingOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [selectedQuick, setSelectedQuick] = useState<string | null>(null)
+  const [previewParty, setPreviewParty] = useState<'student' | 'mentor' | null>(null)
 
   const pingMutation = useMutation({
     mutationFn: ({ reason: text, issueType }: { reason: string; issueType?: string }) =>
@@ -179,14 +181,98 @@ export default function TaskReportScreen() {
     resolvedTicket?.decision === 'PARTIAL_SPLIT' ||
     r.resolutionDecision === 'PARTIAL_SPLIT'
 
-  // Số tiền phân chia: ưu tiên từ r (nếu backend trả > 0), fallback sang snapshot và ticket
-  const mentorSplit = (r.mentorEarnedAmount && r.mentorEarnedAmount > 0)
+  // Số tiền phân chia gốc & sau khi khấu trừ -3.000 ₫ phí nền tảng
+  const mentorGross = (r.mentorEarnedAmount && r.mentorEarnedAmount > 0)
     ? r.mentorEarnedAmount
     : (resolvedTicket?.mentorAmount ?? snap?.mentorAmount ?? 0)
+  const mentorFee = r.mentorPlatformFee != null
+    ? r.mentorPlatformFee
+    : (mentorGross > 0 ? Math.min(3000, mentorGross) : 0)
+  const mentorNet = Math.max(0, mentorGross - mentorFee)
 
-  const studentSplit = (r.studentRefundAmount && r.studentRefundAmount > 0)
-    ? r.studentRefundAmount
-    : (resolvedTicket?.studentRefund ?? snap?.studentRefund ?? 0)
+  const studentGross = (r.studentGrossRefundAmount != null && r.studentGrossRefundAmount > 0)
+    ? r.studentGrossRefundAmount
+    : (resolvedTicket?.studentRefund ?? snap?.studentRefund ?? r.studentRefundAmount ?? 0)
+  const studentFee = r.studentPlatformFee != null
+    ? r.studentPlatformFee
+    : (studentGross > 0 ? Math.min(3000, studentGross) : 0)
+  const studentNet = Math.max(0, studentGross - studentFee)
+
+  const mentorSplit = mentorNet
+  const studentSplit = studentNet
+  const invoiceCode = r.invoiceCode || `INV-TASK-${id}`
+
+  const buildPartyInvoiceText = (party: 'student' | 'mentor') => {
+    const issuedAt = new Date(r.invoiceIssuedAt || Date.now()).toLocaleString('vi-VN')
+    const partyCode = `${invoiceCode}-${party === 'student' ? 'HV' : 'CV'}`
+    if (party === 'student') {
+      return [
+        '================================================',
+        '       AlumNect - HÓA ĐƠN PHÍA HỌC VIÊN         ',
+        '================================================',
+        `Mã hóa đơn : ${partyCode}`,
+        `Nhiệm vụ   : #${id} - ${title}`,
+        `Ngày xuất  : ${issuedAt}`,
+        `Trạng thái : ${TASK_STATUS_LABEL[r.taskStatus] ?? r.taskStatus}`,
+        '------------------------------------------------',
+        `• Giá thỏa thuận gốc        : ${formatVnd(r.originalPrice)}`,
+        `• Điều chỉnh bổ sung        : +${formatVnd(Math.max(0, delta))}`,
+        `• Phí nền tảng khi thanh toán: ${formatVnd(0)}`,
+        `• Tổng tiền đã thanh toán   : ${formatVnd(r.studentTotalPaid)}`,
+        ...(studentGross > 0
+          ? [
+              '------------------------------------------------',
+              `• Khoản hoàn phân bổ gốc    : ${formatVnd(studentGross)}`,
+              `• Phí nền tảng              : -${formatVnd(studentFee)}`,
+              `• SỐ TIỀN HOÀN THỰC NHẬN    : ${formatVnd(studentNet)}`,
+            ]
+          : []),
+        '================================================',
+      ].join('\n')
+    }
+    return [
+      '================================================',
+      '        AlumNect - HÓA ĐƠN PHÍA CỐ VẤN          ',
+      '================================================',
+      `Mã hóa đơn : ${partyCode}`,
+      `Nhiệm vụ   : #${id} - ${title}`,
+      `Ngày xuất  : ${issuedAt}`,
+      `Trạng thái : ${TASK_STATUS_LABEL[r.taskStatus] ?? r.taskStatus}`,
+      '------------------------------------------------',
+      `• Thù lao công việc gốc     : ${formatVnd(mentorGross)}`,
+      `• Phí nền tảng              : ${mentorFee > 0 ? '-' + formatVnd(mentorFee) : formatVnd(0)}`,
+      `• THÙ LAO THỰC NHẬN         : ${formatVnd(mentorNet)}`,
+      '================================================',
+    ].join('\n')
+  }
+
+  const handleDownloadPartyInvoice = async (party: 'student' | 'mentor') => {
+    const invoiceContent = buildPartyInvoiceText(party)
+    const partyCode = `${invoiceCode}-${party === 'student' ? 'HV' : 'CV'}`
+    const partyLabel = party === 'student' ? 'Hóa đơn Phía Học viên' : 'Hóa đơn Phía Cố vấn'
+    try {
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        const blob = new Blob([invoiceContent], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${party === 'student' ? 'Hoa-don-Phia-Hoc-vien' : 'Hoa-don-Phia-Co-van'}-Task-${id}.txt`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        toast.success(`Đã tải ${partyLabel} (${partyCode}) về máy!`)
+        return
+      }
+      await Share.share({
+        title: `${partyLabel} - ${partyCode}`,
+        message: invoiceContent,
+      })
+    } catch {
+      await Clipboard.setStringAsync(invoiceContent)
+      toast.success(`Đã sao chép ${partyLabel} (${partyCode}) vào bộ nhớ tạm!`)
+    }
+  }
 
   // Tiêu đề & nội dung quyết định giải quyết
   const resolutionTitle =
@@ -358,30 +444,57 @@ export default function TaskReportScreen() {
           </Card>
         </Enter>
 
-        {/* Phía Học viên */}
+        {/* Hóa đơn Phía Học viên */}
         <Enter delay={180}>
-          <Card title="Phía Học viên" brand="people">
-            <Row label="Đã thanh toán" hint="Nền tảng tạm giữ cho đến khi nghiệm thu" value={formatVnd(r.studentTotalPaid)} />
+          <Card title="Hóa đơn Phía Học viên" brand="people">
+            <Row label="Phí nền tảng khi thanh toán" value={formatVnd(0)} color="#16A34A" />
+            <Row label="Tổng tiền đã thanh toán" hint="Tạm giữ nguyên vẹn trên PayOS" value={formatVnd(r.studentTotalPaid)} strong />
+            {studentGross > 0 ? (
+              <>
+                <Row label="Khoản hoàn phân bổ gốc" value={formatVnd(studentGross)} />
+                <Row
+                  label="Phí nền tảng"
+                  value={`-${formatVnd(studentFee)}`}
+                  color="#DC2626"
+                />
+                <Row
+                  label="Số tiền hoàn thực nhận"
+                  value={formatVnd(studentNet)}
+                  strong
+                  color="#0284C7"
+                />
+              </>
+            ) : null}
             <Row
-              label="Được hoàn lại"
-              value={formatVnd(studentSplit)}
-              color={studentSplit > 0 ? '#0284C7' : undefined}
-            />
-            <Row
-              label="Trạng thái hoàn tiền"
+              label={studentGross > 0 ? 'Trạng thái hoàn tiền' : 'Trạng thái quỹ'}
               hint={studentStatusHint}
               tag={moneyStatus(effectiveStudentStatus)}
               last
             />
+            <View style={{ marginTop: 12 }}>
+              <Button
+                title="Xem & Tải hóa đơn Phía Học viên"
+                size="sm"
+                textColor="#FFFFFF"
+                style={{ backgroundColor: '#0284C7', borderColor: '#0284C7' }}
+                onPress={() => setPreviewParty('student')}
+              />
+            </View>
           </Card>
         </Enter>
 
-        {/* Phía Mentor */}
+        {/* Hóa đơn Phía Cố vấn */}
         <Enter delay={240}>
-          <Card title="Phía Mentor" brand="suitcase">
+          <Card title="Hóa đơn Phía Cố vấn" brand="suitcase">
+            <Row label="Thù lao công việc gốc" value={formatVnd(mentorGross)} />
+            <Row
+              label="Phí nền tảng"
+              value={mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)}
+              color={mentorFee > 0 ? '#DC2626' : colors.textSecondary}
+            />
             <Row
               label="Thù lao thực nhận"
-              value={formatVnd(mentorSplit)}
+              value={formatVnd(mentorNet)}
               strong
               color={viridian}
             />
@@ -391,6 +504,15 @@ export default function TaskReportScreen() {
               tag={moneyStatus(effectiveMentorStatus)}
               last
             />
+            <View style={{ marginTop: 12 }}>
+              <Button
+                title="Xem & Tải hóa đơn Phía Cố vấn"
+                size="sm"
+                textColor="#FFFFFF"
+                style={{ backgroundColor: viridian, borderColor: viridian }}
+                onPress={() => setPreviewParty('mentor')}
+              />
+            </View>
           </Card>
         </Enter>
 
@@ -409,6 +531,79 @@ export default function TaskReportScreen() {
           </Enter>
         ) : null}
       </ScrollView>
+
+      {/* Sheet Hóa đơn điện tử tách riêng kèm Logo AlumNect trên Mobile */}
+      <SheetModal visible={previewParty !== null} onClose={() => setPreviewParty(null)}>
+        {previewParty ? (
+          <View style={{ padding: 20 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 2, borderBottomColor: '#F27024', paddingBottom: 14, marginBottom: 16 }}>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                  <Txt size={28} weight="800" style={{ color: '#0A58CA', fontStyle: 'italic' }}>Alum</Txt>
+                  <Txt size={28} weight="800" style={{ color: '#C84B11', fontStyle: 'italic' }}>Nect</Txt>
+                </View>
+                <Txt size={11.5} weight="800" style={{ color: colors.textSecondary, marginTop: 4, letterSpacing: 0.4 }}>
+                  {previewParty === 'student' ? 'HÓA ĐƠN PHÍA HỌC VIÊN' : 'HÓA ĐƠN PHÍA CỐ VẤN'}
+                </Txt>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Txt size={11.5} style={{ color: colors.textSecondary }}>
+                  Mã: <Txt size={11.5} weight="800" style={{ color: colors.text }}>{`${invoiceCode}-${previewParty === 'student' ? 'HV' : 'CV'}`}</Txt>
+                </Txt>
+                <Txt size={11.5} style={{ color: colors.textSecondary, marginTop: 2 }}>
+                  Nhiệm vụ: <Txt size={11.5} weight="800" style={{ color: colors.text }}>{`#${id}`}</Txt>
+                </Txt>
+              </View>
+            </View>
+
+            <Txt size={13} style={{ color: colors.text, marginBottom: 12 }} numberOfLines={2}>
+              <Txt size={13} weight="800">Tên nhiệm vụ: </Txt>{title}
+            </Txt>
+
+            <View style={{ backgroundColor: isDark ? colors.surface : '#F8FAFC', borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 14 }}>
+              {previewParty === 'student' ? (
+                <>
+                  <Row label="Giá thỏa thuận gốc" value={formatVnd(r.originalPrice)} />
+                  <Row label="Điều chỉnh bổ sung" value={`+${formatVnd(Math.max(0, delta))}`} />
+                  <Row label="Phí nền tảng khi thanh toán" value={formatVnd(0)} color="#16A34A" />
+                  <Row label="Tổng tiền đã thanh toán (Giữ trên PayOS)" value={formatVnd(r.studentTotalPaid)} strong color="#0284C7" last={studentGross <= 0} />
+                  {studentGross > 0 ? (
+                    <>
+                      <Row label="Khoản hoàn trả phân bổ gốc" value={formatVnd(studentGross)} />
+                      <Row label="Phí nền tảng" value={`-${formatVnd(studentFee)}`} color="#DC2626" />
+                      <Row label="Số tiền hoàn thực nhận" value={formatVnd(studentNet)} strong color="#0284C7" last />
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <Row label="Thù lao công việc gốc" value={formatVnd(mentorGross)} />
+                  <Row label="Phí nền tảng" value={mentorFee > 0 ? `-${formatVnd(mentorFee)}` : formatVnd(0)} color={mentorFee > 0 ? '#DC2626' : colors.textSecondary} />
+                  <Row label="Thù lao thực nhận" value={formatVnd(mentorNet)} strong color={viridian} />
+                  <Row label="Trạng thái chi trả" tag={moneyStatus(effectiveMentorStatus)} last />
+                </>
+              )}
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+              <Button
+                title="Đóng"
+                variant="outline"
+                size="sm"
+                style={{ flex: 1 }}
+                onPress={() => setPreviewParty(null)}
+              />
+              <Button
+                title="Tải hóa đơn về máy"
+                size="sm"
+                textColor="#FFFFFF"
+                style={{ flex: 2, backgroundColor: previewParty === 'student' ? '#0284C7' : viridian, borderColor: previewParty === 'student' ? '#0284C7' : viridian }}
+                onPress={() => { void handleDownloadPartyInvoice(previewParty) }}
+              />
+            </View>
+          </View>
+        ) : null}
+      </SheetModal>
 
       {/* Modal Ping lại Admin về sự cố dòng tiền */}
       <SheetModal visible={pingOpen} onClose={() => setPingOpen(false)}>

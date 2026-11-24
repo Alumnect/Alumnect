@@ -160,7 +160,27 @@ public class MentoringTaskCompletionServiceImpl implements MentoringTaskCompleti
 
         if (Boolean.TRUE.equals(request.getAccept())) {
             // =========================================================================
-            // CHẤP NHẬN NGHIỆM THU: TASK CHUYỂN SANG COMPLETED VÀ TỰ ĐỘNG TẠO PAYOUT
+            // 1. GHI NHẬN ĐÁNH GIÁ MENTOR TRƯỚC KHI CONFIRM NGHIỆM THU (NẾU CÓ GỬI RATING)
+            // =========================================================================
+            if (request.getRating() != null && request.getRating() >= 1 && request.getRating() <= 5) {
+                try {
+                    String reviewComment = (request.getReviewComment() != null && !request.getReviewComment().isBlank())
+                            ? request.getReviewComment().trim()
+                            : (request.getFeedbackNote() != null && !request.getFeedbackNote().isBlank() ? request.getFeedbackNote().trim() : null);
+                    com.alumnect.alumnect_backend.dto.request.mentorship.MentorReviewRequest reviewReq =
+                            com.alumnect.alumnect_backend.dto.request.mentorship.MentorReviewRequest.builder()
+                                    .taskId(task.getId())
+                                    .rating(request.getRating())
+                                    .comment(reviewComment)
+                                    .build();
+                    mentorReputationService.submitMentorReview(currentUser.getEmail(), reviewReq);
+                } catch (Exception reviewEx) {
+                    log.info("Ghi nhận đánh giá Mentor khi nghiệm thu Task id={}: {}", task.getId(), reviewEx.getMessage());
+                }
+            }
+
+            // =========================================================================
+            // 2. CHẤP NHẬN NGHIỆM THU: TASK CHUYỂN SANG COMPLETED VÀ TỰ ĐỘNG TẠO PAYOUT
             // =========================================================================
             completion.setStatus(MentoringCompletionStatus.CONFIRMED);
             completion.setFeedbackNote(request.getFeedbackNote() != null ? request.getFeedbackNote().trim() : null);

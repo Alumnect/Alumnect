@@ -102,8 +102,8 @@ public class MentorReputationServiceImpl implements MentorReputationService {
         if (!task.getStudent().getId().equals(student.getId())) {
             throw new ForbiddenException("Chỉ Học viên của Task mới được đánh giá Mentor.");
         }
-        if (task.getStatus() != MentoringTaskStatus.COMPLETED) {
-            throw new BadRequestException("Chỉ có thể đánh giá Mentor sau khi Task đã hoàn thành.");
+        if (task.getStatus() != MentoringTaskStatus.COMPLETED && task.getStatus() != MentoringTaskStatus.SUBMITTED) {
+            throw new BadRequestException("Chỉ có thể đánh giá Mentor khi Mentor đã nộp kết quả nghiệm thu hoặc Task đã hoàn thành.");
         }
         if (mentorReviewRepository.existsByTaskId(task.getId())) {
             throw new ConflictException("Bạn đã đánh giá Mentor cho Task này rồi.");

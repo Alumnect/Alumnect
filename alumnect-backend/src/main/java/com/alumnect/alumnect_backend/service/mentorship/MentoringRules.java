@@ -27,6 +27,25 @@ public class MentoringRules {
             MentoringTaskStatus.PREPARATION, MentoringTaskStatus.IN_PROGRESS,
             MentoringTaskStatus.SUBMITTED, MentoringTaskStatus.DISPUTED);
 
+    /** Phí nền tảng cố định 3.000đ thu trên mỗi lệnh chi trả (Mentor) hoặc hoàn tiền (Học viên) có phát sinh (> 0đ) */
+    public static final BigDecimal PLATFORM_TRANSFER_FEE = BigDecimal.valueOf(3000);
+
+    /** Tính phí nền tảng 3.000đ cho một lệnh chi/hoàn: chỉ trừ khi số tiền gốc > 0 */
+    public static BigDecimal calculateTransferFee(BigDecimal grossAmount) {
+        if (grossAmount == null || grossAmount.signum() <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return grossAmount.min(PLATFORM_TRANSFER_FEE);
+    }
+
+    /** Tính số tiền thực nhận sau khi trừ 3.000đ phí nền tảng */
+    public static BigDecimal calculateNetTransfer(BigDecimal grossAmount) {
+        if (grossAmount == null || grossAmount.signum() <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return grossAmount.subtract(calculateTransferFee(grossAmount)).max(BigDecimal.ZERO);
+    }
+
     private final MentoringTaskRepository taskRepository;
     private final com.alumnect.alumnect_backend.dao.mentorship.MentoringPaymentLedgerRepository ledgerRepository;
 
