@@ -86,7 +86,7 @@ export const MENTORING_CORE_PRINCIPLES: CorePrincipleItem[] = [
   },
 ]
 
-/** 6 con số & quy tắc vàng từ 10 điều khoản UC90 + Nghị định 117/2025/NĐ-CP */
+/** 6 con số & quy tắc vàng từ 10 điều khoản UC90 */
 export const MENTORING_GOLDEN_RULES: GoldenRuleCard[] = [
   {
     id: 'escrow',
@@ -125,11 +125,11 @@ export const MENTORING_GOLDEN_RULES: GoldenRuleCard[] = [
     tone: 'danger',
   },
   {
-    id: 'tax-117',
-    metric: 'NĐ 117',
-    unit: 'Thuế & Phí',
+    id: 'payos-fee',
+    metric: '0% / 3.000đ',
+    unit: 'Phí nền tảng',
     title: 'Minh bạch Thu hộ – Chi hộ',
-    desc: '0% phí hoa hồng nền tảng. Mentor cá nhân khấu trừ 7% thuế theo NĐ 117/2025 + 3.000đ phí PayOS.',
+    desc: '0% phí hoa hồng nền tảng trên mỗi buổi học, chỉ trừ 3.000đ phí hạ tầng chuyển khoản PayOS.',
     brandIcon: 'coin',
     tone: 'brand',
   },
@@ -466,8 +466,8 @@ export const STUDENT_GUIDE_STEPS: MobileGuideStep[] = [
     ],
     highlights: [
       'Thời hiệu khiếu nại: Tối đa 07 ngày kể từ khi kết thúc nhiệm vụ',
-      'Hủy trước 24h hoàn 100%; Cố vấn đơn phương hủy hoàn 100%',
-      'Phần hoàn lại cho Học viên không tính thuế (chỉ trừ 3.000đ phí PayOS)',
+      'Hoàn trả 100% nếu Cố vấn không thực hiện hoặc vi phạm cam kết',
+      'Phần hoàn lại cho Học viên chỉ trừ 3.000đ phí chuyển khoản PayOS',
     ],
     notes: [
       {
@@ -536,7 +536,7 @@ export const MENTOR_GUIDE_STEPS: MobileGuideStep[] = [
     ],
     highlights: [
       'Cấp huy hiệu Cố vấn xác thực nổi bật trên toàn nền tảng',
-      'Khai báo CCCD & MST cá nhân để cấp chứng từ thuế theo NĐ 117',
+      'Khai báo tài khoản ngân hàng thụ hưởng chính xác để nhận thù lao tự động',
       'Hồ sơ đầy đủ giúp tăng gấp 3 lần tỷ lệ sinh viên gửi yêu cầu',
     ],
     notes: [
@@ -790,7 +790,7 @@ export const MENTOR_GUIDE_STEPS: MobileGuideStep[] = [
         title: 'Huy hiệu "Thành công" chuyển khoản PayOS',
         shortLabel: 'PayOS đã chi trả',
         description:
-          'Tiền tự động về tài khoản thụ hưởng. Cá nhân thực nhận = (93% × Giá trị) − 3.000đ theo NĐ 117/2025.',
+          'Tiền tự động về tài khoản thụ hưởng qua PayOS (trừ 3.000đ phí chuyển khoản).',
         targetX: 585,
         targetY: 895,
         labelX: 485,
@@ -800,24 +800,24 @@ export const MENTOR_GUIDE_STEPS: MobileGuideStep[] = [
     ],
     highlights: [
       'Chuyển khoản tự động qua PayOS, không cần chờ duyệt thủ công',
-      'Mentor cá nhân: thực nhận = (93% × Giá trị) − 3.000đ (7% thuế NĐ 117)',
-      'Mentor Doanh nghiệp/HKD có hóa đơn: miễn khấu trừ 7% thuế tại nguồn',
+      'Thực nhận = Giá trị thỏa thuận − 3.000đ phí chuyển khoản PayOS',
+      'Không thu phí hoa hồng trên từng buổi học',
     ],
     notes: [
       {
         type: 'tip',
-        text: 'Mẹo: Kiểm tra chính xác số tài khoản thụ hưởng và MST cá nhân trong Hồ sơ Mentor để lệnh chi trả và chứng từ thuế luôn chính xác.',
+        text: 'Mẹo: Kiểm tra chính xác số tài khoản thụ hưởng trong Hồ sơ Mentor để lệnh chi trả qua PayOS luôn chính xác.',
       },
     ],
   },
 ]
 
-/** 5 Câu hỏi thường gặp — Đồng bộ 100% từ Web MentoringGuide.tsx + cập nhật NĐ 117/2025 */
+/** 5 Câu hỏi thường gặp — Đồng bộ 100% từ Web MentoringGuide.tsx */
 export const MENTORING_GUIDE_FAQS: GuideFaqItem[] = [
   {
-    tag: 'Ký quỹ & Thuế',
-    q: 'Tiền ký quỹ, phí nền tảng và thuế theo Nghị định 117 được tính như thế nào?',
-    a: 'Khi Học viên thanh toán thỏa thuận, 100% số tiền được tạm giữ an toàn tại quỹ ký quỹ AlumNect qua PayOS và chỉ giải ngân khi hoàn tất nghiệm thu. AlumNect không thu hoa hồng trên từng buổi học (chỉ thu phí gói thành viên của Mentor). Theo Nghị định 117/2025/NĐ-CP, Mentor cá nhân được khấu trừ nộp thay 7% thuế (5% GTGT + 2% TNCN) và 3.000đ phí chuyển khoản PayOS: Thực nhận = (93% × Giá trị) − 3.000đ. Doanh nghiệp/HKD có hóa đơn điện tử hợp lệ được miễn khấu trừ 7% tại nguồn.',
+    tag: 'Ký quỹ & Phí',
+    q: 'Tiền ký quỹ và phí giao dịch được tính như thế nào?',
+    a: 'Khi Học viên thanh toán thỏa thuận, 100% số tiền được tạm giữ an toàn tại quỹ ký quỹ AlumNect qua PayOS và chỉ giải ngân khi hoàn tất nghiệm thu. AlumNect không thu hoa hồng trên từng buổi học (chỉ thu phí gói thành viên của Mentor), và mọi lệnh chi trả hoặc hoàn tiền chỉ trừ 3.000đ phí chuyển khoản PayOS.',
   },
   {
     tag: 'Quy tắc 72h',
@@ -832,7 +832,7 @@ export const MENTORING_GUIDE_FAQS: GuideFaqItem[] = [
   {
     tag: 'Khiếu nại',
     q: 'Thời hiệu mở phiếu khiếu nại tranh chấp là bao lâu?',
-    a: 'Phiếu khiếu nại tranh chấp chỉ được phép mở trong vòng tối đa 07 ngày kể từ thời điểm phát sinh sự cố hoặc ngày kết thúc nhiệm vụ để tạm phong tỏa quỹ ký quỹ. Quá 07 ngày, hệ thống tự động đóng quyền khiếu nại và giải ngân dứt điểm theo dữ liệu nhật ký công việc. Phần hoàn lại cho Học viên không tính thuế (chỉ trừ 3.000đ phí chuyển khoản hoàn tiền).',
+    a: 'Phiếu khiếu nại tranh chấp chỉ được phép mở trong vòng tối đa 07 ngày kể từ thời điểm phát sinh sự cố hoặc ngày kết thúc nhiệm vụ để tạm phong tỏa quỹ ký quỹ. Quá 07 ngày, hệ thống tự động đóng quyền khiếu nại và giải ngân dứt điểm theo dữ liệu nhật ký công việc. Phần hoàn lại cho Học viên chỉ trừ 3.000đ phí chuyển khoản hoàn tiền.',
   },
   {
     tag: 'Bản quyền',

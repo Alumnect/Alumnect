@@ -442,7 +442,7 @@ class FE60_TaskReportReviewTest {
     }
 
     @Test
-    @DisplayName("UTCID11 - Task not COMPLETED -> submitMentorReview -> BadRequestException")
+    @DisplayName("UTCID11 - Task not SUBMITTED or COMPLETED -> submitMentorReview -> BadRequestException")
     void utcid11_submitMentorReview_badRequest() {
         // Given: Task IN_PROGRESS
         task.setStatus(MentoringTaskStatus.IN_PROGRESS);
@@ -454,7 +454,7 @@ class FE60_TaskReportReviewTest {
         // When + Then
         assertThatThrownBy(() -> reputationService.submitMentorReview(STUDENT_EMAIL, request))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Chỉ có thể đánh giá Mentor sau khi Task đã hoàn thành.");
+                .hasMessage("Chỉ có thể đánh giá Mentor khi Mentor đã nộp kết quả nghiệm thu hoặc Task đã hoàn thành.");
     }
 
     // ================= UTCID12 -> UTCID13: Penalty and Completed Task =================

@@ -399,7 +399,7 @@ export default function MentoringGuideScreen() {
                   Các câu hỏi thường gặp
                 </Txt>
                 <Txt size={11.5} style={{ color: colors.textTertiary }}>
-                  Giải đáp nhanh về Ký quỹ, 72 giờ, Thuế NĐ 117 & Khiếu nại
+                  Giải đáp nhanh về Ký quỹ, 72 giờ, Phí giao dịch & Khiếu nại
                 </Txt>
               </View>
             </View>
@@ -482,7 +482,7 @@ export default function MentoringGuideScreen() {
                 Xem đầy đủ 10 Điều khoản dịch vụ
               </Txt>
               <Txt size={12} style={{ color: colors.textSecondary, marginTop: 2, lineHeight: 17 }}>
-                Quy chế pháp lý, chính sách thuế NĐ 117/2025 & giải quyết tranh chấp.
+                Quy chế pháp lý, chính sách ký quỹ & giải quyết tranh chấp.
               </Txt>
             </View>
             <ChevronRight size={18} color={viridian} weight="bold" />
