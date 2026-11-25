@@ -79,6 +79,7 @@ services:
       - SITE_ADDRESS=${SITE_ADDRESS}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./conf.d:/etc/caddy/conf.d:ro
       - ./www:/srv/www:ro
       - caddy_data:/data
       - caddy_config:/config

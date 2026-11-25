@@ -12,3 +12,5 @@
 		file_server
 	}
 }
+
+import /etc/caddy/conf.d/*.caddy
