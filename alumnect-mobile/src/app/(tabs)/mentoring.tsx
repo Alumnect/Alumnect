@@ -693,7 +693,7 @@ export default function MentoringTab() {
             brandIcon="writing"
             icon={<FileText size={20} color={viridian} />}
             title="Điều khoản & Quy chế Mentoring"
-            desc="Xem đầy đủ 10 điều khoản, Ký quỹ PayOS & thuế NĐ 117/2025"
+            desc="Xem đầy đủ 10 điều khoản & cơ chế Ký quỹ PayOS"
             onPress={() => {
               setUtilitySheet(false)
               router.push('/mentoring/terms')
