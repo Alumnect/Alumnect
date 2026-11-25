@@ -231,7 +231,8 @@ export function RequestForm({
       for (const file of picked.assets) {
         const fileType = guessMime(file.name, file.mimeType)
         // uploadFile ép Content-Type của blob trùng với loại đã ký URL — tránh R2 trả 403 SignatureDoesNotMatch
-        const uploaded = await uploadFile({ uri: file.uri, name: file.name, mimeType: fileType }, 'mentorship/requests')
+        const uploaded = await uploadFile({ uri: file.uri, name: file.name, mimeType: fileType, size: file.size }, 'mentorship/requests')
+        if (uploaded.fileSize <= 0) throw new Error(`Tệp "${file.name}" rỗng hoặc không đọc được dung lượng`)
         if (uploaded.fileSize >= 10 * 1024 * 1024) throw new Error(`Tệp "${file.name}" vượt quá 10 MB`)
         setAttachments((a) => [...a, { fileName: file.name, fileUrl: uploaded.url, fileSize: uploaded.fileSize, fileType }])
       }
