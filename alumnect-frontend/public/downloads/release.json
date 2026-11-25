@@ -1,12 +1,12 @@
 {
   "version": "1.0.0",
-  "buildNumber": 2,
+  "buildNumber": 3,
   "fileName": "alumnect-v1.0.0.apk",
   "downloadUrl": "/downloads/alumnect-v1.0.0.apk",
-  "fileSizeBytes": 39197848,
+  "fileSizeBytes": 39198940,
   "fileSizeMB": "37.4 MB",
   "minAndroid": "Android 8.0+",
-  "releaseDate": "2026-11-24",
+  "releaseDate": "2026-11-25",
   "packageId": "alumnect.online",
   "releaseNotes": "Bản phát hành chính thức cho hệ điều hành Android. Kết nối mạng lưới cựu sinh viên, việc làm tuyển dụng, cố vấn 1:1 FPTU và Cẩm nang Hướng dẫn Cố vấn trực quan 5 bước."
 }

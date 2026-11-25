@@ -122,8 +122,8 @@ async function ensureLocalFileUri(uri: string, fileName?: string): Promise<{ loc
   }
 }
 
-/** Tải nhị phân (Binary) tệp trực tiếp lên Presigned URL (hỗ trợ cả mobile native stream và web blob). */
-async function uploadBinaryToSignedUrl(uploadUrl: string, fileUri: string, contentType: string, fileName?: string) {
+/** Tải nhị phân (Binary) tệp trực tiếp lên Presigned URL (hỗ trợ cả mobile native stream và web blob) và trả về dung lượng thực tế (bytes). */
+async function uploadBinaryToSignedUrl(uploadUrl: string, fileUri: string, contentType: string, fileName?: string): Promise<number> {
   if (Platform.OS === 'web') {
     const read = await fetch(fileUri)
     const blob = await read.blob()
@@ -132,12 +132,22 @@ async function uploadBinaryToSignedUrl(uploadUrl: string, fileUri: string, conte
       if (__DEV__) console.warn('[uploadBinaryToSignedUrl:web] PUT failed', put.status, await put.text().catch(() => ''))
       throw new Error(`Tải tệp lên thất bại (${put.status}). Vui lòng thử lại.`)
     }
-    return
+    return blob.size
   }
 
   const { localUri, isTemp } = await ensureLocalFileUri(fileUri, fileName)
+  let measuredBytes = 0
 
   try {
+    try {
+      const info = await FileSystem.getInfoAsync(localUri)
+      if (info.exists && 'size' in info && typeof info.size === 'number' && info.size > 0) {
+        measuredBytes = info.size
+      }
+    } catch {
+      // Một số URI không trả size trực tiếp qua getInfoAsync -> sẽ fallback qua blob nếu cần
+    }
+
     const res = await FileSystem.uploadAsync(uploadUrl, localUri, {
       httpMethod: 'PUT',
       uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
@@ -149,15 +159,27 @@ async function uploadBinaryToSignedUrl(uploadUrl: string, fileUri: string, conte
       if (__DEV__) console.warn('[uploadBinaryToSignedUrl:native] PUT failed', res.status, res.body)
       throw new Error(`Tải tệp lên thất bại (${res.status}). Vui lòng thử lại.`)
     }
+    if (measuredBytes <= 0) {
+      try {
+        const read = await fetch(localUri)
+        const blob = await read.blob()
+        if (blob.size > 0) measuredBytes = blob.size
+      } catch {
+        // Bỏ qua nếu không đọc thêm được blob
+      }
+    }
+    return measuredBytes
   } catch (nativeErr) {
     if (__DEV__) console.warn('[uploadBinaryToSignedUrl] uploadAsync failed, trying fetch fallback:', nativeErr)
     try {
       const read = await fetch(localUri)
       const blob = await read.blob()
+      if (blob.size > 0) measuredBytes = blob.size
       const put = await fetch(uploadUrl, { method: 'PUT', body: blob, headers: { 'Content-Type': contentType } })
       if (!put.ok) {
         throw new Error(`Tải tệp lên thất bại (${put.status}). Vui lòng thử lại.`)
       }
+      return measuredBytes
     } catch {
       throw nativeErr instanceof Error ? nativeErr : new Error('Tải tệp lên thất bại. Vui lòng thử lại.')
     }
@@ -183,8 +205,9 @@ export async function uploadFile(
   const signed = await http.get<unknown, ApiResponse<{ uploadUrl: string; publicUrl: string }>>('/files/presigned-url', {
     params: { fileName: name, contentType, folder },
   })
-  await uploadBinaryToSignedUrl(signed.data.uploadUrl, file.uri, contentType, name)
-  return { url: signed.data.publicUrl, fileName: name, fileSize: file.size ?? 0 }
+  const uploadedBytes = await uploadBinaryToSignedUrl(signed.data.uploadUrl, file.uri, contentType, name)
+  const resolvedSize = file.size && file.size > 0 ? file.size : uploadedBytes
+  return { url: signed.data.publicUrl, fileName: name, fileSize: resolvedSize }
 }
 
 /** Chọn ảnh từ thư viện (đăng bài, avatar, bằng chứng...). */
