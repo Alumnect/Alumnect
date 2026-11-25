@@ -27,13 +27,13 @@ type TermsViewMode = 'visual' | 'legal'
 
 const COMMITMENTS = [
   'Tôi cam kết trung thực, giữ liêm chính học thuật và không giao dịch ngoài hệ thống.',
-  'Tôi hiểu cơ chế Ký quỹ PayOS, quy tắc 72 giờ tự động duyệt Work Log và thuế NĐ 117/2025.',
+  'Tôi hiểu cơ chế Ký quỹ PayOS và quy tắc 72 giờ tự động duyệt Work Log.',
   'Tôi đồng ý chính sách báo hủy 12h, thời hiệu khiếu nại 07 ngày và toàn bộ 10 điều khoản.',
 ]
 
 /**
  * UC80 / UC90: Điều khoản & Cẩm nang Hướng dẫn Cố vấn trực quan — đồng bộ 100% nội dung Web
- * (3 nguyên tắc cốt lõi + 10 mục quy chế + NĐ 117/2025/NĐ-CP) với đồ họa vector & trải nghiệm Mobile tối ưu.
+ * (3 nguyên tắc cốt lõi + 10 mục quy chế) với đồ họa vector & trải nghiệm Mobile tối ưu.
  */
 export default function MentoringTermsScreen() {
   const { colors, viridian, viridianSoft, isDark } = useMentoringTheme()
@@ -168,7 +168,7 @@ export default function MentoringTermsScreen() {
               {status.data?.currentVersion ? (
                 <View style={[styles.verPill, { backgroundColor: isDark ? '#2B2B2B' : '#FFFFFF' }]}>
                   <Txt size={10.5} weight="800" style={{ color: viridian }}>
-                    Phiên bản {status.data.currentVersion} · NĐ 117/2025/NĐ-CP
+                    Phiên bản {status.data.currentVersion}
                   </Txt>
                 </View>
               ) : null}

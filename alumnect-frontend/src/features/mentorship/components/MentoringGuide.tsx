@@ -185,7 +185,7 @@ const STUDENT_STEPS: GuideStep[] = [
         'Mô tả chi tiết: Bối cảnh, lỗi kỹ thuật đang gặp hoặc định hướng mục tiêu tốt nghiệp',
         'Lĩnh vực / Chuyên môn hỗ trợ & Đính kèm tài liệu',
       ],
-      highlight: 'Tối thiểu 20 ký tự, hỗ trợ đính kèm tệp tài liệu tối đa 25MB',
+      highlight: 'Tối thiểu 20 ký tự, hỗ trợ đính kèm tệp tài liệu tối đa 10MB',
     },
     notes: [
       {
@@ -853,7 +853,7 @@ const STUDENT_STEPS_EN: GuideStep[] = [
         'Detailed Description: Context, technical errors, or graduation project goals',
         'Support Domain / Specialization & Document Attachments',
       ],
-      highlight: 'Minimum 20 characters, supports file attachments up to 25MB',
+      highlight: 'Minimum 20 characters, supports file attachments up to 10MB',
     },
     notes: [
       {
@@ -1402,7 +1402,7 @@ const MENTOR_STEPS_EN: GuideStep[] = [
 const FAQS = [
   {
     q: 'Tiền ký quỹ, phí nền tảng và chính sách hoàn tiền khi hủy thỏa thuận như thế nào?',
-    a: 'Khi Học viên thanh toán thỏa thuận, 100% số tiền được tạm giữ an toàn tại quỹ ký quỹ của AlumNect (hiện áp dụng mức phí nền tảng ưu đãi 0% trên giao dịch nhiệm vụ) và chỉ giải ngân cho Cố vấn khi Học viên xác nhận nghiệm thu. Nếu Học viên hủy trước 24 giờ trước khi bắt đầu sẽ được hoàn 100%; nếu tự ý hủy sát giờ (dưới 24 giờ) không có lý do bất khả kháng sẽ khấu trừ 20% phí bồi hoàn chuẩn bị cho Cố vấn và hoàn 80%. Nếu Cố vấn đơn phương hủy, Học viên được hoàn 100%.',
+    a: 'Khi Học viên thanh toán thỏa thuận, 100% số tiền được tạm giữ an toàn tại quỹ ký quỹ của AlumNect (áp dụng mức phí hoa hồng 0% trên giao dịch nhiệm vụ) và chỉ giải ngân cho Cố vấn khi Học viên xác nhận nghiệm thu; mọi lệnh chi trả hoặc hoàn tiền qua PayOS chỉ khấu trừ 3.000đ phí chuyển khoản. Nếu phát sinh dừng Task giữa chừng, hai bên có thể tự thỏa thuận chia quỹ hoặc mở khiếu nại để Ban Quản trị phân xử theo bằng chứng.',
   },
   {
     q: 'Quy định tự động xác nhận nhật ký công việc sau 72 giờ hoạt động ra sao?',
@@ -1425,7 +1425,7 @@ const FAQS = [
 const FAQS_EN = [
   {
     q: 'How do Escrow protection, platform fees, and cancellation refunds work?',
-    a: 'When a Student pays for a Deal, 100% of the payment is held securely in AlumNect Escrow (currently with a 0% promotional platform fee on task transactions) and is only disbursed to the Mentor upon completion acceptance. If the Student cancels at least 24 hours before the start time, a 100% refund is issued; late cancellations (under 24 hours) without force majeure incur a 20% preparation compensation fee for the Mentor and an 80% refund. If the Mentor unilaterally cancels, the Student receives a 100% refund.',
+    a: 'When a Student pays for a Deal, 100% of the payment is held securely in AlumNect Escrow (with a 0% platform commission on task transactions) and is only disbursed to the Mentor upon completion acceptance; each outgoing PayOS payout or refund deducts only the 3,000 VND transfer fee. If a Task needs to stop early, both parties can agree on a fund split settlement or open a Dispute Ticket for Administrator resolution based on evidence.',
   },
   {
     q: 'How does the 72-hour automatic Work Log confirmation rule work?',
