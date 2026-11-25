@@ -44,10 +44,10 @@ export function MobileAppDownloadPage() {
     version: '1.0.0',
     fileName: 'alumnect-v1.0.0.apk',
     downloadUrl: '/downloads/alumnect-v1.0.0.apk',
-    fileSizeMB: '39.7 MB',
+    fileSizeMB: '37.4 MB',
     minAndroid: 'Android 8.0+',
     packageId: 'alumnect.online',
-    releaseDate: '24/11/2026',
+    releaseDate: '25/11/2026',
   })
   const [isLoadingSize, setIsLoadingSize] = useState(false)
 
