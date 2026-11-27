@@ -42,6 +42,16 @@
     "scheme": "alumnect",
     "experiments": {
       "typedRoutes": false
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "23d5197d-760f-449d-b466-a9b916d55da7"
+      }
     }
   }
 }

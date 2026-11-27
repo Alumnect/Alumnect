@@ -35,3 +35,6 @@ _handover-secrets/
 /alumnect-backend/src/test/java/com/alumnect/alumnect_backend/dto/response/mentorship/MentorRegistrationJsonTest.java
 tunnel-db.js
 
+
+*.apk
+*-eas-build.apk

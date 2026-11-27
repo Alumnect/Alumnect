@@ -44,7 +44,7 @@ export function MobileAppDownloadPage() {
     version: '1.0.0',
     fileName: 'alumnect-v1.0.0.apk',
     downloadUrl: '/downloads/alumnect-v1.0.0.apk',
-    fileSizeMB: '39.7 MB',
+    fileSizeMB: '104.8 MB',
     minAndroid: 'Android 8.0+',
     packageId: 'alumnect.online',
     releaseDate: '24/11/2026',
@@ -52,7 +52,9 @@ export function MobileAppDownloadPage() {
   const [isLoadingSize, setIsLoadingSize] = useState(false)
 
   const downloadUrl = release.downloadUrl
-  const fullDownloadUrl = typeof window !== 'undefined' ? `${window.location.origin}${downloadUrl}` : downloadUrl
+  const fullDownloadUrl = typeof window !== 'undefined'
+    ? (downloadUrl.startsWith('http://') || downloadUrl.startsWith('https://') ? downloadUrl : `${window.location.origin}${downloadUrl}`)
+    : downloadUrl
 
   // 1. Fetch release manifest & dynamically query real file size from HTTP headers
   useEffect(() => {
@@ -68,27 +70,29 @@ export function MobileAppDownloadPage() {
         }
 
         const targetUrl = manifest.downloadUrl || '/downloads/alumnect-v1.0.0.apk'
-        let dynamicSize = manifest.fileSizeMB || ''
-        let dynamicDate = manifest.releaseDate || ''
+        let dynamicSize = manifest.fileSizeMB || '104.8 MB'
+        let dynamicDate = manifest.releaseDate || '27/11/2026'
 
         // Send HEAD request to the actual APK file on the server to read real byte size and timestamp
-        try {
-          const headRes = await fetch(targetUrl, { method: 'HEAD', cache: 'no-cache' })
-          if (headRes.ok) {
-            const contentLength = headRes.headers.get('content-length')
-            if (contentLength) {
-              const bytes = parseInt(contentLength, 10)
-              if (!isNaN(bytes) && bytes > 0) {
-                dynamicSize = `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+        if (!targetUrl.startsWith('http')) {
+          try {
+            const headRes = await fetch(targetUrl, { method: 'HEAD', cache: 'no-cache' })
+            if (headRes.ok) {
+              const contentLength = headRes.headers.get('content-length')
+              if (contentLength) {
+                const bytes = parseInt(contentLength, 10)
+                if (!isNaN(bytes) && bytes > 0) {
+                  dynamicSize = `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+                }
+              }
+              const lastMod = headRes.headers.get('last-modified')
+              if (lastMod) {
+                dynamicDate = new Date(lastMod).toLocaleDateString('vi-VN')
               }
             }
-            const lastMod = headRes.headers.get('last-modified')
-            if (lastMod) {
-              dynamicDate = new Date(lastMod).toLocaleDateString('vi-VN')
-            }
+          } catch (headErr) {
+            console.warn('Could not read APK headers:', headErr)
           }
-        } catch (headErr) {
-          console.warn('Could not read APK headers:', headErr)
         }
 
         if (isMounted) {
